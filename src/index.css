@@ -1,0 +1,137 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+td>span.fa,
+h3>span>button,
+h4>span>button,
+nav>button,
+nav>.btn-group {
+    margin-left: 5px;
+}
+
+button>span.fa {
+  margin-right: 5px;
+}
+
+h3 {
+  margin-left: 20px
+}
+h4 {
+  margin-left: 30px
+}
+table.changehistory{
+  margin-left: 4em
+}
+
+.centered {
+  text-align: center
+}
+
+.form-group {
+  margin-left: 2em
+}
+
+.TripGroup {
+  margin-left: 40px
+}
+
+.TripGroup td {
+  cursor: pointer
+}
+
+.trip-count {
+  color: lightgray
+}
+
+.section-icon {
+  float: right;
+  margin-right: 5px;
+}
+
+.warning-icon {
+  color: #ffc107
+}
+
+@media screen and (min-width: 992px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+  
+@media screen and (max-width: 991px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+  
+.wiggle {
+  -webkit-animation:wiggle 1.5s infinite linear;
+  animation:        wiggle 1.5s infinite linear
+}
+@-webkit-keyframes wiggle{
+  0%  {-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
+  50% {-webkit-transform:rotate(+20deg);transform:rotate(+20deg)}
+  100%{-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
+}
+@keyframes wiggle{
+  0%  {-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
+  50% {-webkit-transform:rotate(+20deg);transform:rotate(+20deg)}
+  100%{-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
+}
+
+.calendar-hidden {
+  opacity: 0;
+}
+.calendar {
+  max-width: 500px;
+}
+
+.calendar .badge{
+  padding: 3px;
+  cursor: pointer;
+}
+
+.calendar td {
+  width: 50px;
+  border: 1px solid darkgray;
+  vertical-align: top;
+  border: 1px solid darkgray;
+  padding: 2px !important;
+}
+
+.calendar td.calendar-label {
+  width: 25px;
+  border: none;
+  font-weight: bold;
+  text-align: center;
+}
+
+td.calendar-jan,
+td.calendar-may,
+td.calendar-sep {
+  background-color: lightgray
+}
+td.calendar-feb,
+td.calendar-jun,
+td.calendar-oct {
+  background-color: lightskyblue
+}
+
+td.calendar-mar,
+td.calendar-jul,
+td.calendar-nov {
+  background-color: lightgreen
+}
+
+td.calendar-apr,
+td.calendar-aug,
+td.calendar-dec {
+  background-color: gold
+}
+
+td.calendar-today {
+  background-color: pink
+}

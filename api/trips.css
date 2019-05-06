@@ -1,0 +1,196 @@
+body, textarea, td, th, input:date {
+font-family: "Sans-serif";
+}
+
+table {
+border-collapse: collapse;
+}
+
+td, th {
+border: solid 1px silver;
+vertical-align: top;
+text-align: left;
+background-color: #dddddd;
+}
+
+th {
+font-weight: bold;
+}
+
+input, textarea, select {
+background: #eeeeee;
+width: 100%;
+}
+
+input[ng-model^='trip'],
+textarea[ng-model^='trip'],
+input[ng-model^='email'],
+textarea[ng-model^='email'] {
+width: 500px;
+}
+
+input[ng-model^='participant'],
+textarea[ng-model^='participant'] {
+width: 100%;
+}
+
+input[type=checkbox] {
+width: 30px;
+}
+
+to input[ng-model='participant.vehiclerego'] {
+width: 60px;
+}
+
+input[disabled=disabled],
+textarea[disabled=disabled] {
+border: none;
+color: black;
+}
+
+.imageCell {
+height: 20px;
+}
+
+.imageGap {
+height: 5px;
+}
+
+.deleted {
+color: darkgray;
+}
+
+.updated {
+background-color: yellow;
+}
+    
+.inserted {
+background-color: greenyellow;
+}
+
+.highlight1 {
+background-color: pink;
+}
+
+.highlight2 {
+background-color: cyan;
+}
+
+.highlight3 {
+background-color: lime;
+}
+
+.highlight4 {
+background-color: orange;
+}
+
+.highlight5 {
+background-color: silver;
+}
+
+.isRemoved {
+background-image: url("../assets/removed.png");
+background-repeat: repeat-x;
+background-position: center center;
+}
+
+.isWaitListed {
+    background-image: url("../assets/waitlisted.png");
+    background-repeat: repeat-x;
+    background-position: center center;
+    }
+    
+div[ng-show*='$error'], .error {
+font-weight: bold;
+color: red;
+}
+
+.oddrow {
+background-color: #F0F0FF;
+}
+
+.section-icon {
+float: right;
+}
+
+button.open {
+    width: 20px;
+    height: 20px;
+    background: url("../assets/open.png");
+    border: none;
+}
+
+button.closed {
+    width: 20px;
+    height: 20px;
+    background: url("../assets/closed.png");
+    border: none;
+}
+
+button.moveUp {
+    width: 16px;
+    height: 12px;
+    background: url("../assets/uparrow.png");
+    border: none;
+    display: block;
+    padding: 4px;
+}
+
+button.moveDown {
+    width: 16px;
+    height: 12px;
+    background: url("../assets/downarrow.png");
+    border: none;
+    display: block;
+    padding: 4px;
+}
+
+button.moveIn {
+    width: 16px;
+    height: 16px;
+    background: url("../assets/add.png");
+    border: none;
+    display: block;
+    padding: 4px;
+}
+
+button.moveOut {
+    width: 16px;
+    height: 16px;
+    background: url("../assets/minus.png");
+    border: none;
+    display: block;
+    padding: 4px;
+}
+
+button {
+    font-size: 14px;
+}
+
+button[disabled=disabled] {
+background-color: lightgray;
+border-color: lightgray !important;
+color: gray;
+}
+
+/* Printable trip list */
+h3 {
+padding-top: 15px;
+}
+
+
+@media screen and (min-width: 992px) {
+.mobile-only {
+display: none !important;
+}
+}
+
+@media screen and (max-width: 991px) {
+.desktop-only {
+display: none !important;
+}
+}
+
+
+
+

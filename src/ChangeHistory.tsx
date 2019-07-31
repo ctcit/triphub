@@ -119,7 +119,7 @@ export class ChangeHistory extends Component<{
     }
 
     public componentDidMount(){
-        this.props.app.apiCall('GET', this.props.app.state.tripHref + '/change_history')
+        this.props.app.apiCall('GET', this.props.owner.props.href + '/change_history')
             .then((data : IHistoryItem[]) => {
                 data.sort((a : IHistoryItem, b : IHistoryItem) => a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0)
 

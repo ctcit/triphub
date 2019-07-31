@@ -9,7 +9,7 @@ class ConfigClient
 
 class ConfigServer
 {
-	const base_url             = "http://www.ctc.org.nz/index.php/current-trips";
+	const base_url             = "https://ctc.org.nz/triphub.dev/";
 	const currency_in_days     = 7;
 	const email_has_link       = true;
 	const email_has_details    = true;
@@ -20,13 +20,16 @@ class ConfigServer
 	const memberships_table    = "ctc.memberships";
 	const roles_table          = "ctc.roles";
 	const member_roles_table   = "ctc.members_roles";
-	const trips_table          = "trip.dev_trips";
-	const participants_table   = "trip.dev_participants";
-	const change_history_table = "trip.dev_changehistory";
-	const edit_table           = "trip.dev_edit";
-	const log_all_sql		   = true;
+	const trips_table          = "triphub.trips";
+	const participants_table   = "triphub.participants";
+	const change_history_table = "triphub.changehistory";
+	const edit_table           = "triphub.edit";
+	const maps_table           = "triphub.maps";
+	const log_table            = "triphub.log";
+	const log_level_filter     = "/.*/";
 	const api_key              = "6bc3ed05-66a4-4012-96bd-c7192df95997";
-	const api_key_expiry       = "20190515";
+	const api_key_expiry       = "20190815";
+	const api_key_user_id	   = 125;
 }
 
 ?>

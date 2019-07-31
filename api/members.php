@@ -20,6 +20,7 @@ function GetMembers($con, $userid, $id = 0) {
 					(CASE m.mobilephone WHEN '' THEN null ELSE m.mobilephone end),
 					(CASE ms.homephone WHEN '' THEN null ELSE ms.homephone end),
 					(CASE m.workphone WHEN '' THEN null ELSE m.workphone end)) as phone,
+				concat(trim(m.emergencyContactName),' ',trim(m.emergencyContactPhone)) as emergency_contact,
 				q.role,
 				(case when m.id = $userid then 1 else 0 end) as is_me,
 				1 as is_member
@@ -37,6 +38,7 @@ function GetMembers($con, $userid, $id = 0) {
 				p.name,
 				p.email,
 				p.phone,
+				p.emergency_contact,
 				null as role,
 				0 as is_me,
 				0 as is_member			

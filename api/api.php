@@ -26,7 +26,7 @@
         $base_href = "https://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]";
         $route = $method.($entity ? " $entity" : "").($id ? '/{'.rtrim($entity,'s').'_id}' : '')
                         .($sub_entity ? "/$sub_entity" : "").($sub_id ? '/{'.rtrim($sub_entity,'s').'_id}' : '');
-        $result = ApiProcess($con,$base_href,$route,$entity,$id,$sub_entity,$sub_id,$input,$edit_id);
+        $result = ApiProcess($con,$base_href,$method,$route,$entity,$id,$sub_entity,$sub_id,$input,$edit_id);
 
         if (gettype($result) == 'string') {
             header('Content-Type: text/html');
@@ -45,16 +45,17 @@
     }
 
     mysqli_close($con);
-    
-function ApiProcess($con,$base_href,$route,$entity,$id,$sub_entity,$sub_id,$input,$edit_id){
+
+function ApiProcess($con,$base_href,$method,$route,$entity,$id,$sub_entity,$sub_id,$input,$edit_id){
     
 	$table = TableFromEntity($entity);		
     $sub_table = TableFromEntity($sub_entity);		
-    error_log("$route $base_href $entity $id $sub_entity $edit_id ".json_encode($input));
+    LogMessage($con,$method,"$route $entity $id $sub_entity $sub_id $edit_id ".json_encode($input));
     switch ($route) {
         case "GET":
             // DESCRIPTION Gets this API documentation
-            return ApiHelp($con,ApiUserId($con),$base_href);
+            // OUTPUT HTML
+            return ApiHelp($con,$base_href);
 
         case "GET config":
             // DESCRIPTION Gets global configuration parameters
@@ -69,12 +70,12 @@ function ApiProcess($con,$base_href,$route,$entity,$id,$sub_entity,$sub_id,$inpu
         case "GET members/{member_id}":
             // DESCRIPTION Gets member
             // OUTPUT Single <a href='$base_href#members'>members</a>
-            return GetMembers($con, ApiUserId($con), $id)[0];
+            return GetMembers($con, ApiUserId($con), $id);
 
         case "GET trips":
             // DESCRIPTION Gets all trips whose close date is after the current date less one week
             // OUTPUT Array of <a href='$base_href#trips'>trips</a> + tripState + leaders
-            return GetTrips($con, ApiUserId($con,FALSE));
+            return GetTrips($con, ApiUserId($con,false));
         
         case "POST trips":
             // DESCRIPTION Creates a new trip
@@ -86,7 +87,7 @@ function ApiProcess($con,$base_href,$route,$entity,$id,$sub_entity,$sub_id,$inpu
         case "GET trips/{trip_id}":
             // DESCRIPTION Gets detail for a given trip
             // OUTPUT <a href='$base_href#trips'>trips</a> + tripState + leaders + role + href
-            return GetTrips($con, ApiUserId($con,FALSE), $id);
+            return GetTrips($con,ApiUserId($con,false),$id);
         
         case "POST trips/{trip_id}":
         case "PATCH trips/{trip_id}":
@@ -174,25 +175,26 @@ function ApiProcess($con,$base_href,$route,$entity,$id,$sub_entity,$sub_id,$inpu
             // OUTPUT Array of trip indentification details for any trips that had emails send
             return PostEmails($con);
 
+        case "GET maps":
+            // DESCRIPTION Gets maps list
+            // OUTPUT Array of <a href='$base_href#map'>map</a>
+            return SqlResultArray($con,"SELECT * FROM $table ORDER BY name");
+            
+        case "POST migratelegacytrips":
+            // DESCRIPTION Migrates legacy trips
+            // OUTPUT Counts of trips and participants affected
+            return MigrateLegacyTrips($con);
+
         case "POST prettyprintjson":
             // DESCRIPTION Formats JSON
+            // INPUT Raw JSON as a string
             // OUTPUT Formatted JSON
             // INPUTENTITY json
             return json_decode($input['json']);
 
         default:
-            die(Dump("$route not supported"));
+            die(Log($con,"ERROR","$route not supported"));
             break;
-    }
-}
-
-function ApiUserId($con, $dieonfail=TRUE) {
-    if ($_SERVER["HTTP_API_KEY"] == ConfigServer::api_key) {
-        date("Ymd") < ConfigServer::api_key_expiry || die("api key expiry");
-        return $_SERVER["HTTP_API_USER_ID"];
-    } else {
-        $logondetails = GetLogonDetails($con,$username,'1=1',$dieonfail);
-        return $logondetails['userid'];
     }
 }
 
@@ -200,9 +202,30 @@ function TableFromEntity($entity) {
     return (new ReflectionClass("ConfigServer"))->getConstants()[$entity.'_table'];
 }
 
-function Dump($msg){
-    error_log($msg);
-    return $msg;
+function ApiUserId($con, $dieonfail=TRUE) {
+    if ($_SERVER["HTTP_API_KEY"] != ConfigServer::api_key) {
+        $logondetails = GetLogonDetails($con,'1=1',$dieonfail);
+        return $logondetails['userid'];
+    } else if (date("Ymd") < ConfigServer::api_key_expiry) {
+        return ConfigServer::api_key_user_id;
+    } else {
+        die("api key expiry");
+    }
+}
+
+function LogMessage($con,$level,$message,$log=true){
+    if (preg_match(ConfigServer::log_level_filter, $level) && $log) {
+
+        if ($level == 'ERROR')
+            error_log($message);
+
+        $log_table = ConfigServer::log_table;
+        $level_sql = SqlVal($con,$level);
+        $message_sql = SqlVal($con,$message);
+        SqlExecOrDie($con, "INSERT $log_table(level,message) VALUES($level_sql,$message_sql)", false);
+    }
+
+    return $message;
 }
 
 function ChangeHistory($con,$user_id,$verb,$table,$before,$after,$edit_id)
@@ -225,8 +248,8 @@ function ChangeHistory($con,$user_id,$verb,$table,$before,$after,$edit_id)
     
     $change_history_table = ConfigServer::change_history_table;
     $edit_table = ConfigServer::edit_table;
-    $beforeJson = $before === null ? "null" : "'".mysqli_real_escape_string($con,json_encode($before))."'";
-    $afterJson = "'".mysqli_real_escape_string($con,json_encode($after))."'";
+    $beforeJson = SqlVal($con,json_encode($before));
+    $afterJson = SqlVal($con,json_encode($after));
 
     if ($edit_id === null) {
         SqlExecOrDie($con,"INSERT $edit_table SET trip_id = $trip_id, stamp = UTC_TIMESTAMP(), user_id = $user_id");
@@ -280,8 +303,7 @@ function SqlSetFromInput($con,$input,$table){
         if (strpos($sqlcol["Type"],"text") !== false || 
             strpos($sqlcol["Type"],"char") !== false || 
             strpos($sqlcol["Type"],"date") !== false) {
-            $sqlval = mysqli_real_escape_string($con,$val);
-            $set []= "`$col`='$sqlval'";
+            $set []= "`$col`=".SqlVal($con,$val);
         } else {
             $sqlval = floatval($val);
             $set []= "`$col`=$sqlval";
@@ -319,25 +341,29 @@ function AddHRefs(&$result,$base_href,$entity,$sub_entity) {
     return $result;
 }
 
-function ApiHelp($con,$user_id,$base_href) {
+function ApiHelp($con,$base_href) {
+    $html = "";
     $content = array();
     $entities = array();
     $constants = (new ReflectionClass("ConfigServer"))->getConstants();
     $filehandle = fopen("api.php", "r") or die("Unable to open file!");
+    $item = array();
 
     while (!feof($filehandle)) {
         $line = str_replace('$base_href',$base_href,trim(fgets($filehandle)));
         if (preg_match('/case "(GET|POST|PATCH|DELETE)( (.*))?":/',$line,$matches)) {
-            $content[] = array("METHOD"=>$matches[1], "PATH"=>$matches[3], "BASEHREF"=>$base_href);
+            $item['ENTRIES'] []= array("METHOD"=>$matches[1], "PATH"=>$matches[3]);
         } else if (preg_match('/\/\/ (DESCRIPTION|INPUT|OUTPUT|INPUTENTITY) (.*)/',$line,$matches)) {
-            $content[sizeof($content)-1][$matches[1]] .= "$matches[2]<br/>";
+            $item[$matches[1]] .= "$matches[2]<br/>";
+        } else if (preg_match('/return .*;/',$line,$matches) && array_key_exists('ENTRIES',$item)) {
+            $content [] = $item;
+            $item = array();
         }
     }
     fclose($filehandle);
 
     foreach (array("config","members") as $entity) {
-        $data = ApiProcess($con,$base_href,"GET $entity",$entity,null,null,null,null,null);
-        $data = $entity == "config" ? $data : $data[0];
+        $data = ApiProcess($con,$base_href,"GET","GET $entity",$entity,null,null,null,null,null)[0];
         $cols = array();
         
         foreach ($data as $col => $val) {
@@ -346,7 +372,7 @@ function ApiHelp($con,$user_id,$base_href) {
         $entities[$entity] = $cols;
     }
 
-    foreach (array("trips","participants","change_history","edit") as $entity) {
+    foreach (array("trips","participants","change_history","edit","map") as $entity) {
         $sql_cols = SqlResultArray($con,"SHOW FULL COLUMNS FROM ".$constants[$entity."_table"],"Field");
         $cols = array();
 
@@ -366,7 +392,7 @@ function ApiHelp($con,$user_id,$base_href) {
                                      array("col"=>"body",   "type"=>"text",  "comment"=>"The email body"));
     $entities["json"] =        array(array("col"=>"json",   "type"=>"text",  "comment"=>"The json to format"));
 
-    $html = "<style>
+    $html .= "<style>
                 body {font-family: arial;}
                 table {border-collapse: collapse} 
                 td,th {border: solid 1px gray}
@@ -376,17 +402,24 @@ function ApiHelp($con,$user_id,$base_href) {
                 .DELETE {background: red;        }
             </style>";
 
+    $apipath = str_replace('api.php','ApiTest.html',$base_href);
     $html .= "<table>";
     $html .= "<tr><th colspan='2'>Endpoint</th><th>Description</th><th>Input</th><th>Output</th></tr>";
     foreach ($content as &$val) {
+        $val['BASEHREF'] = $base_href;
         $val['FIELDS'] = array_key_exists('INPUTENTITY',$val) ? json_encode($entities[str_replace('<br/>','',$val['INPUTENTITY'])]) : "[]";
-        $html .= "<tr>
-                    <th class='$val[METHOD]'>$val[METHOD]</th>
-                    <td><a href='".str_replace('api.php','ApiTest.html',$base_href)."?".http_build_query($val)."'>$val[PATH]</a></td>
-                    <td>$val[DESCRIPTION]</td>
-                    <td>$val[INPUT]</td>
-                    <td>$val[OUTPUT]</td>
-                </tr>";
+        foreach ($val['ENTRIES'] as $index => $entry) {
+            $val['METHOD'] = $entry['METHOD'];
+            $val['PATH'] = $entry['PATH'];
+            $html .= "<tr>
+                        <th class='$val[METHOD]'>$val[METHOD]</th>
+                        <td><a href='$apipath?".http_build_query($val)."'>$val[PATH]</a></td>";
+            if ($index == 0)
+                $html .= "<td rowspan='".sizeof($val['ENTRIES'])."'>$val[DESCRIPTION]</td>
+                          <td rowspan='".sizeof($val['ENTRIES'])."'>$val[INPUT]</td>
+                          <td rowspan='".sizeof($val['ENTRIES'])."'>$val[OUTPUT]</td>";
+            $html .= "</tr>";
+        }
     }
     $html .= "</table>";
 

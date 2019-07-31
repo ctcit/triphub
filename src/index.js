@@ -7,7 +7,7 @@ import './index.css';
 import autosize from 'autosize';
 
 const BaseUrl = "http://www.ctc.org.nz/trips.dev/api.php"
-const BaseOpt = {headers:{"Api-Key":"6bc3ed05-66a4-4012-96bd-c7192df95997","Api-UserId":125}}
+const BaseOpt = {headers:{"Api-Key":"6bc3ed05-66a4-4012-96bd-c7192df95997"}}
 const Spinner = <span className="fa fa-spinner fa-spin"/>
 
 class Control extends Component {

@@ -52,12 +52,16 @@ export class TripDetail extends Component<{
                 <Control owner={this} id='close_date' label='Close Date' type='date'  {...readOnly}/>
                 <Control owner={this} id='trip_date' label='Trip Date' type='date'  {...readOnly}/>
                 <Control owner={this} id='length' label='Length in days' type='number' {...readOnly}/>
+                <Control owner={this} id='is_social' label='Is social event' type='checkbox' {...readOnly}/>
                 <Control owner={this} id='departure_point' label='Departure Point' type='text' list='departure_point_list' {...readOnly}/>
                 <Control owner={this} id='cost' label='Cost' type='text'  {...readOnly}/>
                 <Control owner={this} id='grade' label='Grade' type='text' list='grade_list'  {...readOnly}/>
                 <Control owner={this} id='max_participants' label='Maximum trampers' type='number' {...readOnly}/>
                 <Control owner={this} id='description' label='Description' type='textarea'  {...readOnly}/>
                 <Control owner={this} id='logistic_info' label='Logistic Information' type='textarea'  {...readOnly}/>
+                <Control owner={this} id='map_1' label='Map 1' type='text' list='mapslist' {...readOnly}/>
+                <Control owner={this} id='map_2' label='Map 2' type='text' list='mapslist' {...readOnly}/>
+                <Control owner={this} id='map_3' label='Map 2' type='text' list='mapslist' {...readOnly}/>
                 <FormGroup row={true}>
                     <Label sm={2}>Map</Label>
                     <Col sm={1}>
@@ -97,6 +101,10 @@ export class TripDetail extends Component<{
                 <option value='Z Papanui' />
                 <option value='Caltex Russley Road' />
             </datalist>,
-        ]
+            <datalist key='mapslist' id='mapslist'>
+                {this.props.app.getMaps()
+                     .map((m:any) => <option key={'map'+m.name} value={m.name + ' ' + m.title} />)}
+            </datalist>
+    ]
     }
 }

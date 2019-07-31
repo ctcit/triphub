@@ -3,22 +3,20 @@ import 'font-awesome/css/font-awesome.min.css';
 import { Component } from 'react';
 import * as React from 'react';
 import { BaseOpt, BaseUrl, Spinner } from '.';
-import {  IMember, IConfig, ITrip, IValidation, IParticipant } from './Interfaces';
+import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar, ICalendarFilter, StateFilter, LengthFilter } from './Calendar';
-
-export enum AppState { List, Calendar, New, Edit }
+import { Route, Switch } from 'react-router-dom';
 
 export class App extends Component<{
     },{
-      appState?: AppState,
-      tripHref?: string
       status?: any,
       statusShow?: boolean,
       loading: boolean,
       members: IMember[],
       membersById: { [id: number]: IMember },
+      maps: IMap[],
       config: IConfig,
       statusId?: any,
       calendarFilter: ICalendarFilter
@@ -31,19 +29,15 @@ export class App extends Component<{
       constructor(props: any){
         super(props)
         this.state = {
-            appState: AppState.List,
             config: { edit_refresh_in_sec: 10, print_lines: 25 },
             loading: true,
             members: [],
             membersById: {},
+            maps: [],
             status: ['Loading ', Spinner],
             statusShow: true,
             calendarFilter: {show_open_and_close:false, state_filter:StateFilter.Open, length_filter: LengthFilter.All}
         }
-        this.setModeList = this.setModeList.bind(this) 
-        this.setModeCalendar = this.setModeCalendar.bind(this) 
-        this.setModeEdit = this.setModeEdit.bind(this) 
-        this.setModeNew = this.setModeNew.bind(this) 
         this.setStatus = this.setStatus.bind(this) 
         this.apiCall = this.apiCall.bind(this)
         this.getMembers = this.getMembers.bind(this)
@@ -51,29 +45,6 @@ export class App extends Component<{
         this.trip = React.createRef()
         this.triplist = React.createRef()
         this.calendar = React.createRef()
-    }
-
-    public setModeList() {
-        this.setState({appState : AppState.List, loading: true})
-
-        if (this.triplist.current) {
-             this.triplist.current.requery()
-        }
-    }
-
-    public setModeCalendar() {
-        this.setState({appState : AppState.Calendar, loading: true})
-        if (this.calendar.current) {
-            this.calendar.current.requery()
-       }
-   }
-
-    public setModeEdit(tripHref?: string) {
-        this.setState({appState : AppState.Edit, tripHref, loading: true})
-    }
-
-    public setModeNew() {
-        this.setState({appState : AppState.New})
     }
 
     public setStatus(status : any, keepFor? : number) {
@@ -123,6 +94,10 @@ export class App extends Component<{
         return this.state.membersById[id] || {"id":id,"name":`member ${id}`} as IMember
     }
 
+    public getMaps() : IMap[] {
+        return this.state.maps
+    }
+
     public validateTrip(trip : ITrip) : IValidation[] {
 
         return this.getMe().role ? [
@@ -163,20 +138,26 @@ export class App extends Component<{
             .then(config => {
                 this.setState({config:config[0]})
             });
-
+        this.apiCall('GET',BaseUrl + '/maps')
+            .then(maps => {
+                this.setState({maps})
+            });
     }
 
     public render(){
 
-        switch (this.state.appState) {
-            case AppState.List:
-                return <TripsList app={this} ref={this.triplist}/>
-            case AppState.Calendar:
-                return <Calendar app={this} ref={this.calendar}/>
-            default:
-                return <Trip app={this} ref={this.trip}
-                        triphref={this.state.tripHref as string} tripnew={this.state.appState === AppState.New}/>
-        }
+        const renderTripList = (props : any) => <TripsList app={this} router={props}/> 
+        const renderCalendar = (props : any) => <Calendar app={this} router={props}/> 
+        const renderNewTrip = (props : any) => <Trip app={this} router={props} is_new={true}/> 
+        const renderTrip = (props : any) => <Trip app={this} router={props} 
+                                                  is_new={false} href={BaseUrl + '/trips/' + props.match.params.id}/> 
+
+        return <Switch>
+            <Route exact={true} path='/' render={renderTripList} />
+            <Route path='/calendar' render={renderCalendar}/>
+            <Route path='/newtrip' render={renderNewTrip}/>
+            <Route path='/:id' render={renderTrip}/>
+        </Switch>
     }
 
     private titleFromId(id:string) : string {

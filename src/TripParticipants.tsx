@@ -2,12 +2,13 @@ import * as React from 'react';
 import { Button, Form, Navbar, ButtonGroup, ListGroup, ListGroupItem  } from 'reactstrap';
 import { Component } from 'react';
 import { IMember,  IParticipant, IValidation } from './Interfaces';
-import { Spinner, ToolTipIcon } from '.';
+import { Spinner } from '.';
 import { Trip } from './Trip';
-import { AppState, App } from './App';
+import { App } from './App';
 import { Expandable } from './Expandable';
 import { Control } from './Control';
 import { GetDisplayPriority } from './Utilities';
+import { ToolTipIcon } from './ToolTipIcon';
 
 class TripParticipant extends Component<{
         participant: IParticipant
@@ -57,6 +58,7 @@ class TripParticipant extends Component<{
                 participants[index].member_id = member.id
                 participants[index].email = member.email 
                 participants[index].phone = member.phone 
+                participants[index].emergency_contact = member.emergency_contact
             } else {
                 participants[index].member_id = 0
             }        
@@ -117,9 +119,11 @@ class TripParticipant extends Component<{
             <div onDrop={onDrop} onDragOver={onDragOver} onDragStart={onDragStart} draggable={true}>
                 <Expandable title={title} id={`${participant.id}`} level={4} expanded={participant.id === -1} buttons={buttons.filter(b => b)}>
                     <Form key='form' className='indentedparticipants'>
-                        <Control owner={this} id='name' key='name' label='Name' type='text' list='memberlist' {...readOnly} affected={['email','phone','memberid']}/>
+                        <Control owner={this} id='name' key='name' label='Name' type='text' list='memberlist' {...readOnly} 
+                                                affected={['email','phone','memberid','emergency_contact']}/>
                         <Control owner={this} id='email' key='email' label='Email' type='text' {...readOnly}/>
                         <Control owner={this} id='phone' key='phone' label='Phone' type='text'  {...readOnly}/>
+                        <Control owner={this} id='emergency_contact' key='emergency_contact' label='Emergency Contact' type='text' {...readOnly}/>
                         <Control owner={this} id='is_leader' key='is_leader' label='Leader' type='checkbox' {...readOnly}/>
                         <Control owner={this} id='is_plb_provider' key='is_plb_provider' label='Has PLB' type='checkbox' {...readOnly}/>
                         <Control owner={this} id='is_vehicle_provider' key='is_vehicle_provider' label='Has Car' type='checkbox' {...readOnly}/>
@@ -161,7 +165,7 @@ export class TripParticipants extends Component<{
 
     public signMeUp(){
         this.props.trip.setState({is_saving:true})
-        this.props.app.apiCall('POST', this.props.trip.props.triphref + '/participants', this.props.trip.signMeUpTramper(), true)
+        this.props.app.apiCall('POST', this.props.trip.props.href + '/participants', this.props.trip.signMeUpTramper(), true)
             .then(this.props.trip.requeryParticipants)
     }
 
@@ -169,7 +173,7 @@ export class TripParticipants extends Component<{
         const participant = this.props.trip.state.participants[0]
 
         this.props.trip.setState({is_saving:true})
-        this.props.app.apiCall('POST', this.props.trip.props.triphref + '/participants', participant, true)
+        this.props.app.apiCall('POST', this.props.trip.props.href + '/participants', participant, true)
             .then(this.props.trip.requeryParticipants)
     }
 
@@ -225,7 +229,7 @@ export class TripParticipants extends Component<{
         const info = this.props.trip.getParticipantsInfo()
         const loading = this.props.app.state.loading
         const is_open = this.props.trip.state.trip.is_open || this.props.trip.isPrivileged()
-        const is_new_trip = this.props.app.state.appState === AppState.New
+        const is_new_trip = this.props.trip.props.is_new
         const has_new_tramper = info.all.find((p:IParticipant) => p.id === -1)
         const im_on_list = info.all.find((m:IParticipant) => m.member_id === me.id)
         const onDragOver = (ev:any) => ev.preventDefault()

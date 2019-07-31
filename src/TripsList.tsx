@@ -5,16 +5,17 @@ import { Component } from 'react';
 import * as React from 'react';
 import { App } from './App';
 import { Button } from 'reactstrap';
-import { BaseUrl, Spinner, ToolTipIcon  } from '.';
+import { BaseUrl, Spinner } from '.';
 import { ITrip, TripState } from './Interfaces';
 import { GetDate, GetLength } from './Utilities';
 import './index.css';
 import { Expandable } from './Expandable';
 import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
+import { ToolTipIcon } from './ToolTipIcon';
 
 class TripsLine extends Component<{
-    app: App,
+    owner: TripsGroup,
     trip: ITrip,
     },{}> {
     constructor(props: any){
@@ -23,19 +24,21 @@ class TripsLine extends Component<{
     }
 
     public onClick() {
-        this.props.app.setModeEdit(this.props.trip.href)
+        this.props.owner.props.router.history.push('/' + this.props.trip.id)
     }
 
     public render(){
+        const app = this.props.owner.props.app
         const trip = this.props.trip
         const id = trip.id
         const isApproved = this.props.trip.is_approved
-        let validation = this.props.app.validateTrip(trip).filter(i => !i.ok)
+        let validation = app.validateTrip(trip).filter(i => !i.ok)
 
         const extractWarnings = (match:RegExp) => {
             const errors = validation.filter(i => match.test(i.id))
             validation = validation.filter(i => !match.test(i.id))
-            return errors.map((e,i)=> <ToolTipIcon key={i} icon='warning' id={id + 'warning' + e.id + '_' + i} tooltip={e.message} className='warning-icon'/>)
+            return errors.map((e,i)=> <ToolTipIcon key={i} icon='warning' id={id + 'warning' + e.id + '_' + i} 
+                                        tooltip={e.message} className='warning-icon'/>)
         }
 
         const tablerow = [
@@ -49,6 +52,7 @@ class TripsLine extends Component<{
                 {trip.title}{extractWarnings(/title/)}
             </td>,
             <td key={'grade' + id} onClick={this.onClick} className='desktop-only'>
+                <span hidden={!trip.is_social}><ToolTipIcon id={'social' + id} icon='glass' tooltip='Social Event'/> </span>
                 {trip.grade}{extractWarnings(/grade/)}
             </td>,
             <td key={'leaders' + id} onClick={this.onClick} className='desktop-only'>
@@ -78,6 +82,7 @@ class TripsLine extends Component<{
 
 export class TripsGroup extends Component<{
     app: App,
+    router: any,
     trips: ITrip[]
     expanded: boolean
   },{
@@ -111,7 +116,7 @@ export class TripsGroup extends Component<{
                     </thead>
                     <tbody>
                         {this.props.trips.map(
-                            (trip:ITrip) => <TripsLine trip={trip} key={trip.id} app={this.props.app}/>)}
+                            (trip:ITrip) => <TripsLine trip={trip} key={trip.id} owner={this} />)}
                     </tbody>    
                 </Table>
             </Expandable>
@@ -121,6 +126,7 @@ export class TripsGroup extends Component<{
 
 export class TripsList extends Component<{
     app: App,
+    router: any
   },{
     groups: ITrip[][],
   }> {
@@ -160,9 +166,10 @@ export class TripsList extends Component<{
     public render(){
         const groups = this.state.groups.filter((group:ITrip[]) => group.length)
         return [
-            <TriphubNavbar key='triphubNavbar' app={this.props.app}/>,
+            <TriphubNavbar key='triphubNavbar' app={this.props.app} router={this.props.router} />,
             groups.map((group:ITrip[],i) => 
-                <TripsGroup trips={group} key={'tripsGroup'  + group[0].trip_state} app={this.props.app} expanded={i === 0}/>)
+                <TripsGroup trips={group} key={'tripsGroup'  + group[0].trip_state} 
+                            app={this.props.app} router={this.props.router} expanded={i === 0}/>)
             ]
         }
 }

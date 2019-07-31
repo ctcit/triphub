@@ -1,29 +1,37 @@
 import { Component } from 'react';
 import * as React from 'react';
-import { App, AppState } from './App';
+import { App } from './App';
 import Navbar from 'reactstrap/lib/Navbar';
 import Button from 'reactstrap/lib/Button';
 import Fade from 'reactstrap/lib/Fade';
 import Badge from 'reactstrap/lib/Badge';
 
 export class TriphubNavbar extends Component<{
-    app: App,
+    app: App
+    router: any
     },{}> {
     constructor(props: any){
         super(props)
     }
+
     public render(){
+
+        const alltrips = () => this.props.router.history.push('/')
+        const calendar = () => this.props.router.history.push('/calendar')
+        const newtrip = () => this.props.router.history.push('/newtrip')
+
         return (
             <Navbar color='light' light={true} expand='md'>
-                <Button color='primary' onClick={this.props.app.setModeList} disabled={this.props.app.state.loading}>
+                <Button color='primary' onClick={alltrips} disabled={this.props.app.state.loading}>
                     <span className='fa fa-bars'/> 
                     All trips
                 </Button>
-                <Button color='primary' onClick={this.props.app.setModeCalendar} disabled={this.props.app.state.loading}>
+                <Button color='primary' onClick={calendar} disabled={this.props.app.state.loading}>
                     <span className='fa fa-calendar'/> 
                     Calendar
                 </Button>
-                <Button color='primary' onClick={this.props.app.setModeNew} disabled={this.props.app.state.loading} hidden={this.props.app.state.appState === AppState.New}>
+                <Button color='primary' onClick={newtrip} disabled={this.props.app.state.loading} 
+                    hidden={this.props.router.location && this.props.router.location.pathname !== '/'}>
                     <span className='fa fa-lightbulb-o'/> 
                     Suggest a trip
                 </Button>

@@ -18,8 +18,12 @@ export interface ITrip {
     departure_point : string
     description : string
     grade : string
+    is_social : boolean
     length : number
     logistic_info : string
+    map_1 : string
+    map_2 : string
+    map_3 : string
     map_html : string
     is_deleted : boolean
     is_approved : boolean
@@ -37,6 +41,7 @@ export interface IParticipant {
     name : string
     email : string
     phone : string
+    emergency_contact : string
     is_leader : boolean
     is_plb_provider : boolean
     is_vehicle_provider : boolean
@@ -51,6 +56,7 @@ export interface IMember {
     name : string
     email : string
     phone : string
+    emergency_contact : string
     role : string
     is_me : boolean
     is_member : boolean
@@ -60,6 +66,13 @@ export interface IConfig {
     edit_refresh_in_sec : number
     print_lines : number
 }
+
+export interface IMap {
+    name : string
+    title : string
+    group : string
+}
+
 
 export interface IEdit {
     id : number

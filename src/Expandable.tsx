@@ -4,7 +4,7 @@ import { Component } from 'react';
 import * as React from 'react';
 import { Button, Collapse  } from 'reactstrap';
 import './index.css';
-import { ToolTipIcon } from '.';
+import { ToolTipIcon } from './ToolTipIcon';
 
 export class Expandable extends Component<{
     id : string

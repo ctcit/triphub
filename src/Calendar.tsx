@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { App } from './App';
-import { Spinner, BaseUrl, ToolTipIcon } from '.';
+import { Spinner, BaseUrl } from '.';
 import { ITrip, TripState } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString } from './Utilities';
 import Button from 'reactstrap/lib/Button';
@@ -10,6 +10,7 @@ import ButtonGroup from 'reactstrap/lib/ButtonGroup';
 import { TripsGroup } from './TripsList';
 import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
+import { ToolTipIcon } from './ToolTipIcon';
 
 interface ICalendarItem {
     id: number
@@ -146,6 +147,7 @@ class CalendarWeek extends Component<{
 
 export class Calendar extends Component<{
         app: App,
+        router: any
     },{
         trips: ITrip[]
         weeks: ICalendarWeek[]
@@ -229,7 +231,7 @@ export class Calendar extends Component<{
         const length = filter.length_filter
 
         return [
-            <TriphubNavbar key='triphubNavbar' app={this.props.app}>
+            <TriphubNavbar key='triphubNavbar' app={this.props.app} router={this.props.router}>
                 <ButtonGroup>
                     <Button color='primary' disabled={true}>Show open and close dates:</Button>
                     <Button color='primary' onClick={showOpenAndClose} active={open_and_close}>Yes</Button>
@@ -259,7 +261,7 @@ export class Calendar extends Component<{
                 </tbody>
             </Table>,
             selected_trip === undefined ? '' :
-            <TripsGroup key='selectedtrip' trips={[selected_trip]} app={app} expanded={true}/>
+            <TripsGroup key='selectedtrip' trips={[selected_trip]} app={app} router={this.props.router} expanded={true}/>
         ]
     }
 }

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>New Zealand Map Picker</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<!-- Leaflet style. REQUIRED! -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+	<style>
+		html { height: 100% }
+		body { height: 100%; margin: 10px; padding: 10px;}
+		.map { height: 80%; width: 100% }
+		.sheet-div-icon { text-align: center; }
+		.sheet-code { font-size: 14pt; font-weight: bold; }
+		.sheet-name { font-size: 11pt; font-weight: bold }
+	</style>
+</head>
+<body>
+	<div id="map" class="map"></div>
+	<script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+	<script src="https://npmcdn.com/leaflet.path.drag@0.0.6/src/Path.Drag.js"></script>
+	<script src="https://npmcdn.com/leaflet-editable@1.2.0/src/Leaflet.Editable.js"></script>
+	<script>
+		var map = L.map('map', {
+			center: [-43.5, 172], // Central Canterbury
+			zoom: 9, // Central Canterbury
+			maxBounds: [[-33, 165], [-48, 179]], // New Zealand
+			zoomControl: true,
+			editable: true, // to enable leaflet.editable
+			drawingCursor: 'crosshair'
+		});
+
+		var baseMapLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+			minZoom: 6,
+			maxZoom: 14,
+			attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) | NZ Topo map sheets sourced from the LINZ Data Service and licensed for reuse under CC BY 4.0'
+		}).addTo(map);
+
+		var nz50LayerGroup = L.layerGroup().addTo(map);
+			
+
+		// resize layers control to fit into view.
+		function resizeLayerControl () {
+			var layerControlHeight = document.body.clientHeight - (10 + 50);
+			var layerControl = document.getElementsByClassName('leaflet-control')[0];
+
+			layerControl.style.overflowY = 'auto';
+			layerControl.style.maxHeight = layerControlHeight + 'px';
+		}
+
+		map.on('resize', resizeLayerControl);
+		resizeLayerControl();
+
+		// -------------------------------------------------------
+		// Route editing
+		// -------------------------------------------------------
+
+		var route = null;
+
+		function editRoute() {
+			if (routeIsValid()) {
+				route.enableEdit();
+				route.on('editable:editing', saveState);
+			} else {
+				route = map.editTools.startPolyline(null, {color: 'red'});
+				route.on('editable:editing', saveState);
+			}
+		}
+
+		function clearRoute() {
+			if (route) {
+				route.disableEdit();
+				route.off('editable:editing');
+				route.remove();
+				route = null;
+				saveState();
+			}
+		}
+
+		function routeIsValid() {
+			return route && route.getLatLngs().length >= 2;
+		}
+
+		// -------------------------------------------------------
+		// Map selection
+		// -------------------------------------------------------
+
+		function getMapPolygons() {
+			return nz50LayerGroup.getLayers().filter(layer => layer.nz50map)
+		}
+
+		function selectMapToggle(polygon) {
+			selectMap(polygon,!polygon.isSelected)
+			saveState();
+		}
+
+		function selectMap(polygon, isSelected) {
+			if (polygon.isSelected != isSelected) {
+				polygon.isSelected = isSelected
+				polygon.setStyle({ fillOpacity: isSelected ? 0.2 : 0});
+			}
+		}
+
+		function saveState() {
+			var message = {
+				type: 'state',
+				route: route ? route.getLatLngs().map(latLng =>  [latLng.lat, latLng.lng]) : [],
+				maps: getMapPolygons().filter(p => p.isSelected).map(p => p.nz50map.sheetCode + ' ' + p.nz50map.name)
+			}
+			window.parent.postMessage(message, '*')
+		}
+
+		function loadNz50Maps(nz50maps) {
+			nz50maps.forEach(function(nz50map) {
+				// the map sheet polygon
+				var polygon = L.polygon(nz50map.coords, {color: 'blue', fill: true, fillOpacity: 0.0}).addTo(nz50LayerGroup);
+
+				// the map sheet label
+				var polygonLabel = L.divIcon({
+					className: 'sheet-div-icon',
+					html: '<div class="sheet-code">' + nz50map.sheetCode + '</div><div class="sheet-name">' + nz50map.name + '</div>'});
+				// you can set .my-div-icon styles in CSS
+
+				// ideally would centre around polygon.getCenter()...
+				var markerPos = polygon.getBounds().pad(-0.25).getNorthWest();
+
+				L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(nz50LayerGroup);
+
+				// add click event handler for polygon
+				polygon.isSelected = false
+				polygon.nz50map = nz50map
+				polygon.on('click', event => selectMapToggle(event.target));
+				});
+		}
+
+        window.addEventListener("message", receiveMessage, false);
+        function receiveMessage(event) {
+			switch (event.data.type) {
+				case 'setState':
+					loadNz50Maps(event.data.nz50maps)
+					route = L.polyline(event.data.route, {color: 'red'}).addTo(map)
+					var maps = event.data.maps.map(m => m.split(' ')[0])
+					getMapPolygons().forEach(polygon => selectMap(polygon, maps.indexOf(polygon.nz50map.sheetCode) >= 0));
+					break;
+				case 'editRoute':
+					editRoute()
+					break;
+				case 'selectMaps':
+					if (routeIsValid()) {
+						route.disableEdit();
+						route.off('editable:editing');
+						saveState()
+					} else {
+						clearRoute();
+					}
+					break;
+				case 'clearMaps':
+					getMapPolygons().forEach(polygon => selectMap(polygon, false))
+					saveState();
+					break;
+				case 'clearRoute':
+					clearRoute();
+					if (event.data.isRouteMode)
+						editRoute();
+					break;
+				case 'selectRouteMaps':
+					getMapPolygons().forEach(function(polygon) {
+						var polygonBounds = polygon.getBounds();
+						var intersects = route.getLatLngs().some(latLng => polygonBounds.contains(latLng))
+						selectMap(polygon, !!intersects);
+					});
+					saveState();
+					break;
+			}
+        }
+
+		window.parent.postMessage({type: 'ready'}, '*')
+
+	</script>
+</body>
+</html>

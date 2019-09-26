@@ -30,8 +30,12 @@ public render(){
     const toggleMenu = () => this.setState({showMenu: !this.state.showMenu})
     const onMouseEnter = () => this.setState({showMenu: true})
     const onMouseLeave = () => this.setState({showMenu: false})
-    const collapse = <Collapse key={'collapse' + this.props.id} isOpen={this.state.expanded} className='noprint'>{this.state.demanded || this.props.children}</Collapse>
-    const button = <Button key='button' color='link' onClick={toggle} type='button'>{this.state.expanded ? '◢' : '▶'}</Button>
+    const collapse = <Collapse key={'collapse' + this.props.id} isOpen={this.state.expanded} className='noprint'>
+                        {this.state.demanded || this.props.children}
+                    </Collapse>
+    const button = <Button key='button' color='link' onClick={toggle} type='button' style={{width:'2em'}}>
+                        {this.state.demanded || this.props.children ? (this.state.expanded ? '◢' : '▶') : ' '}
+                    </Button>
 
     if (this.props.tablerow) {
         return [

@@ -96,42 +96,46 @@ table.changehistory{
 
 .calendar td {
   width: 50px;
-  border: 1px solid darkgray;
+  height: 30px;
+  border-left: 1px solid darkgray;
+  border-right: 1px solid darkgray;
+  border-top: none;
+  border-bottom: none;
   vertical-align: top;
-  border: 1px solid darkgray;
-  padding: 2px !important;
+  padding: 0px !important;
 }
 
-.calendar td.calendar-label {
-  width: 25px;
-  border: none;
-  font-weight: bold;
-  text-align: center;
+.calendar td.top {
+  border-top: 1px solid darkgray;
 }
 
-td.calendar-jan,
-td.calendar-may,
-td.calendar-sep {
+.calendar .selected {
+  background-color: blue
+}
+
+.calendar td.jan,
+.calendar td.may,
+.calendar td.sep {
   background-color: lightgray
 }
-td.calendar-feb,
-td.calendar-jun,
-td.calendar-oct {
+.calendar td.feb,
+.calendar td.jun,
+.calendar td.oct {
   background-color: lightskyblue
 }
 
-td.calendar-mar,
-td.calendar-jul,
-td.calendar-nov {
+.calendar td.mar,
+.calendar td.jul,
+.calendar td.nov {
   background-color: lightgreen
 }
 
-td.calendar-apr,
-td.calendar-aug,
-td.calendar-dec {
+.calendar td.apr,
+.calendar td.aug,
+.calendar td.dec {
   background-color: gold
 }
 
-td.calendar-today {
+.calendar td.today {
   background-color: pink
 }

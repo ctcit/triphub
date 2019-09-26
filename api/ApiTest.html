@@ -24,20 +24,24 @@
                 });
 
                 for (let field of fields) {
-                    const input = field.type == 'text' ? "<textarea id='"+field.col+"'></textarea>" 
+                    const checkbox = field.readonly == 'Yes' ? '' : "<input type='checkbox' id='"+field.col+"_enabled'/>"
+                    const input = field.readonly == 'Yes' ? '' :
+                                    field.type == 'text' ? "<textarea id='"+field.col+"'></textarea>" 
                                                        : "<input type='text' id='"+field.col+"'/>"
                     $('#Fields').append($("<tr><td>"+field.col+"</td>"+
-                                              "<td><input type='checkbox' id='"+field.col+"_enabled'/></td>"+
-                                              "<td>"+input+"</td>"+
-                                              "<td>"+field.type+"</td>"+
-                                              "<td>"+field.comment+"</td></tr>"))
+                                            "<td>"+checkbox+"</td>"+
+                                            "<td>"+input+"</td>"+
+                                            "<td>"+field.type+"</td>"+
+                                            "<td>"+field.comment+"</td></tr>"))
                 }
 
                 $("#Submit").click(function(){
                     let data = {}
                     let submitpath = path.replace(regex, function(key, id) { return $("#"+id).val() });
+                    $("#Submit").attr("disabled", true)
+                    $('#PrettyPrintJsonOutput').html('<i>waiting...</i>')
                     for (let field of fields) {
-                        if ($("#"+field.col+"_enabled").val())
+                        if ($("#"+field.col+"_enabled").prop('checked'))
                             data[field.col] = $("#"+field.col).val()
                     }
                     $.ajax({
@@ -45,6 +49,7 @@
                         type:method,
                         data:method == 'GET' || method == 'DELETE' ? null : JSON.stringify(data),
                         success:function(data,status){
+                                $("#Submit").attr("disabled", false)
                                 $('#PrettyPrintJsonOutput').html(data);
                                 $('.block').css('cursor', 'hand')
                                 $('.block').click(function() {
@@ -70,6 +75,6 @@
 
         </table>
         <button id="Submit" type="button">Submit</button>
-        <pre id="PrettyPrintJsonOutput"></pre>
+        <div id="PrettyPrintJsonOutput"></div>
     </body>
 </html>

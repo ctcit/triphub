@@ -3,11 +3,11 @@ import { Component } from 'react';
 import { Badge, Button, ButtonGroup } from 'reactstrap';
 import { BaseUrl, Spinner } from '.';
 import { App } from './App';
-import { IEdit,  IParticipant, ITrip, TripState } from './Interfaces';
-import { GetDateString, AddDays, GetDisplayPriority } from './Utilities';
+import { IEdit,  IParticipant, ITrip, TripState, IParticipantsInfo } from './Interfaces';
+import { GetDateString, AddDays, GetDisplayPriority, SafeJsonParse } from './Utilities';
 import { TripDetail } from './TripDetail';
 import { TripParticipants } from './TripParticipants';
-import { ChangeHistory } from './ChangeHistory';
+import { History } from './History';
 import { Expandable } from './Expandable';
 import { Email } from './Email';
 import { TripPrint } from './TripPrint';
@@ -18,19 +18,18 @@ import { ToolTipIcon } from './ToolTipIcon';
 
 
 export class Trip extends Component<{
-    is_new: boolean
+    isNew: boolean
     href?: string
     app: App    
-    router: any
     },{
       trip: ITrip
-      edit_id: number
-      edit_href: string
-      edit_is_edited: boolean
-      edit_list: IEdit[]
-      edit_heartbeat_id?: any
+      editId: number
+      editHref: string
+      editIsEdited: boolean
+      editList: IEdit[]
+      editHeartbeatId?: any
       participants: IParticipant[]
-      is_saving: boolean
+      isSaving: boolean
     }> {
 
       public suggestedTrip: {trip: ITrip, participants: IParticipant[]};
@@ -38,13 +37,13 @@ export class Trip extends Component<{
       constructor(props:any){
         super(props)
         this.state = {
-            edit_id: 0,
-            edit_href: '',
-            edit_is_edited: false,
-            edit_list: [],
+            editId: 0,
+            editHref: '',
+            editIsEdited: false,
+            editList: [],
             participants: [],
             trip: {id:0} as ITrip,
-            is_saving: true,
+            isSaving: true,
         }
         this.requeryParticipants = this.requeryParticipants.bind(this)
         this.startSuggestedTrip = this.startSuggestedTrip.bind(this) 
@@ -58,25 +57,25 @@ export class Trip extends Component<{
 
     public isPrivileged(roleonly?: boolean) : boolean {
         const me = this.props.app.getMe()
-        return (me.role || '') !== '' || 
-                (!roleonly && !!this.state.participants.find((p:IParticipant) => me.id === p.member_id && p.is_leader))
+        return this.props.app.state.isPrivileged || 
+                (!roleonly && !!this.state.participants.find((p:IParticipant) => me.id === p.memberId && p.isLeader))
     }
 
     public componentDidMount(){
-        if (this.props.is_new) {
-            this.props.app.setState({loading: false})    
+        if (this.props.isNew) {
+            this.props.app.setState({isLoading: false})    
             this.startSuggestedTrip()
         } else {
 
             this.props.app.setStatus(['Loading ', Spinner])
             this.props.app.apiCall('POST',this.props.href + '/edit',{stamp:new Date().toISOString()})
-                .then((edit_list:IEdit[]) => {
+                .then((editList:IEdit[]) => {
                     this.setState({
-                        edit_id : edit_list[0].id,
-                        edit_href : edit_list[0].href,
-                        edit_is_edited: false,
-                        edit_list,
-                        edit_heartbeat_id: setInterval(this.editHeartbeat, this.props.app.state.config.edit_refresh_in_sec * 1000)
+                        editList,
+                        editId : editList[0].id,
+                        editHref : editList[0].href,
+                        editIsEdited: false,
+                        editHeartbeatId: setInterval(this.editHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
                     })        
             })
 
@@ -90,12 +89,12 @@ export class Trip extends Component<{
     }
 
     public componentWillUnmount(){
-        if (this.state.edit_heartbeat_id) {
-            clearInterval(this.state.edit_heartbeat_id)
+        if (this.state.editHeartbeatId) {
+            clearInterval(this.state.editHeartbeatId)
         }
 
-        if (this.state.edit_href) {
-            this.props.app.apiCall('DELETE', this.state.edit_href,{})
+        if (this.state.editHref) {
+            this.props.app.apiCall('DELETE', this.state.editHref,{})
         }
     }
 
@@ -103,8 +102,8 @@ export class Trip extends Component<{
         this.props.app.apiCall('GET',this.props.href + '/participants')
         .then((participants:IParticipant[]) => {
 
-            this.setState({participants, is_saving: false})
-            this.props.app.setState({loading: false})
+            this.setState({participants, isSaving: false})
+            this.props.app.setState({isLoading: false})
             this.props.app.setStatus('Loaded Trip', 3000)
         })
     }
@@ -112,57 +111,61 @@ export class Trip extends Component<{
     public deleteTrip(){
         const href = this.state.trip.href
 
-        this.props.app.apiCall('POST', href as string, {is_deleted:!this.state.trip.is_deleted}, true)
-            .then(() => this.props.router.history.push('/'))
+        this.props.app.apiCall('POST', href as string, {isDeleted:!this.state.trip.isDeleted}, true)
+            .then(() => this.props.app.setPath('/'))
     }
 
     public approveTrip(){
         const href = this.state.trip.href
 
-        this.props.app.apiCall('POST', href as string, {is_approved:!this.state.trip.is_approved}, true)
-            .then(() => this.props.router.history.push('/'))
+        this.props.app.apiCall('POST', href as string, {isApproved:!this.state.trip.isApproved}, true)
+            .then(() => this.props.app.setPath('/'))
     }
 
     public blankTramper() : IParticipant {
-        return {id: -1, is_leader: false, is_plb_provider: false, is_deleted: false, is_vehicle_provider: false, 
-                logistic_info: '', email: '', member_id: 0, name: '', phone: '', vehicle_rego: '', emergency_contact: ''}
+        return {id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false, 
+                logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '',
+                emergencyContactName: '', emergencyContactPhone: ''}
     }
 
     public signMeUpTramper() : IParticipant {
         const me = this.props.app.getMe()
         return {...this.blankTramper(), 
-                member_id: me.id, name: me.name, email: me.email, phone: me.phone, emergency_contact: me.emergency_contact}
+                memberId: me.id, name: me.name, email: me.email, phone: me.phone, 
+                emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone}
     }
 
     public startSuggestedTrip(){
-        const open_date : Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
-        const close_date : Date = AddDays(open_date, 12 - open_date.getDay())
-        const trip_date : Date = AddDays(close_date, 8)
+        const openDate : Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+        const closeDate : Date = AddDays(openDate, 12 - openDate.getDay())
+        const tripDate : Date = AddDays(closeDate, 8)
         const me = this.props.app.getMe()
 
         this.suggestedTrip = {
             trip: {
-                open_date: GetDateString(open_date),
-                close_date: GetDateString(close_date),
-                trip_date: GetDateString(trip_date),
+                openDate: GetDateString(openDate),
+                closeDate: GetDateString(closeDate),
+                tripDate: GetDateString(tripDate),
                 cost: '',
-                departure_point: '',
+                departurePoint: '',
                 description: '',
                 grade: '',
-                is_social: false,
+                isSocial: false,
+                isNoSignup: false,
                 id: -1,
                 length: 1,
-                logistic_info: '',
-                map_1: '',
-                map_2: '',
-                map_3: '',
-                map_html: '',
-                max_participants: 0,
-                is_deleted: false,
-                is_approved: false,
-                is_open: false,
-                title: me.name + '\'s suggested trip',
-                trip_state: TripState.Suggested_Trip
+                logisticInfo: '',
+                map1: '',
+                map2: '',
+                map3: '',
+                mapHtml: '',
+                mapRoute: '[]',
+                maxParticipants: 0,
+                isDeleted: false,
+                isApproved: false,
+                isOpen: false,
+                title: me.name + "'s suggested trip",
+                tripState: TripState.SuggestedTrip
             },
             participants: [
                 this.signMeUpTramper()
@@ -175,13 +178,10 @@ export class Trip extends Component<{
         const trip = this.state.trip
         const participants = this.state.participants
 
-        console.log(JSON.stringify(trip))
-        console.log(JSON.stringify(participants))
-
         this.props.app.apiCall('POST',BaseUrl + '/trips',trip)
             .then(data => { 
                     this.props.app.apiCall('POST',data.href + '/participants',participants[0])
-                        .then(this.props.router.history.push('/'))
+                        .then(() => this.props.app.setPath('/'))
                 })
         }
 
@@ -191,64 +191,84 @@ export class Trip extends Component<{
 
         if (JSON.stringify({trip,participants}) === JSON.stringify(this.suggestedTrip) ||
             window.confirm('You have made changes, are you sure you want to cancel?')) {
-                this.props.router.history.push('/')
+                this.props.app.setPath('/')
         }
     }
 
-    public getParticipantsInfo() : 
-        {max_participants:number, all:IParticipant[], non_deleted:IParticipant[], current:IParticipant[], waitlist:IParticipant[], deleted:IParticipant[]} {
+    public getParticipantsInfo() : IParticipantsInfo {
         const all = [...this.state.participants]
 
         all.sort((a,b) => GetDisplayPriority(a) - GetDisplayPriority(b))
 
         const trip = this.state.trip
-        const max_participants = trip.max_participants === 0 ? 999 : trip.max_participants
-        const non_deleted = all.filter(p => !p.is_deleted)
-        const deleted = all.filter(p => p.is_deleted)
-        const current = non_deleted.filter((p,i) => i < max_participants)
-        const waitlist = non_deleted.filter((p,i) => i >= max_participants)
+        const maxParticipants = trip.maxParticipants === 0 ? 999 : trip.maxParticipants
+        const leaders = all.filter(p => p.isLeader && !p.isDeleted)
+        const moveable = all.filter(p => !p.isLeader && !p.isDeleted)
+        const deleted = all.filter(p => p.isDeleted)
+        const early = moveable.filter((_,i) => i < maxParticipants - leaders.length)
+        const late = moveable.filter((_,i) => i >= maxParticipants - leaders.length)
+        const current = [...leaders, ...early]
 
-        return {max_participants,all,non_deleted,current,waitlist,deleted}
+        return {maxParticipants,all,leaders,current,moveable,early,late,deleted}
+    }
+
+    public getMaps() : string[] {
+        return [this.state.trip.map1,this.state.trip.map2,this.state.trip.map3].filter(m => m !== '')
+    }
+
+    public getRoute() : any[] {
+        return SafeJsonParse(this.state.trip.mapRoute,[])
+    }
+
+    public getRouteSummary() : string {
+        return (this.getRoute().length === 0 ? 'No route' : this.getRoute().length + ' points in route')
+    }
+
+    public getMapSummary() : string {
+        return this.getRouteSummary() + ', ' +
+               (this.getMaps().length === 0 ? 'no maps selected' : 'selected maps: ' + this.getMaps().map(m => m.split(' ')[0]).join(', '))
     }
 
     public render(){
         const trip = this.state.trip
         const app = this.props.app
-        const is_new = this.props.is_new
-        const changehistory = () => <ChangeHistory key={'ChangeHistory' + trip.id} owner={this} app={this.props.app}/>
+        const isNew = this.props.isNew
+        const history = () => <History key={'History' + trip.id} owner={this} app={this.props.app}/>
         const info = this.getParticipantsInfo()
-        const trip_warnings = app.validateTrip(this.state.trip).filter(i => !i.ok)
-        const trip_warning = trip_warnings.length && !this.props.app.state.loading
-                                    ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={trip_warnings[0].message} className='warning-icon'/> 
+        const tripWarnings = app.validateTrip(this.state.trip).filter(i => !i.ok)
+        const tripWarning = tripWarnings.length && !this.props.app.state.isLoading
+                                    ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={tripWarnings[0].message} className='warning-icon'/> 
                                     : null
-        const participant_warnings = info.non_deleted.map(p => app.validateParticipant(p).filter(i => !i.ok)).filter(vm => vm.length)
-        const participant_warning = participant_warnings.length && !this.props.app.state.loading
-                                    ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participant_warnings[0][0].message} className='warning-icon'/> 
+        const participantWarnings = info.moveable.map(p => app.validateParticipant(p).filter(i => !i.ok)).filter(vm => vm.length)
+        const participantWarning = participantWarnings.length && !this.props.app.state.isLoading
+                                    ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0][0].message} className='warning-icon'/> 
                                     : null
-        const participantCount = <span key='count' className='TripCount'>{` (${info.current.length}${info.waitlist.length ? '+'+info.waitlist.length : ''})`}</span>                                    
+        const participantCount = <span key='count' className='TripCount'>
+                                    {` (${info.leaders.length+info.early.length}${info.late.length ? '+'+info.late.length : ''})`}
+                                 </span>                                    
 
         return [
-            <TriphubNavbar key='triphubnavbar' app={this.props.app} router={this.props.router}>
+            <TriphubNavbar key='triphubnavbar' app={this.props.app}>
                 <Button color='primary' onClick={this.deleteTrip} 
-                        hidden={this.props.app.state.loading || is_new || trip.is_deleted || !this.isPrivileged()}>
+                        hidden={this.props.app.state.isLoading || isNew || trip.isDeleted || !this.isPrivileged()}>
                     <span className='fa fa-remove'/> 
                     Delete this trip
                 </Button>
                 <Button color='primary' onClick={this.deleteTrip} 
-                        hidden={this.props.app.state.loading || is_new || !trip.is_deleted || !this.isPrivileged()}>
+                        hidden={this.props.app.state.isLoading || isNew || !trip.isDeleted || !this.isPrivileged()}>
                     Undelete this trip
                 </Button>
                 <Button color='primary' onClick={this.approveTrip}  
-                        hidden={this.props.app.state.loading || is_new || trip.is_approved  || !this.isPrivileged(true)}>
+                        hidden={this.props.app.state.isLoading || isNew || trip.isApproved  || !this.isPrivileged(true)}>
                     <span key='approvetripicon' className='fa fa-thumbs-o-up'/> 
                     Approve this trip
                 </Button>
                 <Button color='primary' onClick={this.approveTrip} 
-                        hidden={this.props.app.state.loading || is_new || !trip.is_approved || !this.isPrivileged(true)}>
+                        hidden={this.props.app.state.isLoading || isNew || !trip.isApproved || !this.isPrivileged(true)}>
                     <span key='unapprovetripicon' className='fa fa-thumbs-o-down'/> 
                     Remove Approval
                 </Button>
-                <ButtonGroup hidden={this.props.app.state.loading || !is_new}>
+                <ButtonGroup hidden={this.props.app.state.isLoading || !isNew}>
                     <Button color='primary' disabled={true}>
                         <span key='suggesttriplabelicon' className='fa fa-lightbulb-o'/> 
                         Suggest a trip:
@@ -262,51 +282,52 @@ export class Trip extends Component<{
                 </ButtonGroup>
             </TriphubNavbar>,
             <div key='tripstatus'>
-                {this.state.edit_list.map((item:IEdit) =>
+                {this.state.editList.map((item:IEdit) =>
                     <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
                         <Badge pill={true}>
-                            {this.props.app.getMemberById(item.user_id).name} is {item.is_edited ? 'editing' : 'viewing'} this trip
+                            {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
                         </Badge>
                     </ToolTipIcon>)}
                 {!trip.href 
                     ? <Badge pill={true}>New trip</Badge>
-                    : trip.trip_state === TripState.Deleted_Trip 
+                    : trip.tripState === TripState.DeletedTrip 
                     ? <Badge pill={true}>This trip has been deleted</Badge>
-                    : trip.trip_state === TripState.Suggested_Trip && !trip.is_approved
+                    : trip.tripState === TripState.SuggestedTrip && !trip.isApproved
                     ? <Badge pill={true}>This trip has has only been suggested, and not yet approved</Badge>
-                    : trip.trip_state === TripState.Suggested_Trip && trip.is_approved
+                    : trip.tripState === TripState.SuggestedTrip && trip.isApproved
                     ? <Badge pill={true}>This trip has has been suggested, and is approved</Badge>
-                    : !trip.is_open
+                    : !trip.isOpen
                     ? <Badge pill={true}>This trip is closed, please contact the leader</Badge>
                     : null}
             </div>,
             <Expandable key='detail' id='detail' 
-                        title={[this.state.trip.title, trip_warning, <span key='icon' className='fa fa-map-marker section-icon'/>]} level={2} expanded={true}>  
+                        title={[this.state.trip.title, tripWarning, <span key='icon' className='fa fa-map-marker section-icon'/>]} level={2} expanded={true}>  
                 <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app}/>
             </Expandable>,
+            this.state.trip.isSocial && this.state.trip.isNoSignup ? null :
             <Expandable key='participants' id='participants' 
-                        title={['Participants', participant_warning, participantCount ,<span key='icon' className='fa fa-user section-icon'/>]} 
+                        title={['Participants', participantWarning, participantCount, <span key='icon' className='fa fa-user section-icon'/>]} 
                         level={2} expanded={true}>  
                 <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this} app={this.props.app} />
             </Expandable>,
-            this.props.is_new || !this.isPrivileged() ? null :
+            this.props.isNew || !this.isPrivileged() ? null :
             <Expandable key={`email${this.state.trip.id}_${this.state.participants.length}`} id='email'
                         title={['Email', <span key='icon' className='fa fa-paper-plane section-icon'/>]}
                         level={2} expanded={false}>  
                 <Email  owner={this} app={this.props.app}/>
             </Expandable>,
-            this.props.is_new ? null : 
-            <Expandable key='changehistory' id='changehistory'
-                        title={['Change History', <span key='icon' className='fa fa-history section-icon'/>]}
-                        level={2} expanded={false} ondemand={changehistory}>  
-                Change history ...
+            this.props.isNew ? null : 
+            <Expandable key='history' id='history'
+                        title={['History', <span key='icon' className='fa fa-history section-icon'/>]}
+                        level={2} expanded={false} ondemand={history}>  
+                History ...
             </Expandable>,
             <TripPrint key='tripprint' trip={this} app={this.props.app}/>,
         ]
     }
 
     private editHeartbeat() {
-        this.props.app.apiCall('POST', this.state.edit_href, {stamp:new Date().toISOString(),is_edited:this.state.edit_is_edited})
-            .then((edit_list:IEdit[]) => this.setState({edit_list}))
+        this.props.app.apiCall('POST', this.state.editHref, {stamp:new Date().toISOString(),isEdited:this.state.editIsEdited})
+            .then((editList:IEdit[]) => this.setState({editList}))
     }
 }

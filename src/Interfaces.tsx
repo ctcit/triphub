@@ -1,4 +1,4 @@
-export enum TripState { My_Trip, Open_Trip, Closed_Trip, Suggested_Trip, Deleted_Trip }
+export enum TripState { MyTrip, OpenTrip, ClosedTrip, SuggestedTrip, DeletedTrip }
 
 export interface IValidation {
     id : string
@@ -11,44 +11,47 @@ export interface ITrip {
     href? : string
     title : string
     role? : string
-    open_date : string
-    close_date : string
-    trip_date : string
+    openDate : string
+    closeDate : string
+    tripDate : string
     cost : string
-    departure_point : string
+    departurePoint : string
     description : string
     grade : string
-    is_social : boolean
+    isSocial : boolean
+    isNoSignup : boolean
     length : number
-    logistic_info : string
-    map_1 : string
-    map_2 : string
-    map_3 : string
-    map_html : string
-    is_deleted : boolean
-    is_approved : boolean
-    max_participants : number
+    logisticInfo : string
+    map1 : string
+    map2 : string
+    map3 : string
+    mapRoute : string
+    mapHtml : string
+    isDeleted : boolean
+    isApproved : boolean
+    maxParticipants : number
     leaders? : string
-    trip_state : TripState
-    is_open : boolean
-    edits_href? : string
+    tripState : TripState
+    isOpen : boolean
+    editsHref? : string
 }
 
 export interface IParticipant {
     id : number
     href? : string
-    member_id : number
+    memberId : number
     name : string
     email : string
     phone : string
-    emergency_contact : string
-    is_leader : boolean
-    is_plb_provider : boolean
-    is_vehicle_provider : boolean
-    is_deleted : boolean
-    logistic_info : string
-    vehicle_rego : string
-    display_priority? : number
+    emergencyContactName : string
+    emergencyContactPhone : string
+    isLeader : boolean
+    isPlbProvider : boolean
+    isVehicleProvider : boolean
+    isDeleted : boolean
+    logisticInfo : string
+    vehicleRego : string
+    displayPriority? : number
 }
 
 export interface IMember {
@@ -56,29 +59,42 @@ export interface IMember {
     name : string
     email : string
     phone : string
-    emergency_contact : string
+    emergencyContactName : string
+    emergencyContactPhone : string
     role : string
-    is_me : boolean
-    is_member : boolean
+    isMe : boolean
+    isMember : boolean
+    href : string
 }
 
 export interface IConfig {
-    edit_refresh_in_sec : number
-    print_lines : number
+    editRefreshInSec : number
+    printLines : number
+    calendarStartOfWeek : number
 }
 
 export interface IMap {
+    coords : any
+    sheetCode : string
     name : string
-    title : string
-    group : string
 }
-
 
 export interface IEdit {
     id : number
-    user_id : number 
+    userId : number 
     stamp : string
-    is_edited : boolean
+    isEdited : boolean
     href : string
+}
+
+export interface IParticipantsInfo {
+    maxParticipants : number, 
+    all : IParticipant[], 
+    leaders : IParticipant[], 
+    moveable : IParticipant[], 
+    current : IParticipant[], 
+    early : IParticipant[], 
+    late : IParticipant[], 
+    deleted : IParticipant[]       
 }
 

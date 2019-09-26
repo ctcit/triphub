@@ -6,22 +6,28 @@ import { BaseOpt, BaseUrl, Spinner } from '.';
 import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
-import { Calendar, ICalendarFilter, StateFilter, LengthFilter } from './Calendar';
-import { Route, Switch } from 'react-router-dom';
+import { Calendar } from './Calendar';
+import { TitleFromId } from './Utilities';
+import { TriphubNavbar } from './TriphubNavBar';
 
 export class App extends Component<{
     },{
-      status?: any,
-      statusShow?: boolean,
-      loading: boolean,
-      members: IMember[],
-      membersById: { [id: number]: IMember },
-      maps: IMap[],
-      config: IConfig,
-      statusId?: any,
-      calendarFilter: ICalendarFilter
+      status?: any
+      statusShow?: boolean
+      path : string
+      isLoading: boolean
+      isLoadingConfig: boolean
+      isLoadingMaps: boolean
+      isLoadingMapPickerIframe: boolean
+      isLoadingMembers: boolean
+      isPrivileged: boolean
+      members: IMember[]
+      membersById: { [id: number]: IMember }
+      maps: IMap[]
+      mapPickerIframe: string
+      config: IConfig
+      statusId?: any
     }> {
-
       public trip: React.RefObject<Trip>
       public triplist: React.RefObject<TripsList>
       public calendar: React.RefObject<Calendar>
@@ -29,38 +35,50 @@ export class App extends Component<{
       constructor(props: any){
         super(props)
         this.state = {
-            config: { edit_refresh_in_sec: 10, print_lines: 25 },
-            loading: true,
+            config: { editRefreshInSec: 10, printLines: 25, calendarStartOfWeek: 1 },
+            path: window.location.hash.replace('#',''),
+            isLoading: false,
+            isLoadingConfig: true,
+            isLoadingMaps: true,
+            isLoadingMapPickerIframe: true,
+            isLoadingMembers: true,
+            isPrivileged: false,
             members: [],
             membersById: {},
             maps: [],
+            mapPickerIframe: "",
             status: ['Loading ', Spinner],
             statusShow: true,
-            calendarFilter: {show_open_and_close:false, state_filter:StateFilter.Open, length_filter: LengthFilter.All}
         }
         this.setStatus = this.setStatus.bind(this) 
         this.apiCall = this.apiCall.bind(this)
         this.getMembers = this.getMembers.bind(this)
         this.getMe = this.getMe.bind(this)
+        this.getMaps = this.getMaps.bind(this)
         this.trip = React.createRef()
         this.triplist = React.createRef()
         this.calendar = React.createRef()
     }
 
-    public setStatus(status : any, keepFor? : number) {
+    public setStatus(status : any, keepFor? : number) : void {
         if (this.state.statusId !== undefined) {
             clearTimeout(this.state.statusId)
         }
-        this.setState({status, statusShow: true})
-        this.setState({statusId: keepFor && setTimeout(() => this.setState({statusShow: false}), keepFor)})
+        this.setState({status, statusShow: true,
+                        statusId: keepFor && setTimeout(() => this.setState({statusShow: false}), keepFor)})
     }
 
+    public setPath(path: string) : void {
+        window.location.hash = "#" + path
+        this.setState({path})
+    }
+    
     public async apiCall(method:string, url:string, data?:any, isTripEdit?: boolean): Promise<any> {
-        if (isTripEdit && this.trip.current && this.trip.current.state.edit_href && !this.trip.current.state.edit_is_edited) {
-            this.trip.current.setState({edit_is_edited: true})
+        if (isTripEdit && this.trip.current && this.trip.current.state.editHref && !this.trip.current.state.editIsEdited) {
+            this.trip.current.setState({editIsEdited: true})
         }
 
-        const request : RequestInit = { headers: BaseOpt }
+        const request : RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
         
         if (data) {
             request.method = method
@@ -68,7 +86,6 @@ export class App extends Component<{
             request.body = JSON.stringify(data)
         }
         
-        url += isTripEdit && this.trip.current ? '?edit_id=' + this.trip.current.state.edit_id : ''
         console.log(`${method} ${url}`)
         const result = await fetch(url, request);
         const text = await result.text()
@@ -87,7 +104,7 @@ export class App extends Component<{
     }
 
     public getMe() : IMember {
-        return this.state.members.find((m:IMember) => m.is_me) || {} as unknown as IMember
+        return this.state.members.find((m:IMember) => m.isMe) || {} as unknown as IMember
     }
 
     public getMemberById(id: number) : IMember {
@@ -100,67 +117,73 @@ export class App extends Component<{
 
     public validateTrip(trip : ITrip) : IValidation[] {
 
-        return this.getMe().role ? [
-            {id:'title', ok: !trip.is_deleted, message: 'This trip has been deleted'},
+        return this.state.isPrivileged && !this.state.isLoading ? [
+            {id:'title', ok: !trip.isDeleted, message: 'This trip has been deleted'},
             ...this.mandatory(trip,['title','grade','description','departure_point','cost']),
             {id:'length', ok: trip.length >= 1 && trip.length <= 7, message:'Length should be between 1 and 7 days'},
-            {id:'open_date', ok: trip.open_date <= trip.close_date, message:'Open date must be on or before Close date'},
-            {id:'close_date', ok: trip.open_date <= trip.close_date, message:'Open date must be on or before Close date'},
-            {id:'close_date', ok: trip.close_date <= trip.trip_date, message:'Close date must be on or before Trip date'},
-            {id:'trip_date', ok: trip.close_date <= trip.trip_date, message:'Close date must be on or before Trip date'},
-            {id:'max_participants', ok: trip.max_participants >=0, message:'Max Participants must not be negative'},
+            {id:'openDate', ok: trip.openDate <= trip.closeDate, message:'Open date must be on or before Close date'},
+            {id:'closeDate', ok: trip.openDate <= trip.closeDate, message:'Open date must be on or before Close date'},
+            {id:'closeDate', ok: trip.closeDate <= trip.tripDate, message:'Close date must be on or before Trip date'},
+            {id:'tripDate', ok: trip.closeDate <= trip.tripDate, message:'Close date must be on or before Trip date'},
+            {id:'maxParticipants', ok: trip.maxParticipants >= 0, message:'Max Participants must not be negative'},
         ] : []
     }
 
     public validateParticipant(participant : IParticipant) : IValidation[] {
         return [
-            {id:'vehicle_rego',ok:!participant.is_vehicle_provider || participant.vehicle_rego !== '',message:'Rego must be specified'}
+            {id:'vehicleRego',ok:!participant.isVehicleProvider || participant.vehicleRego !== '',message:'Rego must be specified'}
         ]
     }
     
     public mandatory(obj: any, ids: string[]) : IValidation[]{
-        return ids.map(id => ({id, ok: obj[id] !== '', message: this.titleFromId(id) + ' must be entered'}))
+        return ids.map(id => ({id, ok: obj[id] !== '', message: TitleFromId(id) + ' must be entered'}))
     }
 
-   public componentDidMount() {
+    public requeryMembers() : void {
         this.apiCall('GET',BaseUrl + '/members')
-            .then((data : IMember[]) => {
+            .then((members : IMember[]) => {
 
                 const membersById: {[id: number]: IMember} = {}
+                let isPrivileged = false
 
-                for (const member of data) {
+                for (const member of members) {
                     membersById[member.id] = member
+                    isPrivileged = isPrivileged || (member.isMe && member.role != null)
                 }
 
-                this.setState({members:data, membersById})
+                this.setState({isPrivileged, members, membersById, isLoadingMembers: false})
             })
+    }
+
+    public componentDidMount() : void {
+        this.requeryMembers()
+
         this.apiCall('GET',BaseUrl + '/config')
-            .then(config => {
-                this.setState({config:config[0]})
-            });
-        this.apiCall('GET',BaseUrl + '/maps')
-            .then(maps => {
-                this.setState({maps})
-            });
+            .then(config => this.setState({config:config[0], isLoadingConfig: false}));
+            this.apiCall('GET',BaseUrl + '/maps')
+            .then(maps => this.setState({maps, isLoadingMaps: false}));
+        this.apiCall('GET',BaseUrl + '/map_picker_iframe')
+            .then(mapPickerIframe => this.setState({mapPickerIframe:mapPickerIframe[0], isLoadingMapPickerIframe: false}));
     }
 
     public render(){
 
-        const renderTripList = (props : any) => <TripsList app={this} router={props}/> 
-        const renderCalendar = (props : any) => <Calendar app={this} router={props}/> 
-        const renderNewTrip = (props : any) => <Trip app={this} router={props} is_new={true}/> 
-        const renderTrip = (props : any) => <Trip app={this} router={props} 
-                                                  is_new={false} href={BaseUrl + '/trips/' + props.match.params.id}/> 
+        console.log(`path=${this.state.path}`)
 
-        return <Switch>
-            <Route exact={true} path='/' render={renderTripList} />
-            <Route path='/calendar' render={renderCalendar}/>
-            <Route path='/newtrip' render={renderNewTrip}/>
-            <Route path='/:id' render={renderTrip}/>
-        </Switch>
-    }
-
-    private titleFromId(id:string) : string {
-        return id.replace('_',' ').replace(/\b\w/,x => x.toUpperCase())
+        if ( this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingMembers) {
+            return  [<TriphubNavbar key='triphubNavbar' app={this}/>,
+                     <div key='1'>Loading Configuration {this.state.isLoadingConfig ? Spinner : 'Done.'}</div>,
+                     <div key='2'>Loading Maps {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
+                     <div key='3'>Loading Map Picker {this.state.isLoadingMapPickerIframe ? Spinner : 'Done.'}</div>,
+                     <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>]
+        } else if (this.state.path === "/calendar") {
+            return <Calendar app={this}/> 
+        } else if (this.state.path === "/newtrip") {
+            return <Trip app={this} isNew={true}/> 
+        } else if (this.state.path.startsWith("/trips/")) {
+            return <Trip app={this} isNew={false} href={BaseUrl + this.state.path}/> 
+        } else {
+            return <TripsList app={this}/>
+        }
     }
 }

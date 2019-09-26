@@ -65,7 +65,7 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
     while (($row = mysqli_fetch_array($cursor, MYSQLI_ASSOC))) {
         foreach ($fields as $field) {
             if ($row[$field->name] != null) {
-                if (preg_match('/^is_/',$field->name)) {
+                if (preg_match('/^is[_A-Z]/',$field->name)) {
                     $row[$field->name] = $row[$field->name] == '1';
                 }
                 else {
@@ -110,17 +110,17 @@ function SqlResultScalar($con, $sql) {
     return is_scalar($values[0]) ? $values[0] : null;
 }
 
-function SqlExecOrDie($con,$sql,$log=true) {
+function SqlExecOrDie($con,$sql,$returnid=false,$log=true) {
     if (!mysqli_query($con, $sql))
-        die(LogMessage($con,"ERROR","Invalid query: ".
+        die('<pre>'.LogMessage($con,"ERROR","Invalid query: ".
                 ((is_object($con)) ? mysqli_error($con) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false))."\n".
-                $sql,$log));
+                $sql,$log).'</pre>');
 
-    $rows = mysqli_affected_rows($con); 
+    $result = $returnid ? mysqli_insert_id($con) : mysqli_affected_rows($con); 
     
-    LogMessage($con,'SQL',"$sql -- $row row(s) affected",$log);        
+    LogMessage($con,'SQL',"$sql -- result: $result",$log);        
         
-    return $row;
+    return $result;
 }
 
 function PrettyPrintJson($json) {
@@ -128,29 +128,66 @@ function PrettyPrintJson($json) {
     $html = "";
     $pos = 0;
     $stack = array();
-    preg_match_all('/"(\\\\.|[^"])*"[:]?|[\[\]\{\}]|null|true|false/', $text, $matches, PREG_OFFSET_CAPTURE);
+    $counts = array(0);
+    preg_match_all('/"(\\\\.|[^"])*"[:]?|[\[\]\{\}]|null|true|false|[0-9][0-9\\.]*/', $text, $matches, PREG_OFFSET_CAPTURE);
     foreach ($matches[0] as $item) {
         $match = $item[0];
         $offset = $item[1];
         $html .= htmlentities(substr( $text, $pos, $offset - $pos));
         $pos = $offset + strlen($match);
+        $counts[sizeof($counts)-1]++;
 
-        if (substr($match,-1) == ':') 
+        if (substr($match,-1) == ':') {
+            $counts[sizeof($counts)-1]--;
             $html .= "<span style='color:teal'>".htmlentities( $match )."</span>";
-        else if (substr($match,0,10) == '"http:\/\/' || substr($match,0,11) == '"https:\/\/') 
+        } else if (substr($match,0,10) == '"http:\/\/' || substr($match,0,11) == '"https:\/\/') {
             $html .= "<a href='".json_decode($match)."?prettyprintjson=1'>".htmlentities( $match )."</a>";
-        else if (substr($match,0,1) == '"')
+        } else if (substr($match,0,1) == '"') {
             $html .= "<span style='color:red'>".htmlentities( $match )."</span>";
-        else if ($match == '[' || $match == '{') {
-            array_push( $stack, $pos );
-            $html .= "<span style='color:blue' class='block' id='$pos'>$match</span>".
-                     "<span style='display: none; color:red' class='block' id='$pos-hide'>...</span><span id='$pos-show'>";
-        } else if ($match == ']' || $match == '}')
-            $html .= "</span><span style='color:blue' class='block' id='".array_pop($stack)."-close'>$match</span>";
-        else
-            $html .= "<span style='color:blue'>".htmlentities( $match )."</span>";
+        } else if ($match == '[' || $match == '{') {
+            array_push( $stack, $offset );
+            array_push( $counts, 0 );
+            $html .= "<span style='color:blue' class='block' id='$offset'>$match</span>".
+                     "<span id='$offset-show'>";
+        } else if ($match == ']' || $match == '}') {
+            $start = array_pop($stack);
+            $count = array_pop($counts) - 1;
+            $html .= "</span>".
+                     "<span style='display: none; color:orange' class='block' id='$start-hide'>&lt;$count items&gt;</span>".
+                     "<span style='color:blue' class='block' id='$start-close'>$match</span>";
+        } else if ($match == 'null' || $match == 'true' || $match == 'false') {
+            $html .= "<span style='color:blue'>$match</span>";
+        } else {
+            $html .= $match;
+        }
     }
 
-    return $html.htmlentities(substr( $text, $pos, strlen($text)-$pos));
+    return "<pre>".$html.htmlentities(substr( $text, $pos, strlen($text)-$pos))."</pre>";
 }
+
+function ParseCss($text)
+{
+    $text = preg_replace("/\/\*.*\*\//","",$text);
+    $css = array();
+
+    foreach (explode("}",$text) as $style) {
+        $stylesplit = explode("{",$style);
+        foreach (explode(",",$stylesplit[0]) as $selector) {
+            foreach (explode(";",trim($stylesplit[1],"; \t\r\n")) as $val) {
+                $valsplit = explode(":",$val);
+                $css[trim($selector)][trim($valsplit[0])] = preg_replace("/^([0-9]+)px$/","$1",trim($valsplit[1]));
+            }
+        }
+    }
+
+    return $css;
+}
+
+function MakeGuid() {
+    return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', 
+                    mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), 
+                    mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
+}
+
+
 ?>

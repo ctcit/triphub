@@ -7,13 +7,15 @@ import './index.css';
 import './print.css';
 import { Trip } from './Trip';
 import Collapse from 'reactstrap/lib/Collapse';
-import { IValidation } from './Interfaces';
+import { IValidation, IMap } from './Interfaces';
+import { MapGrid } from './MapGrid';
 
 export class TripDetail extends Component<{
         owner: Trip,
         app: App,
     },{
-        edit_map: boolean
+        editMap: boolean
+        editMaps: boolean
     }> {
 
       public href?: string
@@ -21,7 +23,7 @@ export class TripDetail extends Component<{
 
       constructor(props: any){
         super(props)
-        this.state = {edit_map:false}
+        this.state = {editMap:false, editMaps:false}
         this.href = this.props.owner.state.trip.href
         this.app = this.props.app
         this.get = this.get.bind(this)
@@ -43,35 +45,50 @@ export class TripDetail extends Component<{
 
     public render(){
         const readOnly = {readOnly: !this.props.owner.isPrivileged()}
-        const toggleMap = () => this.setState({edit_map:!this.state.edit_map})
+        const toggleMap = () => this.setState({editMap:!this.state.editMap})
+        const toggleMaps = () => this.setState({editMaps:!this.state.editMaps})
 
         return [
             <Form key='form'>
                 <Control owner={this} id='title' label='Title' type='text' {...readOnly}/>
-                <Control owner={this} id='open_date' label='Open Date' type='date'  {...readOnly}/>
-                <Control owner={this} id='close_date' label='Close Date' type='date'  {...readOnly}/>
-                <Control owner={this} id='trip_date' label='Trip Date' type='date'  {...readOnly}/>
+                <Control owner={this} id='openDate' label='Open Date' type='date'  {...readOnly}/>
+                <Control owner={this} id='closeDate' label='Close Date' type='date'  {...readOnly}/>
+                <Control owner={this} id='tripDate' label='Trip Date' type='date'  {...readOnly}/>
                 <Control owner={this} id='length' label='Length in days' type='number' {...readOnly}/>
-                <Control owner={this} id='is_social' label='Is social event' type='checkbox' {...readOnly}/>
-                <Control owner={this} id='departure_point' label='Departure Point' type='text' list='departure_point_list' {...readOnly}/>
+                <Control owner={this} id='isSocial' label='Is social event' type='checkbox' {...readOnly}/>
+                <Control owner={this} id='isNoSignup' label='No sign up list' type='checkbox' {...readOnly} 
+                                        hidden={!this.props.owner.state.trip.isSocial}/>
+                <Control owner={this} id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...readOnly}/>
                 <Control owner={this} id='cost' label='Cost' type='text'  {...readOnly}/>
                 <Control owner={this} id='grade' label='Grade' type='text' list='grade_list'  {...readOnly}/>
-                <Control owner={this} id='max_participants' label='Maximum trampers' type='number' {...readOnly}/>
+                <Control owner={this} id='maxParticipants' label='Maximum trampers' type='number' {...readOnly} 
+                                        hidden={this.props.owner.state.trip.isSocial && this.props.owner.state.trip.isNoSignup}/>
                 <Control owner={this} id='description' label='Description' type='textarea'  {...readOnly}/>
-                <Control owner={this} id='logistic_info' label='Logistic Information' type='textarea'  {...readOnly}/>
-                <Control owner={this} id='map_1' label='Map 1' type='text' list='mapslist' {...readOnly}/>
-                <Control owner={this} id='map_2' label='Map 2' type='text' list='mapslist' {...readOnly}/>
-                <Control owner={this} id='map_3' label='Map 2' type='text' list='mapslist' {...readOnly}/>
+                <Control owner={this} id='logisticnfo' label='Logistic Information' type='textarea'  {...readOnly}/>
+                <FormGroup row={true}>
+                    <Label sm={2}>Maps</Label>
+                    <Col sm={1}>
+                        <Button hidden={readOnly.readOnly} onClick={toggleMaps}>{this.state.editMaps ? 'Hide' : 'Edit'}</Button>
+                    </Col>
+                    <Col sm={2}>{this.props.owner.state.trip.map1}</Col>
+                    <Col sm={2}>{this.props.owner.state.trip.map2}</Col>
+                    <Col sm={2}>{this.props.owner.state.trip.map3}</Col>
+                    <Col sm={2}>{this.props.owner.getRouteSummary()}</Col>
+                </FormGroup>
+                <Control owner={this} id='map1' label='Map 1' type='text' list='mapslist' {...readOnly} hidden={!this.state.editMaps}/>
+                <Control owner={this} id='map2' label='Map 2' type='text' list='mapslist' {...readOnly} hidden={!this.state.editMaps}/>
+                <Control owner={this} id='map3' label='Map 3' type='text' list='mapslist' {...readOnly} hidden={!this.state.editMaps}/>
+                { this.state.editMaps ? <MapGrid owner={this.props.owner}/> : '' }
                 <FormGroup row={true}>
                     <Label sm={2}>Map</Label>
                     <Col sm={1}>
-                        <Button hidden={readOnly.readOnly} onClick={toggleMap}>{this.state.edit_map ? 'Hide' : 'Edit'}</Button>
+                        <Button hidden={readOnly.readOnly} onClick={toggleMap}>{this.state.editMap ? 'Hide' : 'Edit'}</Button>
                     </Col>
                     <Col sm={9}>
-                        <div dangerouslySetInnerHTML={{__html: this.props.owner.state.trip.map_html}}/>    
+                        <div dangerouslySetInnerHTML={{__html: this.props.owner.state.trip.mapHtml}}/>    
                     </Col>
                 </FormGroup>
-                <Collapse isOpen={this.state.edit_map}>
+                <Collapse isOpen={this.state.editMap}>
                     <FormGroup key='instructions' row={true}>
                         <Label sm={2}>Map HTML</Label>
                         <Col sm={1}>
@@ -88,7 +105,7 @@ export class TripDetail extends Component<{
                             </ol>
                         </Col>
                     </FormGroup>
-                    <Control key='control' owner={this} id='map_html' label='' type='textarea'/>
+                    <Control key='control' owner={this} id='mapHtml' label='' type='textarea'/>
                 </Collapse>
             </Form>,
             <datalist key='grade_list' id='grade_list'>
@@ -103,7 +120,7 @@ export class TripDetail extends Component<{
             </datalist>,
             <datalist key='mapslist' id='mapslist'>
                 {this.props.app.getMaps()
-                     .map((m:any) => <option key={'map'+m.name} value={m.name + ' ' + m.title} />)}
+                     .map((m:IMap) => <option key={'map'+m.sheetCode} value={m.sheetCode + ' ' + m.name} />)}
             </datalist>
     ]
     }

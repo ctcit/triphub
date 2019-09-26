@@ -26,5 +26,27 @@ export function GetLength(length : number) : string{
 }
 
 export function GetDisplayPriority(participant: IParticipant) : number {
-    return participant.display_priority || participant.id
+    return participant.displayPriority || participant.id
 }
+
+export function CountWhile(func: (x: number) => boolean) : number {
+    let i = 0;
+    while (func(i)) {
+        i++
+    }
+    return i
+}
+
+export function SafeJsonParse(json : string, defaultValue : any) : any{
+    try {
+        return JSON.parse(json);
+    } catch (err) {
+        return defaultValue
+    }
+}
+
+export function TitleFromId(id:string) : string {
+    return id.replace('_',' ').replace(/\b\w/,x => x.toUpperCase())
+}
+
+

@@ -24,14 +24,14 @@ class TripsLine extends Component<{
     }
 
     public onClick() {
-        this.props.owner.props.router.history.push('/' + this.props.trip.id)
+        this.props.owner.props.app.setPath('/trips/' + this.props.trip.id)
     }
 
     public render(){
         const app = this.props.owner.props.app
         const trip = this.props.trip
         const id = trip.id
-        const isApproved = this.props.trip.is_approved
+        const isApproved = this.props.trip.isApproved
         let validation = app.validateTrip(trip).filter(i => !i.ok)
 
         const extractWarnings = (match:RegExp) => {
@@ -43,7 +43,7 @@ class TripsLine extends Component<{
 
         const tablerow = [
             <td key={'date' + id} onClick={this.onClick}>
-                {GetDate(trip.trip_date)}{extractWarnings(/date/)}
+                {GetDate(trip.tripDate)}{extractWarnings(/date/)}
             </td>,
             <td key={'length' + id} onClick={this.onClick} className='centered'>
                 {GetLength(trip.length)}{extractWarnings(/length/)}
@@ -52,16 +52,16 @@ class TripsLine extends Component<{
                 {trip.title}{extractWarnings(/title/)}
             </td>,
             <td key={'grade' + id} onClick={this.onClick} className='desktop-only'>
-                <span hidden={!trip.is_social}><ToolTipIcon id={'social' + id} icon='glass' tooltip='Social Event'/> </span>
+                <span hidden={!trip.isSocial}><ToolTipIcon id={'social' + id} icon='glass' tooltip='Social Event'/> </span>
                 {trip.grade}{extractWarnings(/grade/)}
             </td>,
             <td key={'leaders' + id} onClick={this.onClick} className='desktop-only'>
                 {trip.leaders}{extractWarnings(/leaders/)}
             </td>,
-            <td key={'role' + id} onClick={this.onClick} hidden={trip.trip_state !== TripState.My_Trip}>
+            <td key={'role' + id} onClick={this.onClick} hidden={trip.tripState !== TripState.MyTrip}>
                 {trip.role}{extractWarnings(/role/)}
             </td>,
-            <td key={'approved' + id} onClick={this.onClick} hidden={trip.trip_state !== TripState.Suggested_Trip} className='centered'>
+            <td key={'approved' + id} onClick={this.onClick} hidden={trip.tripState !== TripState.SuggestedTrip} className='centered'>
                 <ToolTipIcon id={'approvedicon' + id} icon={isApproved ? 'thumbs-o-up' : 'clock-o'} 
                     tooltip={isApproved ? 'This trip has been approved' : 'This trip is not yet approved'}/>
             </td>,
@@ -81,8 +81,7 @@ class TripsLine extends Component<{
 }
 
 export class TripsGroup extends Component<{
-    app: App,
-    router: any,
+    app: App
     trips: ITrip[]
     expanded: boolean
   },{
@@ -94,11 +93,11 @@ export class TripsGroup extends Component<{
     public render(){
 
         const trips = this.props.trips
-        const id = 'tg' + trips[0].trip_state
+        const id = 'tg' + trips[0].tripState
 
         return  (
             <Expandable key={id} id={id} expanded={this.props.expanded} 
-            title={[TripState[trips[0].trip_state].replace('_',' ') + (trips.length > 1 ? 's' : ''), 
+            title={[TripState[trips[0].tripState].replace('Trip',' Trip') + (trips.length > 1 ? 's' : ''), 
                     <span key='count' className='trip-count'> ({trips.length})</span>]}>
                 <Table className='TripGroup' size='sm' striped={true}>
                     <thead>
@@ -109,8 +108,8 @@ export class TripsGroup extends Component<{
                             <th>Title</th>
                             <th className='desktop-only'>Grade</th>
                             <th className='desktop-only'>Leader</th>
-                            <th hidden={this.props.trips[0].trip_state !== TripState.My_Trip}>My Role</th>
-                            <th hidden={this.props.trips[0].trip_state !== TripState.Suggested_Trip} className='centered'>Approved</th>
+                            <th hidden={this.props.trips[0].tripState !== TripState.MyTrip}>My Role</th>
+                            <th hidden={this.props.trips[0].tripState !== TripState.SuggestedTrip} className='centered'>Approved</th>
                             <th/>
                         </tr>
                     </thead>
@@ -125,8 +124,7 @@ export class TripsGroup extends Component<{
 }
 
 export class TripsList extends Component<{
-    app: App,
-    router: any
+    app: App
   },{
     groups: ITrip[][],
   }> {
@@ -143,19 +141,19 @@ export class TripsList extends Component<{
 
             const groups : ITrip[][] = []
 
-            groups[TripState.My_Trip] = [];
-            groups[TripState.Open_Trip] = [];
-            groups[TripState.Closed_Trip] = [];
-            groups[TripState.Suggested_Trip] = [];
-            groups[TripState.Deleted_Trip] = [];
+            groups[TripState.MyTrip] = [];
+            groups[TripState.OpenTrip] = [];
+            groups[TripState.ClosedTrip] = [];
+            groups[TripState.SuggestedTrip] = [];
+            groups[TripState.DeletedTrip] = [];
 
             for (const item of data) {
-                groups[item.trip_state as number].push(item)
+                groups[item.tripState as number].push(item)
             }
 
             this.setState({groups})
             this.props.app.setStatus('Loaded', 3000)
-            this.props.app.setState({loading:false});
+            this.props.app.setState({isLoading:false});
         })
     }
 
@@ -166,10 +164,10 @@ export class TripsList extends Component<{
     public render(){
         const groups = this.state.groups.filter((group:ITrip[]) => group.length)
         return [
-            <TriphubNavbar key='triphubNavbar' app={this.props.app} router={this.props.router} />,
+            <TriphubNavbar key='triphubNavbar' app={this.props.app}/>,
             groups.map((group:ITrip[],i) => 
-                <TripsGroup trips={group} key={'tripsGroup'  + group[0].trip_state} 
-                            app={this.props.app} router={this.props.router} expanded={i === 0}/>)
+                <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripState} 
+                            app={this.props.app} expanded={i === 0}/>)
             ]
         }
 }

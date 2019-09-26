@@ -8,7 +8,6 @@ import Badge from 'reactstrap/lib/Badge';
 
 export class TriphubNavbar extends Component<{
     app: App
-    router: any
     },{}> {
     constructor(props: any){
         super(props)
@@ -16,24 +15,27 @@ export class TriphubNavbar extends Component<{
 
     public render(){
 
-        const alltrips = () => this.props.router.history.push('/')
-        const calendar = () => this.props.router.history.push('/calendar')
-        const newtrip = () => this.props.router.history.push('/newtrip')
+        const alltrips = () => this.props.app.setPath('/')
+        const calendar = () => this.props.app.setPath('/calendar')
+        const newtrip = () => this.props.app.setPath('/newtrip')
+        const revokePrivileges = () => this.props.app.setState({isPrivileged:false})
 
         return (
             <Navbar color='light' light={true} expand='md'>
-                <Button color='primary' onClick={alltrips} disabled={this.props.app.state.loading}>
+                <Button color='primary' onClick={alltrips} disabled={this.props.app.state.isLoading}>
                     <span className='fa fa-bars'/> 
                     All trips
                 </Button>
-                <Button color='primary' onClick={calendar} disabled={this.props.app.state.loading}>
+                <Button color='primary' onClick={calendar} disabled={this.props.app.state.isLoading}>
                     <span className='fa fa-calendar'/> 
                     Calendar
                 </Button>
-                <Button color='primary' onClick={newtrip} disabled={this.props.app.state.loading} 
-                    hidden={this.props.router.location && this.props.router.location.pathname !== '/'}>
+                <Button color='primary' onClick={newtrip} disabled={this.props.app.state.isLoading}>
                     <span className='fa fa-lightbulb-o'/> 
                     Suggest a trip
+                </Button>
+                <Button color='primary' onClick={revokePrivileges} hidden={!this.props.app.state.isPrivileged} >
+                    Revoke Privileges
                 </Button>
                 {this.props.children}
                 <span>

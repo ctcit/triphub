@@ -3,207 +3,217 @@ import { Component } from 'react';
 import { App } from './App';
 import { Spinner, BaseUrl } from '.';
 import { ITrip, TripState } from './Interfaces';
-import { MonthOfYear, DayOfWeek, AddDays, GetDateString } from './Utilities';
+import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile } from './Utilities';
 import Button from 'reactstrap/lib/Button';
-import Badge from 'reactstrap/lib/Badge';
 import ButtonGroup from 'reactstrap/lib/ButtonGroup';
-import { TripsGroup } from './TripsList';
 import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
-import { ToolTipIcon } from './ToolTipIcon';
+import Badge from 'reactstrap/lib/Badge';
 
 interface ICalendarItem {
     id: number
     date: Date
-    type: string
+    field: string
     trip: ITrip
+    text: string
     tooltip: string
+    length: number
 }
 
 interface ICalendarWeek {
     date: Date
-    label: string
-    days: ICalendarItem[][]
+    days: ICalendarItem[][][]
 }
 
 export enum StateFilter { MyTrips, Open, Suggested, All }
-export enum LengthFilter { Day, Weekend, All }
-export interface ICalendarFilter {
-    show_open_and_close: boolean
-    state_filter: StateFilter
-    length_filter: LengthFilter
-    selected_id?: number
-    hover_id?: number
-}
-
-class CalendarItem extends Component<{
-    item: ICalendarItem
-    calendar: Calendar
-},{
-}> {
-    constructor(props: any){
-        super(props)
-    }
-
-    public render(){
-        const item = this.props.item
-        const trip = item.trip
-        const app = this.props.calendar.props.app
-        const filter = app.state.calendarFilter
-        const selected = (filter.hover_id || filter.selected_id) === trip.id
-        const hidden = (!filter.show_open_and_close && (item.type === 'O' || item.type === 'C') && !selected) ||
-                       (filter.state_filter === StateFilter.MyTrips && trip.trip_state !== TripState.My_Trip) ||
-                       (filter.state_filter === StateFilter.Open && !trip.is_open) ||
-                       (filter.state_filter === StateFilter.Suggested && trip.trip_state > TripState.Suggested_Trip) ||
-                       (filter.length_filter === LengthFilter.Day && trip.length !== 1) ||
-                       (filter.length_filter === LengthFilter.Weekend && trip.length === 1)
-        const onMouseEnter = () => app.setState({calendarFilter:{...filter, hover_id: trip.id}})
-        const onMouseLeave = () => app.setState({calendarFilter:{...filter, hover_id: undefined}})
-        const onClick = () => app.setState({calendarFilter:{...filter, selected_id: filter.selected_id === trip.id ? undefined : trip.id, 
-                                                                       hover_id: undefined}})
-        const onDragStart = (ev:any) => ev.dataTransfer.setData('id', item.id)
-
-        return (
-            <span onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} onClick={onClick}>
-                <ToolTipIcon key={item.id} id={'calendaritem' + item.id} tooltip={item.tooltip}>
-                    <Badge pill={true} color={selected ? 'light' : 'dark'} className={hidden ? 'calendar-hidden' : ''}
-                        onDragStart={onDragStart} draggable={true}>
-                        {item.type}
-                    </Badge>
-                </ToolTipIcon>
-            </span>
-        )
-    }
-}
-
-class CalendarDate extends Component<{
-    date: Date
-    items: ICalendarItem[]
-    calendar: Calendar
-},{
-}> {
-    constructor(props: any){
-        super(props)
-    }
-
-    public render(){
-
-        const app = this.props.calendar.props.app
-        const is_today = GetDateString(this.props.date) === GetDateString(new Date())
-
-        const onDragOver = (ev:any) => {
-            ev.preventDefault()
-        }
-
-        const onDrop = (ev:any) => {
-            const item = this.props.calendar.state.items[ev.dataTransfer.getData('id')]
-            const field = item.type === 'O' ? 'open_date' : item.type === 'C' ? 'close_date' : 'trip_date'
-            const trip = {...item.trip, [field]: GetDateString(this.props.date)}
-            const before = app.validateTrip(item.trip).find(i => i.id === field && !i.ok)
-            const after = app.validateTrip(trip).find(i => i.id === field && !i.ok)
-
-            if (!before && after &&
-                !window.confirm('Trip validation resulted in this message:\n\n' + after.message + '\n\nproceed anyway?')) {
-                return
-            }
-
-            item.trip[field] = trip[field]
-            app.apiCall('POST', item.trip.href as string, {[field]: item.trip[field]})
-            this.props.calendar.process_trips(this.props.calendar.state.trips)
-        }
-
-        return (
-            <td className={'calendar-' + (is_today ? 'today' : MonthOfYear[this.props.date.getMonth()].toLowerCase())} 
-                onDragOver={onDragOver} onDrop={onDrop}>
-                {this.props.date.getDate()}
-                <br/>
-                {this.props.items.map(date => <CalendarItem key={date.id} item={date} calendar={this.props.calendar}/>)}
-            </td>
-        )
-    }
-}
+export enum LengthFilter { Day, Weekend, Trips, Social, All }
 
 class CalendarWeek extends Component<{
     week: ICalendarWeek
     calendar: Calendar
 },{
-    selected: boolean
 }> {
     constructor(props: any){
         super(props)
-        this.state = {selected: false}
     }
 
     public render(){
-        const week = this.props.week
-        return (
-            <tr key={week.date.toISOString()}>
-                <td className='calendar-label'>{week.label}</td>
-                {week.days.map((items,i) => <CalendarDate key={i} date={AddDays(week.date,i)} items={items} calendar={this.props.calendar}/>)}
-            </tr>
-        )
+        const rowCount = Math.max(...this.props.week.days.map(w => w.length))
+        const week = this.props.week.date
+        const days = this.props.week.days
+        const label = week.getMonth() === AddDays(week,-7).getMonth() ? '' : MonthOfYear[week.getMonth()] 
+        const rows = []
+
+        for (let row = 0; row < rowCount; row++)
+        {
+            const cells = row === 0 ? [<td key={GetDateString(this.props.week.date)} 
+                                            className='calendar-label' rowSpan={rowCount}>{label}</td>] : []
+
+            for (let col = 0; col < 7;) {
+                let colSpan = 1
+                const date = AddDays(week,col)                
+                const items = days[col][row] || []
+                const slots = []
+                const onDrop = (ev:any) => {
+                    const item = this.props.calendar.items[ev.dataTransfer.getData('id')]
+                    const trip = {...item.trip, [item.field]: GetDateString(date)}
+                    const before = this.props.calendar.props.app.validateTrip(item.trip).find(i => i.id === item.field && !i.ok)
+                    const after = this.props.calendar.props.app.validateTrip(trip).find(i => i.id === item.field && !i.ok)
+        
+                    if (!before && after &&
+                        !window.confirm('Trip validation resulted in this message:\n\n' + after.message + '\n\nproceed anyway?')) {
+                        return
+                    }
+
+                    const trips = [...this.props.calendar.state.trips]
+
+                    trips[trips.indexOf(item.trip)] = trip
+
+                    this.props.calendar.props.app.apiCall('POST', item.trip.href as string, {[item.field]: item.trip[item.field]})
+                    this.props.calendar.setState({trips})
+                }
+
+                for (const item of items) {
+
+                    if (item.field === '') {
+                        slots.push(<b key={item.id}>{item.text}</b>)
+                        continue
+                    }
+
+                    colSpan = CountWhile(x => col+x < 7 && days[col+x][row] && days[col+x][row].indexOf(item) >= 0);
+
+                    const charlimit = 15 * colSpan
+                    const onLink = () => this.props.calendar.props.app.setPath('/trips/' + item.trip.id)
+                    const onSelect = () => this.props.calendar.setState({selected: item.trip.id})
+                    const onDragStart = (ev:any) => ev.dataTransfer.setData('id', item.id)
+                    const text = item.text.length < charlimit ? item.text : item.text.substr(0,charlimit)+'...'
+                    const isSelected = item.trip && this.props.calendar.state.selected === item.trip.id
+
+                    slots.push(' ')
+                    slots.push(
+                        <Badge key={item.id} id={`badge${item.id}`} onDragStart={onDragStart} 
+                                draggable={this.props.calendar.props.app.state.isPrivileged}
+                                className={isSelected ? 'selected' : ''}>
+                            {item.field !== 'tripDate' ? '' : <span onClick={onLink}>&gt;&gt;</span>}
+                            <span onClick={onSelect}>{text}</span>
+                        </Badge>)
+                }
+
+                const isToday = GetDateString(date) === GetDateString(new Date())
+                const className=(isToday ? 'today' : MonthOfYear[date.getMonth()].toLowerCase()) + ' ' + (row === 0 ? 'top' : '')
+                const onDragOver = (ev:any) => ev.preventDefault()
+
+                cells.push(<td colSpan={colSpan} key={col} onDragOver={onDragOver} onDrop={onDrop} className={className}>
+                                {slots}</td>)
+                col += colSpan
+            }
+
+            rows.push(<tr key={`${week.toISOString()}_${row}`}>{cells}</tr>)
+        }
+
+        return rows
     }
 }
 
 export class Calendar extends Component<{
-        app: App,
-        router: any
+        app: App
     },{
-        trips: ITrip[]
-        weeks: ICalendarWeek[]
-        items: ICalendarItem[]
+        trips: ITrip[];
+        openClose: boolean
+        state: StateFilter
+        length: LengthFilter
+        selected: number
     }>{
+    public weeks: ICalendarWeek[]
+    public items: ICalendarItem[]
+
     constructor(props: any){
         super(props)
-        this.state = {trips:[], weeks:[], items:[]}
-        this.process_trips = this.process_trips.bind(this)
+        this.state = {openClose: false,length: LengthFilter.Trips, state: StateFilter.Open, selected: 0, trips: []}
+        this.processTrips = this.processTrips.bind(this)
         this.requery = this.requery.bind(this)
+        this.showItem = this.showItem.bind(this)
     }
 
-    public process_trips(trips: ITrip[]) {
+    public dayIndex(date : Date) : number {
+        return (date.getDay() - this.props.app.state.config.calendarStartOfWeek + 7) % 7
+    }
+
+    public processTrips() {
         const weeks : ICalendarWeek[] = []
-        const items : ICalendarItem[] = []
+        let items : ICalendarItem[] = []
 
-        for (const trip of trips) {
-            items.push({date:new Date(trip.open_date), type: 'O', trip, id: 0, tooltip: 'Open date for ' + trip.title})
-            items.push({date:new Date(trip.close_date), type: 'C', trip, id: 0, tooltip: 'Close date for ' + trip.title})
-
-            const type = trip.length === 1 ? 'D' : trip.length === 2 ? 'WE' : 'LW'
-
-            for (let i = 0; i < trip.length; i++) {
-                items.push({date:AddDays(new Date(trip.trip_date),i), type, trip, id: 0, tooltip: trip.title})
+        for (const trip of this.state.trips) {
+            if (!trip.isSocial || !trip.isNoSignup) {
+                items.push({id: 0, date: new Date(trip.openDate), text: 'O', field: 'openDate', trip, 
+                            tooltip: 'Open date for ' + trip.title, length: 1})
+                items.push({id: 0, date: new Date(trip.closeDate), text: 'C', field: 'closeDate', trip, 
+                            tooltip: 'Close date for ' + trip.title, length: 1})
             }
+
+            items.push({id: 0, date: new Date(trip.tripDate), field: 'tripDate', trip, text: trip.title, 
+                        tooltip: trip.title, length: trip.length})
         }
 
         if (items.length)
         {
-            items.sort((a,b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0)
+            const min = new Date(Math.min(...items.map( i => i.date.getTime())))
+            const max = new Date(Math.max(...items.map( i => AddDays(i.date, i.length-1).getTime())))
+            const start = AddDays(min,-this.dayIndex(min)-14)
+            const stop = AddDays(max,-this.dayIndex(max)+14+6)
+            const datemap : {[key:string]:ICalendarItem[][]} = {}
 
-            const start = AddDays(items[0].date,-items[0].date.getDay()-14)
-            const stop = AddDays(items[items.length-1].date,-items[items.length-1].date.getDay()+14)
-            const weekmap : {[key:string]:ICalendarWeek} = {}
+            items = items.filter(this.showItem)
 
-            for (let date = start; date <= stop; date = AddDays(date,7)) {
-                weeks.push({date, 
-                    label: !weeks.length || date.getMonth() !== AddDays(date,-7).getMonth() ? MonthOfYear[date.getMonth()] : '',
-                    days: [[],[],[],[],[],[],[]]})
-                weekmap[date.toISOString()] = weeks[weeks.length-1]
+            for (let date = start; date <= stop; date = AddDays(date,1)) {
+                items.push({id:0,date,text:`${date.getDate()}`, field:'',tooltip:'',length:1,trip: null as unknown as ITrip})
+                datemap[GetDateString(date)] = [[]]
             }
 
+            items.sort((a,b) => a.field < b.field ? -1 : a.field > b.field ? 1 : 0)
             items.forEach((item,i) => item.id = i)
-            items.forEach((item,i) => weekmap[AddDays(item.date,-item.date.getDay()).toISOString()].days[item.date.getDay()].push(item))
+
+            for (const item of items) {
+                if (item.field === 'tripDate') {
+                    // Find a clear slot
+                    for (let index = 0; ; index++) {
+                        if (CountWhile(x => x < item.length && !datemap[GetDateString(AddDays(item.date,x))][index]) === item.length) {
+                            // Claim it
+                            for (let span = 0; span < item.length; span++) {
+                                datemap[GetDateString(AddDays(item.date,span))][index] = [item]
+                            }
+                            break
+                        }
+                    }
+                } else {
+                    const date = datemap[GetDateString(item.date)]
+                    if (date[date.length-1].length === 5) {
+                        date.push([])
+                    }
+                    date[date.length-1].push(item)
+                }
+            }
+
+            for (let date = start; date <= stop; date = AddDays(date,7)) {
+                const week : ICalendarWeek = {date, days: []}
+                weeks.push(week)
+                for (let i = 0; i < 7; i++) {
+                    week.days.push(datemap[GetDateString(AddDays(date,i))])
+                }
+            }
         }
 
-        this.setState({trips, weeks, items})
+        this.weeks = weeks
+        this.items = items
     }
 
     public requery() {
         this.props.app.setStatus(['Loading ', Spinner])
         this.props.app.apiCall('GET',BaseUrl + '/trips')
         .then((trips:ITrip[]) => {
-            this.process_trips(trips)
             this.props.app.setStatus('Loaded', 3000)
-            this.props.app.setState({loading:false})
+            this.props.app.setState({isLoading:false})
+            this.setState({trips})
         })
     }
 
@@ -211,57 +221,78 @@ export class Calendar extends Component<{
         this.requery()
     }
 
+    public showItem(item : ICalendarItem) {
+        const state = this.state
+        const trip = item.trip
+
+        if (trip.id === state.selected) {
+            return true
+        }
+
+        return  (state.openClose || item.field === 'tripDate')
+            && ((state.state === StateFilter.MyTrips && trip.tripState === TripState.MyTrip) ||
+                (state.state === StateFilter.Open && trip.isOpen) ||
+                (state.state === StateFilter.Suggested && trip.tripState <= TripState.SuggestedTrip) ||
+                (state.state === StateFilter.All)) 
+            && ((state.length === LengthFilter.Day && !trip.isSocial && trip.length === 1) ||
+                (state.length === LengthFilter.Weekend && !trip.isSocial && trip.length > 1) ||
+                (state.length === LengthFilter.Trips && !trip.isSocial) ||
+                (state.length === LengthFilter.Social && trip.isSocial) ||
+                (state.length === LengthFilter.All))
+    }
+
     public render(){
 
+        const config = this.props.app.state.config
+        const state = this.state
+        const showOpenAndClose = () => this.setState({openClose: true})
+        const hideOpenAndClose = () => this.setState({openClose: false})
+        const stateFilterMyTrips = () => this.setState({state: StateFilter.MyTrips})
+        const stateFilterOpen = () => this.setState({state: StateFilter.Open})
+        const stateFilterSuggested = () => this.setState({state: StateFilter.Suggested})
+        const stateFilterAll = () => this.setState({state: StateFilter.All})
+        const lengthFilterDay = () => this.setState({length: LengthFilter.Day})
+        const lengthFilterWeekend = () => this.setState({length: LengthFilter.Weekend})
+        const lengthFilterTrips = () => this.setState({length: LengthFilter.Trips})
+        const lengthFilterSocial = () => this.setState({length: LengthFilter.Social})
+        const lengthFilterAll = () => this.setState({length: LengthFilter.All})
 
-        const app = this.props.app
-        const filter = app.state.calendarFilter
-        const selected_trip = this.state.trips.find(trip => filter.selected_id === trip.id)
-        const showOpenAndClose = () => app.setState({calendarFilter:{...filter, show_open_and_close: true}})
-        const hideOpenAndClose = () => app.setState({calendarFilter:{...filter, show_open_and_close: false}})
-        const stateFilterMyTrips = () => app.setState({calendarFilter:{...filter, state_filter: StateFilter.MyTrips}})
-        const stateFilterOpen = () => app.setState({calendarFilter:{...filter, state_filter: StateFilter.Open}})
-        const stateFilterSuggested = () => app.setState({calendarFilter:{...filter, state_filter: StateFilter.Suggested}})
-        const stateFilterAll = () => app.setState({calendarFilter:{...filter, state_filter: StateFilter.All}})
-        const lengthFilterDay = () => app.setState({calendarFilter:{...filter, length_filter: LengthFilter.Day}})
-        const lengthFilterWeekend = () => app.setState({calendarFilter:{...filter, length_filter: LengthFilter.Weekend}})
-        const lengthFilterAll = () => app.setState({calendarFilter:{...filter, length_filter: LengthFilter.All}})
-        const open_and_close = filter.show_open_and_close
-        const state = filter.state_filter
-        const length = filter.length_filter
+        this.processTrips()
 
         return [
-            <TriphubNavbar key='triphubNavbar' app={this.props.app} router={this.props.router}>
+            <TriphubNavbar key='triphubNavbar' app={this.props.app}>
                 <ButtonGroup>
-                    <Button color='primary' disabled={true}>Show open and close dates:</Button>
-                    <Button color='primary' onClick={showOpenAndClose} active={open_and_close}>Yes</Button>
-                    <Button color='primary' onClick={hideOpenAndClose} active={!open_and_close}>No</Button>
+                    <Button color='secondary' disabled={true}>Show open and close dates:</Button>
+                    <Button color='primary' onClick={showOpenAndClose} active={state.openClose}>Yes</Button>
+                    <Button color='primary' onClick={hideOpenAndClose} active={!state.openClose}>No</Button>
                 </ButtonGroup>
                 <ButtonGroup>
-                    <Button color='primary' disabled={true}>Trip Filter:</Button>
-                    <Button color='primary' onClick={stateFilterMyTrips} active={state === StateFilter.MyTrips}>My Trips</Button>
-                    <Button color='primary' onClick={stateFilterOpen} active={state === StateFilter.Open}>Open</Button>
-                    <Button color='primary' onClick={stateFilterSuggested} active={state === StateFilter.Suggested}>Suggested</Button>
-                    <Button color='primary' onClick={stateFilterAll} active={state === StateFilter.All}>All</Button>
+                    <Button color='secondary' disabled={true}>Trip Filter:</Button>
+                    <Button color='primary' onClick={stateFilterMyTrips} active={state.state === StateFilter.MyTrips}>My Trips</Button>
+                    <Button color='primary' onClick={stateFilterOpen} active={state.state === StateFilter.Open}>Open</Button>
+                    <Button color='primary' onClick={stateFilterSuggested} active={state.state === StateFilter.Suggested}>Suggested</Button>
+                    <Button color='primary' onClick={stateFilterAll} active={state.state === StateFilter.All}>All</Button>
                 </ButtonGroup>
                 <ButtonGroup>
-                    <Button color='primary' disabled={true}>Length Filter:</Button>
-                    <Button color='primary' onClick={lengthFilterDay} active={length === LengthFilter.Day}>Day</Button>
-                    <Button color='primary' onClick={lengthFilterWeekend} active={length === LengthFilter.Weekend}>Weekend</Button>
-                    <Button color='primary' onClick={lengthFilterAll} active={length === LengthFilter.All}>All</Button>
+                    <Button color='secondary' disabled={true}>Length Filter:</Button>
+                    <Button color='primary' onClick={lengthFilterDay} active={state.length === LengthFilter.Day}>Day</Button>
+                    <Button color='primary' onClick={lengthFilterWeekend} active={state.length === LengthFilter.Weekend}>Weekend</Button>
+                    <Button color='primary' onClick={lengthFilterTrips} active={state.length === LengthFilter.Trips}>Trip</Button>
+                    <Button color='primary' onClick={lengthFilterSocial} active={state.length === LengthFilter.Social}>Social</Button>
+                    <Button color='primary' onClick={lengthFilterAll} active={state.length === LengthFilter.All}>All</Button>
                 </ButtonGroup>
             </TriphubNavbar>,
             <Table key='calendar' className='calendar'>
                 <tbody>
                     <tr>
-                        <td className='calendar-label'/>
-                        {DayOfWeek.map((dow) => <td key={dow} className='calendar-label'>{dow}</td>)}
+                        <td className='label'/>
+                        {DayOfWeek.map((_,i) => <td key={i} className='label'>
+                                                    {DayOfWeek[(i + config.calendarStartOfWeek) % 7]}
+                                                </td>)}
                     </tr>
-                    {this.state.weeks.map(week => <CalendarWeek key={week.date.toISOString().substr(0,10)} week={week} calendar={this}/>)}
+                    {this.weeks.map(week => <CalendarWeek key={week.date.toISOString().substr(0,10)} week={week} calendar={this}/>)}
                 </tbody>
-            </Table>,
-            selected_trip === undefined ? '' :
-            <TripsGroup key='selectedtrip' trips={[selected_trip]} app={app} router={this.props.router} expanded={true}/>
+            </Table>
         ]
     }
 }

@@ -124,7 +124,7 @@ export class Control extends Component<{
                             autoComplete='off' list={this.props.list}/>}
                 </Col>
                 <Col sm={2}>
-                    <Badge color='warning' hidden={!validationMessage || this.props.owner.app.state.loading} size='sm' tabIndex={-1}>{validationMessage}</Badge>
+                    <Badge color='warning' hidden={!validationMessage || this.props.owner.app.state.isLoading} size='sm' tabIndex={-1}>{validationMessage}</Badge>
                     <Button size='sm' hidden={!this.state.changed || !!validationMessage} onClick={this.save} onFocus={this.handleButtonFocus} onBlur={this.handleBlur}>
                         {this.state.saving ? [ 'Saving ', Spinner ] : 'Save'}
                     </Button>

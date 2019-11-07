@@ -44,7 +44,7 @@ function GetTrips($con,$userId,$id = null) {
 	   			'Editor'  as role 
 	    FROM $historyTable c
 			JOIN $tripsTable          t on t.id = c.tripId 
-			WHERE $where AND c.userId = $userId  
+			WHERE $where AND c.userId != 0 AND c.userId = $userId 
 			UNION
 			SELECT p.tripId, 
 					(case when p.isDeleted then 'Removed' when p.isLeader then 'Leader' else 'Tramper' end) as role 
@@ -58,7 +58,7 @@ function GetTrips($con,$userId,$id = null) {
 		$trip["participantCount"] = 0;
 
 		foreach ($participants as &$participant) {
-			if ($participant["tripId"] == $trip["id"]) {
+			if ($participant["tripId"] == $trip["id"] && $userId) {
 				$trip["participantCount"]++;
 				if ($participant["isLeader"] == "1")
 					$leaders []= $participant["name"];

@@ -16,6 +16,7 @@ export interface ITrip {
     tripDate : string
     cost : string
     departurePoint : string
+    departureDetails : string
     description : string
     grade : string
     isSocial : boolean
@@ -62,6 +63,7 @@ export interface IMember {
     emergencyContactName : string
     emergencyContactPhone : string
     role : string
+    otherRole : string
     isMe : boolean
     isMember : boolean
     href : string
@@ -77,6 +79,13 @@ export interface IMap {
     coords : any
     sheetCode : string
     name : string
+}
+
+export interface IHoliday {
+    date : string
+    name : string
+    type : string
+    details : string
 }
 
 export interface IEdit {

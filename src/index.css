@@ -116,24 +116,48 @@ table.changehistory{
 .calendar td.jan,
 .calendar td.may,
 .calendar td.sep {
-  background-color: lightgray
+  background-color: #a0a0a0
 }
+
+.calendar td.janweekend,
+.calendar td.mayweekend,
+.calendar td.sepweekend {
+  background-color: #e0e0e0
+}
+
 .calendar td.feb,
 .calendar td.jun,
 .calendar td.oct {
-  background-color: lightskyblue
+  background-color: #A0A0ff
+}
+
+.calendar td.febweekend,
+.calendar td.junweekend,
+.calendar td.octweekend {
+  background-color: #e0e0ff
 }
 
 .calendar td.mar,
 .calendar td.jul,
 .calendar td.nov {
-  background-color: lightgreen
+  background-color: #80ff80
+}
+
+.calendar td.marweekend,
+.calendar td.julweekend,
+.calendar td.novweekend {
+  background-color: #e0ffe0
 }
 
 .calendar td.apr,
 .calendar td.aug,
 .calendar td.dec {
-  background-color: gold
+  background-color: #ffff00
+}
+.calendar td.aprweekend,
+.calendar td.augweekend,
+.calendar td.decweekend {
+  background-color: #ffff80
 }
 
 .calendar td.today {

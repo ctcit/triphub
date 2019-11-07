@@ -17,6 +17,7 @@ class ConfigServer
 	const emailHasDebugInfo   = false;
 	const emailFilter         = "/^alastairgbrown@yahoo\.com\.au$/";
 	const editorRoles         = "'Webmaster','Overnight Trip Organiser','Day Trip Organiser','Club Captain'";
+	const newMemberRoles      = "'New Members Rep'";
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";
 	const rolesTable          = "ctc.roles";
@@ -29,7 +30,7 @@ class ConfigServer
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
 	const apiKey              = "6bc3ed05-66a4-4012-96bd-c7192df95997";
-	const apiKeyExpiry        = "20190930";
+	const apiKeyExpiry        = "20191130";
 	const apiKeyUserId	      = 125;
 }
 

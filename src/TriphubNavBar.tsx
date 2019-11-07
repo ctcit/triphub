@@ -19,6 +19,7 @@ export class TriphubNavbar extends Component<{
         const calendar = () => this.props.app.setPath('/calendar')
         const newtrip = () => this.props.app.setPath('/newtrip')
         const revokePrivileges = () => this.props.app.setState({isPrivileged:false})
+        const me = this.props.app.getMe()
 
         return (
             <Navbar color='light' light={true} expand='md'>
@@ -30,7 +31,7 @@ export class TriphubNavbar extends Component<{
                     <span className='fa fa-calendar'/> 
                     Calendar
                 </Button>
-                <Button color='primary' onClick={newtrip} disabled={this.props.app.state.isLoading}>
+                <Button color='primary' onClick={newtrip} disabled={this.props.app.state.isLoading} hidden={!me.id}>
                     <span className='fa fa-lightbulb-o'/> 
                     Suggest a trip
                 </Button>

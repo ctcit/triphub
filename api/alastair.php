@@ -20,8 +20,10 @@ $con->set_charset('utf8mb4');
 function GetLogonDetails($con,$roleclause="1=1",$dieonfail=TRUE)
 {
     $user = JFactory::getUser();
-    $userrow = SqlResultArray($con,"
-            SELECT primaryEmail,firstName,lastName,m.id
+    $userrow = SqlResultArray($con,
+            "SELECT m.id
+            ,       loginname as name
+            ,       coalesce(r.role,'') as role
             FROM ctc.members             m
             LEFT JOIN ctc.members_roles  mr  on mr.memberid = m.id
             LEFT JOIN ctc.roles          r   on r.id = mr.roleid
@@ -31,19 +33,9 @@ function GetLogonDetails($con,$roleclause="1=1",$dieonfail=TRUE)
         die("You are not logged on.");
 
 	if (count($userrow))
-        return array(
-            "userid"    => $userrow[0]["id"],
-            "username"  => $user->username,
-            "email"     => $userrow[0]["primaryEmail"],
-            "firstname" => $userrow[0]["firstName"],
-            "lastname"  => $userrow[0]["lastName"]);
+        return $userrow[0];
     else
-        return array(
-            "userid"    => 0,
-            "username"  => '',
-            "email"     => '',
-            "firstname" => '',
-            "lastname"  => '');
+        return array("id" => 0,"name"  => '',"role"  => '');
 }
 
 function SqlVal($con,$value) {

@@ -2,6 +2,7 @@
 
 function GetMembers($con, $userid, $id = 0) {
 	$editorRoles       = ConfigServer::editorRoles;
+	$newMemberRoles    = ConfigServer::newMemberRoles;
 	$membersTable      = ConfigServer::membersTable;
 	$membershipsTable  = ConfigServer::membershipsTable;
 	$rolesTable        = ConfigServer::rolesTable;
@@ -9,6 +10,19 @@ function GetMembers($con, $userid, $id = 0) {
 	$tripsTable		   = ConfigServer::tripsTable;
 	$participantsTable = ConfigServer::participantsTable;
 	$where			   = $id === 0 ? "" : "WHERE id = $id";
+
+	if ($userid == 0)
+		return SqlResultArray($con,
+			"SELECT
+				m.id,
+				concat(trim(m.firstname),' ',trim(m.lastname)) as name,
+				r.role,
+				0 AS isMe,
+				1 AS isMember
+			FROM $membersTable      m
+			JOIN $memberrolesTable  mr ON mr.memberId = m.id
+			JOIN $rolesTable        r  ON r.id = mr.roleid
+			WHERE r.role IN ($newMemberRoles)");
 
 	return SqlResultArray($con,
 		"SELECT * 
@@ -23,16 +37,15 @@ function GetMembers($con, $userid, $id = 0) {
 					(CASE m.workphone WHEN '' THEN null ELSE m.workphone end)) as phone,
 				m.emergencyContactName,
 				m.emergencyContactPhone,
-				role.role,
-				(case when m.id = $userid then 1 else 0 end) as isMe,
-				1 as isMember
+				(SELECT r.role
+				 FROM	$memberrolesTable  mr
+				 JOIN 	$rolesTable        r   on r.id = mr.roleid and r.role in ($editorRoles) 
+				 WHERE  mr.memberId = m.id
+				 LIMIT 1) AS role,
+				(CASE WHEN m.id = $userid THEN 1 ELSE 0 END) AS isMe,
+				1 AS isMember
 			FROM $membersTable             m
 			JOIN $membershipsTable         ms  on ms.id = m.membershipId
-			LEFT JOIN
-				(SELECT mr.memberid, max(r.role) as role
-				FROM	$memberrolesTable  mr
-				JOIN 	$rolesTable        r   on r.id = mr.roleid and r.role in ($editorRoles)
-				GROUP BY mr.memberid) role     on role.memberId = m.id
 			WHERE ms.statusAdmin = 'Active'
 			UNION
 			SELECT 
@@ -44,7 +57,7 @@ function GetMembers($con, $userid, $id = 0) {
 				p.emergencyContactPhone,
 				null as role,
 				0 as isMe,
-				0 as isMember			
+				0 as isMember
 			FROM 
 				(SELECT max(p.id) as id
 				FROM $participantsTable p

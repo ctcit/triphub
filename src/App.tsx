@@ -9,6 +9,7 @@ import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
 import { TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
+import { Newsletter } from './Newsletter';
 
 export class App extends Component<{
     },{
@@ -180,6 +181,8 @@ export class App extends Component<{
             return <Calendar app={this}/> 
         } else if (this.state.path === "/newtrip") {
             return <Trip app={this} isNew={true}/> 
+        } else if (this.state.path === "/newsletter") {
+            return <Newsletter app={this}/> 
         } else if (this.state.path.startsWith("/trips/")) {
             return <Trip app={this} isNew={false} href={BaseUrl + this.state.path}/> 
         } else {

@@ -5,6 +5,7 @@
     require('config.php');
     require('trips.php');
     require('members.php');
+    require('newsletter.php');
 
     // Extract data from parameters 
     $method = $_SERVER['REQUEST_METHOD'];
@@ -202,6 +203,23 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Counts of trips and participants affected
             // INPUTENTITY json
             return ImportLegacyTrips($con, $input['json'] == 'TRUNCATE');
+        
+        case "GET newsletters":
+            // DESCRIPTION Gets newsletters
+            // OUTPUT Array of <a href='$baseHref#newsletters'>newsletters</a>
+            return GetNewsletters($con, ApiUserId($con));
+
+        case "GET newsletters/{newsletterId}":
+            // DESCRIPTION Gets newsletter
+            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            return GetNewsletters($con, ApiUserId($con), $id);
+
+        case "POST members/{memberId}":
+        case "PATCH members/{memberId}":
+            // DESCRIPTION Sets emergency contact details for member
+            // OUTPUT Single <a href='$baseHref#members'>members</a>
+            // INPUTENTITY members
+            return ApiPatch($con,ApiUserId($con),$table,$id,$input);
 
         case "POST prettyprintjson":
             // DESCRIPTION Formats JSON

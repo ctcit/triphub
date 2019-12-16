@@ -19,18 +19,19 @@ import { ToolTipIcon } from './ToolTipIcon';
 
 export class Trip extends Component<{
     isNew: boolean
+    isNewSocial: boolean
     href?: string
     app: App    
-    },{
-      trip: ITrip
-      editId: number
-      editHref: string
-      editIsEdited: boolean
-      editList: IEdit[]
-      editHeartbeatId?: any
-      participants: IParticipant[]
-      isSaving: boolean
-    }> {
+},{
+    trip: ITrip
+    editId: number
+    editHref: string
+    editIsEdited: boolean
+    editList: IEdit[]
+    editHeartbeatId?: any
+    participants: IParticipant[]
+    isSaving: boolean
+}> {
 
       public suggestedTrip: {trip: ITrip, participants: IParticipant[]};
 
@@ -46,7 +47,7 @@ export class Trip extends Component<{
             isSaving: true,
         }
         this.requeryParticipants = this.requeryParticipants.bind(this)
-        this.startSuggestedTrip = this.startSuggestedTrip.bind(this) 
+        this.startNewEvent = this.startNewEvent.bind(this) 
         this.saveSuggestedTrip = this.saveSuggestedTrip.bind(this) 
         this.cancelSuggestedTrip = this.cancelSuggestedTrip.bind(this) 
         this.deleteTrip = this.deleteTrip.bind(this)
@@ -64,7 +65,7 @@ export class Trip extends Component<{
     public componentDidMount(){
         if (this.props.isNew) {
             this.props.app.setState({isLoading: false})    
-            this.startSuggestedTrip()
+            this.startNewEvent()
         } else {
 
             this.props.app.setStatus(['Loading ', Spinner])
@@ -72,8 +73,8 @@ export class Trip extends Component<{
                 .then((editList:IEdit[]) => {
                     this.setState({
                         editList,
-                        editId : editList[0].id,
-                        editHref : editList[0].href,
+                        editId: editList[0].id,
+                        editHref: editList[0].href,
                         editIsEdited: false,
                         editHeartbeatId: setInterval(this.editHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
                     })        
@@ -135,7 +136,7 @@ export class Trip extends Component<{
                 emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone}
     }
 
-    public startSuggestedTrip(){
+    public startNewEvent(){
         const openDate : Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
         const closeDate : Date = AddDays(openDate, 12 - openDate.getDay())
         const tripDate : Date = AddDays(closeDate, 8)
@@ -150,9 +151,9 @@ export class Trip extends Component<{
                 departurePoint: '',
                 departureDetails: '',
                 description: '',
-                grade: '',
-                isSocial: false,
-                isNoSignup: false,
+                grade: this.props.isNewSocial ? 'Social' : '',
+                isSocial: this.props.isNewSocial,
+                isNoSignup: this.props.isNewSocial,
                 id: -1,
                 length: 1,
                 logisticInfo: '',
@@ -161,12 +162,13 @@ export class Trip extends Component<{
                 map3: '',
                 mapHtml: '',
                 mapRoute: '[]',
+                isLimited: false,
                 maxParticipants: 0,
                 isDeleted: false,
-                isApproved: false,
-                isOpen: false,
-                title: me.name + "'s suggested trip",
-                tripState: TripState.SuggestedTrip
+                isApproved: this.props.isNewSocial,
+                isOpen: this.props.isNewSocial,
+                title: `${me.name}'s ${this.props.isNewSocial ? 'social event' : 'suggested trip'}`,
+                tripState: this.props.isNewSocial ? TripState.OpenTrip : TripState.SuggestedTrip
             },
             participants: [
                 this.signMeUpTramper()
@@ -283,7 +285,9 @@ export class Trip extends Component<{
                 </ButtonGroup>
             </TriphubNavbar>,
             <div key='tripstatus'>
-                {this.state.editList.map((item:IEdit) =>
+                {this.state.editList
+                    .filter((item:IEdit) => item.id !== this.state.editId)
+                    .map((item:IEdit) =>
                     <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
                         <Badge pill={true}>
                             {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip

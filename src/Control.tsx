@@ -111,16 +111,17 @@ export class Control extends Component<{
         const value = this.props.owner.get(this.props.id)
         const validation = this.props.owner.validate()
         const validationMessage = (validation.find(m => m.id === this.props.id && !m.ok) || {message:null}).message
-        const valueProp = {[this.props.type === 'checkbox' ? 'checked' : 'value'] : value}
+        const valueProp = this.props.type === 'checkbox' ? {checked:!!value} : {value: (value || '')}
         const controlProp = {readOnly: this.props.readOnly, onFocus: this.handleFocus, onBlur: this.handleBlur, onChange: this.handleChange}
+        const id = (this.props.owner.href || '').replace(/[/:.]/g,'')+'_'+this.props.id
 
         return  (
             <FormGroup hidden={this.props.hidden} row={true}>
                 <Label sm={2} for={this.props.id}>{this.props.label}</Label>
                 <Col sm={8}>
                     {this.props.type === 'textarea' ?
-                        <Textarea id={this.props.id} {...valueProp} {...controlProp} className='form-control'/> :
-                        <Input id={this.props.id} {...valueProp} {...controlProp} type={this.props.type as InputType}
+                        <Textarea id={id} {...valueProp} {...controlProp} className='form-control'/> :
+                        <Input id={id} {...valueProp} {...controlProp} type={this.props.type as InputType}
                             autoComplete='off' list={this.props.list}/>}
                 </Col>
                 <Col sm={2}>

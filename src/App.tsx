@@ -124,8 +124,8 @@ export class App extends Component<{
 
         return this.state.isPrivileged && !this.state.isLoading ? [
             {id:'title', ok: !trip.isDeleted, message: 'This trip has been deleted'},
-            ...this.mandatory(trip,['title','grade','description','departure_point','cost']),
-            {id:'length', ok: trip.length >= 1 && trip.length <= 7, message:'Length should be between 1 and 7 days'},
+            ...this.mandatory(trip,['title','grade','description','departure_point',...(trip.isSocial ? [] : ['cost'])]),
+            {id:'length', ok: trip.length >= 1 && trip.length <= 14, message:'Length should be between 1 and 14 days'},
             {id:'openDate', ok: trip.openDate <= trip.closeDate, message:'Open date must be on or before Close date'},
             {id:'closeDate', ok: trip.openDate <= trip.closeDate, message:'Open date must be on or before Close date'},
             {id:'closeDate', ok: trip.closeDate <= trip.tripDate, message:'Close date must be on or before Trip date'},
@@ -195,13 +195,15 @@ export class App extends Component<{
                      <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
                      <div key='5'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>]
         } else if (this.state.path === "/calendar") {
-            return <Calendar app={this}/> 
+            return <Calendar key='calendar' app={this}/> 
         } else if (this.state.path === "/newtrip") {
-            return <Trip app={this} isNew={true}/> 
+            return <Trip key='newtrip' app={this} isNew={true} isNewSocial={true}/> 
+        } else if (this.state.path === "/newsocial") {
+            return <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> 
         } else if (this.state.path.startsWith("/trips/")) {
-            return <Trip app={this} isNew={false} href={BaseUrl + this.state.path}/> 
+            return <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> 
         } else {
-            return <TripsList app={this}/>
+            return <TripsList key='triplist' app={this}/>
         }
     }
 }

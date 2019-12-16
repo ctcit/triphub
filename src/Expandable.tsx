@@ -15,6 +15,7 @@ export class Expandable extends Component<{
     tablerow? : any
     expandClassName? : string
     ondemand?: ()=>any
+    showMenu?: boolean
 },{
     expanded : boolean
     showMenu : boolean
@@ -22,7 +23,7 @@ export class Expandable extends Component<{
 }> {
 constructor(props: any){
     super(props)
-    this.state = {expanded: props.expanded, showMenu: props.expanded}
+    this.state = {expanded: props.expanded, showMenu: props.expanded || props.showMenu}
 }
 
 public render(){

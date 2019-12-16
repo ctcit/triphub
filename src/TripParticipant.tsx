@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button, Form } from 'reactstrap';
 import { Component } from 'react';
-import { IMember,  IParticipant, IValidation } from './Interfaces';
+import { IMember,  IParticipant, IValidation, IParticipantsInfo } from './Interfaces';
 import { Spinner } from '.';
 import { Trip } from './Trip';
 import { App } from './App';
@@ -17,6 +17,7 @@ export class TripParticipant extends Component<{
         app: App
         canWaitList?: boolean
         canUnwaitList?: boolean
+        info: IParticipantsInfo
     },{
         id?: string,
         isSaveOp?: boolean,
@@ -116,13 +117,18 @@ export class TripParticipant extends Component<{
         const isMemberDiff = participant.memberId === this.props.app.getMe().id &&
                              participant.memberId && (participant.emergencyContactName !== member.emergencyContactName ||
                                                       participant.emergencyContactPhone !== member.emergencyContactPhone)
-        const readOnly = {readOnly: !isPrivileged}
+        const common = {readOnly: !isPrivileged, owner: this}
         const iconid = `${participant.id || 'new'}`
         const logisticInfo = (participant.logisticInfo || '').trim()
         const validation = this.app.validateParticipant(participant).filter(v => !v.ok).map(v => v.message)
+        const moveableIndex = this.props.info.moveable.map(m => m.id).indexOf(participant.id)
+        const canMoveUp = moveableIndex > 0
+        const canMoveDown = moveableIndex >= 0 && moveableIndex+1 < this.props.info.moveable.length
         const onDragStart = (ev:any) => ev.dataTransfer.setData('id', participant.id)
         const onDragOver = (ev:any) => ev.preventDefault()
         const onDrop = (ev:any) => this.props.owner.setPosition(parseInt(ev.dataTransfer.getData('id'),10), participant)
+        const onMoveUp = (ev:any) => this.props.owner.setPosition(participant.id,this.props.info.moveable[moveableIndex-1],true)
+        const onMoveDown = (ev:any) => this.props.owner.setPosition(participant.id,this.props.info.moveable[moveableIndex+1],true)
 
         const title = [
             participant.name === '' ? 'New Tramper' : participant.name,' ',
@@ -134,6 +140,14 @@ export class TripParticipant extends Component<{
             participant.memberId === 0 && participant.id !== -1 ? <ToolTipIcon key='nonmember' icon='id-badge' tooltip={`${participant.name} is not a member of the CTC`} id={iconid}/> : '',' ',
         ]
         const buttons = [
+            canMoveUp && isPrivileged ?
+            <Button key='moveup' onClick={onMoveUp}>
+                <span className='fa fa-angle-up'/>
+            </Button> : null,
+            canMoveDown && isPrivileged ?
+            <Button key='movedown' onClick={onMoveDown}>
+                <span className='fa fa-angle-down'/>
+            </Button> : null,
             !participant.isDeleted && participant.href && isPrivileged ? 
             <Button key='delete' onClick={this.setDeleted}>
                 <span className='fa fa-remove'/> 
@@ -161,20 +175,20 @@ export class TripParticipant extends Component<{
             <div onDrop={participant.isDeleted ? this.props.owner.onDropOnDeleted : onDrop} 
                  onDragOver={onDragOver} onDragStart={onDragStart} draggable={!participant.isLeader}>
                 <Expandable title={title} id={`${participant.id}`} level={4} expanded={participant.id === -1} 
-                            buttons={buttons.filter(b => b)}>
+                            buttons={buttons.filter(b => b)} showMenu={participant.showMenu}>
                     <Form key='form' className='indentedparticipants'>
-                        <Control owner={this} id='name' label='Name' type='text' list='memberlist' {...readOnly} 
+                        <Control id='name' label='Name' type='text' list='memberlist' {...common} 
                                                 affected={['email','phone','memberid','emergency_contact']}/>
-                        <Control owner={this} id='email' label='Email' type='text' {...readOnly}/>
-                        <Control owner={this} id='phone' label='Phone' type='text'  {...readOnly}/>
-                        <Control owner={this} id='emergencyContactName' label='Emergency Contact Name' type='text' {...readOnly}/>
-                        <Control owner={this} id='emergencyContactPhone' label='Emergency Contact Phone' type='text' {...readOnly}/>
-                        <Control owner={this} id='isLeader' label='Leader' type='checkbox' {...readOnly}/>
-                        <Control owner={this} id='isPlbProvider' label='Has PLB' type='checkbox' {...readOnly}/>
-                        <Control owner={this} id='isVehicleProvider' label='Has Car' type='checkbox' {...readOnly}/>
-                        <Control owner={this} id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} 
-                                                {...readOnly}/>
-                        <Control owner={this} id='logisticInfo' label='Logistic Information' type='textarea' {...readOnly}/>
+                        <Control id='email' label='Email' type='text' {...common}/>
+                        <Control id='phone' label='Phone' type='text'  {...common}/>
+                        <Control id='emergencyContactName' label='Emergency Contact Name' type='text' {...common}/>
+                        <Control id='emergencyContactPhone' label='Emergency Contact Phone' type='text' {...common}/>
+                        <Control id='isLeader' label='Leader' type='checkbox' {...common}/>
+                        <Control id='isPlbProvider' label='Has PLB' type='checkbox' {...common}/>
+                        <Control id='isVehicleProvider' label='Has Car' type='checkbox' {...common}/>
+                        <Control id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} 
+                                                {...common}/>
+                        <Control id='logisticInfo' label='Logistic Information' type='textarea' {...common}/>
                     </Form>
                 </Expandable>
             </div>

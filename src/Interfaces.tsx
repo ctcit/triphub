@@ -30,6 +30,7 @@ export interface ITrip {
     mapHtml : string
     isDeleted : boolean
     isApproved : boolean
+    isLimited : boolean
     maxParticipants : number
     leaders? : string
     tripState : TripState
@@ -53,6 +54,7 @@ export interface IParticipant {
     logisticInfo : string
     vehicleRego : string
     displayPriority? : number
+    showMenu? : boolean
 }
 
 export interface IMember {

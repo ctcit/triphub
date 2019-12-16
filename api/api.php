@@ -77,13 +77,6 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Single <a href='$basehref#members'>members</a>
             return GetMembers($con, AccessLevel($con,"Unsecured"), $id);
 
-        case "POST members/{memberId}":
-        case "PATCH members/{memberId}":
-            // DESCRIPTION Sets emergency contact details for member
-            // OUTPUT Single <a href='$basehref#members'>members</a>
-            // INPUTENTITY members
-            return ApiPatch($con,AccessLevel($con,"Secured"),$table,$id,$input);
-
         case "GET trips":
             // DESCRIPTION Gets all trips whose close date is after the current date less one week
             // OUTPUT Array of <a href='$basehref#trips'>trips</a> + tripState + leaders
@@ -94,7 +87,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT A <a href='$basehref#trips'>trip</a>
             // OUTPUT The new <a href='$basehref#trips'>trip</a>
             // INPUTENTITY trips
-            return ApiPost($con,AccessLevel($con,"Secured"),$table,$input);
+            return ApiPost($con,AccessLevel($con,"Secured"),$table,$input,0);
             
         case "GET trips/{tripId}":
             // DESCRIPTION Gets detail for a given trip
@@ -107,7 +100,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$basehref#trips'>trips</a>
             // OUTPUT <a href='$basehref#trips'>trips</a>
             // INPUTENTITY trips
-            return ApiPatch($con,AccessLevel($con,"Secured"),$table,$id,$input);
+            return ApiPatch($con,AccessLevel($con,"Secured"),$table,$id,$input,$id);
 
         case "GET trips/{tripId}/participants":
             // DESCRIPTION Get participants for a given trip
@@ -127,7 +120,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT <a href='$basehref#participants'>participants</a> + href
             // INPUTENTITY participants
             $input["tripId"] = $id;
-            return ApiPost($con,AccessLevel($con,"Secured"),$subTable,$input);
+            return ApiPost($con,AccessLevel($con,"Secured"),$subTable,$input,$id);
 
         case "POST trips/{tripId}/edit":
             // DESCRIPTION Creates a new edit record for the given trip
@@ -136,7 +129,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUTENTITY edit
             $input["tripId"] = $id;
             $input["userId"] = AccessLevel($con,"Unsecured");
-            ApiPost($con,$input["userId"],$subTable,$input);
+            ApiPost($con,$input["userId"],$subTable,$input,$id);
             DeleteTripEdits($con);
             return SqlResultArray($con,"SELECT * from $subTable WHERE tripId = $id ORDER BY id DESC");
 
@@ -165,7 +158,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT A <a href='$basehref#participants'>participant</a>
             // OUTPUT The updated <a href='$basehref#participants'>participant</a>
             // INPUTENTITY participants
-            return ApiPatch($con,AccessLevel($con,"Secured"),$subTable,$subId,$input);
+            return ApiPatch($con,AccessLevel($con,"Secured"),$subTable,$subId,$input,$id);
         
         case "POST trips/{tripId}/edit/{editId}":
         case "PATCH trips/{tripId}/edit/{editId}":
@@ -174,9 +167,18 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Array of <a href='$basehref#edit'>edit</a>
             // OUTPUT Returns all the current edits associated with the same trip
             // INPUTENTITY edit
-            ApiPatch($con,AccessLevel($con,"Unsecured"),$subTable,$subId,$input);
+            ApiPatch($con,AccessLevel($con,"Unsecured"),$subTable,$subId,$input,$id);
             DeleteTripEdits($con);
             return SqlResultArray($con,"SELECT * from $subTable WHERE tripId = $id ORDER BY id DESC");
+
+        case "POST trips/{tripId}/members/{memberId}":
+        case "PATCH trips/{tripId}/members/{memberId}":
+            // DESCRIPTION Sets emergency contact details for member
+            // OUTPUT Single <a href='$basehref#members'>member</a>
+            // INPUTENTITY members
+            $userId = AccessLevel($con,"Secured");
+            ApiPatch($con,$userId,$subTable,$subId,$input,$id);
+            return GetMembers($con, $userId, $subId);
 
         case "DELETE trips/{tripId}/edit/{editId}":
             // DESCRIPTION Deletes the given edit record
@@ -264,17 +266,25 @@ function LogMessage($con,$level,$message,$log=true){
     return $message;
 }
 
-function History($con,$userId,$action,$table,$before,$after)
+function History($con,$userId,$action,$table,$before,$after,$tripId)
 {
     switch ($table)
     {
         case ConfigServer::tripsTable:
-            $tripId = $after["id"];
             $participantId = "null";
             break;
         case ConfigServer::participantsTable:
-            $tripId = $after["tripId"];
             $participantId = $after["id"];
+            break;
+        case ConfigServer::membersTable:
+            mail(ConfigServer::adminUpdateEmail, 
+                 "Updated emergency contacts for $after[firstName] $after[lastName]",
+                 "From <b>$before[emergencyContactName]</b>, phone <b>$before[emergencyContactPhone]</b><br/>".
+                 "To <b>$after[emergencyContactName]</b>, phone <b>$after[emergencyContactPhone]</b>",
+                 "MIME-Version: 1.0\r\n".
+                 "Content-type: text/html;charset=UTF-8\r\n".
+                 "From: <noreply@ctc.org.nz>\r\n");
+            $participantId = "null";
             break;
         default:
             return;
@@ -314,22 +324,22 @@ function History($con,$userId,$action,$table,$before,$after)
     }
 }
 
-function ApiPatch($con,$userId,$table,$id,$input){
+function ApiPatch($con,$userId,$table,$id,$input,$tripId){
     $set = SqlSetFromInput($con, $input, $table);
     $sql = "UPDATE $table SET $set WHERE id=$id";
     $before = SqlResultArray($con,"SELECT * FROM $table WHERE id = $id");
     SqlExecOrDie($con,$sql);
     $after = SqlResultArray($con,"SELECT * FROM $table WHERE id = $id");
-    History($con,$userId,"update",$table,$before[0],$after[0]);
+    History($con,$userId,"update",$table,$before[0],$after[0],$tripId);
     return $after;
 }
 
-function ApiPost($con,$userId,$table,$input){
+function ApiPost($con,$userId,$table,$input,$tripId){
     $set = SqlSetFromInput($con, $input, $table);
     $sql = "INSERT $table SET $set";
     $id = SqlExecOrDie($con,$sql,true);
     $after = SqlResultArray($con,"SELECT * FROM $table WHERE id = $id");
-    History($con,$userId,"create",$table,null,$after[0]);
+    History($con,$userId,"create",$table,null,$after[0],$tripId || $id);
     return $after;
 }
 

@@ -19,6 +19,7 @@ class ConfigServer
 	const editorRoles         = "'Webmaster','Overnight Trip Organiser','Day Trip Organiser','Club Captain'";
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";
+	const newslettersTable    = "newsletter.newsletters";
 	const rolesTable          = "ctc.roles";
 	const memberrolesTable    = "ctc.members_roles";
 	const tripsTable          = "triphub.trips";

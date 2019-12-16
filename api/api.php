@@ -5,7 +5,7 @@
     require('config.php');
     require('trips.php');
     require('members.php');
-    require('newsletter.php');
+    require('newsletters.php');
 
     // Extract data from parameters 
     $method = $_SERVER['REQUEST_METHOD'];
@@ -90,12 +90,12 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Array of <a href='$baseHref#trips'>trips</a> + tripState + leaders
             return GetTrips($con, ApiUserId($con,false));
         
-        case "POST trips":
-            // DESCRIPTION Creates a new trip
-            // INPUT A <a href='$baseHref#trips'>trip</a>
-            // OUTPUT The new <a href='$baseHref#trips'>trip</a>
-            // INPUTENTITY trips
-            return ApiPost($con,ApiUserId($con),$table,$input);
+        case "post trips":
+            // description creates a new trip
+            // input a <a href='$basehref#trips'>trip</a>
+            // output the new <a href='$basehref#trips'>trip</a>
+            // inputentity trips
+            return ApiPost($con,apiuserid($con),$table,$input);
             
         case "GET trips/{tripId}":
             // DESCRIPTION Gets detail for a given trip
@@ -213,12 +213,20 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // DESCRIPTION Gets newsletter
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
             return GetNewsletters($con, ApiUserId($con), $id);
+        
+        case "POST newsletters":
+            // DESCRIPTION Creates a new newsletter
+            // INPUT A <a href='$baseHref#newsletters'>newsletter</a>
+            // OUTPUT The new <a href='$baseHref#tripsnewsletters'>newsletter</a>
+            // INPUTENTITY newsletters
+            return ApiPost($con,ApiUserId($con),$table,$input);
 
-        case "POST members/{memberId}":
-        case "PATCH members/{memberId}":
-            // DESCRIPTION Sets emergency contact details for member
-            // OUTPUT Single <a href='$baseHref#members'>members</a>
-            // INPUTENTITY members
+        case "POST newsletters/{newsletterId}":
+        case "PATCH newsletters/{newsletterId}":
+            // DESCRIPTION Updates detail for a given newsletter
+            // INPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // INPUTENTITY newsletters
             return ApiPatch($con,ApiUserId($con),$table,$id,$input);
 
         case "POST prettyprintjson":

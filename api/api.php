@@ -31,7 +31,9 @@
         $baseHref = "https://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]";
         $route = $method.($entity ? " $entity" : "").($id ? '/{'.rtrim($entity,'s').'Id}' : '')
                         .($subEntity ? "/$subEntity" : "").($subId ? '/{'.rtrim($subEntity,'s').'Id}' : '');
-        $result = ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,$input);
+        $queryString = filter_input(INPUT_SERVER, "QUERY_STRING", FILTER_SANITIZE_STRING);
+        parse_str(trim($_SERVER['QUERY_STRING']), $query);
+        $result = ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,$input,$query);
         
         if (gettype($result) == 'string') {
             header('Content-Type: text/html');
@@ -51,7 +53,7 @@
 
     mysqli_close($con);
 
-function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,$input){
+function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,$input,$query){
   
 	$table = TableFromEntity($entity);		
     $subTable = TableFromEntity($subEntity);		
@@ -205,9 +207,9 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             return ImportLegacyTrips($con, $input['json'] == 'TRUNCATE');
         
         case "GET newsletters":
-            // DESCRIPTION Gets newsletters
+            // DESCRIPTION Gets newsletters. Optional ?since=YYYY-MM-DD
             // OUTPUT Array of <a href='$baseHref#newsletters'>newsletters</a>
-            return GetNewsletters($con, ApiUserId($con));
+            return GetNewsletters($con, ApiUserId($con), 0, $query);
 
         case "GET newsletters/{newsletterId}":
             // DESCRIPTION Gets newsletter
@@ -431,7 +433,7 @@ function ApiHelp($con,$baseHref) {
 
     foreach (array("config","members") as $entity) {
         $table = $constants[$entity."Table"];
-        $data = ApiProcess($con,$baseHref,"GET","GET $entity",$entity,null,null,null,null)[0];
+        $data = ApiProcess($con,$baseHref,"GET","GET $entity",$entity,null,null,null,null,null)[0];
         $cols = array();
 
         foreach ($data as $col => $val) {

@@ -1,8 +1,21 @@
 <?php
 
-function GetNewsletters($con, $userid, $id = 0) {
-	$newslettersTable  = ConfigServer::newslettersTable;
-	$where			   = $id === 0 ? "" : "WHERE id = $id";
+function GetNewsletters($con, $userid, $id = 0, $query = null) {
+	$since = "";
+	if (array_key_exists("since", $query))
+	{
+		$since = $query["since"];
+	}
+	$newslettersTable = ConfigServer::newslettersTable;
+	$where = "";
+	if ($id != 0)
+	{
+		$where = "WHERE id = $id";
+	}
+	else if ($since != "")
+	{
+		$where = "WHERE `date` >= '$since'";
+	}
 
 	return SqlResultArray($con,
 		"SELECT * 

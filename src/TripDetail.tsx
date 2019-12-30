@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Button, Form, FormGroup, Label, Col  } from 'reactstrap';
+import { Form, FormGroup, Label, Col  } from 'reactstrap';
 import { App } from './App';
 import { Control } from './Control';
 import './index.css';
 import './print.css';
 import { Trip } from './Trip';
-import { IValidation, IMap } from './Interfaces';
-import { MapGrid } from './MapGrid';
+import { IValidation } from './Interfaces';
+import { MapControl } from './MapControl';
 
 export class TripDetail extends Component<{
         owner: Trip,
@@ -44,9 +44,10 @@ export class TripDetail extends Component<{
 
     public render(){
         const trip = this.props.owner.state.trip
-        const common = {readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), owner:this}
-        const toggleMaps = () => this.setState({editMaps:!this.state.editMaps})
-
+        const common = {
+            readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
+            owner:this
+        }
         return [
             <Form key='form'>
                 <Control id='title' label='Title' type='text' {...common}/>
@@ -68,19 +69,11 @@ export class TripDetail extends Component<{
                 <Control id='description' label='Description' type='textarea'  {...common}/>
                 <Control id='logisticnfo' label='Logistic Information' type='textarea'  {...common}/>
                 <FormGroup row={true} hidden={trip.isSocial}>
-                    <Label sm={2}>Maps</Label>
-                    <Col sm={1}>
-                        <Button hidden={common.readOnly} onClick={toggleMaps}>{this.state.editMaps ? 'Hide' : 'Edit'}</Button>
+                    <Label sm={2}>Maps/Route</Label>
+                    <Col sm={10}>
+                        <MapControl app={this.props.app} readOnly={common.readOnly}/>
                     </Col>
-                    <Col sm={2}>{trip.map1}</Col>
-                    <Col sm={2}>{trip.map2}</Col>
-                    <Col sm={2}>{trip.map3}</Col>
-                    <Col sm={2}>{this.props.owner.getRouteSummary()}</Col>
                 </FormGroup>
-                <Control id='map1' label='Map 1' type='text' list='mapslist' {...common} hidden={!this.state.editMaps}/>
-                <Control id='map2' label='Map 2' type='text' list='mapslist' {...common} hidden={!this.state.editMaps}/>
-                <Control id='map3' label='Map 3' type='text' list='mapslist' {...common} hidden={!this.state.editMaps}/>
-                { this.state.editMaps ? <MapGrid owner={this.props.owner}/> : '' }
             </Form>,
             <datalist key='grade_list' id='grade_list'>
                 <option value='Easy' />
@@ -91,10 +84,6 @@ export class TripDetail extends Component<{
             <datalist key='departure_point_list' id='departure_point_list'>
                 <option value='Z Papanui' />
                 <option value='Caltex Russley Road' />
-            </datalist>,
-            <datalist key='mapslist' id='mapslist'>
-                {this.props.app.getMaps()
-                     .map((m:IMap) => <option key={'map'+m.sheetCode} value={m.sheetCode + ' ' + m.name} />)}
             </datalist>
     ]
     }

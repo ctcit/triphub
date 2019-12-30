@@ -163,3 +163,157 @@ table.changehistory{
 .calendar td.today {
   background-color: pink
 }
+
+/* ---------------------------- */
+/* leaflet map */
+/* ---------------------------- */
+
+.leaflet-container {
+  margin-left: 0%;
+  margin-right: 0%;
+  margin-top: 0%;
+  margin-bottom: 0%;
+  border-width: 1px;
+  border-color: grey;
+  border-style: solid;
+}
+.sheet-div-icon { text-align: center; }
+.sheet-code { font-size: 14pt; font-weight: bold; }
+.sheet-name { font-size: 11pt; font-weight: bold }
+
+/* ---------------------------- */
+/* resizable leaflet map */
+/* ---------------------------- */
+
+.react-resizable {
+  position: relative;
+}
+.react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-repeat: no-repeat;
+  background-origin: content-box;
+  box-sizing: border-box;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2IDYiIHN0eWxlPSJiYWNrZ3JvdW5kLWNvbG9yOiNmZmZmZmYwMCIgeD0iMHB4IiB5PSIwcHgiIHdpZHRoPSI2cHgiIGhlaWdodD0iNnB4Ij48ZyBvcGFjaXR5PSIwLjMwMiI+PHBhdGggZD0iTSA2IDYgTCAwIDYgTCAwIDQuMiBMIDQgNC4yIEwgNC4yIDQuMiBMIDQuMiAwIEwgNiAwIEwgNiA2IEwgNiA2IFoiIGZpbGw9IiMwMDAwMDAiLz48L2c+PC9zdmc+');
+  background-position: bottom right;
+  padding: 0 3px 3px 0;
+  z-index: 1000
+}
+.react-resizable-handle-sw {
+  bottom: 0;
+  left: 0;
+  cursor: sw-resize;
+  transform: rotate(90deg);
+}
+.react-resizable-handle-se {
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+.react-resizable-handle-nw {
+  top: 0;
+  left: 0;
+  cursor: nw-resize;
+  transform: rotate(180deg);
+}
+.react-resizable-handle-ne {
+  top: 0;
+  right: 0;
+  cursor: ne-resize;
+  transform: rotate(270deg);
+}
+.react-resizable-handle-w,
+.react-resizable-handle-e {
+  top: 50%;
+  margin-top: -10px;
+  cursor: ew-resize;
+}
+.react-resizable-handle-w {
+  left: 0;
+  transform: rotate(135deg);
+}
+.react-resizable-handle-e {
+  right: 0;
+  transform: rotate(315deg);
+}
+.react-resizable-handle-n,
+.react-resizable-handle-s {
+  left: 50%;
+  margin-left: -10px;
+  cursor: ns-resize;
+}
+.react-resizable-handle-n {
+  top: 0;
+  transform: rotate(225deg);
+}
+.react-resizable-handle-s {
+  bottom: 0;
+  transform: rotate(45deg);
+}
+
+/* ---------------------------- */
+/* react tags */
+/* ---------------------------- */
+
+div.ReactTags__tags {
+  position: relative;
+}
+/* Styles for the input */
+div.ReactTags__tagInput {
+  width: 320px;
+  border-radius: 2px;
+  display: inline-block;
+}
+div.ReactTags__tagInput input.ReactTags__tagInputField,
+div.ReactTags__tagInput input.ReactTags__tagInputField:focus {
+  height: 31px;
+  margin: 0;
+  font-size: 12px;
+  width: 100%;
+  border: 1px solid #eee;
+  padding: 0 4px;
+}
+/* Styles for selected tags */
+div.ReactTags__selected span.ReactTags__tag {
+  border: 1px solid #ddd;
+  background: #6899e4;
+  color: #ffffff;
+  font-size: 12px;
+  display: inline-block;
+  padding: 5px;
+  margin: 0 5px;
+  cursor: move;
+  border-radius: 2px;
+}
+div.ReactTags__selected a.ReactTags__remove {
+  color: #aaa;
+  margin-left: 5px;
+  cursor: pointer;
+}
+/* Styles for suggestions */
+div.ReactTags__suggestions {
+  position: absolute;
+  z-index: 2000
+}
+div.ReactTags__suggestions ul {
+  list-style-type: none;
+  box-shadow: .05em .01em .5em rgba(0,0,0,.2);
+  background: white;
+  width: 200px;
+}
+div.ReactTags__suggestions li {
+  border-bottom: 1px solid #ddd;
+  padding: 5px 10px;
+  margin: 0;
+}
+div.ReactTags__suggestions li mark {
+  text-decoration: underline;
+  background: none;
+  font-weight: 600;
+}
+div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
+  background: #b7cfe0;
+  cursor: pointer;
+}
+

@@ -98,3 +98,13 @@ export interface IParticipantsInfo {
     deleted : IParticipant[]       
 }
 
+export interface INewsletter {
+    id : number 
+    href? : string
+    date : Date
+    issueDate : Date
+    nextdeadline : Date
+    volume : number
+    number : number
+    isCurrent : boolean
+}

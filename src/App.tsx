@@ -181,8 +181,8 @@ export class App extends Component<{
             return <Calendar app={this}/> 
         } else if (this.state.path === "/newtrip") {
             return <Trip app={this} isNew={true}/> 
-        } else if (this.state.path === "/newsletter") {
-            return <Newsletter app={this}/> 
+        } else if (this.state.path.startsWith("/newsletters/")) {
+            return <Newsletter app={this} href={BaseUrl + this.state.path}/> 
         } else if (this.state.path.startsWith("/trips/")) {
             return <Trip app={this} isNew={false} href={BaseUrl + this.state.path}/> 
         } else {

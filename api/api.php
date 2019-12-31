@@ -92,7 +92,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Array of <a href='$baseHref#trips'>trips</a> + tripState + leaders
             return GetTrips($con, ApiUserId($con,false));
         
-        case "post trips":
+        case "POST trips":
             // description creates a new trip
             // input a <a href='$basehref#trips'>trip</a>
             // output the new <a href='$basehref#trips'>trip</a>
@@ -373,9 +373,11 @@ function AddHRef(&$row,$baseHref,$entity,$subEntity) {
     if (!is_array($row)) return;
     if ($row["memberId"])                             $row["memberHref"]       = "$baseHref/members/$row[memberId]";
     if ($row["userId"])                               $row["userHref"]         = "$baseHref/members/$row[userId]";
+    if ($row["newsletterId"])                         $row["newsletterHref"]   = "$baseHref/newsletters/$row[newstletterId]";
     if ($row["tripId"])                               $row["tripHref"]         = "$baseHref/trips/$row[tripId]";
     if ($row["participantId"])                        $row["participantHref"]  = "$baseHref/trips/$row[tripId]/participants/$row[participantId]";
     if ("$entity/$subEntity" == "members/")           $row["href"]             = "$baseHref/$entity/$row[id]";
+    if ("$entity/$subEntity" == "newsletters/")       $row["href"]             = "$baseHref/$entity/$row[id]";
     if ("$entity/$subEntity" == "trips/")             $row["href"]             = "$baseHref/$entity/$row[id]";
     if ("$entity/$subEntity" == "trips/")             $row["participantsHref"] = "$baseHref/trips/$row[id]/participants";
     if ("$entity/$subEntity" == "trips/")             $row["historyHref"]      = "$baseHref/trips/$row[id]/history";
@@ -404,6 +406,7 @@ function IsReadOnly($table, $col) {
     else if ($table === ConfigServer::tripsTable || 
              $table === ConfigServer::participantsTable ||
              $table === ConfigServer::historyTable || 
+             $table === ConfigServer::newslettersTable || 
              $table === ConfigServer::editTable)
         return $col === 'id';
     else

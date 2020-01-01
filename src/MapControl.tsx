@@ -2,13 +2,12 @@ import * as L from 'leaflet';
 import * as React from 'react';
 import { Component } from 'react';
 import { App } from './App';
-import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row,  } from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText } from 'reactstrap';
 import { MapEditor } from './MapEditor';
 import FormGroup from 'reactstrap/lib/FormGroup';
 import Button from 'reactstrap/lib/Button';
 import { IMap } from './Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
-import Label from 'reactstrap/lib/Label';
 
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 
@@ -84,10 +83,13 @@ export class MapControl extends Component<{
                 if (mapVisible) {
                     this.setUpMap();
                 }
+                this.unshowSelectedMaps();
                 this.mapSheets = this.tempMapSheets;
                 this.showSelectedMaps();
     
                 this.setRoutesFromJson(this.tempRoutesAsJson);
+
+                this.fitBounds();
     
                 this.setState({ 
                     editing: false,
@@ -106,20 +108,6 @@ export class MapControl extends Component<{
         return (
             <FormGroup>
                 <Row>
-                    <Col sm={4}>
-                    {
-                        this.mapSheets.length > 0 &&
-                            <ListGroup>
-                                { this.mapSheets.map((mapSheet: string) => 
-                                    <ListGroupItem sm={4} key={mapSheet} color="primary">{this.mapSheetWithName(mapSheet)}</ListGroupItem>
-                                )}
-                            </ListGroup>
-                    }
-                    {
-                        this.mapSheets.length === 0 &&
-                            <Label>No maps selected</Label>
-                    }
-                    </Col>
                     <Col sm={'auto'}>
                     { this.state.mapVisible &&
                         <ResizableBox width={this.initialWidth} height={this.initialHeight} minConstraints={[200, 200]} onResize={onResize}>
@@ -127,14 +115,28 @@ export class MapControl extends Component<{
                         </ResizableBox>
                     }
                     { !this.state.mapVisible &&
-                            <Label>No route specified</Label>
+                            <FormText color="muted">No routes specified</FormText>
+                    }
+                    </Col>
+                    <Col sm={4}>
+                    {
+                        this.mapSheets.length > 0 &&
+                            <ListGroup>
+                                { this.mapSheets.map((mapSheet: string) => 
+                                    <ListGroupItem sm={3} key={mapSheet} color="primary">{this.mapSheetWithName(mapSheet)}</ListGroupItem>
+                                )}
+                            </ListGroup>
+                    }
+                    {
+                        this.mapSheets.length === 0 &&
+                            <FormText color="muted">No maps selected</FormText>
                     }
                     </Col>
                     <Col sm={2}>
                         <FormGroup row={true} key='mapeditor'>
                             <Button onClick={onEdit} hidden={this.props.readOnly}>Edit</Button>
                             <Modal isOpen={this.state.editing} toggle={onSave} size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}}>
-                                <ModalHeader toggle={onSave}>Maps and Route</ModalHeader>
+                                <ModalHeader toggle={onSave}>Maps and Routes</ModalHeader>
                                 <ModalBody>
                                     <MapEditor app={this.props.app} nz50maps={this.nz50maps} mapSheets={this.mapSheets} routesAsJson={this.getRoutesAsJson()}
                                         onMapSheetsChanged={onMapSheetsChanged} onRoutesChanged={onRoutesChanged}/>
@@ -146,7 +148,6 @@ export class MapControl extends Component<{
                             </Modal>
                         </FormGroup>
                     </Col>
-  
                 </Row>
             </FormGroup>
         );
@@ -181,9 +182,6 @@ export class MapControl extends Component<{
 
             this.nz50LayerGroup = L.layerGroup()
                 .addTo(this.minimap);
-
-            // {this.props.app.getMaps()
-            //     .map((m: IMap) => <option key={'map' + m.sheetCode} value={m.sheetCode + ' ' + m.name} />)}
 
             this.nz50maps.forEach(nz50map => {
                 // the map sheet polygon
@@ -256,20 +254,48 @@ export class MapControl extends Component<{
         return this.routeColours[this.routes.length % this.routeColours.length];
     }
 
+    private fitBounds(): void {
+        let bounds: L.LatLngBounds | undefined;
+        if (this.routes.length > 0) {
+            this.routes.forEach((route: L.Polyline) => {
+                if (!bounds) {
+                    bounds = route.getBounds();
+                } else {
+                    bounds.extend(route.getBounds());
+                }
+            })
+        } else {
+            if (this.mapSheets.length > 0) {
+                this.mapSheets.forEach((mapSheet: string) => {
+                    if (this.nz50MapPolygonsBySheet[mapSheet]) {
+                        if (!bounds) {
+                            bounds = this.nz50MapPolygonsBySheet[mapSheet].getBounds();
+                        } else {
+                            bounds.extend(this.nz50MapPolygonsBySheet[mapSheet].getBounds());
+                        }
+                    }
+                });
+            }
+        }
+        if (bounds) {
+            this.minimap.fitBounds(bounds);
+        }
+    }
+
     // -------------------------------------------------------
     // Selected Maps
     // -------------------------------------------------------
 
-    private showSelectedMaps(): void {
-        const selectedMapSheets = this.mapSheets;
+    private unshowSelectedMaps(): void {
         this.mapSheets.forEach((mapSheet: string) => {
             this.unhighlightMapSheet(mapSheet);
         });
-        this.mapSheets = [];
-        selectedMapSheets.forEach((selectedMapSheet: string) => {
+    }
+
+    private showSelectedMaps(): void {
+        this.mapSheets.forEach((selectedMapSheet: string) => {
             this.highlightMapSheet(selectedMapSheet);
         });
-        this.mapSheets = this.mapSheets.concat(selectedMapSheets);
     }
 
     private highlightMapSheet(mapSheet: string): void {

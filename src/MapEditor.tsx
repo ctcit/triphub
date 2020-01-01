@@ -6,7 +6,7 @@ import { Component } from 'react';
 import { App } from './App';
 import FormGroup from 'reactstrap/lib/FormGroup';
 import Col from 'reactstrap/lib/Col';
-import { Button, TabPane, TabContent, Nav, NavItem, NavLink, Tooltip, CustomInput, ButtonGroup, Row } from 'reactstrap';
+import { Button, TabPane, TabContent, Nav, NavItem, NavLink, Tooltip, CustomInput, ButtonGroup, Row, FormText } from 'reactstrap';
 import { IMap } from './Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdGridOff} from 'react-icons/md';
@@ -135,13 +135,14 @@ export class MapEditor extends Component<{
         });
 
 
-        this.resizeMap(300, 300);
+        this.resizeMap(500, 500);
 
         this.setRoutesFromJson(this.props.routesAsJson);
         this.setState({ routes: this.routes });
         this.saveRoute(); 
 
         this.showInitiallySelectedMaps();
+        this.fitBounds();
     }
 
     public render(){
@@ -232,7 +233,8 @@ export class MapEditor extends Component<{
                 </Nav>
                 <TabContent activeTab={this.state.activeTab}>
                     <TabPane tabId="SelectMaps">
-                        <Row>
+                        <Row className="mb-2 ml-1"><FormText color='muted'>Click on map sheet to select; click again to unselect</FormText></Row>
+                        <Row className="mb-2">
                             <Col sm={2}>
                                 <ButtonGroup>
                                     <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='primary' 
@@ -254,12 +256,13 @@ export class MapEditor extends Component<{
                                     handleAddition={handleAddition}
                                     handleDrag={handleDrag}
                                     delimiters={delimiters}
-                                    placeholder={'Start typing or click on the map to add a new map sheet'} />
+                                    placeholder={'Start typing to add a map sheet by name'} />
                             </Col>
                         </Row>
                     </TabPane>
                     <TabPane tabId="EditRoute">
-                        <Row>
+                        <Row className="mb-2 ml-1"><FormText color='muted'>Click points on map to draw route, or import route from GPX file</FormText></Row>
+                        <Row className="mb-2">
                             <Col sm={4}>
                                 <ButtonGroup>
                                     <ButtonWithTooltip id="AddRouteButton" color='primary' 
@@ -295,7 +298,7 @@ export class MapEditor extends Component<{
                         </Row>
                 </TabPane>
                 </TabContent>
-                <ResizableBox key="resizableMap" className="resizableMap" width={this.state.maxMapWidth} height={300} axis={'y'} minConstraints={[300, 300]} maxConstraints={[this.state.maxMapWidth, 2000]} onResize={onResizeMap}>
+                <ResizableBox key="resizableMap" className="resizableMap" width={this.state.maxMapWidth} height={500} axis={'y'} minConstraints={[300, 300]} maxConstraints={[this.state.maxMapWidth, 2000]} onResize={onResizeMap}>
                     <div id="map"/>
                 </ResizableBox>
             </FormGroup>
@@ -410,7 +413,6 @@ export class MapEditor extends Component<{
                 }).on('addline', (event: any) => {
                     gpxLatLngs = gpxLatLngs.concat((event.line as L.Polyline).getLatLngs() as L.LatLng[]);
                 }).on('loaded', (event: Event) => {
-                    this.map.fitBounds((event.target as unknown as L.Polyline).getBounds());
                     const generalizedLatLngs = this.generalize(gpxLatLngs);
                     if (generalizedLatLngs.length > 0) {
                         const route = L.polyline(generalizedLatLngs, {color: this.getRouteColor()}).addTo(this.map);
@@ -418,6 +420,7 @@ export class MapEditor extends Component<{
                         this.saveRoute();
                         this.setState({ routes: this.routes });
                     }
+                    this.fitBounds();
                     this.setState({invalidGpxFile: false });
                     resolve();
                 }).on('error', (event: any) => {
@@ -500,6 +503,34 @@ export class MapEditor extends Component<{
 
     private getRouteColor() {
         return this.routeColours[this.routes.length % this.routeColours.length];
+    }
+
+    private fitBounds(): void {
+        let bounds: L.LatLngBounds | undefined;
+        if (this.routes.length > 0) {
+            this.routes.forEach((route: L.Polyline) => {
+                if (!bounds) {
+                    bounds = route.getBounds();
+                } else {
+                    bounds.extend(route.getBounds());
+                }
+            })
+        } else {
+            if (this.mapSheets.length > 0) {
+                this.mapSheets.forEach((mapSheet: string) => {
+                    if (this.nz50MapPolygonsBySheet[mapSheet]) {
+                        if (!bounds) {
+                            bounds = this.nz50MapPolygonsBySheet[mapSheet].getBounds();
+                        } else {
+                            bounds.extend(this.nz50MapPolygonsBySheet[mapSheet].getBounds());
+                        }
+                    }
+                });
+            }
+        }
+        if (bounds) {
+            this.map.fitBounds(bounds);
+        }
     }
 
     // -------------------------------------------------------

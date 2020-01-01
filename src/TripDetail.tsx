@@ -69,7 +69,7 @@ export class TripDetail extends Component<{
                 <Control id='description' label='Description' type='textarea'  {...common}/>
                 <Control id='logisticnfo' label='Logistic Information' type='textarea'  {...common}/>
                 <FormGroup row={true} hidden={trip.isSocial}>
-                    <Label sm={2}>Maps/Route</Label>
+                    <Label sm={2}>Maps/Routes</Label>
                     <Col sm={10}>
                         <MapControl app={this.props.app} readOnly={common.readOnly}/>
                     </Col>

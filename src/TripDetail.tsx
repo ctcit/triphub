@@ -2,11 +2,11 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Form, FormGroup, Label, Col  } from 'reactstrap';
 import { App } from './App';
-import { Control } from './Control';
+import { Control, IControlOwner } from './Control';
 import './index.css';
 import './print.css';
 import { Trip } from './Trip';
-import { IValidation } from './Interfaces';
+import { IValidation, IMap } from './Interfaces';
 import { MapControl } from './MapControl';
 
 export class TripDetail extends Component<{
@@ -15,10 +15,12 @@ export class TripDetail extends Component<{
     },{
         editMap: boolean
         editMaps: boolean
-    }> {
+    }> implements IControlOwner {
 
       public href?: string
       public app: App
+
+      private nz50MapsBySheet: { [mapSheet: string] : IMap } = {};
 
       constructor(props: any){
         super(props)
@@ -28,6 +30,14 @@ export class TripDetail extends Component<{
         this.get = this.get.bind(this)
         this.set = this.set.bind(this)
         this.validate = this.validate.bind(this)
+
+        // BJ TODO: move to App
+        const nz50Maps: IMap[] = this.props.app.getMaps();
+        this.nz50MapsBySheet = {};
+        nz50Maps.forEach((nz50Map: IMap) => {
+            this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
+        });
+
     }
 
     public validate() : IValidation[] {
@@ -48,6 +58,40 @@ export class TripDetail extends Component<{
             readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
             owner:this
         }
+
+        // BJ TODO: remove 3 map limit
+        const getMapSheets = (): string[] => {
+            const mapSheets: string[] = [];
+            ["map1", "map2", "map3"].forEach((mapFieldId: string) => {
+                const mapSheet = this.get(mapFieldId);
+                if (mapSheet && mapSheet !== "") {
+                    const parts = mapSheet.split(" ");
+                    if (parts.length > 0 && this.nz50MapsBySheet[parts[0]]) {
+                        mapSheets.push(parts[0]);
+                    }
+                }
+            });
+            return mapSheets;
+        }
+
+        const getRoutesAsJson = (): string => {
+            return this.get("mapRoute");
+        }
+
+        // BJ TODO: remove 3 map limit
+        const saveMapChanges = (mapSheets: string[] | undefined, routesAsJson: string | undefined): Promise<void> => {
+            const body: any = {};
+            if (mapSheets) {
+                body.map1 = mapSheets.length > 0 ? mapSheets[0] + " " +  this.nz50MapsBySheet[mapSheets[0]] : "";
+                body.map2 = mapSheets.length > 1 ? mapSheets[1] + " " +  this.nz50MapsBySheet[mapSheets[1]] : "";
+                body.map3 = mapSheets.length > 2 ? mapSheets[2] + " " +  this.nz50MapsBySheet[mapSheets[2]] : "";
+            }
+            if (routesAsJson) {
+                body.mapRoute = routesAsJson;
+            }
+            return this.saveTrip(body);
+        }
+
         return [
             <Form key='form'>
                 <Control id='title' label='Title' type='text' {...common}/>
@@ -71,7 +115,7 @@ export class TripDetail extends Component<{
                 <FormGroup row={true} hidden={trip.isSocial}>
                     <Label sm={2}>Maps/Routes</Label>
                     <Col sm={10}>
-                        <MapControl app={this.props.app} readOnly={common.readOnly}/>
+                        <MapControl nz50MapsBySheet={this.nz50MapsBySheet} readOnly={common.readOnly} mapSheets={getMapSheets()} routesAsJson={getRoutesAsJson()} saveMapChanges={saveMapChanges}/>
                     </Col>
                 </FormGroup>
             </Form>,
@@ -87,4 +131,9 @@ export class TripDetail extends Component<{
             </datalist>
     ]
     }
+
+    public saveTrip(body: any): Promise<void> {
+        return this.app.apiCall('POST', this.href as string, body, true);
+    }
+
 }

@@ -3,7 +3,6 @@ import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
 import * as React from 'react';
 import { Component } from 'react';
-import { App } from './App';
 import FormGroup from 'reactstrap/lib/FormGroup';
 import Col from 'reactstrap/lib/Col';
 import { Button, TabPane, TabContent, Nav, NavItem, NavLink, Tooltip, CustomInput, ButtonGroup, Row, FormText } from 'reactstrap';
@@ -25,8 +24,7 @@ const KeyCodes = {
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
 export class MapEditor extends Component<{
-    app: App,
-    nz50maps: IMap[],
+    nz50MapsBySheet: { [mapSheet: string] : IMap },
     mapSheets: string[],
     routesAsJson: string,
     onMapSheetsChanged: (mapSheets: string[]) => void,
@@ -72,8 +70,9 @@ export class MapEditor extends Component<{
             invalidGpxFile: false,
 
             tags: [],
-            suggestions: this.props.nz50maps.map((nz50map: IMap) => {
-                return { id: nz50map.sheetCode, text: nz50map.sheetCode + ' ' + nz50map.name };
+            suggestions: Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
+                const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+                return { id: nz50Map.sheetCode, text: nz50Map.sheetCode + ' ' + nz50Map.name };
             }),
 
             maxMapWidth: 1200
@@ -111,13 +110,15 @@ export class MapEditor extends Component<{
         this.nz50LayerGroup = L.layerGroup()
             .addTo(this.map);
 
-        this.props.nz50maps.forEach(nz50map => {
+        Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
+            const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+
             // the map sheet polygon
-            const polygon = L.polygon(nz50map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
+            const polygon = L.polygon(nz50Map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
 
             // the map sheet label
             const polygonLabel = L.divIcon({className: 'sheet-div-icon',
-                html: '<div class="sheet-code">' + nz50map.sheetCode + '</div><div class="sheet-name">' + nz50map.name + '</div>'});
+                html: '<div class="sheet-code">' + nz50Map.sheetCode + '</div><div class="sheet-name">' + nz50Map.name + '</div>'});
             // you can set .my-div-icon styles in CSS
 
             // ideally would centre around polygon.getCenter()...
@@ -126,12 +127,12 @@ export class MapEditor extends Component<{
             L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50LayerGroup);
 
             // add click event handler for polygon
-            (polygon as any).nz50map = nz50map;
+            (polygon as any).nz50map = nz50Map;
             polygon.on('click', event => {
                 this.selectOrUnselectMap(event.target);
             });
 
-            this.nz50MapPolygonsBySheet[nz50map.sheetCode] = polygon as NZ50MapPolygon;
+            this.nz50MapPolygonsBySheet[nz50Map.sheetCode] = polygon as NZ50MapPolygon;
         });
 
 
@@ -306,8 +307,8 @@ export class MapEditor extends Component<{
     }
 
     private mapSheetWithName(mapSheet: string) {
-        const nz50map = this.props.nz50maps.find((nz50map2 => nz50map2.sheetCode === mapSheet));
-        return nz50map ? nz50map.sheetCode + ' ' + nz50map.name : mapSheet;
+        const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+        return nz50Map ? nz50Map.sheetCode + ' ' + nz50Map.name : mapSheet;
     }
 
     private resizeMap(height?: number, width?: number): void {

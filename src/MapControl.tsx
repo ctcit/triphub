@@ -1,7 +1,6 @@
 import * as L from 'leaflet';
 import * as React from 'react';
 import { Component } from 'react';
-import { App } from './App';
 import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText } from 'reactstrap';
 import { MapEditor } from './MapEditor';
 import FormGroup from 'reactstrap/lib/FormGroup';
@@ -12,8 +11,11 @@ import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 
 export class MapControl extends Component<{
-    app: App,
-    readOnly: boolean
+    readOnly: boolean,
+    nz50MapsBySheet: { [mapSheet: string] : IMap },
+    mapSheets: string[],
+    routesAsJson: string,
+    saveMapChanges: (mapSheets: string[] | undefined, routesAsJson: string | undefined) => Promise<void>
 },{
     mapVisible: boolean,
     editing: boolean,
@@ -26,17 +28,16 @@ export class MapControl extends Component<{
     private mapInitialized: boolean = false;
 
     // NZ50 map sheets grid
-    private nz50maps: IMap[];
     private nz50LayerGroup: L.LayerGroup<NZ50MapPolygon[]>;
     private nz50MapPolygonsBySheet: { [mapSheet: string] : NZ50MapPolygon } = {};
 
     // selected map sheets
-    private mapSheets: string[] = /* this.props.mapSheets || */ [];
-    private tempMapSheets: string[] = []; // changed mapSheets before being saved
+    private mapSheets: string[] = [];
+    private pendingMapSheets: string[] = []; // changed mapSheets before being saved
 
     // routes
     private routes: L.Polyline[] = [];
-    private tempRoutesAsJson: string;  // changed routes before being saved
+    private pendingRoutesAsJson: string;  // changed routes before being saved
     private routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow'];
 
 
@@ -44,19 +45,18 @@ export class MapControl extends Component<{
         super(props);
 
         this.state = { 
-            mapVisible: false,
+            mapVisible: this.props.mapSheets.length > 0 || Boolean(this.props.routesAsJson),
             editing: false,
             editsMade: false
         };
-        
-        this.nz50maps = this.props.app.getMaps();
+        this.mapSheets = this.props.mapSheets;
 
-        this.tempRoutesAsJson = this.getRoutesAsJson();
-        this.tempMapSheets = this.mapSheets;
+        this.pendingRoutesAsJson = this.props.routesAsJson;
+        this.pendingMapSheets = this.props.mapSheets;
     }
 
     public componentDidMount() {
-        if (this.mapVisible()) {
+        if (this.state.mapVisible) {
             this.setUpMap();
         }
     }
@@ -67,33 +67,37 @@ export class MapControl extends Component<{
         }
 
         const onMapSheetsChanged = (mapSheets: string[]) => {
-            this.tempMapSheets = mapSheets;
+            this.pendingMapSheets = mapSheets;
             this.setState({ editsMade: true });
         }
         const onRoutesChanged = (routesAsJson: string) => {
-            this.tempRoutesAsJson = routesAsJson;
+            this.pendingRoutesAsJson = routesAsJson;
             this.setState({ editsMade: true });
         }
 
         const onSave = () => { 
-            const mapVisible: boolean = this.tempMapSheets.length > 0 || Boolean(this.tempRoutesAsJson);
+            const mapVisible: boolean = this.pendingMapSheets.length > 0 || Boolean(this.pendingRoutesAsJson);
             this.setState({ 
                 mapVisible
-            }, () => {
+            }, async () => {
                 if (mapVisible) {
                     this.setUpMap();
                 }
                 this.unshowSelectedMaps();
-                this.mapSheets = this.tempMapSheets;
+                this.mapSheets = this.pendingMapSheets;
                 this.showSelectedMaps();
     
-                this.setRoutesFromJson(this.tempRoutesAsJson);
+                this.setRoutesFromJson(this.pendingRoutesAsJson);
 
                 this.fitBounds();
     
                 this.setState({ 
                     editing: false,
-                }); 
+                });
+
+                await this.props.saveMapChanges(
+                    this.pendingMapSheets.length > 0 ? this.pendingMapSheets : undefined,
+                    Boolean(this.pendingRoutesAsJson) ? this.pendingRoutesAsJson : undefined );
             }); 
 
         }
@@ -138,7 +142,7 @@ export class MapControl extends Component<{
                             <Modal isOpen={this.state.editing} toggle={onSave} size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}}>
                                 <ModalHeader toggle={onSave}>Maps and Routes</ModalHeader>
                                 <ModalBody>
-                                    <MapEditor app={this.props.app} nz50maps={this.nz50maps} mapSheets={this.mapSheets} routesAsJson={this.getRoutesAsJson()}
+                                    <MapEditor nz50MapsBySheet={this.props.nz50MapsBySheet} mapSheets={this.mapSheets} routesAsJson={this.getRoutesAsJson()}
                                         onMapSheetsChanged={onMapSheetsChanged} onRoutesChanged={onRoutesChanged}/>
                                 </ModalBody>
                                 <ModalFooter>
@@ -183,13 +187,15 @@ export class MapControl extends Component<{
             this.nz50LayerGroup = L.layerGroup()
                 .addTo(this.minimap);
 
-            this.nz50maps.forEach(nz50map => {
+            Object.keys(this.props.nz50MapsBySheet).forEach(mapSheet => {
+                const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+
                 // the map sheet polygon
-                const polygon = L.polygon(nz50map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
+                const polygon = L.polygon(nz50Map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
 
                 // the map sheet label
                 const polygonLabel = L.divIcon({className: 'sheet-div-icon',
-                    html: '<div class="sheet-code">' + nz50map.sheetCode + '</div><div class="sheet-name">' + nz50map.name + '</div>'});
+                    html: '<div class="sheet-code">' + nz50Map.sheetCode + '</div><div class="sheet-name">' + nz50Map.name + '</div>'});
                 // you can set .my-div-icon styles in CSS
 
                 // ideally would centre around polygon.getCenter()...
@@ -197,25 +203,23 @@ export class MapControl extends Component<{
 
                 L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50LayerGroup);
 
-                this.nz50MapPolygonsBySheet[nz50map.sheetCode] = polygon as NZ50MapPolygon;
+                this.nz50MapPolygonsBySheet[nz50Map.sheetCode] = polygon as NZ50MapPolygon;
             });
 
             this.resizeMap(this.initialHeight, this.initialWidth);
     
             this.showSelectedMaps();
-            this.setRoutesFromJson(this.tempRoutesAsJson);
+            this.setRoutesFromJson(this.pendingRoutesAsJson);
+
+            this.fitBounds();
 
             this.mapInitialized = true;
         }
     }
     
-    private mapVisible(): boolean {
-        return this.mapSheets.length > 0 || this.routes.length > 0;
-    }
-
     private mapSheetWithName(mapSheet: string) {
-        const nz50map = this.nz50maps.find((nz50map2 => nz50map2.sheetCode === mapSheet));
-        return nz50map ? nz50map.sheetCode + ' ' + nz50map.name : mapSheet;
+        const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+        return nz50Map ? nz50Map.sheetCode + ' ' + nz50Map.name : mapSheet;
     }
 
     private resizeMap(height: number, width: number): void {

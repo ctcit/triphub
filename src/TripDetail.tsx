@@ -82,9 +82,9 @@ export class TripDetail extends Component<{
         const saveMapChanges = (mapSheets: string[] | undefined, routesAsJson: string | undefined): Promise<void> => {
             const body: any = {};
             if (mapSheets) {
-                body.map1 = mapSheets.length > 0 ? mapSheets[0] + " " +  this.nz50MapsBySheet[mapSheets[0]] : "";
-                body.map2 = mapSheets.length > 1 ? mapSheets[1] + " " +  this.nz50MapsBySheet[mapSheets[1]] : "";
-                body.map3 = mapSheets.length > 2 ? mapSheets[2] + " " +  this.nz50MapsBySheet[mapSheets[2]] : "";
+                body.map1 = mapSheets.length > 0 ? mapSheets[0] + " " +  this.nz50MapsBySheet[mapSheets[0]].name : "";
+                body.map2 = mapSheets.length > 1 ? mapSheets[1] + " " +  this.nz50MapsBySheet[mapSheets[1]].name : "";
+                body.map3 = mapSheets.length > 2 ? mapSheets[2] + " " +  this.nz50MapsBySheet[mapSheets[2]].name : "";
             }
             if (routesAsJson) {
                 body.mapRoute = routesAsJson;

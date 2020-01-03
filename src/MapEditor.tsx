@@ -13,6 +13,7 @@ import classnames from 'classnames';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import * as Popper from 'popper.js';
 import ReactResizeDetector from 'react-resize-detector';
+import { Spinner } from 'src';
 
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 
@@ -38,7 +39,8 @@ export class MapEditor extends Component<{
     invalidGpxFile: boolean,
     tags: Tag[],
     suggestions: Tag[],
-    maxMapWidth: number
+    maxMapWidth: number,
+    busy: boolean
 }>{
     // the leaflet map
     private map: L.Map;
@@ -76,88 +78,14 @@ export class MapEditor extends Component<{
                 return { id: nz50Map.sheetCode, text: nz50Map.sheetCode + ' ' + nz50Map.name };
             }),
 
-            maxMapWidth: 1200
+            maxMapWidth: 1200,
+
+            busy: false
         };
     }
 
     public componentDidMount() {
-
-        this.map = L.map('map', {
-            center: [-43.5, 172], // Central Canterbury
-            zoom: 9, // Central Canterbury
-            maxBounds: [[-33, 165], [-48, 179]], // New Zealand
-            zoomControl: true,
-            editable: true, // to enable leaflet.editable
-            drawingCursor: 'crosshair',
-            trackResize: false // we handle the resizing to the ResizableBox
-
-        } as L.MapOptions);
-
-        // tslint:disable-next-line:prefer-const
-        // let baseMapLayer = 
-        // L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        // 	minZoom: 6,
-        // 	maxZoom: 14,
-        // 	attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) | NZ Topo map sheets sourced from the LINZ Data Service and licensed for reuse under CC BY 4.0'
-        // }).addTo(map);
-        L.tileLayer('http://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
-            minZoom: 6,
-            maxZoom: 16,
-            subdomains:'abcd',
-            attribution: '<a href=“http://data.linz.govt.nz”>Sourced from LINZ. CC BY 4.0'
-        }).addTo(this.map);
-        
-
-        this.nz50LayerGroup = L.layerGroup()
-            .addTo(this.map);
-        this.nz50MarkerLayerGroup = L.layerGroup()
-            .addTo(this.map);
-
-        Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
-            const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
-
-            // the map sheet polygon
-            const polygon = L.polygon(nz50Map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
-
-            // the map sheet label
-            const polygonLabel = L.divIcon({className: 'sheet-div-icon',
-                html: '<div class="sheet-code">' + nz50Map.sheetCode + '</div><div class="sheet-name">' + nz50Map.name + '</div>'});
-            // you can set .my-div-icon styles in CSS
-
-            // ideally would centre around polygon.getCenter()...
-            const markerPos = polygon.getBounds().pad(-0.25).getNorthWest();
-
-            L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50MarkerLayerGroup);
-
-            // add click event handler for polygon
-            (polygon as any).nz50map = nz50Map;
-            polygon.on('click', event => {
-                this.selectOrUnselectMap(event.target);
-            });
-
-            this.nz50MapPolygonsBySheet[nz50Map.sheetCode] = polygon as NZ50MapPolygon;
-        });
-
-        this.map.on('zoomend', () => {
-            if (this.map.getZoom() < 9) {
-                if (this.map.hasLayer(this.nz50MarkerLayerGroup)) {
-                    this.map.removeLayer(this.nz50MarkerLayerGroup);
-                }
-            } else {
-                if (!this.map.hasLayer(this.nz50MarkerLayerGroup)) {
-                    this.map.addLayer(this.nz50MarkerLayerGroup);
-                }
-            }
-        });
-
-        this.resizeMap(500, 500);
-
-        this.setRoutesFromJson(this.props.routesAsJson);
-        this.setState({ routes: this.routes });
-        this.saveRoute(); 
-
-        this.showInitiallySelectedMaps();
-        this.fitBounds();
+        this.setUpMap();
     }
 
     public render(){
@@ -207,13 +135,15 @@ export class MapEditor extends Component<{
             this.continueRoute();
         }
         const generalizeRoute = () => {
-            this.generalizeRoute();
-            this.saveRoute();
-            this.continueRoute();
+            this.generalizeRoute().then(() => {
+                this.saveRoute();
+                this.continueRoute();
+            });
         }
         const undoLastRouteEdit = () => {
-            this.undoLastRouteEdit();
-            this.continueRoute();
+            this.undoLastRouteEdit().then(() => {
+                this.continueRoute();
+            });
         }
         const importGpx = (e: any) => {
             const gpxFile = e.target.files ? e.target.files[0] : null;
@@ -310,6 +240,9 @@ export class MapEditor extends Component<{
                                     invalid={this.state.invalidGpxFile} 
                                 />
                             </Col>
+                            <Col sm={1}>
+                                <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>
+                            </Col>
                         </Row>
                 </TabPane>
                 </TabContent>
@@ -318,6 +251,85 @@ export class MapEditor extends Component<{
                 </ResizableBox>
             </FormGroup>
         );
+    }
+
+    private setUpMap(): void {
+        this.map = L.map('map', {
+            center: [-43.5, 172], // Central Canterbury
+            zoom: 9, // Central Canterbury
+            maxBounds: [[-33, 165], [-48, 179]], // New Zealand
+            zoomControl: true,
+            editable: true, // to enable leaflet.editable
+            drawingCursor: 'crosshair',
+            trackResize: false // we handle the resizing to the ResizableBox
+
+        } as L.MapOptions);
+
+        // tslint:disable-next-line:prefer-const
+        // let baseMapLayer = 
+        // L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        // 	minZoom: 6,
+        // 	maxZoom: 14,
+        // 	attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) | NZ Topo map sheets sourced from the LINZ Data Service and licensed for reuse under CC BY 4.0'
+        // }).addTo(map);
+        L.tileLayer('http://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
+            minZoom: 6,
+            maxZoom: 16,
+            subdomains:'abcd',
+            attribution: '<a href=“http://data.linz.govt.nz”>Sourced from LINZ. CC BY 4.0'
+        }).addTo(this.map);
+        
+
+        this.nz50LayerGroup = L.layerGroup()
+            .addTo(this.map);
+        this.nz50MarkerLayerGroup = L.layerGroup()
+            .addTo(this.map);
+
+        Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
+            const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+
+            // the map sheet polygon
+            const polygon = L.polygon(nz50Map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
+
+            // the map sheet label
+            const polygonLabel = L.divIcon({className: 'sheet-div-icon',
+                html: '<div class="sheet-code">' + nz50Map.sheetCode + '</div><div class="sheet-name">' + nz50Map.name + '</div>'});
+            // you can set .my-div-icon styles in CSS
+
+            // ideally would centre around polygon.getCenter()...
+            const markerPos = polygon.getBounds().pad(-0.25).getNorthWest();
+
+            L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50MarkerLayerGroup);
+
+            // add click event handler for polygon
+            (polygon as any).nz50map = nz50Map;
+            polygon.on('click', event => {
+                this.selectOrUnselectMap(event.target);
+            });
+
+            this.nz50MapPolygonsBySheet[nz50Map.sheetCode] = polygon as NZ50MapPolygon;
+        });
+
+        this.map.on('zoomend', () => {
+            if (this.map.getZoom() < 9) {
+                if (this.map.hasLayer(this.nz50MarkerLayerGroup)) {
+                    this.map.removeLayer(this.nz50MarkerLayerGroup);
+                }
+            } else {
+                if (!this.map.hasLayer(this.nz50MarkerLayerGroup)) {
+                    this.map.addLayer(this.nz50MarkerLayerGroup);
+                }
+            }
+        });
+
+        this.resizeMap(500, 500);
+
+        this.setRoutesFromJson(this.props.routesAsJson);
+        this.setState({ routes: this.routes });
+        this.saveRoute(); 
+
+        this.showInitiallySelectedMaps();
+        this.fitBounds();
     }
 
     private mapSheetWithName(mapSheet: string) {
@@ -419,6 +431,7 @@ export class MapEditor extends Component<{
     
             let gpxLatLngs: L.LatLng[] = [];
             reader.onload = () => {
+                this.setState({ busy: true });
                 const gpx = reader.result as string;
                 new L.GPX(gpx, {
                     async: true, 
@@ -432,14 +445,13 @@ export class MapEditor extends Component<{
                     if (generalizedLatLngs.length > 0) {
                         const route = L.polyline(generalizedLatLngs, {color: this.getRouteColor()}).addTo(this.map);
                         this.routes.push(route);
-                        this.saveRoute();
                         this.setState({ routes: this.routes });
                     }
                     this.fitBounds();
-                    this.setState({invalidGpxFile: false });
+                    this.setState({invalidGpxFile: false, busy: false });
                     resolve();
                 }).on('error', (event: any) => {
-                    this.setState({invalidGpxFile: true })
+                    this.setState({invalidGpxFile: true, busy: false })
                     alert('Error loading file: ' + event.err);
                     reject();
                 });
@@ -449,18 +461,24 @@ export class MapEditor extends Component<{
         });
     }
 
-    private generalizeRoute(): void {
-        const zoom = this.map.getZoom();
-        const tolerance = 22 + 240000 * Math.exp(-0.6 * zoom);
-        const generalizedLatLngsPerRoute: L.LatLng[][] = this.routes.map((route: L.Polyline) => this.generalize(route.getLatLngs() as L.LatLng[], tolerance));
-        this.clearRoute();
-        generalizedLatLngsPerRoute.forEach((generalizedLatLngs: L.LatLng[]) => {
-            if (generalizedLatLngs.length > 0) {
-                const route = L.polyline(generalizedLatLngs, {color: this.getRouteColor()}).addTo(this.map);
-                this.routes.push(route);
-            }
+    private generalizeRoute(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.setState({ busy: true });
+            setTimeout(() => {
+                const zoom = this.map.getZoom();
+                const tolerance = 22 + 240000 * Math.exp(-0.6 * zoom);
+                const generalizedLatLngsPerRoute: L.LatLng[][] = this.routes.map((route: L.Polyline) => this.generalize(route.getLatLngs() as L.LatLng[], tolerance));
+                this.clearRoute();
+                generalizedLatLngsPerRoute.forEach((generalizedLatLngs: L.LatLng[]) => {
+                    if (generalizedLatLngs.length > 0) {
+                        const route = L.polyline(generalizedLatLngs, {color: this.getRouteColor()}).addTo(this.map);
+                        this.routes.push(route);
+                    }
+                });
+                this.setState({ routes: this.routes, busy: false });
+                resolve();
+            }, 0);
         });
-        this.setState({ routes: this.routes });
     }
 
     private generalize(latLngs: L.LatLng[], tolerance: number = 25): L.LatLng[] {
@@ -484,18 +502,27 @@ export class MapEditor extends Component<{
         const routesAsJSON: string = this.getRoutesAsJson();
         this.props.onRoutesChanged(routesAsJSON);
         this.routesUndoStack.push(routesAsJSON);
-        console.log(">>>>> " + this.routesUndoStack.length + ", " + routesAsJSON);
+        // console.log(">>>>> " + this.routesUndoStack.length + ", " + routesAsJSON);
         this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1 });
     }
 
-    private undoLastRouteEdit(): void {
-        if (this.routesUndoStack.length > 1) { // always leave the orignal on the stack
-            let routesAsJSON = this.routesUndoStack.pop(); // discard this
-            routesAsJSON = this.routesUndoStack[this.routesUndoStack.length - 1];
-            console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsJSON);
-            this.setRoutesFromJson(routesAsJSON);
-        }
-        this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1 });
+    private undoLastRouteEdit(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.routesUndoStack.length > 1) { // always leave the orignal on the stack
+                this.setState({ busy: true });
+                setTimeout(() => {
+                    let routesAsJSON = this.routesUndoStack.pop(); // discard this
+                    routesAsJSON = this.routesUndoStack[this.routesUndoStack.length - 1];
+                    // console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsJSON);
+                    this.setRoutesFromJson(routesAsJSON);
+                    this.props.onRoutesChanged(routesAsJSON);
+                    this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1, busy: false });
+                    resolve();
+                }, 0);
+            } else {
+                resolve();
+            }
+        });
     }
 
     private getRoutesAsJson(): string {

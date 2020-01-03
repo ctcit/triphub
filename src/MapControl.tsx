@@ -29,6 +29,7 @@ export class MapControl extends Component<{
 
     // NZ50 map sheets grid
     private nz50LayerGroup: L.LayerGroup<NZ50MapPolygon[]>;
+    private nz50MarkerLayerGroup: L.LayerGroup<L.Marker[]>;
     private nz50MapPolygonsBySheet: { [mapSheet: string] : NZ50MapPolygon } = {};
 
     // selected map sheets
@@ -186,6 +187,8 @@ export class MapControl extends Component<{
 
             this.nz50LayerGroup = L.layerGroup()
                 .addTo(this.minimap);
+            this.nz50MarkerLayerGroup = L.layerGroup()
+                .addTo(this.minimap);
 
             Object.keys(this.props.nz50MapsBySheet).forEach(mapSheet => {
                 const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
@@ -201,11 +204,23 @@ export class MapControl extends Component<{
                 // ideally would centre around polygon.getCenter()...
                 const markerPos = polygon.getBounds().pad(-0.25).getNorthWest();
 
-                L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50LayerGroup);
+                L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50MarkerLayerGroup);
 
                 this.nz50MapPolygonsBySheet[nz50Map.sheetCode] = polygon as NZ50MapPolygon;
             });
 
+            this.minimap.on('zoomend', () => {
+                if (this.minimap.getZoom() < 9) {
+                    if (this.minimap.hasLayer(this.nz50MarkerLayerGroup)) {
+                        this.minimap.removeLayer(this.nz50MarkerLayerGroup);
+                    }
+                } else {
+                    if (!this.minimap.hasLayer(this.nz50MarkerLayerGroup)) {
+                        this.minimap.addLayer(this.nz50MarkerLayerGroup);
+                    }
+                }
+            });
+    
             this.resizeMap(this.initialHeight, this.initialWidth);
     
             this.showSelectedMaps();

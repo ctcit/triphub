@@ -74,7 +74,7 @@ export class Trip extends Component<{
                     this.setState({
                         editList,
                         editId: editList[0].id,
-                        editHref: editList[0].href,
+                        editHref: `${this.props.href}/edit/${editList[0].id}`,
                         editIsEdited: false,
                         editHeartbeatId: setInterval(this.editHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
                     })        
@@ -110,16 +110,12 @@ export class Trip extends Component<{
     }
 
     public deleteTrip(){
-        const href = this.state.trip.href
-
-        this.props.app.apiCall('POST', href as string, {isDeleted:!this.state.trip.isDeleted}, true)
+        this.props.app.apiCall('POST', this.props.href as string, {isDeleted:!this.state.trip.isDeleted}, true)
             .then(() => this.props.app.setPath('/'))
     }
 
     public approveTrip(){
-        const href = this.state.trip.href
-
-        this.props.app.apiCall('POST', href as string, {isApproved:!this.state.trip.isApproved}, true)
+        this.props.app.apiCall('POST', this.props.href as string, {isApproved:!this.state.trip.isApproved}, true)
             .then(() => this.props.app.setPath('/'))
     }
 
@@ -293,7 +289,7 @@ export class Trip extends Component<{
                             {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
                         </Badge>
                     </ToolTipIcon>)}
-                {!trip.href 
+                {trip.id <= 0
                     ? <Badge pill={true}>New trip</Badge>
                     : trip.tripState === TripState.DeletedTrip 
                     ? <Badge pill={true}>This trip has been deleted</Badge>

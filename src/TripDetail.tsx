@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Form, FormGroup, Label, Col  } from 'reactstrap';
 import { App } from './App';
-import { Control, IControlOwner } from './Control';
+import { SaveableControl, IControlOwner } from './SaveableControl';
 import './index.css';
 import './print.css';
 import { Trip } from './Trip';
@@ -25,7 +25,7 @@ export class TripDetail extends Component<{
       constructor(props: any){
         super(props)
         this.state = {editMap:false, editMaps:false}
-        this.href = this.props.owner.state.trip.href
+        this.href = this.props.owner.props.href
         this.app = this.props.app
         this.get = this.get.bind(this)
         this.set = this.set.bind(this)
@@ -94,24 +94,26 @@ export class TripDetail extends Component<{
 
         return [
             <Form key='form'>
-                <Control id='title' label='Title' type='text' {...common}/>
-                <Control id='openDate' label='Open Date' type='date'  {...common}/>
-                <Control id='closeDate' label='Close Date' type='date'  {...common}/>
-                <Control id='tripDate' label='Trip Date' type='date'  {...common}/>
-                <Control id='length' label='Length in days' type='number' {...common}/>
-                <Control id='isSocial' label='Is social event' type='checkbox' {...common}/>
-                <Control id='isNoSignup' label='No sign up list' type='checkbox' {...common} 
+                <SaveableControl id='title' label='Title' type='text' {...common}/>
+                <SaveableControl id='openDate' label='Open Date' type='date'  {...common}/>
+                <SaveableControl id='closeDate' label='Close Date' type='date'  {...common}/>
+                <SaveableControl id='tripDate' label='Trip Date' type='date'  {...common}/>
+                <SaveableControl id='isSocial' label='Event Type' type='radio'
+                                radioOptions={{"Social Event":true,"Tramp":false}} {...common}/>
+                <SaveableControl id='isNoSignup' label='No sign up list' type='checkbox' {...common} 
                                         hidden={!trip.isSocial}/>
-                <Control id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...common}/>
-                <Control id='departureDetails' label='Departure Details' type='text' {...common}/>
-                <Control id='cost' label='Cost' type='text'  {...common}/>
-                <Control id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
-                <Control id='isLimited' label='Limited Numbers' type='checkbox' {...common} 
+                <SaveableControl id='length' label='Length in days' type='number' 
+                                        hidden={trip.isSocial} {...common}/>
+                <SaveableControl id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...common}/>
+                <SaveableControl id='departureDetails' label='Departure Details' type='text' {...common}/>
+                <SaveableControl id='cost' label='Cost' type='text'  {...common}/>
+                <SaveableControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
+                <SaveableControl id='isLimited' label='Limited Numbers' type='checkbox' {...common} 
                                         hidden={trip.isSocial && trip.isNoSignup}/>
-                <Control id='maxParticipants' label='Maximum trampers' type='number' {...common} 
+                <SaveableControl id='maxParticipants' label='Maximum trampers' type='number' {...common} 
                                         hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)}/>
-                <Control id='description' label='Description' type='textarea'  {...common}/>
-                <Control id='logisticnfo' label='Logistic Information' type='textarea'  {...common}/>
+                <SaveableControl id='description' label='Description' type='textarea'  {...common}/>
+                <SaveableControl id='logisticnfo' label='Logistic Information' type='textarea'  {...common}/>
                 <FormGroup row={true} hidden={trip.isSocial}>
                     <Label sm={2}>Maps/Routes</Label>
                     <Col sm={10}>

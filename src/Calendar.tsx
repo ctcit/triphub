@@ -69,7 +69,7 @@ class CalendarWeek extends Component<{
 
                     trips[trips.indexOf(item.trip)] = trip
 
-                    this.props.calendar.props.app.apiCall('POST', item.trip.href as string, {[item.field]: item.trip[item.field]})
+                    this.props.calendar.props.app.apiCall('POST', `${BaseUrl}/trips/${item.trip.id}`, {[item.field]: item.trip[item.field]})
                     this.props.calendar.setState({trips})
                 }
 

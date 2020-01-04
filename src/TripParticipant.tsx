@@ -6,7 +6,7 @@ import { Spinner } from '.';
 import { Trip } from './Trip';
 import { App } from './App';
 import { Expandable } from './Expandable';
-import { Control } from './Control';
+import { SaveableControl } from './SaveableControl';
 import { ToolTipIcon } from './ToolTipIcon';
 import { TripParticipants } from './TripParticipants';
 
@@ -31,7 +31,7 @@ export class TripParticipant extends Component<{
     constructor(props : any){
         super(props)
         this.state = {}
-        this.href = this.props.participant.href
+        this.href = `${this.props.trip.props.href}/participants/${this.props.participant.id}`
         this.app = this.props.app
         this.get = this.get.bind(this)
         this.set = this.set.bind(this)
@@ -102,7 +102,9 @@ export class TripParticipant extends Component<{
 
         if (confirm(`Are you sure you want to update the contact details for ${member.name} ?`)) {
             this.setState({isMemberOp:true})
-            this.props.app.apiCall('POST', member.href as string, {emergencyContactName, emergencyContactPhone}, false)
+            this.props.app.apiCall('POST', 
+                    `${this.props.trip.props.href}/members/${member.id}`,
+                    {emergencyContactName, emergencyContactPhone}, false)
                 .then(() => {
                     this.props.app.requeryMembers()
                     this.setState({isMemberOp:false})
@@ -148,12 +150,12 @@ export class TripParticipant extends Component<{
             <Button key='movedown' onClick={onMoveDown}>
                 <span className='fa fa-angle-down'/>
             </Button> : null,
-            !participant.isDeleted && participant.href && isPrivileged ? 
+            !participant.isDeleted && participant.id > 0 && isPrivileged ? 
             <Button key='delete' onClick={this.setDeleted}>
                 <span className='fa fa-remove'/> 
                 {this.state.isSaveOp ? ['Deleting ', Spinner] : 'Delete'}
             </Button> : null,
-            participant.isDeleted && participant.href && isPrivileged ? 
+            participant.isDeleted && participant.id > 0 && isPrivileged ? 
             <Button key='undelete' onClick={this.setDeleted}>
                 {this.state.isSaveOp ? ['Signing back up ', Spinner] : 'Sign back up'}
             </Button> : null,
@@ -177,18 +179,18 @@ export class TripParticipant extends Component<{
                 <Expandable title={title} id={`${participant.id}`} level={4} expanded={participant.id === -1} 
                             buttons={buttons.filter(b => b)} showMenu={participant.showMenu}>
                     <Form key='form' className='indentedparticipants'>
-                        <Control id='name' label='Name' type='text' list='memberlist' {...common} 
+                        <SaveableControl id='name' label='Name' type='text' list='memberlist' {...common} 
                                                 affected={['email','phone','memberid','emergency_contact']}/>
-                        <Control id='email' label='Email' type='text' {...common}/>
-                        <Control id='phone' label='Phone' type='text'  {...common}/>
-                        <Control id='emergencyContactName' label='Emergency Contact Name' type='text' {...common}/>
-                        <Control id='emergencyContactPhone' label='Emergency Contact Phone' type='text' {...common}/>
-                        <Control id='isLeader' label='Leader' type='checkbox' {...common}/>
-                        <Control id='isPlbProvider' label='Has PLB' type='checkbox' {...common}/>
-                        <Control id='isVehicleProvider' label='Has Car' type='checkbox' {...common}/>
-                        <Control id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} 
+                        <SaveableControl id='email' label='Email' type='text' {...common}/>
+                        <SaveableControl id='phone' label='Phone' type='text'  {...common}/>
+                        <SaveableControl id='emergencyContactName' label='Emergency Contact Name' type='text' {...common}/>
+                        <SaveableControl id='emergencyContactPhone' label='Emergency Contact Phone' type='text' {...common}/>
+                        <SaveableControl id='isLeader' label='Leader' type='checkbox' {...common}/>
+                        <SaveableControl id='isPlbProvider' label='Has PLB' type='checkbox' {...common}/>
+                        <SaveableControl id='isVehicleProvider' label='Has Car' type='checkbox' {...common}/>
+                        <SaveableControl id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} 
                                                 {...common}/>
-                        <Control id='logisticInfo' label='Logistic Information' type='textarea' {...common}/>
+                        <SaveableControl id='logisticInfo' label='Logistic Information' type='textarea' {...common}/>
                     </Form>
                 </Expandable>
             </div>

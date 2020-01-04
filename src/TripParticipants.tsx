@@ -101,7 +101,7 @@ export class TripParticipants extends Component<{
         participants[index] = {...participant, ...props, showMenu}
 
         this.props.trip.setState({participants})
-        return this.props.app.apiCall('POST', participant.href as string, props, true)
+        return this.props.app.apiCall('POST', `${this.props.trip.props.href}/participants/${id}`, props, true)
     }
 
     public onDropOnDeleted(ev:any) 

@@ -36,8 +36,6 @@
             header('Content-Type: text/html');
             echo $result;
         } else {
-            $result = AddHRefs($result,$basehref,$entity,$subEntity);
-
             if (intval($_GET["prettyprintjson"])) {
                 header('Content-Type: text/html');
                 echo PrettyPrintJson($result);
@@ -135,7 +133,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
 
         case "GET trips/{tripId}/history":
             // DESCRIPTION Gets change history for a given trip
-            // OUTPUT Array of <a href='$basehref#history'>history</a> + href
+            // OUTPUT Array of <a href='$basehref#history'>history</a>
             return SqlResultArray($con,"SELECT * FROM $subTable WHERE tripId=$id ORDER BY id");
             
         case "POST trips/{tripId}/email":
@@ -368,35 +366,6 @@ function SqlSetFromInput($con,$input,$table){
     return implode(",", $set);
 }
 
-function AddHRef(&$row,$basehref,$entity,$subEntity) {
-    if (!is_array($row)) return;
-    if ($row["memberId"])                             $row["memberHref"]       = "$basehref/members/$row[memberId]";
-    if ($row["userId"])                               $row["userHref"]         = "$basehref/members/$row[userId]";
-    if ($row["tripId"])                               $row["tripHref"]         = "$basehref/trips/$row[tripId]";
-    if ($row["participantId"])                        $row["participantHref"]  = "$basehref/trips/$row[tripId]/participants/$row[participantId]";
-    if ("$entity/$subEntity" == "members/")           $row["href"]             = "$basehref/$entity/$row[id]";
-    if ("$entity/$subEntity" == "trips/")             $row["href"]             = "$basehref/$entity/$row[id]";
-    if ("$entity/$subEntity" == "trips/")             $row["participantsHref"] = "$basehref/trips/$row[id]/participants";
-    if ("$entity/$subEntity" == "trips/")             $row["historyHref"]      = "$basehref/trips/$row[id]/history";
-    if ("$entity/$subEntity" == "trips/")             $row["editsHref"]        = "$basehref/trips/$row[id]/edits";
-    if ("$entity/$subEntity" == "trips/edit")         $row["href"]             = "$basehref/trips/$row[tripId]/edit/$row[id]";
-    if ("$entity/$subEntity" == "trips/participants") $row["href"]             = "$basehref/trips/$row[tripId]/participants/$row[id]";
-}
-
-function AddHRefs(&$result,$basehref,$entity,$subEntity) {
-    if (is_array($result) && sizeof($result)) {
-        if (array_keys($result) === range(0, count($result) - 1)) {
-            foreach ($result as &$row) {
-                AddHRef($row,$basehref,$entity,$subEntity);
-            }
-        } else {
-            AddHRef($result,$basehref,$entity,$subEntity);
-        }
-    }
-
-    return $result;
-}
-
 function IsReadOnly($table, $col) {
     if ($table === ConfigServer::membersTable)
         return $col !== 'emergencyContactName' && $col !== 'emergencyContactPhone';
@@ -417,6 +386,7 @@ function ApiHelp($con,$basehref) {
     $filehandle = fopen("api.php", "r") or die("Unable to open file!");
     $item = Array('security'=>'Unsecured');
 
+    // Pares this file to extract enpoint information
     while (!feof($filehandle)) {
         $line = str_replace('$basehref',$basehref,trim(fgets($filehandle)));
         if (preg_match('/case "(GET|POST|PATCH|DELETE)( (.*))?":/',$line,$matches))
@@ -433,6 +403,7 @@ function ApiHelp($con,$basehref) {
     }
     fclose($filehandle);
 
+    // Add data structure meta data for config and members, from API results
     foreach (array("config","members") as $entity) {
         $table = $constants[$entity."Table"];
         $data = ApiProcess($con,$basehref,"GET","GET $entity",$entity,null,null,null,null)[0];
@@ -445,25 +416,20 @@ function ApiHelp($con,$basehref) {
         $entities[$entity] = $cols;
     }
 
+    // Add data structure meta data from tables meta data
     foreach (array("trips","participants","history","edit") as $entity) {
         $table = $constants[$entity."Table"];
         $sqlCols = SqlResultArray($con,"SHOW FULL COLUMNS FROM $table","Field");
         $cols = array();
 
-        AddHRef($sqlCols,$basehref,"trips",$entity == "trips" ? "" : $entity);
         foreach ($sqlCols as $field => $col) {
-            if (preg_match('/^href$/', $field))
-                $cols []= array("col"=>$field,"type"=>"hyperlink","comment"=>"Link to $entity","readonly"=>"Yes");
-            else if (preg_match('/Href$/', $field))
-                $cols []= array("col"=>$field,"type"=>"hyperlink","comment"=>"Link to ".str_replace("Href","",$field),
-                                "readonly"=>"Yes");
-            else
-                $cols []= array("col"=>$field,"type"=>$col["Type"],"comment"=>$col["Comment"] ? $col["Comment"] : "",
-                                "readonly"=>IsReadOnly($table,$field) ? "Yes" : "");
+            $cols []= array("col"=>$field,"type"=>$col["Type"],"comment"=>$col["Comment"] ? $col["Comment"] : "",
+                            "readonly"=>IsReadOnly($table,$field) ? "Yes" : "");
         }
         $entities[$entity] = $cols;
     }
 
+    // Add data structure we haven't managed to get from above
     $entities["subjectbody"] = array(array("col"=>"subject",  "type"=>"string","comment"=>"The email subject"),
                                      array("col"=>"body",     "type"=>"text",  "comment"=>"The email body"));
     $entities["json"] =        array(array("col"=>"json",     "type"=>"text",  "comment"=>"The json to format"));
@@ -485,6 +451,7 @@ function ApiHelp($con,$basehref) {
                 .DELETE {background: red;        }
             </style>";
 
+    // Add endpoint information as HTML
     $apipath = str_replace('api.php','ApiTest.html',$basehref);
     $html .= "<table>";
     $html .= "<tr><th colspan='2'>Endpoint</th><th>Security</th><th>Description</th><th>Input</th><th>Output</th></tr>";
@@ -507,6 +474,7 @@ function ApiHelp($con,$basehref) {
     }
     $html .= "</table>";
 
+    // Add data structure information as HTML
     foreach ($entities as $entity => $cols) {
         $html .= "<h2 id='$entity'>$entity</h2>";
         $html .= "<table><tr><th>Column</th><th>Type</th><th>Read only</th><th>Comments</th></tr>";

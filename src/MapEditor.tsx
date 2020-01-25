@@ -8,7 +8,7 @@ import Col from 'reactstrap/lib/Col';
 import { Button, TabPane, TabContent, Nav, NavItem, NavLink, Tooltip, CustomInput, ButtonGroup, Row, FormText } from 'reactstrap';
 import { IMap } from './Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
-import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdGridOff, MdNavigateNext, MdNavigateBefore, MdClearAll} from 'react-icons/md';
+import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdGridOff, MdNavigateNext, MdNavigateBefore, MdClearAll, MdContentCut} from 'react-icons/md';
 import { GiJoint } from 'react-icons/gi';
 import { IoMdSwap } from 'react-icons/io';
 import { AiOutlineRollback } from 'react-icons/ai';
@@ -39,6 +39,7 @@ export class MapEditor extends Component<{
     currentRouteIndex: number,
     routes: L.Polyline[],
     canUndoLastRouteEdit: boolean,
+    splitMode: boolean,
     gpxFile?: File,
     invalidGpxFile: boolean,
     tags: Tag[],
@@ -63,7 +64,7 @@ export class MapEditor extends Component<{
     private routeMarkers: L.Marker[] = [];
     private routesUndoStack: Array<{ routesAsJSON: string, currentRouteIndex: number }> = [];
     private vertexIsDragging: boolean = false;
-    private routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow'];
+    private routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow', 'deeppink', 'darkviolet', 'teal', 'orangered'];
 
 
     constructor(props:any) {
@@ -76,6 +77,7 @@ export class MapEditor extends Component<{
             currentRouteIndex: this.routes.length - 1,
             routes: this.routes,
             canUndoLastRouteEdit: false,
+            splitMode: false,
             gpxFile: undefined,
             invalidGpxFile: false,
 
@@ -164,6 +166,9 @@ export class MapEditor extends Component<{
             this.joinNextRoute();
             this.saveRoute();
             this.continueRoute();
+        }
+        const splitRoute = () => {
+            this.setState( { splitMode: !this.state.splitMode })
         }
         const swapRoute = () => {
             this.endRoute();
@@ -256,7 +261,7 @@ export class MapEditor extends Component<{
                         </Row>
                     </TabPane>
                     <TabPane tabId="EditRoute">
-                        <Row className="mb-2 ml-1"><FormText color='muted'>Click points on map to draw route, or import route from GPX file. CTRL-click on vertex splits the route.</FormText></Row>
+                        <Row className="mb-2 ml-1"><FormText color='muted'>Click points on map to draw route, or import route from GPX file</FormText></Row>
                         <Row className="mb-2">
                             <Col sm={5}>
                                 <ButtonGroup>
@@ -265,8 +270,6 @@ export class MapEditor extends Component<{
                                         placement="top" tooltipText="Add new route">
                                         <MdAddCircle/>
                                     </ButtonWithTooltip>
-                                </ButtonGroup>
-                                <ButtonGroup>
                                     <ButtonWithTooltip id="PreviousRouteButton" color='primary' 
                                         onClick={previousRoute} disabled={this.state.currentRouteIndex <= 0} 
                                         placement="top" tooltipText="Edit the previous route">
@@ -288,6 +291,11 @@ export class MapEditor extends Component<{
                                         onClick={joinRoute} disabled={this.state.currentRouteIndex >= this.state.routes.length - 1} 
                                         placement="top" tooltipText="Join current route with the next route">
                                             <GiJoint/>
+                                    </ButtonWithTooltip>
+                                    <ButtonWithTooltip id="SplitRouteButton" color={this.state.splitMode ? 'danger' : 'primary'} 
+                                        onClick={splitRoute} disabled={this.state.currentRouteIndex < 0} 
+                                        placement="top" tooltipText="Split the current route at the next vertex clicked">
+                                            <MdContentCut/>
                                     </ButtonWithTooltip>
                                     <ButtonWithTooltip id="SwapRouteButton" color='primary' 
                                         onClick={swapRoute} disabled={this.state.currentRouteIndex >= this.state.routes.length - 1} 
@@ -311,8 +319,6 @@ export class MapEditor extends Component<{
                                         placement="top" tooltipText="Clear all routes">
                                             <MdClearAll/>
                                     </ButtonWithTooltip>
-                                </ButtonGroup>
-                                <ButtonGroup>
                                     <ButtonWithTooltip id="UndoButton" color='primary' 
                                         onClick={undoLastRouteEdit} disabled={!this.state.canUndoLastRouteEdit} 
                                         placement="top" tooltipText="Undo last change">
@@ -419,11 +425,13 @@ export class MapEditor extends Component<{
         this.showInitiallySelectedMaps();
         this.fitBounds();
 
-        this.map.on('editable:vertex:ctrlclick editable:vertex:metakeyclick', (event: any) => {
-            this.endRoute();
-            this.splitRoute(event.vertex as L.VertexMarker);
-            this.saveRoute();
-            this.continueRoute();
+        this.map.on('editable:vertex:click', (event: any) => {
+            if (this.state.splitMode) {
+                this.endRoute();
+                this.splitRoute(event.vertex as L.VertexMarker);
+                this.saveRoute();
+                this.continueRoute();
+            }
         });
     }
 
@@ -457,6 +465,7 @@ export class MapEditor extends Component<{
             this.addRoute();
         }
         this.adjustRoutePositionIndicators(true);
+        this.setState({ splitMode: false });
     }
 
     private addRoute(): void {

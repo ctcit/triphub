@@ -317,3 +317,33 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   cursor: pointer;
 }
 
+/* ---------------------------- */
+/* route markers  */
+/* ---------------------------- */
+.marker-ring {
+  width: 20px;
+  height: 20px;
+  border-radius: 50% 50% 50% 50%;
+  background: #c30b82;
+  position: absolute;
+}
+
+.marker-ring::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    margin: 2px 0 0 2px;
+    background: #fff;
+    position: absolute;
+    border-radius: 50%;
+ }
+
+ .route-marker-div-icon i {
+   position: absolute;
+   width: 18px;
+   font-size: 14px;
+   font-weight: bold;
+   left: 0;
+   right: 0;
+   text-align: center;
+}

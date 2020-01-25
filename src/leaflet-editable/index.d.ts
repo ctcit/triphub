@@ -269,4 +269,14 @@ declare module 'leaflet' {
     interface Polyline extends EditableMixin, PolylineEditor {}
 
     interface Polygon extends EditableMixin, PolygonEditor {}
+
+    interface VertexMarker extends L.Marker {
+        delete(): void; // Delete a vertex and the related LatLng.
+        getIndex(): number; // Get the index of the current vertex among others of the same LatLngs group.
+        getLastIndex(): number; // Get last vertex index of the LatLngs group of the current vertex.
+        getPrevious(): VertexMarker; // Get the previous VertexMarker in the same LatLngs group.
+        getNext(): VertexMarker; // Get the next VertexMarker in the same LatLngs group.
+        split(): void; // Split the vertex LatLngs group at its index, if possible.
+        continue(): void; // Continue the vertex LatLngs from this vertex. Only active for first and last vertices of a Polyline. 
+    }
 }

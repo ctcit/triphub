@@ -38,6 +38,7 @@ export class MapControl extends Component<{
 
     // routes
     private routes: L.Polyline[] = [];
+    private routeMarkers: L.Marker[] = [];
     private pendingRoutesAsJson: string;  // changed routes before being saved
     private routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow'];
 
@@ -264,13 +265,37 @@ export class MapControl extends Component<{
         if (routesAsJson) {
             const routesLatLngs: L.LatLng[][] = JSON.parse(routesAsJson);
             routesLatLngs.forEach(routeLatLngs => {
-                this.routes.push(L.polyline(routeLatLngs, {color: this.getRouteColor()}).addTo(this.minimap));
+                this.routes.push(L.polyline(routeLatLngs, {}).addTo(this.minimap));
             });
         }
+        this.adjustRoutePositionIndicators();
     }
 
-    private getRouteColor() {
-        return this.routeColours[this.routes.length % this.routeColours.length];
+    private adjustRoutePositionIndicators() {
+        this.routeMarkers.forEach((routeMarker: L.Marker) => {
+            routeMarker.remove();
+        });
+        this.routeMarkers = [];
+        if (this.routes.length > 0) {
+            let index: number = 0;
+            this.routes.forEach((route: L.Polyline) => {
+                const color: string = this.routeColours[index % this.routeColours.length];
+                route.setStyle({color});
+                const latLngs: L.LatLng[] = route.getLatLngs() as L.LatLng[];
+                if (latLngs.length > 0) {
+                    const label: string = this.routes.length > 1 ? (index + 1).toString() : ""; // no label if only one route
+                    const divIcon = L.divIcon({
+                        className: 'route-marker-div-icon',
+                        html: "<div style='background-color:" + color + ";' class='marker-ring'></div><i>" + label + "</i>",
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    });
+                    const routeMarker = L.marker(latLngs[0], { icon: divIcon }).addTo(this.minimap);
+                    this.routeMarkers.push(routeMarker);
+                }
+                index++;
+            });
+        }
     }
 
     private fitBounds(): void {

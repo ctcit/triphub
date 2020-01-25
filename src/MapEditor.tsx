@@ -8,7 +8,10 @@ import Col from 'reactstrap/lib/Col';
 import { Button, TabPane, TabContent, Nav, NavItem, NavLink, Tooltip, CustomInput, ButtonGroup, Row, FormText } from 'reactstrap';
 import { IMap } from './Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
-import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdGridOff} from 'react-icons/md';
+import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdGridOff, MdNavigateNext, MdNavigateBefore, MdClearAll} from 'react-icons/md';
+import { GiJoint } from 'react-icons/gi';
+import { IoMdSwap } from 'react-icons/io';
+import { AiOutlineRollback } from 'react-icons/ai';
 import classnames from 'classnames';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import * as Popper from 'popper.js';
@@ -33,6 +36,7 @@ export class MapEditor extends Component<{
 },{
     activeTab: string,
     mapSheets: string[]
+    currentRouteIndex: number,
     routes: L.Polyline[],
     canUndoLastRouteEdit: boolean,
     gpxFile?: File,
@@ -54,8 +58,10 @@ export class MapEditor extends Component<{
     private mapSheets: string[] = this.props.mapSheets || [];
 
     // routes
+    private currentRouteIndex: number = -1;
     private routes: L.Polyline[] = [];
-    private routesUndoStack: string[] = [];
+    private routeMarkers: L.Marker[] = [];
+    private routesUndoStack: Array<{ routesAsJSON: string, currentRouteIndex: number }> = [];
     private vertexIsDragging: boolean = false;
     private routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow'];
 
@@ -67,6 +73,7 @@ export class MapEditor extends Component<{
             activeTab: "SelectMaps",
 
             mapSheets: this.mapSheets,
+            currentRouteIndex: this.routes.length - 1,
             routes: this.routes,
             canUndoLastRouteEdit: false,
             gpxFile: undefined,
@@ -126,22 +133,62 @@ export class MapEditor extends Component<{
         const clearSelectedMaps = () => this.clearSelectedMaps();
 
         const addRoute = () => {
+            this.endRoute();
             this.addRoute();
             this.saveRoute();
         }
-        const clearRoute = () => {
-            this.clearRoute();
+        const deleteRoute = () => {
+            this.deleteRoute();
+            this.saveRoute();
+            this.continueRoute();
+        }
+        const clearAllRoutes = () => {
+            this.clearAllRoutes();
+            this.saveRoute();
+            this.continueRoute();
+        }
+        const previousRoute = () => {
+            this.endRoute();
+            this.previousRoute();
+            this.saveRoute();
+            this.continueRoute();
+        }
+        const nextRoute = () => {
+            this.endRoute();
+            this.nextRoute();
+            this.saveRoute();
+            this.continueRoute();
+        }
+        const joinRoute = () => {
+            this.endRoute();
+            this.joinNextRoute();
+            this.saveRoute();
+            this.continueRoute();
+        }
+        const swapRoute = () => {
+            this.endRoute();
+            this.swapNextRoute();
+            this.saveRoute();
+            this.continueRoute();
+        }
+        const reverseRoute = () => {
+            this.endRoute();
+            this.reverseRoute();
             this.saveRoute();
             this.continueRoute();
         }
         const generalizeRoute = () => {
             this.generalizeRoute().then(() => {
+                this.endRoute();
                 this.saveRoute();
                 this.continueRoute();
             });
         }
         const undoLastRouteEdit = () => {
+            this.endRoute();
             this.undoLastRouteEdit().then(() => {
+                this.continueRoute();
+            }, () => {
                 this.continueRoute();
             });
         }
@@ -149,8 +196,11 @@ export class MapEditor extends Component<{
             const gpxFile = e.target.files ? e.target.files[0] : null;
             e.target.value = null; // allow selecting the same file again
             this.setState( {gpxFile});
+            this.endRoute();
             this.importGpx(gpxFile).then(() => {
                 this.saveRoute();
+                this.continueRoute();
+            }, () => {
                 this.continueRoute();
             })
         }
@@ -206,25 +256,63 @@ export class MapEditor extends Component<{
                         </Row>
                     </TabPane>
                     <TabPane tabId="EditRoute">
-                        <Row className="mb-2 ml-1"><FormText color='muted'>Click points on map to draw route, or import route from GPX file</FormText></Row>
+                        <Row className="mb-2 ml-1"><FormText color='muted'>Click points on map to draw route, or import route from GPX file. CTRL-click on vertex splits the route.</FormText></Row>
                         <Row className="mb-2">
-                            <Col sm={4}>
+                            <Col sm={5}>
                                 <ButtonGroup>
                                     <ButtonWithTooltip id="AddRouteButton" color='primary' 
                                         onClick={addRoute} disabled={false} 
                                         placement="top" tooltipText="Add new route">
                                         <MdAddCircle/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="ClearAllRoutesButton" color='primary' 
-                                        onClick={clearRoute} disabled={this.state.routes.length === 0}  
-                                        placement="top" tooltipText="Clear all routes">
-                                            <MdClear/>
+                                </ButtonGroup>
+                                <ButtonGroup>
+                                    <ButtonWithTooltip id="PreviousRouteButton" color='primary' 
+                                        onClick={previousRoute} disabled={this.state.currentRouteIndex <= 0} 
+                                        placement="top" tooltipText="Edit the previous route">
+                                            <MdNavigateBefore/>
                                     </ButtonWithTooltip>
+                                    <ButtonWithTooltip id="NextRouteButton" color='primary' 
+                                        onClick={nextRoute} disabled={this.state.currentRouteIndex >= this.state.routes.length - 1} 
+                                        placement="top" tooltipText="Edit the next route">
+                                            <MdNavigateNext/>
+                                    </ButtonWithTooltip>
+                                </ButtonGroup>
+                                <ButtonGroup>
                                     <ButtonWithTooltip id="SimplifyRouteButton" color='primary' 
                                         onClick={generalizeRoute} disabled={this.state.routes.length === 0} 
                                         placement="top" tooltipText="Simplify route for current zoom level">
                                             <MdTimeline/>
                                     </ButtonWithTooltip>
+                                    <ButtonWithTooltip id="JoinRouteButton" color='primary' 
+                                        onClick={joinRoute} disabled={this.state.currentRouteIndex >= this.state.routes.length - 1} 
+                                        placement="top" tooltipText="Join current route with the next route">
+                                            <GiJoint/>
+                                    </ButtonWithTooltip>
+                                    <ButtonWithTooltip id="SwapRouteButton" color='primary' 
+                                        onClick={swapRoute} disabled={this.state.currentRouteIndex >= this.state.routes.length - 1} 
+                                        placement="top" tooltipText="Swap the current route with the next route">
+                                            <IoMdSwap/>
+                                    </ButtonWithTooltip>
+                                    <ButtonWithTooltip id="ReverseRouteButton" color='primary' 
+                                        onClick={reverseRoute} disabled={this.state.currentRouteIndex < 0} 
+                                        placement="top" tooltipText="Reverse the direction of the current route">
+                                            <AiOutlineRollback/>
+                                    </ButtonWithTooltip>
+                                </ButtonGroup>
+                                <ButtonGroup>
+                                    <ButtonWithTooltip id="DeleteRouteButton" color='primary' 
+                                        onClick={deleteRoute} disabled={this.state.routes.length === 0}  
+                                        placement="top" tooltipText="Delete current route">
+                                            <MdClear/>
+                                    </ButtonWithTooltip>
+                                    <ButtonWithTooltip id="ClearAllRoutesButton" color='primary' 
+                                        onClick={clearAllRoutes} disabled={this.state.routes.length === 0}  
+                                        placement="top" tooltipText="Clear all routes">
+                                            <MdClearAll/>
+                                    </ButtonWithTooltip>
+                                </ButtonGroup>
+                                <ButtonGroup>
                                     <ButtonWithTooltip id="UndoButton" color='primary' 
                                         onClick={undoLastRouteEdit} disabled={!this.state.canUndoLastRouteEdit} 
                                         placement="top" tooltipText="Undo last change">
@@ -325,11 +413,18 @@ export class MapEditor extends Component<{
         this.resizeMap(500, 500);
 
         this.setRoutesFromJson(this.props.routesAsJson);
-        this.setState({ routes: this.routes });
+        this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
         this.saveRoute(); 
 
         this.showInitiallySelectedMaps();
         this.fitBounds();
+
+        this.map.on('editable:vertex:ctrlclick editable:vertex:metakeyclick', (event: any) => {
+            this.endRoute();
+            this.splitRoute(event.vertex as L.VertexMarker);
+            this.saveRoute();
+            this.continueRoute();
+        });
     }
 
     private mapSheetWithName(mapSheet: string) {
@@ -354,50 +449,134 @@ export class MapEditor extends Component<{
 
     private continueRoute() {
         if (this.routes.length > 0) {
-            this.routes.forEach((route: L.Polyline) => {
-                route.enableEdit();
-                this.setRouteEventsOn(route);
-            });
-            const lastRoute = this.routes[this.routes.length - 1];
-            ((lastRoute as any).editor as L.PolylineEditor).continueForward();
+            const currentRoute = this.routes[this.currentRouteIndex];
+            currentRoute.enableEdit();
+            this.setRouteEventsOn(currentRoute);
+            ((currentRoute as any).editor as L.PolylineEditor).continueForward();
         } else {
             this.addRoute();
         }
+        this.adjustRoutePositionIndicators(true);
     }
 
     private addRoute(): void {
         if (this.routes.length > 0 && this.routes[this.routes.length - 1].getLatLngs().length === 0) {
             return; // use existing empty route
         }
-        const route = this.map.editTools.startPolyline(undefined, {
-            color: this.getRouteColor()
-        });
+        const route = this.map.editTools.startPolyline(undefined, {});
         this.setRouteEventsOn(route);
         this.routes.push(route);
-        this.setState({ routes: this.routes });
+        this.currentRouteIndex = this.routes.length - 1;
+        this.adjustRoutePositionIndicators();
+        this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
     }
 
     private endRoute(): void {
-        this.routes = this.routes.filter((route: L.Polyline) => {
-            this.setRouteEventsOff(route);
-            route.disableEdit();
-            if (route.getLatLngs().length === 0) {
-                route.remove(); // purge empty routes
-                return false;
+        if (this.routes.length > 0) {
+            const currentRoute = this.routes[this.currentRouteIndex];
+            this.setRouteEventsOff(currentRoute);
+            currentRoute.disableEdit();
+            if (currentRoute.getLatLngs().length === 0) {
+                currentRoute.remove(); // purge empty routes
+                this.routes.splice(this.currentRouteIndex, 1);
+                this.setState({ routes: this.routes });
             }
-            return true;
-        });
-        this.setState({ routes: this.routes });
+            this.currentRouteIndex = Math.min(this.currentRouteIndex, this.routes.length - 1)
+            this.adjustRoutePositionIndicators();
+        };
     }
 
-    private clearRoute(): void {
+    private deleteRoute(): void {
+        if (this.routes.length > 0) {
+            const currentRoute = this.routes[this.currentRouteIndex];
+            this.setRouteEventsOff(currentRoute);
+            currentRoute.disableEdit();
+            currentRoute.remove();
+            this.routes.splice(this.currentRouteIndex, 1);
+            this.currentRouteIndex = Math.min(this.currentRouteIndex, this.routes.length - 1)
+            this.adjustRoutePositionIndicators();
+            this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
+        };
+    }
+
+    private clearAllRoutes(): void {
         this.routes.forEach((route: L.Polyline) => {
             this.setRouteEventsOff(route);
             route.disableEdit();
             route.remove();
         });
         this.routes = [];
-        this.setState({ routes: this.routes });
+        this.currentRouteIndex = -1;
+        this.adjustRoutePositionIndicators();
+        this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
+    }
+
+    private previousRoute(): void {
+        if (this.currentRouteIndex > 0) {
+            this.currentRouteIndex = this.currentRouteIndex - 1;
+            this.setState({ currentRouteIndex: this.currentRouteIndex });
+            this.adjustRoutePositionIndicators();
+        }
+    }
+
+    private nextRoute(): void {
+        if (this.currentRouteIndex < this.routes.length - 1) {
+            this.currentRouteIndex = this.currentRouteIndex + 1;
+            this.setState({ currentRouteIndex: this.currentRouteIndex });
+            this.adjustRoutePositionIndicators();
+        }
+    }
+
+    private joinNextRoute(): void {
+        if (this.currentRouteIndex < this.routes.length - 1) {
+            const currentRoute = this.routes[this.currentRouteIndex];
+            const nextRoute = this.routes[this.currentRouteIndex + 1];
+            nextRoute.setLatLngs((currentRoute.getLatLngs() as L.LatLng[][]).concat(nextRoute.getLatLngs() as L.LatLng[][]));
+            this.deleteRoute();
+            this.adjustRoutePositionIndicators();
+        }
+    }
+
+    private swapNextRoute(): void {
+        if (this.currentRouteIndex < this.routes.length - 1) {
+            const currentRoute = this.routes[this.currentRouteIndex];
+            const nextRoute = this.routes[this.currentRouteIndex + 1];
+            const currentRouteLatLngs = currentRoute.getLatLngs();
+            currentRoute.setLatLngs(nextRoute.getLatLngs());
+            nextRoute.setLatLngs(currentRouteLatLngs);
+            this.adjustRoutePositionIndicators();
+        }
+    }
+
+    private reverseRoute(): void {
+        if (this.currentRouteIndex >= 0) {
+            const currentRoute = this.routes[this.currentRouteIndex];
+            currentRoute.setLatLngs(currentRoute.getLatLngs().reverse());
+            this.adjustRoutePositionIndicators();
+        }
+    }
+
+    private splitRoute(vertex: L.VertexMarker) {
+        if (this.currentRouteIndex >= 0) {
+            const currentRoute = this.routes[this.currentRouteIndex];
+            const latLngs: L.LatLng[] = currentRoute.getLatLngs() as L.LatLng[];
+            const index = vertex.getIndex();
+            if (index > 0 && index < latLngs.length) {
+                const firstPart = latLngs.slice(0, index + 1);
+                currentRoute.setLatLngs(firstPart);
+                let secondPart: L.LatLng[] = [];
+                secondPart.push(new L.LatLng(vertex.getLatLng().lat, vertex.getLatLng().lng)); // clone shared latLng
+                if (index < latLngs.length - 1) {
+                    secondPart = secondPart.concat(latLngs.slice(index + 1));
+                }
+                const newRoute = L.polyline(secondPart, {}).addTo(this.map);
+                this.setRouteEventsOn(newRoute);
+                this.routes.push(newRoute);
+                this.currentRouteIndex = this.currentRouteIndex + 1;
+                this.adjustRoutePositionIndicators();
+                this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
+            }
+        }
     }
 
     private setRouteEventsOn(route: L.Polyline) {
@@ -426,7 +605,6 @@ export class MapEditor extends Component<{
             if (!gpxFile) {
                 reject();
             }
-            this.clearRoute();
             const reader = new FileReader();
     
             let gpxLatLngs: L.LatLng[] = [];
@@ -435,17 +613,17 @@ export class MapEditor extends Component<{
                 const gpx = reader.result as string;
                 new L.GPX(gpx, {
                     async: true, 
-                    polyline_options: {
-                        color: this.getRouteColor()
-                    }
+                    polyline_options: {}
                 }).on('addline', (event: any) => {
                     gpxLatLngs = gpxLatLngs.concat((event.line as L.Polyline).getLatLngs() as L.LatLng[]);
                 }).on('loaded', (event: Event) => {
                     const generalizedLatLngs = this.generalize(gpxLatLngs);
                     if (generalizedLatLngs.length > 0) {
-                        const route = L.polyline(generalizedLatLngs, {color: this.getRouteColor()}).addTo(this.map);
+                        const route = L.polyline(generalizedLatLngs, {}).addTo(this.map);
                         this.routes.push(route);
-                        this.setState({ routes: this.routes });
+                        this.currentRouteIndex = this.routes.length - 1;
+                        this.adjustRoutePositionIndicators();
+                        this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
                     }
                     this.fitBounds();
                     this.setState({invalidGpxFile: false, busy: false });
@@ -467,14 +645,18 @@ export class MapEditor extends Component<{
             setTimeout(() => {
                 const zoom = this.map.getZoom();
                 const tolerance = 22 + 240000 * Math.exp(-0.6 * zoom);
-                const generalizedLatLngsPerRoute: L.LatLng[][] = this.routes.map((route: L.Polyline) => this.generalize(route.getLatLngs() as L.LatLng[], tolerance));
-                this.clearRoute();
-                generalizedLatLngsPerRoute.forEach((generalizedLatLngs: L.LatLng[]) => {
+                if (this.routes.length > 0) {
+                    const currentRoute = this.routes[this.currentRouteIndex];
+                    const generalizedLatLngs: L.LatLng[] = this.generalize(currentRoute.getLatLngs() as L.LatLng[], tolerance);
+                    this.setRouteEventsOff(currentRoute);
+                    currentRoute.disableEdit();
+                    currentRoute.remove();
                     if (generalizedLatLngs.length > 0) {
-                        const route = L.polyline(generalizedLatLngs, {color: this.getRouteColor()}).addTo(this.map);
-                        this.routes.push(route);
+                        const generalizedRoute = L.polyline(generalizedLatLngs, {}).addTo(this.map);
+                        this.routes[this.currentRouteIndex] = generalizedRoute;
                     }
-                });
+                }
+                this.adjustRoutePositionIndicators();
                 this.setState({ routes: this.routes, busy: false });
                 resolve();
             }, 0);
@@ -501,7 +683,7 @@ export class MapEditor extends Component<{
     private saveRoute(): void {
         const routesAsJSON: string = this.getRoutesAsJson();
         this.props.onRoutesChanged(routesAsJSON);
-        this.routesUndoStack.push(routesAsJSON);
+        this.routesUndoStack.push({ routesAsJSON, currentRouteIndex: this.currentRouteIndex });
         // console.log(">>>>> " + this.routesUndoStack.length + ", " + routesAsJSON);
         this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1 });
     }
@@ -511,12 +693,18 @@ export class MapEditor extends Component<{
             if (this.routesUndoStack.length > 1) { // always leave the orignal on the stack
                 this.setState({ busy: true });
                 setTimeout(() => {
-                    let routesAsJSON = this.routesUndoStack.pop(); // discard this
-                    routesAsJSON = this.routesUndoStack[this.routesUndoStack.length - 1];
+                    let undoStackItem = this.routesUndoStack.pop(); // discard this
+                    undoStackItem = this.routesUndoStack[this.routesUndoStack.length - 1];
+                    const routesAsJSON = undoStackItem.routesAsJSON;
                     // console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsJSON);
                     this.setRoutesFromJson(routesAsJSON);
+                    this.currentRouteIndex = undoStackItem.currentRouteIndex;
                     this.props.onRoutesChanged(routesAsJSON);
-                    this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1, busy: false });
+                    this.setState({ 
+                        canUndoLastRouteEdit: this.routesUndoStack.length > 1, 
+                        busy: false,
+                        currentRouteIndex: this.currentRouteIndex, 
+                        routes: this.routes });
                     resolve();
                 }, 0);
             } else {
@@ -534,17 +722,44 @@ export class MapEditor extends Component<{
     }
 
     private setRoutesFromJson(routesAsJson: string): void {
-        this.clearRoute();
+        this.clearAllRoutes();
         if (routesAsJson) {
             const routesLatLngs: L.LatLng[][] = JSON.parse(routesAsJson);
             routesLatLngs.forEach(routeLatLngs => {
-                this.routes.push(L.polyline(routeLatLngs, {color: this.getRouteColor()}).addTo(this.map));
+                this.routes.push(L.polyline(routeLatLngs, {}).addTo(this.map));
+                this.currentRouteIndex = this.routes.length - 1;
             });
+            this.adjustRoutePositionIndicators();
         }
     }
 
-    private getRouteColor() {
-        return this.routeColours[this.routes.length % this.routeColours.length];
+    private adjustRoutePositionIndicators(suppressCurrentRouteMarker: boolean = false) {
+        this.routeMarkers.forEach((routeMarker: L.Marker) => {
+            routeMarker.remove();
+        });
+        this.routeMarkers = [];
+        if (this.routes.length > 0) {
+            let index: number = 0;
+            this.routes.forEach((route: L.Polyline) => {
+                const color: string = this.routeColours[index % this.routeColours.length];
+                route.setStyle({color});
+                const latLngs: L.LatLng[] = route.getLatLngs() as L.LatLng[];
+                if (latLngs.length > 0) {
+                    if (!suppressCurrentRouteMarker || index !== this.currentRouteIndex) {
+                        const label: string = this.routes.length > 1 ? (index + 1).toString() : ""; // no label if only one route
+                        const divIcon = L.divIcon({
+                            className: 'route-marker-div-icon',
+                            html: "<div style='background-color:" + color + ";' class='marker-ring'></div><i>" + label + "</i>",
+                            iconSize: [20, 20],
+                            iconAnchor: [10, 10]
+                        });
+                        const routeMarker = L.marker(latLngs[0], { icon: divIcon }).addTo(this.map);
+                        this.routeMarkers.push(routeMarker);
+                    }
+                }
+                index++;
+            });
+        }
     }
 
     private fitBounds(): void {

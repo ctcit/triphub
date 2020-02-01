@@ -100,7 +100,10 @@ class CalendarWeek extends Component<{
                 }
 
                 const isToday = GetDateString(date) === GetDateString(new Date())
-                const className=(isToday ? 'today' : MonthOfYear[date.getMonth()].toLowerCase()) + ' ' + (row === 0 ? 'top' : '')
+                const isWeekend = this.props.calendar.props.app.state.holidayMap[GetDateString(date)] || 
+                                    date.getDay() === 0 || date.getDay() === 6
+                const className= (isToday ? 'today' : MonthOfYear[date.getMonth()].toLowerCase() + (isWeekend ? 'weekend' : '')) 
+                                    + ' ' + (row === 0 ? 'top' : '')
                 const onDragOver = (ev:any) => ev.preventDefault()
 
                 cells.push(<td colSpan={colSpan} key={col} onDragOver={onDragOver} onDrop={onDrop} className={className}>

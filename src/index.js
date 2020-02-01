@@ -145,6 +145,7 @@ class TripDetail extends Component {
                 <Control owner={this} id="length" label="Length in days" type="number" 
                                         validate={v => parseInt(v,10) < 1 || parseInt(v,10) > 7 ? "Length should be between 1 and 7 days" : null}/>
                 <Control owner={this} id="departurePoint" label="Departure Point" type="text" />
+                <Control owner={this} id="departureDetails" label="Departure Details" type="text" />
                 <Control owner={this} id="cost" label="Cost" type="text" />
                 <Control owner={this} id="grade" label="Grade" type="text" />
                 <Control owner={this} id="maxParticipants" label="Maximum number of trampers" type="number"  

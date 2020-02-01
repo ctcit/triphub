@@ -17,6 +17,7 @@ class ConfigServer
 	const emailHasDebugInfo   = false;
 	const emailFilter         = "/^alastairgbrown@yahoo\.com\.au$/";
 	const editorRoles         = "'Webmaster','Overnight Trip Organiser','Day Trip Organiser','Club Captain'";
+	const newMemberRoles      = "'New Members Rep'";
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";
 	const newslettersTable    = "newsletter.newsletters";

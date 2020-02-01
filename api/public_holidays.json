@@ -1,0 +1,2786 @@
+[
+  {
+    "date": "2019-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-01-02",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-01-21",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2019-01-28",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2019-01-28",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2019-02-04",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2019-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-03-11",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2019-03-21",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2019-03-25",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2019-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-04-19",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-04-20",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-04-21",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-04-22",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-04-23",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2019-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-05-12",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-06-03",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-06-22",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2019-09-01",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2019-09-23",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2019-10-25",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2019-10-27",
+    "name": "Diwali/Deepavali",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-10-28",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-11-04",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2019-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-11-15",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2019-12-02",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2019-12-02",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2019-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2019-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2019-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2019-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-01-02",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-01-20",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2020-01-27",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2020-01-27",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2020-02-03",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2020-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-03-09",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2020-03-20",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2020-03-23",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2020-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-04-10",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-04-11",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-04-12",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-04-13",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-04-14",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2020-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-04-27",
+    "name": "ANZAC Day observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-05-10",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-06-01",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2020-09-06",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2020-09-28",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2020-10-23",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2020-10-26",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-11-02",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2020-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-11-13",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2020-11-14",
+    "name": "Diwali/Deepavali",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-11-30",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2020-11-30",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2020-12-21",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2020-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2020-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-12-28",
+    "name": "Boxing Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2020-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-01-04",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-01-25",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2021-02-01",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2021-02-01",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2021-02-01",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2021-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-02-08",
+    "name": "Waitangi Day observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-03-08",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2021-03-20",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2021-03-22",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2021-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-04-02",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-04-03",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-04-04",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-04-05",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-04-06",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2021-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-04-26",
+    "name": "ANZAC Day observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-05-09",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-06-07",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2021-09-05",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2021-09-27",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2021-10-22",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2021-10-25",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-11-01",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2021-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-11-12",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2021-11-29",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2021-11-29",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2021-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2021-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2021-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-12-27",
+    "name": "Christmas Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-12-28",
+    "name": "Boxing Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2021-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-01-03",
+    "name": "New Years Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-01-04",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-01-24",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2022-01-31",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2022-01-31",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2022-01-31",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2022-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-02-07",
+    "name": "Waitangi Day observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-03-14",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2022-03-21",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2022-03-21",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2022-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-04-15",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-04-16",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-04-17",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-04-18",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-04-19",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2022-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-05-08",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-06-06",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2022-09-04",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2022-09-26",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2022-10-21",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2022-10-24",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-10-31",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2022-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-11-11",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2022-11-28",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2022-11-28",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2022-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2022-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2022-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-12-27",
+    "name": "Christmas Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2022-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-01-02",
+    "name": "New Years Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-01-03",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-01-23",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2023-01-30",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2023-01-30",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2023-01-30",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2023-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-03-13",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2023-03-20",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2023-03-21",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2023-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-04-07",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-04-08",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-04-09",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-04-10",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-04-11",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2023-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-05-14",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-06-05",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-06-22",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2023-09-03",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2023-09-25",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2023-10-20",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2023-10-23",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-10-30",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2023-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-11-17",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2023-11-27",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2023-12-04",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2023-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2023-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2023-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2023-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-01-02",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-01-22",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2024-01-29",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2024-01-29",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2024-01-29",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2024-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-03-11",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2024-03-20",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2024-03-25",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2024-03-29",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-03-30",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-03-31",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-04-01",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-04-02",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2024-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-05-12",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-06-03",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2024-09-01",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2024-09-23",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2024-10-25",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2024-10-28",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-11-04",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2024-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-11-15",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2024-12-02",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2024-12-02",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2024-12-21",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2024-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2024-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2024-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-01-02",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-01-20",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2025-01-27",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2025-01-27",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2025-02-03",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2025-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-03-10",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2025-03-20",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2025-03-24",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2025-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-04-18",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-04-19",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-04-20",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-04-21",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-04-22",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2025-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-05-11",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-06-02",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2025-09-07",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-09-22",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2025-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2025-10-24",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2025-10-27",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-11-03",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2025-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-11-14",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2025-12-01",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2025-12-01",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2025-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2025-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2025-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2025-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-01-02",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-01-19",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2026-01-26",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2026-01-26",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2026-02-02",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2026-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-03-09",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2026-03-21",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2026-03-23",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2026-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-04-03",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-04-04",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-04-05",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-04-06",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-04-07",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2026-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-04-27",
+    "name": "ANZAC Day observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-05-10",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-06-01",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2026-09-06",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2026-09-28",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2026-10-23",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2026-10-26",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-11-02",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2026-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-11-13",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2026-11-30",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2026-11-30",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2026-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2026-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2026-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-12-28",
+    "name": "Boxing Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2026-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-01-04",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-01-25",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2027-02-01",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2027-02-01",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2027-02-01",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2027-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-02-08",
+    "name": "Waitangi Day observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-03-08",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2027-03-21",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2027-03-22",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-03-27",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-03-28",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-03-29",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-03-30",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2027-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-04-26",
+    "name": "ANZAC Day observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-05-09",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-06-07",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-06-22",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2027-09-05",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2027-09-27",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2027-10-22",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2027-10-25",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-11-01",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2027-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-11-12",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2027-11-29",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2027-11-29",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2027-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2027-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-12-27",
+    "name": "Christmas Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-12-28",
+    "name": "Boxing Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2027-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-01-03",
+    "name": "New Years Day Observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-01-04",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-01-24",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2028-01-31",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2028-01-31",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2028-01-31",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2028-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-02-07",
+    "name": "Waitangi Day observed",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-03-13",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2028-03-20",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2028-03-20",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2028-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-04-15",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-04-16",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-04-17",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-04-18",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2028-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-05-14",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-06-05",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2028-09-03",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-09-22",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2028-09-25",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2028-10-20",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2028-10-23",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-10-30",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2028-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-11-17",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2028-11-27",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2028-12-04",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2028-12-21",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2028-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2028-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-01-02",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-01-22",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2029-01-29",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2029-01-29",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2029-01-29",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2029-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-03-12",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2029-03-20",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2029-03-26",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2029-03-30",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-03-31",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-04-01",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-04-02",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-04-03",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2029-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-05-13",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-06-04",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2029-09-02",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2029-09-24",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2029-10-19",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2029-10-22",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-10-29",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2029-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-11-16",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2029-12-03",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2029-12-03",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2029-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2029-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2029-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2029-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-01-01",
+    "name": "New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-01-02",
+    "name": "Day after New Years Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-01-21",
+    "name": "Wellington Anniversary Day",
+    "type": "Local holiday",
+    "details": "Manawatu-Whanganui*, Wellington"
+  },
+  {
+    "date": "2030-01-28",
+    "name": "Northland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Northland"
+  },
+  {
+    "date": "2030-01-28",
+    "name": "Auckland Anniversary Day",
+    "type": "Local holiday",
+    "details": "AUK, BOP, GIS, HKB*, MWT*, WKO"
+  },
+  {
+    "date": "2030-02-04",
+    "name": "Nelson Anniversary Day",
+    "type": "Local holiday",
+    "details": "CAN*, NSN, TAS, WTC*"
+  },
+  {
+    "date": "2030-02-06",
+    "name": "Waitangi Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-02-14",
+    "name": "Valentines Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-03-11",
+    "name": "Taranaki Anniversary Day",
+    "type": "Local holiday",
+    "details": "Taranaki"
+  },
+  {
+    "date": "2030-03-21",
+    "name": "March Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2030-03-25",
+    "name": "Otago Anniversary Day",
+    "type": "Local holiday",
+    "details": "Otago"
+  },
+  {
+    "date": "2030-04-01",
+    "name": "April Fools",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-04-19",
+    "name": "Good Friday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-04-20",
+    "name": "Holy Saturday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-04-21",
+    "name": "Easter Sunday",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-04-22",
+    "name": "Easter Monday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-04-23",
+    "name": "Southland Anniversary Day",
+    "type": "Local holiday",
+    "details": "Southland"
+  },
+  {
+    "date": "2030-04-25",
+    "name": "ANZAC Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-05-12",
+    "name": "Mothers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-06-03",
+    "name": "Queens Birthday",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-06-21",
+    "name": "June Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2030-09-01",
+    "name": "Fathers Day",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-09-23",
+    "name": "September Equinox",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2030-09-23",
+    "name": "South Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2030-10-25",
+    "name": "Hawkes Bay Anniversary Day",
+    "type": "Local holiday",
+    "details": "Hawke's Bay*"
+  },
+  {
+    "date": "2030-10-28",
+    "name": "Labour Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-10-31",
+    "name": "Halloween",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-11-04",
+    "name": "Marlborough Anniversary Day",
+    "type": "Local holiday",
+    "details": "Marlborough"
+  },
+  {
+    "date": "2030-11-05",
+    "name": "Guy Fawkes Night",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-11-15",
+    "name": "Canterbury Show Day",
+    "type": "Local holiday",
+    "details": "Canterbury*"
+  },
+  {
+    "date": "2030-12-02",
+    "name": "Chatham Islands Anniversary Day",
+    "type": "Local holiday",
+    "details": "Chatham Islands"
+  },
+  {
+    "date": "2030-12-02",
+    "name": "Westland Anniversary Day",
+    "type": "Local holiday",
+    "details": "West Coast*"
+  },
+  {
+    "date": "2030-12-22",
+    "name": "December Solstice",
+    "type": "Season",
+    "details": ""
+  },
+  {
+    "date": "2030-12-24",
+    "name": "Christmas Eve",
+    "type": "Observance",
+    "details": ""
+  },
+  {
+    "date": "2030-12-25",
+    "name": "Christmas Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-12-26",
+    "name": "Boxing Day",
+    "type": "National holiday",
+    "details": ""
+  },
+  {
+    "date": "2030-12-31",
+    "name": "New Years Eve",
+    "type": "Observance",
+    "details": ""
+  }
+]

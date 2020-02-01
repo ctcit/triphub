@@ -3,7 +3,7 @@ import 'font-awesome/css/font-awesome.min.css';
 import { Component } from 'react';
 import * as React from 'react';
 import { BaseOpt, BaseUrl, Spinner } from '.';
-import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant } from './Interfaces';
+import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant, IHoliday } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
@@ -21,11 +21,13 @@ export class App extends Component<{
       isLoadingMaps: boolean
       isLoadingMapPickerIframe: boolean
       isLoadingMembers: boolean
+      isLoadingHolidays: boolean
       isPrivileged: boolean
       members: IMember[]
       membersById: { [id: number]: IMember }
       maps: IMap[]
       mapPickerIframe: string
+      holidayMap: { [id: string]: IHoliday }
       config: IConfig
       statusId?: any
     }> {
@@ -43,10 +45,12 @@ export class App extends Component<{
             isLoadingMaps: true,
             isLoadingMapPickerIframe: true,
             isLoadingMembers: true,
+            isLoadingHolidays: true,
             isPrivileged: false,
             members: [],
             membersById: {},
             maps: [],
+            holidayMap: {},
             mapPickerIframe: "",
             status: ['Loading ', Spinner],
             statusShow: true,
@@ -71,6 +75,7 @@ export class App extends Component<{
 
     public setPath(path: string) : void {
         window.location.hash = "#" + path
+        window.scrollTo(0,0)
         this.setState({path})
     }
     
@@ -109,7 +114,7 @@ export class App extends Component<{
     }
 
     public getMemberById(id: number) : IMember {
-        return this.state.membersById[id] || {"id":id,"name":`member ${id}`} as IMember
+        return this.state.membersById[id] || {id,name:'Anonymous'} as IMember
     }
 
     public getMaps() : IMap[] {
@@ -148,8 +153,10 @@ export class App extends Component<{
                 let isPrivileged = false
 
                 for (const member of members) {
-                    membersById[member.id] = member
-                    isPrivileged = isPrivileged || (member.isMe && member.role != null)
+                    if (member.id) {
+                        membersById[member.id] = member
+                        isPrivileged = isPrivileged || (member.isMe && member.role != null)
+                    }
                 }
 
                 this.setState({isPrivileged, members, membersById, isLoadingMembers: false})
@@ -161,10 +168,20 @@ export class App extends Component<{
 
         this.apiCall('GET',BaseUrl + '/config')
             .then(config => this.setState({config:config[0], isLoadingConfig: false}));
-            this.apiCall('GET',BaseUrl + '/maps')
+        this.apiCall('GET',BaseUrl + '/maps')
             .then(maps => this.setState({maps, isLoadingMaps: false}));
         this.apiCall('GET',BaseUrl + '/map_picker_iframe')
             .then(mapPickerIframe => this.setState({mapPickerIframe:mapPickerIframe[0], isLoadingMapPickerIframe: false}));
+        this.apiCall('GET',BaseUrl + '/public_holidays')
+            .then(holidays => {
+                const holidayMap = {}
+
+                for (const holiday of holidays.filter((h : IHoliday) => h.type === 'National holiday' || h.name === 'Canterbury Show Day')){
+                    holidayMap[holiday.date] = holiday
+                }
+
+                this.setState({holidayMap, isLoadingHolidays: false})
+            });
     }
 
     public render(){
@@ -174,9 +191,10 @@ export class App extends Component<{
         if ( this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingMembers) {
             return  [<TriphubNavbar key='triphubNavbar' app={this}/>,
                      <div key='1'>Loading Configuration {this.state.isLoadingConfig ? Spinner : 'Done.'}</div>,
-                     <div key='2'>Loading Maps {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
+                     <div key='2'>Loading Maps {this.state.isLoadingMaps ? Spinner : 'Done.'}</div>,
                      <div key='3'>Loading Map Picker {this.state.isLoadingMapPickerIframe ? Spinner : 'Done.'}</div>,
-                     <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>]
+                     <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
+                     <div key='5'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>]
         } else if (this.state.path === "/calendar") {
             return <Calendar app={this}/> 
         } else if (this.state.path === "/newtrip") {

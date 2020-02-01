@@ -59,6 +59,7 @@ export class TripDetail extends Component<{
                 <Control owner={this} id='isNoSignup' label='No sign up list' type='checkbox' {...readOnly} 
                                         hidden={!this.props.owner.state.trip.isSocial}/>
                 <Control owner={this} id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...readOnly}/>
+                <Control owner={this} id='departureDetails' label='Departure Details' type='text' {...readOnly}/>
                 <Control owner={this} id='cost' label='Cost' type='text'  {...readOnly}/>
                 <Control owner={this} id='grade' label='Grade' type='text' list='grade_list'  {...readOnly}/>
                 <Control owner={this} id='maxParticipants' label='Maximum trampers' type='number' {...readOnly} 

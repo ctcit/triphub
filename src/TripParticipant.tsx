@@ -113,7 +113,8 @@ export class TripParticipant extends Component<{
         const participant = this.props.participant
         const member = this.props.app.getMemberById(participant.memberId)
         const isPrivileged = this.props.trip.isPrivileged() || this.props.app.getMe().id === participant.memberId
-        const isMemberDiff = participant.memberId && (participant.emergencyContactName !== member.emergencyContactName ||
+        const isMemberDiff = participant.memberId === this.props.app.getMe().id &&
+                             participant.memberId && (participant.emergencyContactName !== member.emergencyContactName ||
                                                       participant.emergencyContactPhone !== member.emergencyContactPhone)
         const readOnly = {readOnly: !isPrivileged}
         const iconid = `${participant.id || 'new'}`

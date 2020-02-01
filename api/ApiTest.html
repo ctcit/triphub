@@ -5,17 +5,17 @@
         <script>
             $( document ).ready(function() {
                 const params = new URLSearchParams(window.location.search);
-                const method = params.get('METHOD')
-                const path = params.get('BASEHREF') + '/' + params.get('PATH')
-                const fields = JSON.parse(params.get('FIELDS'))
+                const method = params.get('method')
+                const path = params.get('basehref') + '/' + params.get('path')
+                const fields = JSON.parse(params.get('fields'))
                 const regex = /{\w+}/g
 
                 $('#Header').html(method + ' ' + path)
-                $('#Home').html("<a href='"+params.get('BASEHREF')+"'><i>(home)</i></a>")
+                $('#Home').html("<a href='"+params.get('basehref')+"'><i>(home)</i></a>")
                 $('#Submit').html(method)
-                $('#Input').html(params.get('INPUT'))
-                $('#Output').html(params.get('OUTPUT'))
-                $('#Description').html(params.get('DESCRIPTION'))
+                $('#Input').html(params.get('input'))
+                $('#Output').html(params.get('output'))
+                $('#Description').html(params.get('description'))
 
                 path.replace(regex, function(key, id) {
                     $('#Fields').append($("<tr><td>"+key+"</td>"+

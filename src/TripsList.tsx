@@ -32,6 +32,7 @@ class TripsLine extends Component<{
         const trip = this.props.trip
         const id = trip.id
         const isApproved = this.props.trip.isApproved
+        const me = this.props.owner.props.app.getMe()
         let validation = app.validateTrip(trip).filter(i => !i.ok)
 
         const extractWarnings = (match:RegExp) => {
@@ -55,7 +56,7 @@ class TripsLine extends Component<{
                 <span hidden={!trip.isSocial}><ToolTipIcon id={'social' + id} icon='glass' tooltip='Social Event'/> </span>
                 {trip.grade}{extractWarnings(/grade/)}
             </td>,
-            <td key={'leaders' + id} onClick={this.onClick} className='desktop-only'>
+            <td key={'leaders' + id} onClick={this.onClick} hidden={!me.id} className='desktop-only'>
                 {trip.leaders}{extractWarnings(/leaders/)}
             </td>,
             <td key={'role' + id} onClick={this.onClick} hidden={trip.tripState !== TripState.MyTrip}>
@@ -94,6 +95,7 @@ export class TripsGroup extends Component<{
 
         const trips = this.props.trips
         const id = 'tg' + trips[0].tripState
+        const me = this.props.app.getMe()
 
         return  (
             <Expandable key={id} id={id} expanded={this.props.expanded} 
@@ -107,7 +109,7 @@ export class TripsGroup extends Component<{
                             <th className='centered'>Length</th>
                             <th>Title</th>
                             <th className='desktop-only'>Grade</th>
-                            <th className='desktop-only'>Leader</th>
+                            <th hidden={!me.id} className='desktop-only'>Leader</th>
                             <th hidden={this.props.trips[0].tripState !== TripState.MyTrip}>My Role</th>
                             <th hidden={this.props.trips[0].tripState !== TripState.SuggestedTrip} className='centered'>Approved</th>
                             <th/>

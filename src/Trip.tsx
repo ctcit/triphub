@@ -101,7 +101,7 @@ export class Trip extends Component<{
     public requeryParticipants(){
         this.props.app.apiCall('GET',this.props.href + '/participants')
         .then((participants:IParticipant[]) => {
-
+            participants = participants || []
             this.setState({participants, isSaving: false})
             this.props.app.setState({isLoading: false})
             this.props.app.setStatus('Loaded Trip', 3000)
@@ -148,6 +148,7 @@ export class Trip extends Component<{
                 tripDate: GetDateString(tripDate),
                 cost: '',
                 departurePoint: '',
+                departureDetails: '',
                 description: '',
                 grade: '',
                 isSocial: false,
@@ -196,7 +197,7 @@ export class Trip extends Component<{
     }
 
     public getParticipantsInfo() : IParticipantsInfo {
-        const all = [...this.state.participants]
+        const all = [...(this.state.participants || [])]
 
         all.sort((a,b) => GetDisplayPriority(a) - GetDisplayPriority(b))
 

@@ -37,6 +37,18 @@ export class TripParticipants extends Component<{
     }
 
     public signMeUp(){
+
+        if (!this.props.app.getMe().id) {
+            const newMembersRep = this.props.app.state.members[0]
+            alert(`Non members are most welcome to join club trips.\n`+
+                  `Please either:\n`+
+                  `• Get to meet us at our weekly meetings at\n` +
+                  `     Canterbury Mineral and Lapidary Club rooms,\n` +
+                  `     110 Waltham Rd, Waltham; or\n` +
+                  `• Contact ${newMembersRep.name} via the via the prospective members form`)
+            return
+        }
+
         this.props.trip.setState({isSaving:true})
         this.props.app.apiCall('POST', this.props.trip.props.href + '/participants', this.props.trip.signMeUpTramper(), true)
             .then(this.props.trip.requeryParticipants)
@@ -51,7 +63,7 @@ export class TripParticipants extends Component<{
     }
 
     public signUpTramperCancel(){
-        this.props.trip.setState({participants: this.props.trip.state.participants.filter((p:any) => p.id !== 'new')})
+        this.props.trip.setState({participants: this.props.trip.state.participants.filter((p:any) => p.id !== -1)})
     }
 
     public setPosition(id : number, target?: IParticipant ) : Promise<any> {
@@ -97,12 +109,13 @@ export class TripParticipants extends Component<{
         this.setParticipant(parseInt(ev.dataTransfer.getData('id'),10), {isDeleted:true})
     }
 
-
     public render() {
         const me = this.props.app.getMe()
+        const anon = !me.id
         const info = this.props.trip.getParticipantsInfo()
         const loading = this.props.app.state.isLoading
-        const isOpen = this.props.trip.state.trip.isOpen || this.props.trip.isPrivileged()
+        const isPrivileged = this.props.trip.isPrivileged()
+        const isOpen = this.props.trip.state.trip.isOpen || isPrivileged
         const isNewTrip = this.props.trip.props.isNew
         const hasNewTramper = !!info.all.find((p:IParticipant) => p.id === -1)
         const imOnList = !!info.all.find((m:IParticipant) => m.memberId === me.id)
@@ -117,7 +130,7 @@ export class TripParticipants extends Component<{
                     {this.props.trip.state.isSaving ? ['Signing up ',Spinner] : 'Sign me up!'}
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                 </Button>,
-                <Button key={'signup' + info.all.length} onClick={this.signUpTramper} hidden={loading || isNewTrip || hasNewTramper || !isOpen}>
+                <Button key={'signup' + info.all.length} onClick={this.signUpTramper} hidden={loading || isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
                     <span className='fa fa-user-plus'/> Sign up a tramper
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                 </Button>,

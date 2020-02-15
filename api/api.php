@@ -220,6 +220,13 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT id, name and role of loghed on user
             return GetLogonDetails($con,'r.role in ('.ConfigServer::editorRoles.')',False);
 
+        case "GET route":
+            header('Location: https://ctc.org.nz/db/index.php/routesRest/route', true, 301);
+            exit();
+        case "GET route/{routedId}":
+            header('Location: https://ctc.org.nz/db/index.php/routesRest/route?id=' . routeId, true, 301);
+            exit();
+
         default:
             die(Log($con,"ERROR","$route not supported"));
             break;

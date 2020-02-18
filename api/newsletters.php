@@ -40,6 +40,7 @@ function GetCurrentNewsletter($con, $userid) {
 		"SELECT * 
 		FROM
 			$newslettersTable
+		WHERE `date` > NOW()
 		ORDER by date DESC LIMIT 1");
 }
 

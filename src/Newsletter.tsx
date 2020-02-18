@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { Form } from 'reactstrap';
-import { Control } from './Control';
+import { SaveableControl } from './SaveableControl';
 // import { Badge, Button, ButtonGroup } from 'reactstrap';
 import { Spinner } from '.';
 import { App } from './App';
@@ -84,11 +84,11 @@ export class Newsletter extends Component<{
             <h1 key="title">Manage Newsletter</h1>,
 
             <Form key='form'>
-                <Control owner={this} id='volume' label='Volume' type='number' {...readOnly}/>
-                <Control owner={this} id='number' label='Number' type='number' {...readOnly}/>
-                <Control owner={this} id='date' label='Date' type='date' {...readOnly}/>
-                <Control owner={this} id='issueDate' label='Issue Date' type='date' {...readOnly}/>
-                <Control owner={this} id='nextdeadline' label='Next Deadline' type='date' {...readOnly}/>
+                <SaveableControl owner={this} id='volume' label='Volume' type='number' {...readOnly}/>
+                <SaveableControl owner={this} id='number' label='Number' type='number' {...readOnly}/>
+                <SaveableControl owner={this} id='date' label='Date' type='date' {...readOnly}/>
+                <SaveableControl owner={this} id='issueDate' label='Issue Date' type='date' {...readOnly}/>
+                <SaveableControl owner={this} id='nextdeadline' label='Next Deadline' type='date' {...readOnly}/>
             </Form>
         ]
     }

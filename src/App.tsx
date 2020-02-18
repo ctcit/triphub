@@ -19,14 +19,12 @@ export class App extends Component<{
       isLoading: boolean
       isLoadingConfig: boolean
       isLoadingMaps: boolean
-      isLoadingMapPickerIframe: boolean
       isLoadingMembers: boolean
       isLoadingHolidays: boolean
       isPrivileged: boolean
       members: IMember[]
       membersById: { [id: number]: IMember }
       maps: IMap[]
-      mapPickerIframe: string
       holidayMap: { [id: string]: IHoliday }
       config: IConfig
       statusId?: any
@@ -43,7 +41,6 @@ export class App extends Component<{
             isLoading: false,
             isLoadingConfig: true,
             isLoadingMaps: true,
-            isLoadingMapPickerIframe: true,
             isLoadingMembers: true,
             isLoadingHolidays: true,
             isPrivileged: false,
@@ -51,7 +48,6 @@ export class App extends Component<{
             membersById: {},
             maps: [],
             holidayMap: {},
-            mapPickerIframe: "",
             status: ['Loading ', Spinner],
             statusShow: true,
         }
@@ -125,8 +121,9 @@ export class App extends Component<{
 
         return this.state.isPrivileged && !this.state.isLoading ? [
             {id:'title', ok: !trip.isDeleted, message: 'This trip has been deleted'},
-            ...this.mandatory(trip,['title','grade','description','departure_point','cost']),
-            {id:'length', ok: trip.length >= 1 && trip.length <= 7, message:'Length should be between 1 and 7 days'},
+            ...this.mandatory(trip,['title','description']),
+            ...this.mandatory(trip,trip.isSocial ? [] : ['cost','grade','departure_point']),
+            {id:'length', ok: trip.length >= 1 && trip.length <= 14, message:'Length should be between 1 and 14 days'},
             {id:'openDate', ok: trip.openDate <= trip.closeDate, message:'Open date must be on or before Close date'},
             {id:'closeDate', ok: trip.openDate <= trip.closeDate, message:'Open date must be on or before Close date'},
             {id:'closeDate', ok: trip.closeDate <= trip.tripDate, message:'Close date must be on or before Trip date'},
@@ -170,8 +167,6 @@ export class App extends Component<{
             .then(config => this.setState({config:config[0], isLoadingConfig: false}));
         this.apiCall('GET',BaseUrl + '/maps')
             .then(maps => this.setState({maps, isLoadingMaps: false}));
-        this.apiCall('GET',BaseUrl + '/map_picker_iframe')
-            .then(mapPickerIframe => this.setState({mapPickerIframe:mapPickerIframe[0], isLoadingMapPickerIframe: false}));
         this.apiCall('GET',BaseUrl + '/public_holidays')
             .then(holidays => {
                 const holidayMap = {}
@@ -188,23 +183,25 @@ export class App extends Component<{
 
         console.log(`path=${this.state.path}`)
 
-        if ( this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingMembers) {
+        if ( this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingMembers || this.state.isLoadingHolidays) {
             return  [<TriphubNavbar key='triphubNavbar' app={this}/>,
                      <div key='1'>Loading Configuration {this.state.isLoadingConfig ? Spinner : 'Done.'}</div>,
                      <div key='2'>Loading Maps {this.state.isLoadingMaps ? Spinner : 'Done.'}</div>,
-                     <div key='3'>Loading Map Picker {this.state.isLoadingMapPickerIframe ? Spinner : 'Done.'}</div>,
-                     <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
-                     <div key='5'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>]
+                     <div key='3'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
+                     <div key='4'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>]
         } else if (this.state.path === "/calendar") {
-            return <Calendar app={this}/> 
+            return <Calendar key='calendar' app={this}/> 
         } else if (this.state.path === "/newtrip") {
             return <Trip app={this} isNew={true}/> 
         } else if (this.state.path.startsWith("/newsletters/")) {
             return <Newsletter app={this} href={BaseUrl + this.state.path}/> 
+            return <Trip key='newtrip' app={this} isNew={true} isNewSocial={true}/> 
+        } else if (this.state.path === "/newsocial") {
+            return <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> 
         } else if (this.state.path.startsWith("/trips/")) {
-            return <Trip app={this} isNew={false} href={BaseUrl + this.state.path}/> 
+            return <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> 
         } else {
-            return <TripsList app={this}/>
+            return <TripsList key='triplist' app={this}/>
         }
     }
 }

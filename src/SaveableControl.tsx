@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
 import { Component } from 'react';
 import * as React from 'react';
-import { Badge,Col, FormGroup, Input,Label, Button  } from 'reactstrap';
+import { Badge,Col, FormGroup, Input,Label  } from 'reactstrap';
 import { InputType } from 'reactstrap/lib/Input';
 import './index.css';
 import { App } from './App';
@@ -18,7 +18,7 @@ export interface IControlOwner {
     validate() : IValidation[]
 }
 
-export class Control extends Component<{
+export class SaveableControl extends Component<{
       type : string 
       owner : IControlOwner 
       id : string 
@@ -27,6 +27,7 @@ export class Control extends Component<{
       readOnly? : boolean
       list? : any
       affected? : string[]
+      radioOptions? : {[id:string]: any}
     },{
       saving : boolean
       changed : boolean
@@ -95,7 +96,8 @@ export class Control extends Component<{
     }
 
     public handleChange(event : any){
-        const value = this.props.type === 'checkbox' ? event.target.checked : 
+        const value = this.props.type === 'radio' ? (this.props.radioOptions || {})[event.target.value] : 
+                      this.props.type === 'checkbox' ? event.target.checked : 
                       this.props.type === 'number' ? parseFloat(event.target.value) : event.target.value
 
         if (value === this.state.prevValue[0] || !this.props.owner.href) {
@@ -111,26 +113,30 @@ export class Control extends Component<{
         const value = this.props.owner.get(this.props.id)
         const validation = this.props.owner.validate()
         const validationMessage = (validation.find(m => m.id === this.props.id && !m.ok) || {message:null}).message
-        const valueProp = {[this.props.type === 'checkbox' ? 'checked' : 'value'] : value}
+        const valueProp = this.props.type === 'checkbox' ? {checked:!!value} : {value: (value || '')}
         const controlProp = {readOnly: this.props.readOnly, onFocus: this.handleFocus, onBlur: this.handleBlur, onChange: this.handleChange}
+        const id = (this.props.owner.href || '').replace(/[/:.]/g,'')+'_'+this.props.id
+        const radioOptions = this.props.radioOptions || {}
 
         return  (
             <FormGroup hidden={this.props.hidden} row={true}>
                 <Label sm={2} for={this.props.id}>{this.props.label}</Label>
                 <Col sm={8}>
                     {this.props.type === 'textarea' ?
-                        <Textarea id={this.props.id} {...valueProp} {...controlProp} className='form-control'/> :
-                        <Input id={this.props.id} {...valueProp} {...controlProp} type={this.props.type as InputType}
+                        <Textarea id={id} {...valueProp} {...controlProp} className='form-control'/> :
+                     this.props.type === 'radio'  ?
+                        Object.keys(radioOptions).map((key,i) => 
+                            <Label key={`${id}_${i}`}>
+                                <Input id={`${id}_${i}`} name={id} type={this.props.type as InputType}
+                                        checked={value === radioOptions[key]} value={key} {...controlProp}/>
+                                    {key}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            </Label>) :
+                        <Input id={id} {...valueProp} {...controlProp} type={this.props.type as InputType}
                             autoComplete='off' list={this.props.list}/>}
                 </Col>
                 <Col sm={2}>
                     <Badge color='warning' hidden={!validationMessage || this.props.owner.app.state.isLoading} size='sm' tabIndex={-1}>{validationMessage}</Badge>
-                    <Button size='sm' hidden={!this.state.changed || !!validationMessage} onClick={this.save} onFocus={this.handleButtonFocus} onBlur={this.handleBlur}>
-                        {this.state.saving ? [ 'Saving ', Spinner ] : 'Save'}
-                    </Button>
-                    <Button size='sm' hidden={!this.state.changed || this.state.saving} onClick={this.cancel} onFocus={this.handleButtonFocus} onBlur={this.handleBlur}>
-                        Cancel
-                    </Button>
+                    <Badge color='success' hidden={!this.state.saving} size='sm' tabIndex={-1}>Saving {Spinner}</Badge>
                 </Col>
             </FormGroup>
         )

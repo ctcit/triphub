@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Control } from './Control';
+import { SaveableControl } from './SaveableControl';
 import { App } from './App';
 import { Trip } from './Trip';
 import { IValidation } from './Interfaces';
@@ -47,15 +47,15 @@ export class Email extends Component<{
 
     public send() {
         this.setState({sending: true})
-        this.app.apiCall('POST', this.props.owner.state.trip.href + '/email', this.state, true)
+        this.app.apiCall('POST', this.props.owner.props.href + '/email', this.state, true)
             .then(() => this.setState({sending: false}))
     }
 
     public render(){
         return [
-            <Control key='recipients' id='recipients' type='textarea' owner={this} label='Recipients' readOnly={true}/>,
-            <Control key='subject' id='subject' type='text' owner={this} label='Subject' />,
-            <Control key='body' id='body' type='textarea' owner={this} label='Body' />,
+            <SaveableControl key='recipients' id='recipients' type='textarea' owner={this} label='Recipients' readOnly={true}/>,
+            <SaveableControl key='subject' id='subject' type='text' owner={this} label='Subject' />,
+            <SaveableControl key='body' id='body' type='textarea' owner={this} label='Body' />,
             <FormGroup key='button'>
                 <Label/>
                 <Col sm={10}>

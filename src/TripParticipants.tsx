@@ -66,7 +66,7 @@ export class TripParticipants extends Component<{
         this.props.trip.setState({participants: this.props.trip.state.participants.filter((p:any) => p.id !== -1)})
     }
 
-    public setPosition(id : number, target?: IParticipant ) : Promise<any> {
+    public setPosition(id : number, target?: IParticipant, showMenu? : boolean ) : Promise<any> {
         const info = this.props.trip.getParticipantsInfo()
         const source = info.all.find(p => p.id === id) as IParticipant
         const sourceIndex = info.moveable.indexOf(source)
@@ -89,19 +89,19 @@ export class TripParticipants extends Component<{
                                     : GetDisplayPriority(target)/2 + GetDisplayPriority(info.moveable[nextIndex])/2
         }
 
-        return this.setParticipant(id, {isDeleted:false,displayPriority:displayPriority.toString()})
+        return this.setParticipant(id, {isDeleted:false,displayPriority:displayPriority.toString()},showMenu)
     }
 
-    public setParticipant(id : number, props : {}) : Promise<any> {
+    public setParticipant(id : number, props : {}, showMenu?: boolean) : Promise<any> {
 
         const participants = [...this.props.trip.state.participants]
         const participant = participants.find((p:IParticipant) => p.id === id) as IParticipant
         const index = participants.indexOf(participant) 
 
-        participants[index] = {...participant, ...props}
+        participants[index] = {...participant, ...props, showMenu}
 
         this.props.trip.setState({participants})
-        return this.props.app.apiCall('POST', participant.href as string, props, true)
+        return this.props.app.apiCall('POST', `${this.props.trip.props.href}/participants/${id}`, props, true)
     }
 
     public onDropOnDeleted(ev:any) 
@@ -155,7 +155,8 @@ export class TripParticipants extends Component<{
                     {
                         info.current.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip} 
-                                    owner={this} app={this.props.app} canWaitList={info.late.length !== 0} ref={this.participant}/>)
+                                    owner={this} app={this.props.app} canWaitList={info.late.length !== 0} ref={this.participant}
+                                    info={info}/>)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={info.late.length === 0}>
@@ -163,7 +164,7 @@ export class TripParticipants extends Component<{
                     {
                         info.late.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip} 
-                                    owner={this} app={this.props.app} canUnwaitList={true}/>)
+                                    owner={this} app={this.props.app} canUnwaitList={true} info={info}/>)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={isNewTrip || info.deleted.length === 0}>
@@ -171,7 +172,7 @@ export class TripParticipants extends Component<{
                     {
                         info.deleted.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip} 
-                                    owner={this} app={this.props.app}/>)
+                                    owner={this} app={this.props.app} info={info}/>)
                     }
                 </ListGroupItem>
             </ListGroup>,

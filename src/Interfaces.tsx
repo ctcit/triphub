@@ -8,7 +8,6 @@ export interface IValidation {
 
 export interface ITrip {
     id : number
-    href? : string
     title : string
     role? : string
     openDate : string
@@ -30,16 +29,15 @@ export interface ITrip {
     mapHtml : string
     isDeleted : boolean
     isApproved : boolean
+    isLimited : boolean
     maxParticipants : number
     leaders? : string
     tripState : TripState
     isOpen : boolean
-    editsHref? : string
 }
 
 export interface IParticipant {
     id : number
-    href? : string
     memberId : number
     name : string
     email : string
@@ -53,6 +51,7 @@ export interface IParticipant {
     logisticInfo : string
     vehicleRego : string
     displayPriority? : number
+    showMenu? : boolean
 }
 
 export interface IMember {
@@ -66,7 +65,6 @@ export interface IMember {
     otherRole : string
     isMe : boolean
     isMember : boolean
-    href : string
 }
 
 export interface IConfig {

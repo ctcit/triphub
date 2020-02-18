@@ -19,6 +19,7 @@ export class TriphubNavbar extends Component<{
         const calendar = () => this.props.app.setPath('/calendar')
         const newtrip = () => this.props.app.setPath('/newtrip')
         const newsletter = () => this.props.app.setPath('/newsletter')
+        const newsocial = () => this.props.app.setPath('/newsocial')
         const revokePrivileges = () => this.props.app.setState({isPrivileged:false})
         const me = this.props.app.getMe()
 
@@ -38,6 +39,11 @@ export class TriphubNavbar extends Component<{
                 </Button>
                 <Button color='primary' onClick={newsletter} hidden={!this.props.app.state.isPrivileged} >
                     Manage Newsletter
+                </Button>
+                <Button color='primary' onClick={newsocial} disabled={this.props.app.state.isLoading} 
+                    hidden={!me.id || !this.props.app.state.isPrivileged}>
+                    <span className='fa fa-glass'/> 
+                    Add a social event
                 </Button>
                 <Button color='primary' onClick={revokePrivileges} hidden={!this.props.app.state.isPrivileged} >
                     Revoke Privileges

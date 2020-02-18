@@ -39,8 +39,6 @@
             header('Content-Type: text/html');
             echo $result;
         } else {
-            $result = AddHRefs($result,$basehref,$entity,$subEntity);
-
             if (intval($_GET["prettyprintjson"])) {
                 header('Content-Type: text/html');
                 echo PrettyPrintJson($result);
@@ -80,13 +78,6 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Single <a href='$basehref#members'>members</a>
             return GetMembers($con, AccessLevel($con,"Unsecured"), $id);
 
-        case "POST members/{memberId}":
-        case "PATCH members/{memberId}":
-            // DESCRIPTION Sets emergency contact details for member
-            // OUTPUT Single <a href='$basehref#members'>members</a>
-            // INPUTENTITY members
-            return ApiPatch($con,AccessLevel($con,"Secured"),$table,$id,$input);
-
         case "GET trips":
             // DESCRIPTION Gets all trips whose close date is after the current date less one week
             // OUTPUT Array of <a href='$basehref#trips'>trips</a> + tripState + leaders
@@ -97,7 +88,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT A <a href='$basehref#trips'>trip</a>
             // OUTPUT The new <a href='$basehref#trips'>trip</a>
             // INPUTENTITY trips
-            return ApiPost($con,AccessLevel($con,"Secured"),$table,$input);
+            return ApiPost($con,AccessLevel($con,"Secured"),$table,$input,0);
             
         case "GET trips/{tripId}":
             // DESCRIPTION Gets detail for a given trip
@@ -110,7 +101,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$basehref#trips'>trips</a>
             // OUTPUT <a href='$basehref#trips'>trips</a>
             // INPUTENTITY trips
-            return ApiPatch($con,AccessLevel($con,"Secured"),$table,$id,$input);
+            return ApiPatch($con,AccessLevel($con,"Secured"),$table,$id,$input,$id);
 
         case "GET trips/{tripId}/participants":
             // DESCRIPTION Get participants for a given trip
@@ -130,7 +121,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT <a href='$basehref#participants'>participants</a> + href
             // INPUTENTITY participants
             $input["tripId"] = $id;
-            return ApiPost($con,AccessLevel($con,"Secured"),$subTable,$input);
+            return ApiPost($con,AccessLevel($con,"Secured"),$subTable,$input,$id);
 
         case "POST trips/{tripId}/edit":
             // DESCRIPTION Creates a new edit record for the given trip
@@ -139,13 +130,13 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUTENTITY edit
             $input["tripId"] = $id;
             $input["userId"] = AccessLevel($con,"Unsecured");
-            ApiPost($con,$input["userId"],$subTable,$input);
+            ApiPost($con,$input["userId"],$subTable,$input,$id);
             DeleteTripEdits($con);
             return SqlResultArray($con,"SELECT * from $subTable WHERE tripId = $id ORDER BY id DESC");
 
         case "GET trips/{tripId}/history":
             // DESCRIPTION Gets change history for a given trip
-            // OUTPUT Array of <a href='$basehref#history'>history</a> + href
+            // OUTPUT Array of <a href='$basehref#history'>history</a>
             return SqlResultArray($con,"SELECT * FROM $subTable WHERE tripId=$id ORDER BY id");
             
         case "POST trips/{tripId}/email":
@@ -168,7 +159,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT A <a href='$basehref#participants'>participant</a>
             // OUTPUT The updated <a href='$basehref#participants'>participant</a>
             // INPUTENTITY participants
-            return ApiPatch($con,AccessLevel($con,"Secured"),$subTable,$subId,$input);
+            return ApiPatch($con,AccessLevel($con,"Secured"),$subTable,$subId,$input,$id);
         
         case "POST trips/{tripId}/edit/{editId}":
         case "PATCH trips/{tripId}/edit/{editId}":
@@ -177,9 +168,18 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Array of <a href='$basehref#edit'>edit</a>
             // OUTPUT Returns all the current edits associated with the same trip
             // INPUTENTITY edit
-            ApiPatch($con,AccessLevel($con,"Unsecured"),$subTable,$subId,$input);
+            ApiPatch($con,AccessLevel($con,"Unsecured"),$subTable,$subId,$input,$id);
             DeleteTripEdits($con);
             return SqlResultArray($con,"SELECT * from $subTable WHERE tripId = $id ORDER BY id DESC");
+
+        case "POST trips/{tripId}/members/{memberId}":
+        case "PATCH trips/{tripId}/members/{memberId}":
+            // DESCRIPTION Sets emergency contact details for member
+            // OUTPUT Single <a href='$basehref#members'>member</a>
+            // INPUTENTITY members
+            $userId = AccessLevel($con,"Secured");
+            ApiPatch($con,$userId,$subTable,$subId,$input,$id);
+            return GetMembers($con, $userId, $subId);
 
         case "DELETE trips/{tripId}/edit/{editId}":
             // DESCRIPTION Deletes the given edit record
@@ -306,17 +306,25 @@ function LogMessage($con,$level,$message,$log=true){
     return $message;
 }
 
-function History($con,$userId,$action,$table,$before,$after)
+function History($con,$userId,$action,$table,$before,$after,$tripId)
 {
     switch ($table)
     {
         case ConfigServer::tripsTable:
-            $tripId = $after["id"];
             $participantId = "null";
             break;
         case ConfigServer::participantsTable:
-            $tripId = $after["tripId"];
             $participantId = $after["id"];
+            break;
+        case ConfigServer::membersTable:
+            mail(ConfigServer::adminUpdateEmail, 
+                 "Updated emergency contacts for $after[firstName] $after[lastName]",
+                 "From <b>$before[emergencyContactName]</b>, phone <b>$before[emergencyContactPhone]</b><br/>".
+                 "To <b>$after[emergencyContactName]</b>, phone <b>$after[emergencyContactPhone]</b>",
+                 "MIME-Version: 1.0\r\n".
+                 "Content-type: text/html;charset=UTF-8\r\n".
+                 "From: <noreply@ctc.org.nz>\r\n");
+            $participantId = "null";
             break;
         default:
             return;
@@ -356,22 +364,22 @@ function History($con,$userId,$action,$table,$before,$after)
     }
 }
 
-function ApiPatch($con,$userId,$table,$id,$input){
+function ApiPatch($con,$userId,$table,$id,$input,$tripId){
     $set = SqlSetFromInput($con, $input, $table);
     $sql = "UPDATE $table SET $set WHERE id=$id";
     $before = SqlResultArray($con,"SELECT * FROM $table WHERE id = $id");
     SqlExecOrDie($con,$sql);
     $after = SqlResultArray($con,"SELECT * FROM $table WHERE id = $id");
-    History($con,$userId,"update",$table,$before[0],$after[0]);
+    History($con,$userId,"update",$table,$before[0],$after[0],$tripId);
     return $after;
 }
 
-function ApiPost($con,$userId,$table,$input){
+function ApiPost($con,$userId,$table,$input,$tripId){
     $set = SqlSetFromInput($con, $input, $table);
     $sql = "INSERT $table SET $set";
     $id = SqlExecOrDie($con,$sql,true);
     $after = SqlResultArray($con,"SELECT * FROM $table WHERE id = $id");
-    History($con,$userId,"create",$table,null,$after[0]);
+    History($con,$userId,"create",$table,null,$after[0],$tripId || $id);
     return $after;
 }
 
@@ -400,37 +408,6 @@ function SqlSetFromInput($con,$input,$table){
     return implode(",", $set);
 }
 
-function AddHRef(&$row,$basehref,$entity,$subEntity) {
-    if (!is_array($row)) return;
-    if ($row["memberId"])                             $row["memberHref"]       = "$baseHref/members/$row[memberId]";
-    if ($row["userId"])                               $row["userHref"]         = "$baseHref/members/$row[userId]";
-    if ($row["newsletterId"])                         $row["newsletterHref"]   = "$baseHref/newsletters/$row[newstletterId]";
-    if ($row["tripId"])                               $row["tripHref"]         = "$baseHref/trips/$row[tripId]";
-    if ($row["participantId"])                        $row["participantHref"]  = "$baseHref/trips/$row[tripId]/participants/$row[participantId]";
-    if ("$entity/$subEntity" == "members/")           $row["href"]             = "$baseHref/$entity/$row[id]";
-    if ("$entity/$subEntity" == "newsletters/")       $row["href"]             = "$baseHref/$entity/$row[id]";
-    if ("$entity/$subEntity" == "trips/")             $row["href"]             = "$baseHref/$entity/$row[id]";
-    if ("$entity/$subEntity" == "trips/")             $row["participantsHref"] = "$baseHref/trips/$row[id]/participants";
-    if ("$entity/$subEntity" == "trips/")             $row["historyHref"]      = "$baseHref/trips/$row[id]/history";
-    if ("$entity/$subEntity" == "trips/")             $row["editsHref"]        = "$baseHref/trips/$row[id]/edits";
-    if ("$entity/$subEntity" == "trips/edit")         $row["href"]             = "$baseHref/trips/$row[tripId]/edit/$row[id]";
-    if ("$entity/$subEntity" == "trips/participants") $row["href"]             = "$baseHref/trips/$row[tripId]/participants/$row[id]";
-}
-
-function AddHRefs(&$result,$basehref,$entity,$subEntity) {
-    if (is_array($result) && sizeof($result)) {
-        if (array_keys($result) === range(0, count($result) - 1)) {
-            foreach ($result as &$row) {
-                AddHRef($row,$basehref,$entity,$subEntity);
-            }
-        } else {
-            AddHRef($result,$basehref,$entity,$subEntity);
-        }
-    }
-
-    return $result;
-}
-
 function IsReadOnly($table, $col) {
     if ($table === ConfigServer::membersTable)
         return $col !== 'emergencyContactName' && $col !== 'emergencyContactPhone';
@@ -452,6 +429,7 @@ function ApiHelp($con,$basehref) {
     $filehandle = fopen("api.php", "r") or die("Unable to open file!");
     $item = Array('security'=>'Unsecured');
 
+    // Pares this file to extract enpoint information
     while (!feof($filehandle)) {
         $line = str_replace('$basehref',$basehref,trim(fgets($filehandle)));
         if (preg_match('/case "(GET|POST|PATCH|DELETE)( (.*))?":/',$line,$matches))
@@ -468,6 +446,7 @@ function ApiHelp($con,$basehref) {
     }
     fclose($filehandle);
 
+    // Add data structure meta data for config and members, from API results
     foreach (array("config","members") as $entity) {
         $table = $constants[$entity."Table"];
         $data = ApiProcess($con,$basehref,"GET","GET $entity",$entity,null,null,null,null)[0];
@@ -480,25 +459,20 @@ function ApiHelp($con,$basehref) {
         $entities[$entity] = $cols;
     }
 
+    // Add data structure meta data from tables meta data
     foreach (array("trips","participants","history","edit") as $entity) {
         $table = $constants[$entity."Table"];
         $sqlCols = SqlResultArray($con,"SHOW FULL COLUMNS FROM $table","Field");
         $cols = array();
 
-        AddHRef($sqlCols,$basehref,"trips",$entity == "trips" ? "" : $entity);
         foreach ($sqlCols as $field => $col) {
-            if (preg_match('/^href$/', $field))
-                $cols []= array("col"=>$field,"type"=>"hyperlink","comment"=>"Link to $entity","readonly"=>"Yes");
-            else if (preg_match('/Href$/', $field))
-                $cols []= array("col"=>$field,"type"=>"hyperlink","comment"=>"Link to ".str_replace("Href","",$field),
-                                "readonly"=>"Yes");
-            else
-                $cols []= array("col"=>$field,"type"=>$col["Type"],"comment"=>$col["Comment"] ? $col["Comment"] : "",
-                                "readonly"=>IsReadOnly($table,$field) ? "Yes" : "");
+            $cols []= array("col"=>$field,"type"=>$col["Type"],"comment"=>$col["Comment"] ? $col["Comment"] : "",
+                            "readonly"=>IsReadOnly($table,$field) ? "Yes" : "");
         }
         $entities[$entity] = $cols;
     }
 
+    // Add data structure we haven't managed to get from above
     $entities["subjectbody"] = array(array("col"=>"subject",  "type"=>"string","comment"=>"The email subject"),
                                      array("col"=>"body",     "type"=>"text",  "comment"=>"The email body"));
     $entities["json"] =        array(array("col"=>"json",     "type"=>"text",  "comment"=>"The json to format"));
@@ -520,6 +494,7 @@ function ApiHelp($con,$basehref) {
                 .DELETE {background: red;        }
             </style>";
 
+    // Add endpoint information as HTML
     $apipath = str_replace('api.php','ApiTest.html',$basehref);
     $html .= "<table>";
     $html .= "<tr><th colspan='2'>Endpoint</th><th>Security</th><th>Description</th><th>Input</th><th>Output</th></tr>";
@@ -542,6 +517,7 @@ function ApiHelp($con,$basehref) {
     }
     $html .= "</table>";
 
+    // Add data structure information as HTML
     foreach ($entities as $entity => $cols) {
         $html .= "<h2 id='$entity'>$entity</h2>";
         $html .= "<table><tr><th>Column</th><th>Type</th><th>Read only</th><th>Comments</th></tr>";

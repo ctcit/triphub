@@ -167,7 +167,10 @@ export class TripsList extends Component<{
         const groups = this.state.groups.filter((group:ITrip[]) => group.length)
         return [
             <TriphubNavbar key='triphubNavbar' app={this.props.app}/>,
-            groups.map((group:ITrip[],i) => 
+            groups
+                .filter((group:ITrip[]) => this.props.app.state.isPrivileged || 
+                                            (group[0].tripState !== TripState.SuggestedTrip && group[0].tripState !== TripState.DeletedTrip))
+                .map((group:ITrip[],i) => 
                 <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripState} 
                             app={this.props.app} expanded={i === 0}/>)
             ]

@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Button, Form, FormGroup, Label, Col  } from 'reactstrap';
+import { Form, FormGroup, Label, Col  } from 'reactstrap';
 import { App } from './App';
-import { Control } from './Control';
+import { SaveableControl, IControlOwner } from './SaveableControl';
 import './index.css';
 import './print.css';
 import { Trip } from './Trip';
-import Collapse from 'reactstrap/lib/Collapse';
 import { IValidation, IMap } from './Interfaces';
-import { MapGrid } from './MapGrid';
+import { MapControl } from './MapControl';
 
 export class TripDetail extends Component<{
         owner: Trip,
@@ -16,19 +15,29 @@ export class TripDetail extends Component<{
     },{
         editMap: boolean
         editMaps: boolean
-    }> {
+    }> implements IControlOwner {
 
       public href?: string
       public app: App
 
+      private nz50MapsBySheet: { [mapSheet: string] : IMap } = {};
+
       constructor(props: any){
         super(props)
         this.state = {editMap:false, editMaps:false}
-        this.href = this.props.owner.state.trip.href
+        this.href = this.props.owner.props.href
         this.app = this.props.app
         this.get = this.get.bind(this)
         this.set = this.set.bind(this)
         this.validate = this.validate.bind(this)
+
+        // BJ TODO: move to App
+        const nz50Maps: IMap[] = this.props.app.getMaps();
+        this.nz50MapsBySheet = {};
+        nz50Maps.forEach((nz50Map: IMap) => {
+            this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
+        });
+
     }
 
     public validate() : IValidation[] {
@@ -44,70 +53,73 @@ export class TripDetail extends Component<{
     }
 
     public render(){
-        const readOnly = {readOnly: !this.props.owner.isPrivileged()}
-        const toggleMap = () => this.setState({editMap:!this.state.editMap})
-        const toggleMaps = () => this.setState({editMaps:!this.state.editMaps})
+        const trip = this.props.owner.state.trip
+        const common = {
+            readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
+            owner:this
+        }
+
+        // BJ TODO: remove 3 map limit
+        const getMapSheets = (): string[] => {
+            const mapSheets: string[] = [];
+            ["map1", "map2", "map3"].forEach((mapFieldId: string) => {
+                const mapSheet = this.get(mapFieldId);
+                if (mapSheet && mapSheet !== "") {
+                    const parts = mapSheet.split(" ");
+                    if (parts.length > 0 && this.nz50MapsBySheet[parts[0]]) {
+                        mapSheets.push(parts[0]);
+                    }
+                }
+            });
+            return mapSheets;
+        }
+
+        const getRoutesAsJson = (): string => {
+            return this.get("mapRoute");
+        }
+
+        // BJ TODO: remove 3 map limit
+        const saveMapChanges = (mapSheets: string[] | undefined, routesAsJson: string | undefined): Promise<void> => {
+            const body: any = {};
+            if (mapSheets) {
+                body.map1 = mapSheets.length > 0 ? mapSheets[0] + " " +  this.nz50MapsBySheet[mapSheets[0]].name : "";
+                body.map2 = mapSheets.length > 1 ? mapSheets[1] + " " +  this.nz50MapsBySheet[mapSheets[1]].name : "";
+                body.map3 = mapSheets.length > 2 ? mapSheets[2] + " " +  this.nz50MapsBySheet[mapSheets[2]].name : "";
+            }
+            if (routesAsJson) {
+                body.mapRoute = routesAsJson;
+            }
+            return this.saveTrip(body);
+        }
 
         return [
             <Form key='form'>
-                <Control owner={this} id='title' label='Title' type='text' {...readOnly}/>
-                <Control owner={this} id='openDate' label='Open Date' type='date'  {...readOnly}/>
-                <Control owner={this} id='closeDate' label='Close Date' type='date'  {...readOnly}/>
-                <Control owner={this} id='tripDate' label='Trip Date' type='date'  {...readOnly}/>
-                <Control owner={this} id='length' label='Length in days' type='number' {...readOnly}/>
-                <Control owner={this} id='isSocial' label='Is social event' type='checkbox' {...readOnly}/>
-                <Control owner={this} id='isNoSignup' label='No sign up list' type='checkbox' {...readOnly} 
-                                        hidden={!this.props.owner.state.trip.isSocial}/>
-                <Control owner={this} id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...readOnly}/>
-                <Control owner={this} id='departureDetails' label='Departure Details' type='text' {...readOnly}/>
-                <Control owner={this} id='cost' label='Cost' type='text'  {...readOnly}/>
-                <Control owner={this} id='grade' label='Grade' type='text' list='grade_list'  {...readOnly}/>
-                <Control owner={this} id='maxParticipants' label='Maximum trampers' type='number' {...readOnly} 
-                                        hidden={this.props.owner.state.trip.isSocial && this.props.owner.state.trip.isNoSignup}/>
-                <Control owner={this} id='description' label='Description' type='textarea'  {...readOnly}/>
-                <Control owner={this} id='logisticnfo' label='Logistic Information' type='textarea'  {...readOnly}/>
-                <FormGroup row={true}>
-                    <Label sm={2}>Maps</Label>
-                    <Col sm={1}>
-                        <Button hidden={readOnly.readOnly} onClick={toggleMaps}>{this.state.editMaps ? 'Hide' : 'Edit'}</Button>
-                    </Col>
-                    <Col sm={2}>{this.props.owner.state.trip.map1}</Col>
-                    <Col sm={2}>{this.props.owner.state.trip.map2}</Col>
-                    <Col sm={2}>{this.props.owner.state.trip.map3}</Col>
-                    <Col sm={2}>{this.props.owner.getRouteSummary()}</Col>
-                </FormGroup>
-                <Control owner={this} id='map1' label='Map 1' type='text' list='mapslist' {...readOnly} hidden={!this.state.editMaps}/>
-                <Control owner={this} id='map2' label='Map 2' type='text' list='mapslist' {...readOnly} hidden={!this.state.editMaps}/>
-                <Control owner={this} id='map3' label='Map 3' type='text' list='mapslist' {...readOnly} hidden={!this.state.editMaps}/>
-                { this.state.editMaps ? <MapGrid owner={this.props.owner}/> : '' }
-                <FormGroup row={true}>
-                    <Label sm={2}>Map</Label>
-                    <Col sm={1}>
-                        <Button hidden={readOnly.readOnly} onClick={toggleMap}>{this.state.editMap ? 'Hide' : 'Edit'}</Button>
-                    </Col>
-                    <Col sm={9}>
-                        <div dangerouslySetInnerHTML={{__html: this.props.owner.state.trip.mapHtml}}/>    
+                <SaveableControl id='title' label='Title' type='text' {...common}/>
+                <SaveableControl id='openDate' label='Open Date' type='date'  {...common}/>
+                <SaveableControl id='closeDate' label='Close Date' type='date'  {...common}/>
+                <SaveableControl id='tripDate' label='Trip Date' type='date'  {...common}/>
+                <SaveableControl id='isSocial' label='Event Type' type='radio'
+                                radioOptions={{"Social Event":true,"Tramp":false}} {...common}/>
+                <SaveableControl id='isNoSignup' label='No sign up list' type='checkbox' {...common} 
+                                        hidden={!trip.isSocial}/>
+                <SaveableControl id='length' label='Length in days' type='number' 
+                                        hidden={trip.isSocial} {...common}/>
+                <SaveableControl id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...common}/>
+                <SaveableControl id='departureDetails' label='Departure Details' type='text' {...common}/>
+                <SaveableControl id='cost' label='Cost' type='text'  {...common}/>
+                <SaveableControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
+                <SaveableControl id='isLimited' label='Limited Numbers' type='checkbox' {...common} 
+                                        hidden={trip.isSocial && trip.isNoSignup}/>
+                <SaveableControl id='maxParticipants' label='Maximum trampers' type='number' {...common} 
+                                        hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)}/>
+                <SaveableControl id='description' label='Description' type='textarea'  {...common}/>
+                <SaveableControl id='logisticnfo' label='Logistic Information' type='textarea'  {...common}/>
+                <FormGroup row={true} hidden={trip.isSocial}>
+                    <Label sm={2}>Maps/Routes</Label>
+                    <Col sm={10}>
+                        <MapControl nz50MapsBySheet={this.nz50MapsBySheet} readOnly={common.readOnly} mapSheets={getMapSheets()} routesAsJson={getRoutesAsJson()} saveMapChanges={saveMapChanges}/>
                     </Col>
                 </FormGroup>
-                <Collapse isOpen={this.state.editMap}>
-                    <FormGroup key='instructions' row={true}>
-                        <Label sm={2}>Map HTML</Label>
-                        <Col sm={1}>
-                            <div>To get map:</div>,
-                        </Col>
-                        <Col sm={9}>
-                            <ol>
-                                <li>Go to <a href='http://www.topomap.co.nz/' target='new'>www.topomap.co.nz</a></li>
-                                <li>Navigate to a location</li>
-                                <li>Click on <b>Share Map</b></li>
-                                <li>Check <b>Embed map in web page</b></li>
-                                <li>Copy the relevant text</li>
-                                <li>Paste it below:</li>
-                            </ol>
-                        </Col>
-                    </FormGroup>
-                    <Control key='control' owner={this} id='mapHtml' label='' type='textarea'/>
-                </Collapse>
             </Form>,
             <datalist key='grade_list' id='grade_list'>
                 <option value='Easy' />
@@ -118,11 +130,12 @@ export class TripDetail extends Component<{
             <datalist key='departure_point_list' id='departure_point_list'>
                 <option value='Z Papanui' />
                 <option value='Caltex Russley Road' />
-            </datalist>,
-            <datalist key='mapslist' id='mapslist'>
-                {this.props.app.getMaps()
-                     .map((m:IMap) => <option key={'map'+m.sheetCode} value={m.sheetCode + ' ' + m.name} />)}
             </datalist>
     ]
     }
+
+    public saveTrip(body: any): Promise<void> {
+        return this.app.apiCall('POST', this.href as string, body, true);
+    }
+
 }

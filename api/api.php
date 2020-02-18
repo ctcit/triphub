@@ -31,7 +31,9 @@
         $basehref = "https://$_SERVER[HTTP_HOST]$_SERVER[SCRIPT_NAME]";
         $route = $method.($entity ? " $entity" : "").($id ? '/{'.rtrim($entity,'s').'Id}' : '')
                         .($subEntity ? "/$subEntity" : "").($subId ? '/{'.rtrim($subEntity,'s').'Id}' : '');
-        $result = ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,$input);
+        $queryString = filter_input(INPUT_SERVER, "QUERY_STRING", FILTER_SANITIZE_STRING);
+        parse_str(trim($_SERVER['QUERY_STRING']), $query);
+        $result = ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,$input,$query);
         
         if (gettype($result) == 'string') {
             header('Content-Type: text/html');
@@ -51,7 +53,7 @@
 
     mysqli_close($con);
 
-function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,$input§){
+function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,$input,$query){
   
 	$table = TableFromEntity($entity);		
     $subTable = TableFromEntity($subEntity);		
@@ -212,19 +214,29 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
         case "GET newsletters":
             // DESCRIPTION Gets newsletters. Optional ?since=YYYY-MM-DD
             // OUTPUT Array of <a href='$baseHref#newsletters'>newsletters</a>
-            return GetNewsletters($con, ApiUserId($con), 0, $query);
+            return GetNewsletters($con, AccessLevel($con,"Privileged"), 0, $query);
 
         case "GET newsletters/{newsletterId}":
             // DESCRIPTION Gets newsletter
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetNewsletters($con, ApiUserId($con), $id);
+            return GetNewsletters($con, AccessLevel($con,"Privileged"), $id);
+
+        case "GET newsletters/current":
+            // DESCRIPTION Gets current newsletter, if it exists
+            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            return GetCurrentNewsletter($con, AccessLevel($con,"Privileged"));
+
+        case "GET newsletters/latest":
+            // DESCRIPTION Gets most recent newsletter
+            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            return GetLatestNewsletter($con, AccessLevel($con,"Privileged"));
         
         case "POST newsletters":
             // DESCRIPTION Creates a new newsletter
             // INPUT A <a href='$baseHref#newsletters'>newsletter</a>
             // OUTPUT The new <a href='$baseHref#tripsnewsletters'>newsletter</a>
             // INPUTENTITY newsletters
-            return ApiPost($con,ApiUserId($con),$table,$input);
+            return ApiPost($con, AccessLevel($con,"Privileged"),$table,$input);
 
         case "POST newsletters/{newsletterId}":
         case "PATCH newsletters/{newsletterId}":
@@ -232,7 +244,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$baseHref#newsletters'>newsletters</a>
             // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
-            return ApiPatch($con,ApiUserId($con),$table,$id,$input);
+            return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input);
 
         case "POST prettyprintjson":
             // DESCRIPTION Formats JSON
@@ -260,17 +272,21 @@ function AccessLevel($con, $accesslevel) {
     if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
         $member = GetLogonDetails($con,'1=1',$accesslevel != "Unsecured");
     } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {
-        if (ConfigServer::apiKeyUserId == 0 && $accesslevel != "Unsecured")
+        if (ConfigServer::apiKeyUserId == 0 && $accesslevel != "Unsecured") {
             die("not logged on");
-        if ($accesslevel != "Privileged")
+        }
+        if ($accesslevel != "Privileged") {
             return ConfigServer::apiKeyUserId;    
+        }
         $member = GetMembers($con, ConfigServer::apiKeyUserId, ConfigServer::apiKeyUserId);
     } else {
         die("api key expiry");
     }
 
     if ($accesslevel == "Privileged" && $member['role'] == '')
+    {
         die("You are not logged on as a priviledged user.");
+    }
         
     return $member['id'];
 }

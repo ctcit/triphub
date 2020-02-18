@@ -19,10 +19,28 @@ function GetNewsletters($con, $userid, $id = 0, $query = null) {
 
 	return SqlResultArray($con,
 		"SELECT * 
-		FROM
-			$newslettersTable
+		FROM $newslettersTable
 		$where
 		ORDER by id");
+}
+
+function GetLatestNewsletter($con, $userid) {
+	$newslettersTable = ConfigServer::newslettersTable;
+	return SqlResultArray($con,
+		"SELECT *
+		 FROM $newslettersTable
+		 WHERE `date` <= NOW()
+		 ORDER BY date Desc LIMIT 1");
+
+}
+
+function GetCurrentNewsletter($con, $userid) {
+	$newslettersTable = ConfigServer::newslettersTable;
+	return SqlResultArray($con,
+		"SELECT * 
+		FROM
+			$newslettersTable
+		ORDER by date DESC LIMIT 1");
 }
 
 ?>

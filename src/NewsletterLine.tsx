@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Component } from 'react';
-//import { Form } from 'reactstrap';
-//import { SaveableControl } from './SaveableControl';
+// import { Form } from 'reactstrap';
+// import { SaveableControl } from './SaveableControl';
 // import { Badge, Button, ButtonGroup } from 'reactstrap';
-//import { Spinner } from '.';
-//import { App } from './App';
-//import { BaseUrl } from '.';
+// import { Spinner } from '.';
+// import { App } from './App';
+// import { BaseUrl } from '.';
 import { FormatDate } from './Utilities';
 import { Button } from 'reactstrap';
 // import { IEdit,  IParticipant, ITrip, TripState, IParticipantsInfo } from './Interfaces';
@@ -19,8 +19,8 @@ import { INewsletter } from './Interfaces';
 // import { TripPrint } from './TripPrint';
 import './index.css';
 import './print.css';
-//import { TriphubNavbar } from './TriphubNavBar';
-//import { Newsletter } from './Newsletter';
+// import { TriphubNavbar } from './TriphubNavBar';
+// import { Newsletter } from './Newsletter';
 import { NewsletterList } from './NewsletterList';
 // import { ToolTipIcon } from './ToolTipIcon';
 
@@ -39,11 +39,11 @@ export class NewsletterLine extends Component<{
     }
 
     public render(){
-        //const app = this.props.owner.props.app
+        // const app = this.props.owner.props.app
         const newsletter = this.props.newsletter
         const id = newsletter.id
-        //const me = this.props.owner.props.app.getMe()
-        //let validation = app.validateTrip(newsletter).filter(i => !i.ok)
+        // const me = this.props.owner.props.app.getMe()
+        // let validation = app.validateTrip(newsletter).filter(i => !i.ok)
 
         /*
         const extractWarnings = (match:RegExp) => {
@@ -53,6 +53,7 @@ export class NewsletterLine extends Component<{
                                         tooltip={e.message} className='warning-icon'/>)
         }
         */
+       console.log(newsletter.date)
 
 
         return [

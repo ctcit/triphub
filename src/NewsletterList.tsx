@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
-//import { Form } from 'reactstrap';
-//import { SaveableControl } from './SaveableControl';
+// import { Form } from 'reactstrap';
+// import { SaveableControl } from './SaveableControl';
 // import { Badge, Button, ButtonGroup } from 'reactstrap';
 import { Spinner } from '.';
 import { App } from './App';
@@ -67,14 +67,14 @@ export class NewsletterList extends Component<{
         return [
                 <TriphubNavbar key='triphubNavbar' app={this.props.app}/>,
                 // Current newsletter summary of link to create
-                <h2>Current Newsletter</h2>,
-                <NewsletterLine owner={this} newsletter={this.state.current}/> ,
+                <h2 key='currentNewsletterTitle'>Current Newsletter</h2>,
+                // <NewsletterLine key='currentNewsltter' owner={this} newsletter={this.state.current}/> ,
 
                 // Summaries of other newsletters
-                <h2>Past newsletters</h2>,
+                <h2 key='pastNewslettersTitle'>Past newsletters</h2>,
                 this.state.newsletters.map( (newsletter) =>
                 {
-                    return <NewsletterLine owner={this} newsletter={newsletter}/>
+                    return <NewsletterLine key={'pastNewsletter'+newsletter.id} owner={this} newsletter={newsletter}/>
                 })
             ]
         }

@@ -13,6 +13,10 @@ export function AddDays(date:Date, days:number):Date {
 
 export function GetDate(dateString : string) : string{
     const date = new Date(dateString)
+    return FormatDate(date)
+}
+
+export function FormatDate(date : Date) : string{
     return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()]
 }
 

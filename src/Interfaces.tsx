@@ -108,9 +108,9 @@ export interface IParticipantsInfo {
 export interface INewsletter {
     id : number 
     href? : string
-    date : Date
-    issueDate : Date
-    nextdeadline : Date
+    date : string
+    issueDate : string
+    nextdeadline : string
     volume : number
     number : number
     isCurrent : boolean

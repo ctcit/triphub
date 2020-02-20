@@ -31,11 +31,16 @@ export class NewsletterLine extends Component<{
     },{}> {
     constructor(props: any){
         super(props)
-        this.onClick = this.onClick.bind(this) 
+        this.onEditClick = this.onEditClick.bind(this) 
+        this.onGenerateClick = this.onGenerateClick.bind(this) 
     }
 
-    public onClick() {
+    public onEditClick() {
         this.props.owner.props.app.setPath('/newsletters/' + this.props.newsletter.id)
+    }
+
+    public onGenerateClick() {
+        window.location.href = "https://ctc.org.nz/newsletter/generate.php?expand=newsletter.odt"
     }
 
     public render(){
@@ -57,23 +62,26 @@ export class NewsletterLine extends Component<{
 
 
         return [
-            <td key={'volume' + id} onClick={this.onClick}>
+            <td key={'volume' + id}>
                 {newsletter.volume}
             </td>,
-            <td key={'number' + id} onClick={this.onClick}>
+            <td key={'number' + id}>
                 {newsletter.number}
             </td>,
-            <td key={'date' + id} onClick={this.onClick}>
+            <td key={'date' + id}>
                 {FormatDate(newsletter.date)}
             </td>,
-            <td key={'issueDate' + id} onClick={this.onClick}>
+            <td key={'issueDate' + id}>
                 {FormatDate(newsletter.issueDate)}
             </td>,
-            <td key={'nextdeadline' + id} onClick={this.onClick}>
+            <td key={'nextdeadline' + id}>
                 {FormatDate(newsletter.nextdeadline)}
             </td>,
-            <td key={'link' + id}>
-                <Button color='link' onClick={this.onClick}>▶</Button>
+            <td key={'editLink' + id}>
+                <Button color='link' onClick={this.onEditClick}>Edit</Button>
+            </td>,
+            <td key={'generateLink' + id}>
+                <Button color='link' onClick={this.onGenerateClick}>Edit</Button>
             </td>
         ]
     }

@@ -6,8 +6,9 @@ import { SaveableControl, IControlOwner } from './SaveableControl';
 import './index.css';
 import './print.css';
 import { Trip } from './Trip';
-import { IValidation, IMap } from './Interfaces';
+import { IValidation, IMap, IArchivedRoute } from './Interfaces';
 import { MapControl } from './MapControl';
+import { BaseUrl } from 'src';
 
 export class TripDetail extends Component<{
         owner: Trip,
@@ -21,10 +22,14 @@ export class TripDetail extends Component<{
       public app: App
 
       private nz50MapsBySheet: { [mapSheet: string] : IMap } = {};
+      private archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute } = {};
 
       constructor(props: any){
         super(props)
-        this.state = {editMap:false, editMaps:false}
+        this.state = {
+            editMap:false, 
+            editMaps:false
+        }
         this.href = this.props.owner.props.href
         this.app = this.props.app
         this.get = this.get.bind(this)
@@ -38,6 +43,12 @@ export class TripDetail extends Component<{
             this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
         });
 
+        // BJ TODO: move to App
+        const archivedRoutes: IArchivedRoute[] = this.props.app.getArchivedRoutes();
+        this.archivedRoutesById = {};
+        archivedRoutes.forEach((archivedRoute: IArchivedRoute) => {
+            this.archivedRoutesById[archivedRoute.id] = archivedRoute;
+        });
     }
 
     public validate() : IValidation[] {
@@ -92,6 +103,12 @@ export class TripDetail extends Component<{
             return this.saveTrip(body);
         }
 
+        // TODO Move to service
+        const getArchivedRoute = (archivedRouteId: string): Promise<IArchivedRoute | undefined> =>  {
+            return this.app.apiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
+                .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
+        }
+
         return [
             <Form key='form'>
                 <SaveableControl id='title' label='Title' type='text' {...common}/>
@@ -117,7 +134,15 @@ export class TripDetail extends Component<{
                 <FormGroup row={true} hidden={trip.isSocial}>
                     <Label sm={2}>Maps/Routes</Label>
                     <Col sm={10}>
-                        <MapControl nz50MapsBySheet={this.nz50MapsBySheet} readOnly={common.readOnly} mapSheets={getMapSheets()} routesAsJson={getRoutesAsJson()} saveMapChanges={saveMapChanges}/>
+                        <MapControl 
+                            nz50MapsBySheet={this.nz50MapsBySheet} 
+                            archivedRoutesById={this.archivedRoutesById}
+                            readOnly={common.readOnly} 
+                            mapSheets={getMapSheets()} 
+                            routesAsJson={getRoutesAsJson()} 
+                            saveMapChanges={saveMapChanges}
+                            getArchivedRoute={getArchivedRoute} // TODO replace with service
+                        />
                     </Col>
                 </FormGroup>
             </Form>,

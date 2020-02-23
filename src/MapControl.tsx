@@ -5,7 +5,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, C
 import { MapEditor } from './MapEditor';
 import FormGroup from 'reactstrap/lib/FormGroup';
 import Button from 'reactstrap/lib/Button';
-import { IMap } from './Interfaces';
+import { IMap, IArchivedRoute } from './Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
@@ -13,9 +13,11 @@ type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 export class MapControl extends Component<{
     readOnly: boolean,
     nz50MapsBySheet: { [mapSheet: string] : IMap },
+    archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute },
     mapSheets: string[],
     routesAsJson: string,
-    saveMapChanges: (mapSheets: string[] | undefined, routesAsJson: string | undefined) => Promise<void>
+    saveMapChanges: (mapSheets: string[] | undefined, routesAsJson: string | undefined) => Promise<void>,
+    getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     mapVisible: boolean,
     editing: boolean,
@@ -144,8 +146,15 @@ export class MapControl extends Component<{
                             <Modal isOpen={this.state.editing} toggle={onSave} size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}}>
                                 <ModalHeader toggle={onSave}>Maps and Routes</ModalHeader>
                                 <ModalBody>
-                                    <MapEditor nz50MapsBySheet={this.props.nz50MapsBySheet} mapSheets={this.mapSheets} routesAsJson={this.getRoutesAsJson()}
-                                        onMapSheetsChanged={onMapSheetsChanged} onRoutesChanged={onRoutesChanged}/>
+                                    <MapEditor 
+                                        nz50MapsBySheet={this.props.nz50MapsBySheet} 
+                                        archivedRoutesById={this.props.archivedRoutesById}
+                                        mapSheets={this.mapSheets} 
+                                        routesAsJson={this.getRoutesAsJson()}
+                                        onMapSheetsChanged={onMapSheetsChanged} 
+                                        onRoutesChanged={onRoutesChanged}
+                                        getArchivedRoute={this.props.getArchivedRoute} // TODO replace with service
+                                    />
                                 </ModalBody>
                                 <ModalFooter>
                                     <Button color="primary" onClick={onSave} disabled={!this.state.editsMade}>Save</Button>{' '}

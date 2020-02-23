@@ -5,6 +5,7 @@
     require('config.php');
     require('trips.php');
     require('members.php');
+    require('routes.php');
 
     // Extract data from parameters 
     $method = $_SERVER['REQUEST_METHOD'];
@@ -220,12 +221,11 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT id, name and role of loghed on user
             return GetLogonDetails($con,'r.role in ('.ConfigServer::editorRoles.')',False);
 
-        case "GET route":
-            header('Location: https://ctc.org.nz/db/index.php/routesRest/route', true, 301);
-            exit();
-        case "GET route/{routedId}":
-            header('Location: https://ctc.org.nz/db/index.php/routesRest/route?id=' . routeId, true, 301);
-            exit();
+        case "GET routes":
+            return GetRoutes($con, AccessLevel($con,"Unsecured"));
+
+        case "GET routes/{routeId}":
+            return GetRoute($con, AccessLevel($con,"Unsecured"), $id);
 
         default:
             die(Log($con,"ERROR","$route not supported"));

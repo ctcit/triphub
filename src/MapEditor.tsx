@@ -6,7 +6,7 @@ import { Component } from 'react';
 import FormGroup from 'reactstrap/lib/FormGroup';
 import Col from 'reactstrap/lib/Col';
 import { Button, TabPane, TabContent, Nav, NavItem, NavLink, Tooltip, CustomInput, ButtonGroup, Row, FormText } from 'reactstrap';
-import { IMap } from './Interfaces';
+import { IMap, IArchivedRoute } from './Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdGridOff, MdNavigateNext, MdNavigateBefore, MdClearAll, MdContentCut} from 'react-icons/md';
 import { GiJoint } from 'react-icons/gi';
@@ -20,6 +20,21 @@ import { Spinner } from 'src';
 
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 
+// class ArchivedRoute {
+//     public id: string;
+//     public caption: string;
+//     public gpxfilename: string;
+//     public routenotes: string;
+//     public originatorid: string;
+//     public left: string;
+//     public top: string;
+//     public right: string;
+//     public bottom: string;
+//     public trackdate: string; // "2015-01-10"
+//     public firstName: string;
+//     public lastName: string;
+// }
+
 const KeyCodes = {
     comma: 188,
     enter: 13,
@@ -29,10 +44,12 @@ const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
 export class MapEditor extends Component<{
     nz50MapsBySheet: { [mapSheet: string] : IMap },
+    archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute },
     mapSheets: string[],
     routesAsJson: string,
     onMapSheetsChanged: (mapSheets: string[]) => void,
-    onRoutesChanged: (routesAsJson: string) => void
+    onRoutesChanged: (routesAsJson: string) => void,
+    getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     activeTab: string,
     mapSheets: string[]
@@ -43,7 +60,8 @@ export class MapEditor extends Component<{
     gpxFile?: File,
     invalidGpxFile: boolean,
     tags: Tag[],
-    suggestions: Tag[],
+    mapSheetSuggestions: Tag[],
+    archivedRouteSuggestions: Tag[],
     maxMapWidth: number,
     busy: boolean
 }>{
@@ -82,9 +100,14 @@ export class MapEditor extends Component<{
             invalidGpxFile: false,
 
             tags: [],
-            suggestions: Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
+            mapSheetSuggestions: Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
                 const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
                 return { id: nz50Map.sheetCode, text: nz50Map.sheetCode + ' ' + nz50Map.name };
+            }),
+
+            archivedRouteSuggestions: Object.keys(this.props.archivedRoutesById).map((archivedRouteId: string) => {
+                const archivedRoute: IArchivedRoute = this.props.archivedRoutesById[archivedRouteId];
+                return { id: archivedRoute.id.toString(), text: archivedRoute.caption };
             }),
 
             maxMapWidth: 1200,
@@ -127,9 +150,9 @@ export class MapEditor extends Component<{
             }
         }
 
-        const handleDelete = (pos: number) => this.deleteSelectedMaps(pos);
-        const handleAddition = (tag: Tag) => this.addSelectedMaps([tag.id]);
-        const handleDrag = (tag: Tag, currPos: number, newPos: number) => this.dragSelectedMaps(tag, currPos, newPos);
+        const handleMapDelete = (pos: number) => this.deleteSelectedMaps(pos);
+        const handleMapAddition = (tag: Tag) => this.addSelectedMaps([tag.id]);
+        const handleMapDrag = (tag: Tag, currPos: number, newPos: number) => this.dragSelectedMaps(tag, currPos, newPos);
 
         const selectRouteMaps = () => this.selectRouteMaps();
         const clearSelectedMaps = () => this.clearSelectedMaps();
@@ -202,12 +225,27 @@ export class MapEditor extends Component<{
             e.target.value = null; // allow selecting the same file again
             this.setState( {gpxFile});
             this.endRoute();
-            this.importGpx(gpxFile).then(() => {
+            this.importGpxFromFile(gpxFile).then(() => {
                 this.saveRoute();
                 this.continueRoute();
             }, () => {
                 this.continueRoute();
             })
+        }
+        const handleArchivedRouteDelete = (pos: number) => null;
+        const handleArchivedRouteAddition = (tag: Tag) => {
+            this.props.getArchivedRoute(tag.id)
+                .then((archivedRoute: IArchivedRoute) => {
+                    const gpxFile = undefined;
+                    this.setState( {gpxFile});
+                    this.endRoute();
+                    this.importGpx(archivedRoute.gpx).then(() => {
+                        this.saveRoute();
+                        this.continueRoute();
+                    }, () => {
+                        this.continueRoute();
+                    })
+                    });
         }
 
         return (
@@ -251,10 +289,10 @@ export class MapEditor extends Component<{
                             </Col>
                             <Col sm={6}>
                                 <ReactTags tags={this.state.tags}
-                                    suggestions={this.state.suggestions}
-                                    handleDelete={handleDelete}
-                                    handleAddition={handleAddition}
-                                    handleDrag={handleDrag}
+                                    suggestions={this.state.mapSheetSuggestions}
+                                    handleDelete={handleMapDelete}
+                                    handleAddition={handleMapAddition}
+                                    handleDrag={handleMapDrag}
                                     delimiters={delimiters}
                                     placeholder={'Start typing to add a map sheet by name'} />
                             </Col>
@@ -333,6 +371,12 @@ export class MapEditor extends Component<{
                                     onChange={importGpx}
                                     invalid={this.state.invalidGpxFile} 
                                 />
+                                <ReactTags tags={[]}
+                                    suggestions={this.state.archivedRouteSuggestions}
+                                    handleDelete={handleArchivedRouteDelete}
+                                    handleAddition={handleArchivedRouteAddition}
+                                    delimiters={delimiters}
+                                    placeholder={'Start typing for archived routes'} />
                             </Col>
                             <Col sm={1}>
                                 <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>
@@ -609,42 +653,50 @@ export class MapEditor extends Component<{
         route.off('editable:editing');
     }
 
-    private importGpx(gpxFile: File): Promise<void> {
+    private importGpxFromFile(gpxFile: File): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             if (!gpxFile) {
                 reject();
             }
             const reader = new FileReader();
     
-            let gpxLatLngs: L.LatLng[] = [];
             reader.onload = () => {
                 this.setState({ busy: true });
                 const gpx = reader.result as string;
-                new L.GPX(gpx, {
-                    async: true, 
-                    polyline_options: {}
-                }).on('addline', (event: any) => {
-                    gpxLatLngs = gpxLatLngs.concat((event.line as L.Polyline).getLatLngs() as L.LatLng[]);
-                }).on('loaded', (event: Event) => {
-                    const generalizedLatLngs = this.generalize(gpxLatLngs);
-                    if (generalizedLatLngs.length > 0) {
-                        const route = L.polyline(generalizedLatLngs, {}).addTo(this.map);
-                        this.routes.push(route);
-                        this.currentRouteIndex = this.routes.length - 1;
-                        this.adjustRoutePositionIndicators();
-                        this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
-                    }
-                    this.fitBounds();
-                    this.setState({invalidGpxFile: false, busy: false });
-                    resolve();
-                }).on('error', (event: any) => {
-                    this.setState({invalidGpxFile: true, busy: false })
-                    alert('Error loading file: ' + event.err);
-                    reject();
-                });
+                this.importGpx(gpx)
+                    .then(() => resolve(), () => reject());
             };
     
             reader.readAsText(gpxFile);
+        });
+    }
+
+    private importGpx(gpx: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.setState({ busy: true });
+            let gpxLatLngs: L.LatLng[] = [];
+            new L.GPX(gpx, {
+                async: true, 
+                polyline_options: {}
+            }).on('addline', (event: any) => {
+                gpxLatLngs = gpxLatLngs.concat((event.line as L.Polyline).getLatLngs() as L.LatLng[]);
+            }).on('loaded', (event: Event) => {
+                const generalizedLatLngs = this.generalize(gpxLatLngs);
+                if (generalizedLatLngs.length > 0) {
+                    const route = L.polyline(generalizedLatLngs, {}).addTo(this.map);
+                    this.routes.push(route);
+                    this.currentRouteIndex = this.routes.length - 1;
+                    this.adjustRoutePositionIndicators();
+                    this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
+                }
+                this.fitBounds();
+                this.setState({invalidGpxFile: false, busy: false });
+                resolve();
+            }).on('error', (event: any) => {
+                this.setState({invalidGpxFile: true, busy: false })
+                alert('Error loading file: ' + event.err);
+                reject();
+            });
         });
     }
 

@@ -23,6 +23,7 @@ class ConfigServer
 	const membershipsTable    = "ctc.memberships";
 	const rolesTable          = "ctc.roles";
 	const memberrolesTable    = "ctc.members_roles";
+	const routesTable         = "ctc.routes";
 	const tripsTable          = "triphub.trips";
 	const participantsTable   = "triphub.participants";
 	const historyTable        = "triphub.history";
@@ -31,7 +32,7 @@ class ConfigServer
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
 	const apiKey              = "6bc3ed05-66a4-4012-96bd-c7192df95997";
-	const apiKeyExpiry        = "20191231";
+	const apiKeyExpiry        = "20200331";
 	const apiKeyUserId	      = 125;
 }
 

@@ -30,8 +30,7 @@ export class NewsletterLine extends Component<{
         const newsletter = this.props.newsletter
         const id = newsletter.id
 
-        return [
-            <tr>
+        return <tr>
                 <td key={'volume' + id}>
                     {newsletter.volume}
                 </td>
@@ -48,7 +47,6 @@ export class NewsletterLine extends Component<{
                     <Button color='link' onClick={this.onEditClick}>Edit</Button>
                     <Button color='link' onClick={this.onGenerateClick}>Generate</Button>
                 </td>
-            </tr>
-        ]
+            </tr>;
     }
 }

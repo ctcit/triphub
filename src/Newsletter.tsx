@@ -2,33 +2,25 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Form } from 'reactstrap';
 import { SaveableControl } from './SaveableControl';
-// import { Badge, Button, ButtonGroup } from 'reactstrap';
-import { Spinner } from '.';
+import { Spinner, BaseUrl } from '.';
 import { App } from './App';
-// import { IEdit,  IParticipant, ITrip, TripState, IParticipantsInfo } from './Interfaces';
 import { INewsletter, IValidation } from './Interfaces';
-// import { GetDateString, AddDays, GetDisplayPriority, SafeJsonParse } from './Utilities';
-// import { TripDetail } from './TripDetail';
-// import { TripParticipants } from './TripParticipants';
-// import { History } from './History';
-// import { Expandable } from './Expandable';
-// import { Email } from './Email';
-// import { TripPrint } from './TripPrint';
 import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
-// import { ToolTipIcon } from './ToolTipIcon';
 
 
 export class Newsletter extends Component<{
     app: App,
-    href?: string
+    href?: string,
+    isNew : boolean
     }, {
         newsletter: INewsletter,
         isSaving: boolean
     }> {
 
-       // public suggestedTrip: {trip: ITrip, participants: IParticipant[]};
+    public newNesletter: INewsletter
+
     public href?: string
     public app : App;
 
@@ -44,7 +36,6 @@ export class Newsletter extends Component<{
         this.href = this.props.href
         this.validate = this.validate.bind(this)
     }
-        // this.requeryParticipants = this.requeryParticipants.bind(this)
 
     public get(id: string) : any{
         return this.state.newsletter[id]
@@ -62,20 +53,43 @@ export class Newsletter extends Component<{
         ];
     }
 
-    public componentDidMount(){
-        
+    public componentDidMount() {
+        if (this.props.isNew) {
+            this.props.app.setState({isLoading: false})    
+            this.startNewNewsletter()
+        } else {
             this.props.app.setStatus(['Loading ', Spinner])
 
             this.props.app.apiCall('GET',this.props.href as string)
-                .then((newsletter:INewsletter) => {
-                    this.setState({newsletter:newsletter[0]})
-                    this.props.app.setState({isLoading: false})
-                    this.props.app.setStatus('Loaded Trip', 3000)
-                })
+            .then((newsletter:INewsletter) => {
+                this.setState({newsletter:newsletter[0]})
+                this.props.app.setState({isLoading: false})
+                this.props.app.setStatus('Loaded Trip', 3000)
+            })
+        }
             
     }
-    // public componentWillUnmount(){
-    // }
+
+    public startNewNewsletter() {
+
+        this.newNesletter = {
+            id: 99,
+            volume: 99,
+            number: 99,
+            date: "01/01/2001",
+            issueDate: "01/01/2001",
+            nextdeadline: "01/01/2001",
+            isCurrent: true,
+        }
+        this.setState({newsletter: this.newNesletter})
+    }
+
+    public saveNewNesletter(){
+        const newsletter = this.state.newsletter
+
+        this.props.app.apiCall('POST',BaseUrl + '/newsletters',newsletter)
+            .then(() => this.props.app.setPath('/newsletterlist'))
+        }
 
     public render(){
         const readOnly = {readOnly: false};

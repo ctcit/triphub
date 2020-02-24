@@ -8,6 +8,7 @@ import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
 import { NewsletterGroup } from './NewsletterGroup';
+import { Button } from 'reactstrap';
 
 
 export class NewsletterList extends Component<{
@@ -23,6 +24,7 @@ export class NewsletterList extends Component<{
             current: {id:0} as INewsletter
         }
         this.requery = this.requery.bind(this)
+        this.newNewsletter = this.newNewsletter.bind(this)
     }
 
     public requery() {
@@ -38,21 +40,35 @@ export class NewsletterList extends Component<{
 
     public componentDidMount(){
         this.props.app.apiCall('GET', BaseUrl+'/newsletters/current')
-        .then((data:INewsletter) => {
-            this.setState({current:data});
+        .then((data:INewsletter[]) => {
+            if (data.length > 0)
+            {
+                this.setState({current:data[0]});
+            }
+            else
+            {
+                this.setState({current:{id:-1} as INewsletter});
+            }
         });
         this.requery()
     }
+
+    public newNewsletter() {
+        this.props.app.setPath("/newnewsletter")
+    }
+
 
     public render(){
         
         let currentNewsletter : any;
         if (this.state.current.id === 0)
         {
-            currentNewsletter = <span>No current newsletter!<button>Create</button></span>
+            currentNewsletter = <span>Loading...</span>
+        } else if (this.state.current.id === -1)
+        {
+            currentNewsletter = <span>No current newsletter!<Button onClick={this.newNewsletter}>Create</Button></span>
 
-        }
-        else
+        } else 
         {
             currentNewsletter = <NewsletterGroup key="pastNewsletters" app={this.props.app} newsletters={[this.state.current]}/>
 

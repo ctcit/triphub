@@ -234,17 +234,12 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
         case "GET newsletters/volumes":
             // DESCRIPTION Gets available volumes
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetVolumes($con, AccessLevel($con,"Privileged"));
+            return GetNewsletterVolumes($con, AccessLevel($con,"Privileged"));
 
         case "GET newsletters/volumes/{volumeId}":
             // DESCRIPTION Gets all the newsletters of a specific volume
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetVolume($con, AccessLevel($con,"Privileged"), $subId);
-
-        case "GET newsletters/next":
-            // DESCRIPTION Gets available volumes
-            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetVolumes($con, AccessLevel($con,"Privileged"));
+            return GetNewsletterVolume($con, AccessLevel($con,"Privileged"), $subId);
         
         case "POST newsletters":
             // DESCRIPTION Creates a new newsletter

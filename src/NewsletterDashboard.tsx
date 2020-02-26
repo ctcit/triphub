@@ -12,7 +12,8 @@ import { NewsletterGroup } from './NewsletterGroup';
 import { Button } from 'reactstrap';
 
 class NewsletterVolumeLink extends Component<{
-    volume: number
+    volume: number,
+    selected: boolean
     onClick: (volume: number) => void
     }, {}> {
     constructor(props: any)
@@ -26,7 +27,11 @@ class NewsletterVolumeLink extends Component<{
     }
 
     public render() {
-        return <a href="#" onClick={this.onVolumeClick}>{this.props.volume}</a>
+        let className :string = "newsletter-volume-list-link"
+        if (this.props.selected) {
+            className +=" newsletter-volume-list-link-selected"
+        }
+        return <a href="#" onClick={this.onVolumeClick} className={className}>{this.props.volume}</a>
     }
 }
 
@@ -111,11 +116,11 @@ export class NewsletterDashboard extends Component<{
                 // Summaries of other newsletters
                 <h2 key='pastNewslettersTitle'>Past newsletters</h2>,
                 <NewsletterList key="pastNewsletters" app={this.props.app} volume={this.state.volume}/>,
-                <ul key="volumeList">
+                <ul key="volumeList" className="newsletter-volume-list">
                     {this.state.volumes.map(
                         (volume:number) =>
-                        <li key={"volume"+volume}>
-                            <NewsletterVolumeLink volume={volume} onClick={this.setVolume}/>
+                        <li key={"volume"+volume} className="newsletter-volume-list-item">
+                            <NewsletterVolumeLink volume={volume} onClick={this.setVolume} selected={volume===this.state.volume}/>
                         </li>
                         )
                     }

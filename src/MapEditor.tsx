@@ -19,21 +19,8 @@ import ReactResizeDetector from 'react-resize-detector';
 import { Spinner } from 'src';
 
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
+type ArchivedRoutePolygon = L.Polygon & {archivedRoute: { id: string }};
 
-// class ArchivedRoute {
-//     public id: string;
-//     public caption: string;
-//     public gpxfilename: string;
-//     public routenotes: string;
-//     public originatorid: string;
-//     public left: string;
-//     public top: string;
-//     public right: string;
-//     public bottom: string;
-//     public trackdate: string; // "2015-01-10"
-//     public firstName: string;
-//     public lastName: string;
-// }
 
 const KeyCodes = {
     comma: 188,
@@ -72,6 +59,12 @@ export class MapEditor extends Component<{
     private nz50LayerGroup: L.LayerGroup<NZ50MapPolygon[]>;
     private nz50MarkerLayerGroup: L.LayerGroup<L.Marker[]>;
     private nz50MapPolygonsBySheet: { [mapSheet: string] : NZ50MapPolygon } = {};
+
+    // Archived routes
+    private archivedRoutesLayerGroup: L.LayerGroup<ArchivedRoutePolygon[]>;
+    private archivedRoutesInfoControl: L.Control;;
+    private archivedRoutePolygonsById: { [id: string] : ArchivedRoutePolygon } = {};
+
 
     // selected map sheets
     private mapSheets: string[] = this.props.mapSheets || [];
@@ -138,11 +131,18 @@ export class MapEditor extends Component<{
         
         const setSelectMapsTab = () => {
             this.endRoute();
+            this.hideArchivedRoutes();
             setTab('SelectMaps');
         }
         const setEditRoutesTab = () => {
             this.continueRoute();
+            this.hideArchivedRoutes();
             setTab('EditRoute');
+        }
+        const setRoutesArchiveTab = () => {
+            this.endRoute();
+            this.showArchivedRoutes();
+            setTab('RoutesArchive');
         }
         const setTab = (tab: string) => {
             if (this.state.activeTab !== tab) {
@@ -268,6 +268,14 @@ export class MapEditor extends Component<{
                         Edit Routes
                     </NavLink>
                     </NavItem>
+                    <NavItem>
+                    <NavLink
+                        className={classnames({ active: this.state.activeTab === 'RoutesArchive' })}
+                        onClick={setRoutesArchiveTab}
+                    >
+                        Routes Archive
+                    </NavLink>
+                    </NavItem>
                 </Nav>
                 <TabContent activeTab={this.state.activeTab}>
                     <TabPane tabId="SelectMaps">
@@ -371,19 +379,29 @@ export class MapEditor extends Component<{
                                     onChange={importGpx}
                                     invalid={this.state.invalidGpxFile} 
                                 />
+                            </Col>
+                            <Col sm={1}>
+                                <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>
+                            </Col>
+                        </Row>
+                    </TabPane>
+                    <TabPane tabId="RoutesArchive">
+                        <Row className="mb-2 ml-1"><FormText color='muted'>Import routes from the routes archive</FormText></Row>
+                        <Row className="mb-2">
+                            <Col sm={6}>
                                 <ReactTags tags={[]}
                                     suggestions={this.state.archivedRouteSuggestions}
                                     handleDelete={handleArchivedRouteDelete}
                                     handleAddition={handleArchivedRouteAddition}
                                     delimiters={delimiters}
-                                    placeholder={'Start typing for archived routes'} />
+                                    placeholder={'Start typing to select by name'} />
                             </Col>
                             <Col sm={1}>
                                 <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>
                             </Col>
                         </Row>
                 </TabPane>
-                </TabContent>
+            </TabContent>
                 <ResizableBox key="resizableMap" className="resizableMap" width={this.state.maxMapWidth} height={500} axis={'y'} minConstraints={[300, 300]} maxConstraints={[this.state.maxMapWidth, 2000]} onResize={onResizeMap}>
                     <div id="map"/>
                 </ResizableBox>
@@ -958,24 +976,94 @@ export class MapEditor extends Component<{
         }
     }
 
-    // private loadSelectedMaps(): void {
-    //     const lastSelectedMaps = sessionStorage.getItem('lastSelectedMaps');
-    //     if (lastSelectedMaps) {
-    //         const values = (lastSelectedMaps || "").split(" ");
-    //         this.getMapPolygons().forEach((polygon: NZ50MapPolygon) => {
-    //             if (values.indexOf(polygon.nz50map.sheetCode) >= 0) {
-    //                 this.toggleSelectMap(polygon);
-    //             }
-    //         });
-    //     }
-    // }
+    // -------------------------------------------------------
+    // Routes Archive
+    // -------------------------------------------------------
 
-    // private saveSelectedMaps(): void {
-    //     const selectedMapsInput: HTMLInputElement = document.getElementById('selected-maps') as HTMLInputElement;
-    //     sessionStorage.setItem('lastSelectedMaps', selectedMapsInput.value);
-    // }
+    private showArchivedRoutes(): void {
+        
+        if (!this.archivedRoutesLayerGroup) {
+            this.archivedRoutesLayerGroup = L.layerGroup()
+                .addTo(this.map);
 
+            // -----
+            this.archivedRoutesInfoControl = (L as any).control();
+            const infoControl: any = this.archivedRoutesInfoControl;
 
+            infoControl.onAdd = () => {
+                infoControl._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+                infoControl.update();
+                return infoControl._div;
+            };
+            infoControl.update = (archivedRoute: IArchivedRoute) => {
+                infoControl._div.innerHTML = (archivedRoute ?
+                    '<b>' + archivedRoute.caption + '</b><br /><p>' + archivedRoute.routenotes + '</p>'
+                    : 'Hover over a route for details.  Click to import.');
+            };
+            this.archivedRoutesInfoControl.addTo(this.map);
+            
+            // -----
+            Object.keys(this.props.archivedRoutesById).map((id: string) => {
+                const archivedRoute: IArchivedRoute = this.props.archivedRoutesById[id];
+
+                // very rough transformation from NZGD to WGS84
+                const top = -37.55621 + ((parseFloat(archivedRoute.top) - 5837998.824) / 111561.9956) - 0.065;
+                const left = 168.58630 + ((parseFloat(archivedRoute.left) - 1252000.414) / 82972.8376) + 0.19;
+                const right = 176.39608 + ((parseFloat(archivedRoute.right) - 1900000.022) / 82972.8376) + 0.19;
+                const bottom = -44.97809 + ((parseFloat(archivedRoute.bottom) - 5009999.080) / 111561.9956) - 0.065;
+
+                const coords: L.LatLngExpression[] = [[top, left], [top, right], [bottom, right], [bottom, left]] as L.LatLngExpression[];
+
+                // the map sheet polygon
+                const polygon = L.polygon(coords, {color: 'green', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.archivedRoutesLayerGroup);
+
+                // add click event handler for polygon
+                (polygon as any).archivedRoute = archivedRoute;
+                polygon.on('click', event => {
+                    this.selectArchivedRoute(event.target);
+                });
+
+                polygon.on('mouseover', event => {
+                    polygon.setStyle({weight: 5, fillOpacity: 0.2});
+                    infoControl.update((polygon as any).archivedRoute);
+                });
+
+                polygon.on('mouseout', event => {
+                    polygon.setStyle({weight: 2, fillOpacity: 0.0});
+                    infoControl.update(undefined);
+                });
+
+                this.archivedRoutePolygonsById[archivedRoute.id] = polygon as ArchivedRoutePolygon;
+            });
+        } else {
+            this.archivedRoutesLayerGroup
+                .addTo(this.map);
+            this.archivedRoutesInfoControl
+                .addTo(this.map);
+        }
+
+    }
+
+    private hideArchivedRoutes(): void {
+        if (this.archivedRoutesLayerGroup) {
+            this.archivedRoutesLayerGroup
+                .removeFrom(this.map);
+            this.archivedRoutesInfoControl
+                .remove();
+        }
+    }
+
+    private selectArchivedRoute(polygon: ArchivedRoutePolygon) {
+        this.props.getArchivedRoute(polygon.archivedRoute.id)
+            .then((archivedRoute: IArchivedRoute) => {
+                const gpxFile = undefined;
+                this.setState( {gpxFile});
+                this.importGpx(archivedRoute.gpx).then(() => {
+                    this.saveRoute();
+                })
+            });
+
+    }
 }
 
 // -------------------------------------------------------

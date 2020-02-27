@@ -10,6 +10,7 @@ function GetRoutes($con, $userid)
         "SELECT 
             r.id, 
             r.caption,
+            r.routenotes,
             r.left,r.top,r.right,r.bottom,
             r.trackdate
          FROM $routesTable r 

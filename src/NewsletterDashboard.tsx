@@ -11,6 +11,34 @@ import { NewsletterList } from './NewsletterList';
 import { NewsletterGroup } from './NewsletterGroup';
 import { Button } from 'reactstrap';
 
+class NewsletterVolumeSelector extends Component<{
+        volumes: number[],
+        selectedVolume: number,
+        visibleCount: number
+        onVolumeSelected: (volume: number) => void
+    }, {
+        lastVolume: number
+    }> {
+
+    constructor(props: any) {
+        super(props)
+        this.setState({lastVolume: this.props.volumes[this.props.volumes.length-1]})
+    }
+
+    public render() {
+        const volumesToShow : number[] = this.props.volumes.slice(this.state.lastVolume-this.props.visibleCount, this.state.lastVolume);
+        return <ul key="volumeList" className="newsletter-volume-list">
+                {volumesToShow.map(
+                    (volume:number) =>
+                    <li key={"volume"+volume} className="newsletter-volume-list-item">
+                        <NewsletterVolumeLink volume={volume} onClick={this.props.onVolumeSelected} selected={volume===this.props.selectedVolume}/>
+                    </li>
+                    )
+                }
+            </ul>
+    }
+}
+
 class NewsletterVolumeLink extends Component<{
     volume: number,
     selected: boolean
@@ -40,16 +68,16 @@ export class NewsletterDashboard extends Component<{
   },{
     newsletters: INewsletter[],
     current: INewsletter,
-    volumes: number[],
-    volume: number
+    volume: number,
+    volumes: number[]
   }> {
     constructor(props: any){
         super(props)
         this.state = {
             newsletters: [],
             current: {id:0} as INewsletter,
-            volumes: [],
-            volume: 0
+            volume: 0,
+            volumes: []
         }
         this.requery = this.requery.bind(this)
         this.newNewsletter = this.newNewsletter.bind(this)
@@ -116,15 +144,7 @@ export class NewsletterDashboard extends Component<{
                 // Summaries of other newsletters
                 <h2 key='pastNewslettersTitle'>Past newsletters</h2>,
                 <NewsletterList key="pastNewsletters" app={this.props.app} volume={this.state.volume}/>,
-                <ul key="volumeList" className="newsletter-volume-list">
-                    {this.state.volumes.map(
-                        (volume:number) =>
-                        <li key={"volume"+volume} className="newsletter-volume-list-item">
-                            <NewsletterVolumeLink volume={volume} onClick={this.setVolume} selected={volume===this.state.volume}/>
-                        </li>
-                        )
-                    }
-                </ul>
+                <NewsletterVolumeSelector key="volumeList" selectedVolume={this.state.volume} onVolumeSelected={this.setVolume} volumes={this.state.volumes} visibleCount={6} />
             ]
         }
 }

@@ -163,29 +163,29 @@ export class MapEditor extends Component<{
         const addRoute = () => {
             this.endRoute();
             this.addRoute();
-            this.saveRoute();
+            this.saveRouteChange();
             this.continueRoute();
         }
         const deleteRoute = () => {
             this.deleteRoute();
-            this.saveRoute();
+            this.saveRouteChange();
             this.continueRoute();
         }
         const clearAllRoutes = () => {
             this.clearAllRoutes();
-            this.saveRoute();
+            this.saveRouteChange();
             this.continueRoute();
         }
         const previousRoute = () => {
             this.endRoute();
             this.previousRoute();
-            this.saveRoute();
+            this.saveRouteChange();
             this.continueRoute();
         }
         const nextRoute = () => {
             this.endRoute();
             this.nextRoute();
-            this.saveRoute();
+            this.saveRouteChange();
             this.continueRoute();
         }
         const zoomToRoutes = () => {
@@ -194,7 +194,7 @@ export class MapEditor extends Component<{
         const joinRoute = () => {
             this.endRoute();
             this.joinNextRoute();
-            this.saveRoute();
+            this.saveRouteChange();
             this.continueRoute();
         }
         const splitRoute = () => {
@@ -203,19 +203,19 @@ export class MapEditor extends Component<{
         const swapRoute = () => {
             this.endRoute();
             this.swapNextRoute();
-            this.saveRoute();
+            this.saveRouteChange();
             this.continueRoute();
         }
         const reverseRoute = () => {
             this.endRoute();
             this.reverseRoute();
-            this.saveRoute();
+            this.saveRouteChange();
             this.continueRoute();
         }
         const generalizeRoute = () => {
             this.generalizeRoute().then(() => {
                 this.endRoute();
-                this.saveRoute();
+                this.saveRouteChange();
                 this.continueRoute();
             });
         }
@@ -237,7 +237,7 @@ export class MapEditor extends Component<{
             this.setState( {gpxFile});
             this.endRoute();
             this.importGpxFromFile(gpxFile).then(() => {
-                this.saveRoute();
+                this.saveRouteChange();
                 this.continueRoute();
             }, () => {
                 this.continueRoute();
@@ -505,6 +505,7 @@ export class MapEditor extends Component<{
         this.resizeMap(500, 500);
 
         this.setRoutesFromJson(this.props.routesAsJson);
+        this.recordLastRouteEdit(this.props.routesAsJson); // prime the undo stack but don't notify as a change
         this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
 
         this.showInitiallySelectedMaps();
@@ -514,7 +515,7 @@ export class MapEditor extends Component<{
             if (this.state.splitMode) {
                 this.endRoute();
                 this.splitRoute(event.vertex as L.VertexMarker);
-                this.saveRoute();
+                this.saveRouteChange();
                 this.continueRoute();
             }
         });
@@ -827,7 +828,7 @@ export class MapEditor extends Component<{
     private setRouteEventsOn(route: L.Polyline) {
         route.on('editable:editing', () => {
             if (!this.vertexIsDragging) {
-                this.saveRoute();
+                this.saveRouteChange();
             }
         });
         route.on('editable:vertex:dragstart', () => { 
@@ -835,7 +836,7 @@ export class MapEditor extends Component<{
         });
         route.on('editable:vertex:dragend', () => { 
             this.vertexIsDragging = false; 
-            this.saveRoute();
+            this.saveRouteChange();
         });
     }
 
@@ -942,9 +943,14 @@ export class MapEditor extends Component<{
         return generalizedLatLngs;
     }
 
-    private saveRoute(): void {
+    private saveRouteChange(): void {
         const routesAsJSON: string = this.getRoutesAsJson();
         this.props.onRoutesChanged(routesAsJSON);
+        this.recordLastRouteEdit(routesAsJSON);
+        this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1 });
+    }
+
+    private recordLastRouteEdit(routesAsJSON: string): void {
         this.routesUndoStack.push({ routesAsJSON, currentRouteIndex: this.currentRouteIndex });
         // console.log(">>>>> " + this.routesUndoStack.length + ", " + routesAsJSON);
         this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1 });
@@ -955,18 +961,20 @@ export class MapEditor extends Component<{
             if (this.routesUndoStack.length > 1) { // always leave the orignal on the stack
                 this.setState({ busy: true });
                 setTimeout(() => {
-                    let undoStackItem = this.routesUndoStack.pop(); // discard this
-                    undoStackItem = this.routesUndoStack[this.routesUndoStack.length - 1];
-                    const routesAsJSON = undoStackItem.routesAsJSON;
-                    // console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsJSON);
-                    this.setRoutesFromJson(routesAsJSON);
-                    this.currentRouteIndex = undoStackItem.currentRouteIndex;
-                    this.props.onRoutesChanged(routesAsJSON);
-                    this.setState({ 
-                        canUndoLastRouteEdit: this.routesUndoStack.length > 1, 
-                        busy: false,
-                        currentRouteIndex: this.currentRouteIndex, 
-                        routes: this.routes });
+                    if (this.routesUndoStack.length > 1) { // always leave the orignal on the stack
+                        let undoStackItem = this.routesUndoStack.pop(); // discard this
+                        undoStackItem = this.routesUndoStack[this.routesUndoStack.length - 1];
+                        const routesAsJSON = undoStackItem.routesAsJSON;
+                        // console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsJSON);
+                        this.setRoutesFromJson(routesAsJSON);
+                        this.currentRouteIndex = undoStackItem.currentRouteIndex;
+                        this.props.onRoutesChanged(routesAsJSON);
+                        this.setState({ 
+                            canUndoLastRouteEdit: this.routesUndoStack.length > 1, 
+                            busy: false,
+                            currentRouteIndex: this.currentRouteIndex, 
+                            routes: this.routes });
+                    }
                     resolve();
                 }, 0);
             } else {
@@ -1125,7 +1133,7 @@ export class MapEditor extends Component<{
                 const gpxFile = undefined;
                 this.setState( {gpxFile});
                 this.importGpx(archivedRoute.gpx).then(() => {
-                    this.saveRoute();
+                    this.saveRouteChange();
                 })
             });
 

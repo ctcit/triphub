@@ -8,7 +8,7 @@ import Col from 'reactstrap/lib/Col';
 import { Button, TabPane, TabContent, Nav, NavItem, NavLink, Tooltip, CustomInput, ButtonGroup, Row, FormText } from 'reactstrap';
 import { IMap, IArchivedRoute } from './Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
-import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdGridOff, MdNavigateNext, MdNavigateBefore, MdClearAll, MdContentCut} from 'react-icons/md';
+import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdGridOff, MdNavigateNext, MdNavigateBefore, MdClearAll, MdContentCut, MdZoomOutMap} from 'react-icons/md';
 import { GiJoint } from 'react-icons/gi';
 import { IoMdSwap } from 'react-icons/io';
 import { AiOutlineRollback } from 'react-icons/ai';
@@ -55,6 +55,8 @@ export class MapEditor extends Component<{
     // the leaflet map
     private map: L.Map;
 
+    private infoControl: L.Control;;
+
     // NZ50 map sheets grid
     private nz50LayerGroup: L.LayerGroup<NZ50MapPolygon[]>;
     private nz50MarkerLayerGroup: L.LayerGroup<L.Marker[]>;
@@ -62,9 +64,7 @@ export class MapEditor extends Component<{
 
     // Archived routes
     private archivedRoutesLayerGroup: L.LayerGroup<ArchivedRoutePolygon[]>;
-    private archivedRoutesInfoControl: L.Control;;
     private archivedRoutePolygonsById: { [id: string] : ArchivedRoutePolygon } = {};
-
 
     // selected map sheets
     private mapSheets: string[] = this.props.mapSheets || [];
@@ -130,16 +130,19 @@ export class MapEditor extends Component<{
         }
         
         const setSelectMapsTab = () => {
+            this.highlightSelectedMaps();
             this.endRoute();
             this.hideArchivedRoutes();
             setTab('SelectMaps');
         }
         const setEditRoutesTab = () => {
-            this.continueRoute();
+            this.unhighlightSelectedMaps();
             this.hideArchivedRoutes();
+            this.continueRoute();
             setTab('EditRoute');
         }
         const setRoutesArchiveTab = () => {
+            this.unhighlightSelectedMaps();
             this.endRoute();
             this.showArchivedRoutes();
             setTab('RoutesArchive');
@@ -161,6 +164,7 @@ export class MapEditor extends Component<{
             this.endRoute();
             this.addRoute();
             this.saveRoute();
+            this.continueRoute();
         }
         const deleteRoute = () => {
             this.deleteRoute();
@@ -183,6 +187,9 @@ export class MapEditor extends Component<{
             this.nextRoute();
             this.saveRoute();
             this.continueRoute();
+        }
+        const zoomToRoutes = () => {
+            this.fitBounds();
         }
         const joinRoute = () => {
             this.endRoute();
@@ -220,6 +227,10 @@ export class MapEditor extends Component<{
                 this.continueRoute();
             });
         }
+        const undoLastRouteEditWithoutContinue = () => {
+            this.endRoute();
+            this.undoLastRouteEdit();
+        }
         const importGpx = (e: any) => {
             const gpxFile = e.target.files ? e.target.files[0] : null;
             e.target.value = null; // allow selecting the same file again
@@ -234,18 +245,7 @@ export class MapEditor extends Component<{
         }
         const handleArchivedRouteDelete = (pos: number) => null;
         const handleArchivedRouteAddition = (tag: Tag) => {
-            this.props.getArchivedRoute(tag.id)
-                .then((archivedRoute: IArchivedRoute) => {
-                    const gpxFile = undefined;
-                    this.setState( {gpxFile});
-                    this.endRoute();
-                    this.importGpx(archivedRoute.gpx).then(() => {
-                        this.saveRoute();
-                        this.continueRoute();
-                    }, () => {
-                        this.continueRoute();
-                    })
-                    });
+            this.selectArchivedRoute(tag.id);
         }
 
         return (
@@ -283,6 +283,11 @@ export class MapEditor extends Component<{
                         <Row className="mb-2">
                             <Col sm={2}>
                                 <ButtonGroup>
+                                    <ButtonWithTooltip id="ZoomToRoutesButton1" color='primary' 
+                                        onClick={zoomToRoutes} disabled={this.state.routes.length === 0} 
+                                        placement="top" tooltipText="Zoom to route extents">
+                                            <MdZoomOutMap/>
+                                    </ButtonWithTooltip>
                                     <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='primary' 
                                         onClick={selectRouteMaps} disabled={this.state.routes.length === 0 }  
                                         placement="top" tooltipText="Select maps overlapping the route">
@@ -311,10 +316,10 @@ export class MapEditor extends Component<{
                         <Row className="mb-2">
                             <Col sm={5}>
                                 <ButtonGroup>
-                                    <ButtonWithTooltip id="AddRouteButton" color='primary' 
-                                        onClick={addRoute} disabled={false} 
-                                        placement="top" tooltipText="Add new route">
-                                        <MdAddCircle/>
+                                    <ButtonWithTooltip id="ZoomToRoutesButton2" color='primary' 
+                                        onClick={zoomToRoutes} disabled={this.state.routes.length === 0} 
+                                        placement="top" tooltipText="Zoom to route extents">
+                                            <MdZoomOutMap/>
                                     </ButtonWithTooltip>
                                     <ButtonWithTooltip id="PreviousRouteButton" color='primary' 
                                         onClick={previousRoute} disabled={this.state.currentRouteIndex <= 0} 
@@ -355,6 +360,11 @@ export class MapEditor extends Component<{
                                     </ButtonWithTooltip>
                                 </ButtonGroup>
                                 <ButtonGroup>
+                                    <ButtonWithTooltip id="AddRouteButton" color='primary' 
+                                        onClick={addRoute} disabled={false} 
+                                        placement="top" tooltipText="Add new route">
+                                        <MdAddCircle/>
+                                    </ButtonWithTooltip>
                                     <ButtonWithTooltip id="DeleteRouteButton" color='primary' 
                                         onClick={deleteRoute} disabled={this.state.routes.length === 0}  
                                         placement="top" tooltipText="Delete current route">
@@ -365,7 +375,7 @@ export class MapEditor extends Component<{
                                         placement="top" tooltipText="Clear all routes">
                                             <MdClearAll/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="UndoButton" color='primary' 
+                                    <ButtonWithTooltip id="UndoButton1" color='primary' 
                                         onClick={undoLastRouteEdit} disabled={!this.state.canUndoLastRouteEdit} 
                                         placement="top" tooltipText="Undo last change">
                                             <MdUndo/>
@@ -388,13 +398,27 @@ export class MapEditor extends Component<{
                     <TabPane tabId="RoutesArchive">
                         <Row className="mb-2 ml-1"><FormText color='muted'>Import routes from the routes archive</FormText></Row>
                         <Row className="mb-2">
+                            <Col sm={2}>
+                                <ButtonGroup>
+                                    <ButtonWithTooltip id="ZoomToRoutesButton3" color='primary' 
+                                        onClick={zoomToRoutes} disabled={this.state.routes.length === 0} 
+                                        placement="top" tooltipText="Zoom to route extents">
+                                            <MdZoomOutMap/>
+                                    </ButtonWithTooltip>
+                                    <ButtonWithTooltip id="UndoButton2" color='primary' 
+                                        onClick={undoLastRouteEditWithoutContinue} disabled={!this.state.canUndoLastRouteEdit} 
+                                        placement="top" tooltipText="Undo last change">
+                                            <MdUndo/>
+                                    </ButtonWithTooltip>
+                                </ButtonGroup>
+                            </Col>
                             <Col sm={6}>
                                 <ReactTags tags={[]}
                                     suggestions={this.state.archivedRouteSuggestions}
                                     handleDelete={handleArchivedRouteDelete}
                                     handleAddition={handleArchivedRouteAddition}
                                     delimiters={delimiters}
-                                    placeholder={'Start typing to select by name'} />
+                                    placeholder={'Start typing to add a route by name'} />
                             </Col>
                             <Col sm={1}>
                                 <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>
@@ -482,7 +506,6 @@ export class MapEditor extends Component<{
 
         this.setRoutesFromJson(this.props.routesAsJson);
         this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
-        this.saveRoute(); 
 
         this.showInitiallySelectedMaps();
         this.fitBounds();
@@ -495,6 +518,19 @@ export class MapEditor extends Component<{
                 this.continueRoute();
             }
         });
+
+        // ---------
+        // info control
+        this.infoControl = (L as any).control();
+        const infoControl: any = this.infoControl;
+        infoControl.onAdd = () => {
+            infoControl._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+            return infoControl._div;
+        };
+        infoControl.update = (html: string) => {
+            infoControl._div.innerHTML = html;
+        };
+
     }
 
     private mapSheetWithName(mapSheet: string) {
@@ -514,6 +550,137 @@ export class MapEditor extends Component<{
     }
 
     // -------------------------------------------------------
+    // Map selection
+    // -------------------------------------------------------
+
+    private showInitiallySelectedMaps(): void {
+        const initialMapSheets = this.mapSheets;
+        this.clearAllSelectedMapsWithoutSave();
+        this.addSelectedMapsWithoutSave(initialMapSheets);
+    }
+
+    private clearSelectedMaps(): void {
+        this.clearAllSelectedMaps();
+    }
+
+    private selectRouteMaps(): void {
+        this.clearAllSelectedMaps();
+        const mapPolygons = (this.nz50LayerGroup.getLayers() as NZ50MapPolygon[]).filter((polygon) => {
+            return polygon.nz50map;
+        });
+        const mapSheets: string[] = [];
+        // crude, but good enough, overlap detection
+        mapPolygons.forEach((polygon: NZ50MapPolygon) => {
+            const mapSheet: string = polygon.nz50map.sheetCode;
+            const polygonBounds = polygon.getBounds();
+            const intersects = this.routes.some((route: L.Polyline) => {
+                return (route.getLatLngs() as L.LatLng[]).some((latLng: L.LatLng) => {
+                    return polygonBounds.contains(latLng);
+                });
+            });
+            if (intersects) {
+                mapSheets.push(mapSheet);
+            }
+        });
+        this.addSelectedMaps(mapSheets);
+    }
+
+    private selectOrUnselectMap(polygon: NZ50MapPolygon): void {
+        const mapSheet: string = polygon.nz50map.sheetCode;
+        const index = this.mapSheets.indexOf(mapSheet);
+        if (index < 0) {
+            this.addSelectedMaps([ mapSheet ]);
+        } else {
+            this.deleteSelectedMaps(index);
+        }
+    }
+
+    private clearAllSelectedMaps(): void {
+        this.clearAllSelectedMapsWithoutSave();
+        this.saveSelectedMaps();
+    }
+
+    private clearAllSelectedMapsWithoutSave(): void {
+        this.unhighlightMaps(this.mapSheets);
+        this.mapSheets = [];
+        this.setTags();
+    }
+
+    private addSelectedMaps(addedMapSheets: string[]): void {
+        this.addSelectedMapsWithoutSave(addedMapSheets);
+        this.saveSelectedMaps();
+    }
+
+    private addSelectedMapsWithoutSave(addedMapSheets: string[]): void {
+        this.highlightMaps(addedMapSheets);
+        this.mapSheets = this.mapSheets.concat(addedMapSheets);
+        this.setTags();
+    }
+
+    private deleteSelectedMaps(pos: number): void {
+        const tag: Tag = this.state.tags[pos];
+        if (tag) {
+            this.unhighlightMapSheet(tag.id);
+            this.mapSheets = this.mapSheets.filter((mapSheet: string) => mapSheet !== tag.id);
+            this.setTags();
+            this.saveSelectedMaps();
+        }
+    }
+ 
+    private dragSelectedMaps(tag: Tag, currPos: number, newPos: number): void {
+        const tags = [...this.state.tags];
+        const newTags = tags.slice();
+        newTags.splice(currPos, 1);
+        newTags.splice(newPos, 0, tag);
+        this.mapSheets = newTags.map(newTag => newTag.id);
+        this.setTags();
+        this.saveSelectedMaps();
+}
+
+    private setTags(): void {
+        const newTags = this.mapSheets.map((mapSheet: string) => ({ id: mapSheet, text: this.mapSheetWithName(mapSheet) }));
+        this.setState({ tags: newTags, mapSheets: this.mapSheets });
+    }
+
+    private saveSelectedMaps(): void {
+        this.props.onMapSheetsChanged(this.mapSheets);
+    }
+
+    private highlightSelectedMaps(): void {
+        this.highlightMaps(this.mapSheets);
+    }
+
+    private unhighlightSelectedMaps(): void {
+        this.unhighlightMaps(this.mapSheets);
+    }
+
+    private highlightMaps(mapSheets: string[]): void {
+        mapSheets.forEach((mapSheet: string) => {
+            this.highlightMapSheet(mapSheet);
+        });
+    }
+
+    private unhighlightMaps(mapSheets: string[]): void {
+        mapSheets.forEach((addedMapSheet: string) => {
+            this.unhighlightMapSheet(addedMapSheet);
+        });
+    }
+
+    private highlightMapSheet(mapSheet: string): void {
+        const polygon: NZ50MapPolygon = this.nz50MapPolygonsBySheet[mapSheet];
+        if (polygon) {
+            polygon.setStyle({ fillOpacity: 0.1});
+        }
+    }
+
+    private unhighlightMapSheet(mapSheet: string): void {
+        const polygon: NZ50MapPolygon = this.nz50MapPolygonsBySheet[mapSheet];
+        if (polygon) {
+            polygon.setStyle({ fillOpacity: 0.0});
+        }
+    }
+
+    // -------------------------------------------------------
     // Route editing
     // -------------------------------------------------------
 
@@ -528,18 +695,9 @@ export class MapEditor extends Component<{
         }
         this.adjustRoutePositionIndicators(true);
         this.setState({ splitMode: false });
-    }
 
-    private addRoute(): void {
-        if (this.routes.length > 0 && this.routes[this.routes.length - 1].getLatLngs().length === 0) {
-            return; // use existing empty route
-        }
-        const route = this.map.editTools.startPolyline(undefined, {});
-        this.setRouteEventsOn(route);
-        this.routes.push(route);
-        this.currentRouteIndex = this.routes.length - 1;
-        this.adjustRoutePositionIndicators();
-        this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
+        this.infoControl.addTo(this.map);
+        (this.infoControl as any).update('<b>Editing route ' + (this.currentRouteIndex + 1).toString() + ' of ' + this.routes.length.toString() + '</b>');
     }
 
     private endRoute(): void {
@@ -555,6 +713,22 @@ export class MapEditor extends Component<{
             this.currentRouteIndex = Math.min(this.currentRouteIndex, this.routes.length - 1)
             this.adjustRoutePositionIndicators();
         };
+        
+        this.infoControl.remove();
+    }
+
+    // --------
+
+    private addRoute(): void {
+        if (this.routes.length > 0 && this.routes[this.routes.length - 1].getLatLngs().length === 0) {
+            return; // use existing empty route
+        }
+        const route = this.map.editTools.startPolyline(undefined, {});
+        this.setRouteEventsOn(route);
+        this.routes.push(route);
+        this.currentRouteIndex = this.routes.length - 1;
+        this.adjustRoutePositionIndicators();
+        this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
     }
 
     private deleteRoute(): void {
@@ -692,14 +866,18 @@ export class MapEditor extends Component<{
     private importGpx(gpx: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             this.setState({ busy: true });
-            let gpxLatLngs: L.LatLng[] = [];
+            const zoom = this.map.getZoom();
+            const tolerance = this.getTolerance(Math.max(14, zoom));  // don't generalize too harshly when zoomed out
             new L.GPX(gpx, {
                 async: true, 
-                polyline_options: {}
+                polyline_options: {},
+                gpx_options:{
+                    parseElements: ['track', 'route'] as any // yuk!
+                },
+                marker_options: {}
             }).on('addline', (event: any) => {
-                gpxLatLngs = gpxLatLngs.concat((event.line as L.Polyline).getLatLngs() as L.LatLng[]);
-            }).on('loaded', (event: Event) => {
-                const generalizedLatLngs = this.generalize(gpxLatLngs);
+                const gpxLatLngs = (event.line as L.Polyline).getLatLngs() as L.LatLng[];
+                const generalizedLatLngs = this.generalize(gpxLatLngs, tolerance);
                 if (generalizedLatLngs.length > 0) {
                     const route = L.polyline(generalizedLatLngs, {}).addTo(this.map);
                     this.routes.push(route);
@@ -707,6 +885,7 @@ export class MapEditor extends Component<{
                     this.adjustRoutePositionIndicators();
                     this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
                 }
+            }).on('loaded', (event: Event) => {
                 this.fitBounds();
                 this.setState({invalidGpxFile: false, busy: false });
                 resolve();
@@ -723,7 +902,7 @@ export class MapEditor extends Component<{
             this.setState({ busy: true });
             setTimeout(() => {
                 const zoom = this.map.getZoom();
-                const tolerance = 22 + 240000 * Math.exp(-0.6 * zoom);
+                const tolerance = this.getTolerance(zoom);
                 if (this.routes.length > 0) {
                     const currentRoute = this.routes[this.currentRouteIndex];
                     const generalizedLatLngs: L.LatLng[] = this.generalize(currentRoute.getLatLngs() as L.LatLng[], tolerance);
@@ -740,6 +919,10 @@ export class MapEditor extends Component<{
                 resolve();
             }, 0);
         });
+    }
+
+    private getTolerance(zoom: number): number {
+        return 22 + 240000 * Math.exp(-0.6 * zoom);
     }
 
     private generalize(latLngs: L.LatLng[], tolerance: number = 25): L.LatLng[] {
@@ -870,138 +1053,20 @@ export class MapEditor extends Component<{
     }
 
     // -------------------------------------------------------
-    // Map selection
-    // -------------------------------------------------------
-
-    private showInitiallySelectedMaps(): void {
-        const initialMapSheets = this.mapSheets;
-        this.clearAllSelectedMaps();
-        this.addSelectedMaps(initialMapSheets);
-    }
-
-    private clearSelectedMaps(): void {
-        this.clearAllSelectedMaps();
-    }
-
-    private selectRouteMaps(): void {
-        this.clearAllSelectedMaps();
-        const mapPolygons = (this.nz50LayerGroup.getLayers() as NZ50MapPolygon[]).filter((polygon) => {
-            return polygon.nz50map;
-        });
-        const mapSheets: string[] = [];
-        // crude, but good enough, overlap detection
-        mapPolygons.forEach((polygon: NZ50MapPolygon) => {
-            const mapSheet: string = polygon.nz50map.sheetCode;
-            const polygonBounds = polygon.getBounds();
-            const intersects = this.routes.some((route: L.Polyline) => {
-                return (route.getLatLngs() as L.LatLng[]).some((latLng: L.LatLng) => {
-                    return polygonBounds.contains(latLng);
-                });
-            });
-            if (intersects) {
-                mapSheets.push(mapSheet);
-            }
-        });
-        this.addSelectedMaps(mapSheets);
-    }
-
-    private selectOrUnselectMap(polygon: NZ50MapPolygon): void {
-        const mapSheet: string = polygon.nz50map.sheetCode;
-        const index = this.mapSheets.indexOf(mapSheet);
-        if (index < 0) {
-            this.addSelectedMaps([ mapSheet ]);
-        } else {
-            this.deleteSelectedMaps(index);
-        }
-    }
-
-    private clearAllSelectedMaps(): void {
-        this.mapSheets.forEach((mapSheet: string) => {
-            this.unhighlightMapSheet(mapSheet);
-        });
-        this.mapSheets = [];
-        this.setTags();
-        this.saveSelectedMaps();
-    }
-
-    private addSelectedMaps(addedMapSheets: string[]): void {
-        addedMapSheets.forEach((addedMapSheet: string) => {
-            this.highlightMapSheet(addedMapSheet);
-        });
-        this.mapSheets = this.mapSheets.concat(addedMapSheets);
-        this.setTags();
-        this.saveSelectedMaps();
-    }
-
-    private deleteSelectedMaps(pos: number): void {
-        const tag: Tag = this.state.tags[pos];
-        if (tag) {
-            this.unhighlightMapSheet(tag.id);
-            this.mapSheets = this.mapSheets.filter((mapSheet: string) => mapSheet !== tag.id);
-            this.setTags();
-            this.saveSelectedMaps();
-        }
-    }
- 
-    private dragSelectedMaps(tag: Tag, currPos: number, newPos: number): void {
-        const tags = [...this.state.tags];
-        const newTags = tags.slice();
-        newTags.splice(currPos, 1);
-        newTags.splice(newPos, 0, tag);
-        this.mapSheets = newTags.map(newTag => newTag.id);
-        this.setTags();
-        this.saveSelectedMaps();
-}
-
-    private setTags(): void {
-        const newTags = this.mapSheets.map((mapSheet: string) => ({ id: mapSheet, text: this.mapSheetWithName(mapSheet) }));
-        this.setState({ tags: newTags, mapSheets: this.mapSheets });
-    }
-
-    private saveSelectedMaps(): void {
-        this.props.onMapSheetsChanged(this.mapSheets);
-    }
-
-    private highlightMapSheet(mapSheet: string): void {
-        const polygon: NZ50MapPolygon = this.nz50MapPolygonsBySheet[mapSheet];
-        if (polygon) {
-            polygon.setStyle({ fillOpacity: 0.1});
-        }
-    }
-
-    private unhighlightMapSheet(mapSheet: string): void {
-        const polygon: NZ50MapPolygon = this.nz50MapPolygonsBySheet[mapSheet];
-        if (polygon) {
-            polygon.setStyle({ fillOpacity: 0.0});
-        }
-    }
-
-    // -------------------------------------------------------
     // Routes Archive
     // -------------------------------------------------------
 
     private showArchivedRoutes(): void {
-        
+
+        const infoControl: any = this.infoControl;
+        const defaultInfoControlMessage: string = 'Hover over a route for details.  Click to import.';
+
         if (!this.archivedRoutesLayerGroup) {
             this.archivedRoutesLayerGroup = L.layerGroup()
                 .addTo(this.map);
-
-            // -----
-            this.archivedRoutesInfoControl = (L as any).control();
-            const infoControl: any = this.archivedRoutesInfoControl;
-
-            infoControl.onAdd = () => {
-                infoControl._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
-                infoControl.update();
-                return infoControl._div;
-            };
-            infoControl.update = (archivedRoute: IArchivedRoute) => {
-                infoControl._div.innerHTML = (archivedRoute ?
-                    '<b>' + archivedRoute.caption + '</b><br /><p>' + archivedRoute.routenotes + '</p>'
-                    : 'Hover over a route for details.  Click to import.');
-            };
-            this.archivedRoutesInfoControl.addTo(this.map);
-            
+            this.infoControl
+                .addTo(this.map);
+    
             // -----
             Object.keys(this.props.archivedRoutesById).map((id: string) => {
                 const archivedRoute: IArchivedRoute = this.props.archivedRoutesById[id];
@@ -1020,17 +1085,16 @@ export class MapEditor extends Component<{
                 // add click event handler for polygon
                 (polygon as any).archivedRoute = archivedRoute;
                 polygon.on('click', event => {
-                    this.selectArchivedRoute(event.target);
+                    this.selectArchivedRoute(archivedRoute.id);
                 });
 
                 polygon.on('mouseover', event => {
                     polygon.setStyle({weight: 5, fillOpacity: 0.2});
-                    infoControl.update((polygon as any).archivedRoute);
+                    infoControl.update('<b>' + archivedRoute.caption + '</b><br /><p>' + archivedRoute.routenotes + '</p>');
                 });
-
                 polygon.on('mouseout', event => {
                     polygon.setStyle({weight: 2, fillOpacity: 0.0});
-                    infoControl.update(undefined);
+                    infoControl.update(defaultInfoControlMessage);
                 });
 
                 this.archivedRoutePolygonsById[archivedRoute.id] = polygon as ArchivedRoutePolygon;
@@ -1038,23 +1102,25 @@ export class MapEditor extends Component<{
         } else {
             this.archivedRoutesLayerGroup
                 .addTo(this.map);
-            this.archivedRoutesInfoControl
+            this.infoControl
                 .addTo(this.map);
         }
 
+        infoControl.update(defaultInfoControlMessage);
     }
 
     private hideArchivedRoutes(): void {
         if (this.archivedRoutesLayerGroup) {
             this.archivedRoutesLayerGroup
                 .removeFrom(this.map);
-            this.archivedRoutesInfoControl
+            this.infoControl
                 .remove();
         }
     }
 
-    private selectArchivedRoute(polygon: ArchivedRoutePolygon) {
-        this.props.getArchivedRoute(polygon.archivedRoute.id)
+    private selectArchivedRoute(archivedRouteId: string) {
+        this.setState({ busy: true });
+        this.props.getArchivedRoute(archivedRouteId)
             .then((archivedRoute: IArchivedRoute) => {
                 const gpxFile = undefined;
                 this.setState( {gpxFile});
@@ -1091,7 +1157,9 @@ export class ButtonWithTooltip extends Component<{
         const toggle = () => { this.setState( { tooltipOpen: !this.state.tooltipOpen }) };
 
         return <div>
-            <Button id={this.props.id} color={this.props.color} disabled={this.props.disabled} onClick={this.props.onClick} >{this.props.children}</Button>
+            <div id={this.props.id}>
+                <Button color={this.props.color} disabled={this.props.disabled} onClick={this.props.onClick} >{this.props.children}</Button>
+            </div>
             <Tooltip target={this.props.id} isOpen={this.state.tooltipOpen} placement={this.props.placement} toggle={toggle}>{this.props.tooltipText}</Tooltip>
         </div>
     }

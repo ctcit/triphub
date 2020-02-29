@@ -1,7 +1,7 @@
 import * as L from 'leaflet';
 import * as React from 'react';
 import { Component } from 'react';
-import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText } from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu } from 'reactstrap';
 import { MapEditor } from './MapEditor';
 import FormGroup from 'reactstrap/lib/FormGroup';
 import Button from 'reactstrap/lib/Button';
@@ -16,18 +16,18 @@ export class MapControl extends Component<{
     archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute },
     mapSheets: string[],
     routesAsJson: string,
-    saveMapChanges: (mapSheets: string[] | undefined, routesAsJson: string | undefined) => Promise<void>,
+    saveMapChanges: (mapSheets: string[], routesAsJson: string) => Promise<void>,
     getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     mapVisible: boolean,
     editing: boolean,
-    editsMade: boolean
+    editsMade: boolean,
+    cancelDropdownOpen: boolean
 }>{
     // the leaflet map
-    private initialHeight: number = 250;
-    private  initialWidth: number = 250;
+    private initialHeight: number = 400;
+    private  initialWidth: number = 500;
     private minimap: L.Map;
-    private mapInitialized: boolean = false;
 
     // NZ50 map sheets grid
     private nz50LayerGroup: L.LayerGroup<NZ50MapPolygon[]>;
@@ -41,7 +41,7 @@ export class MapControl extends Component<{
     // routes
     private routes: L.Polyline[] = [];
     private routeMarkers: L.Marker[] = [];
-    private pendingRoutesAsJson: string;  // changed routes before being saved
+    private pendingRoutesAsJson: string = '[]';  // changed routes before being saved
     private routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow'];
 
 
@@ -49,13 +49,14 @@ export class MapControl extends Component<{
         super(props);
 
         this.state = { 
-            mapVisible: this.props.mapSheets.length > 0 || Boolean(this.props.routesAsJson),
+            mapVisible: this.props.routesAsJson !== '[]',
             editing: false,
-            editsMade: false
+            editsMade: false,
+            cancelDropdownOpen: false
         };
         this.mapSheets = this.props.mapSheets;
 
-        this.pendingRoutesAsJson = this.props.routesAsJson;
+        this.pendingRoutesAsJson = this.props.routesAsJson || '[]';
         this.pendingMapSheets = this.props.mapSheets;
     }
 
@@ -67,7 +68,7 @@ export class MapControl extends Component<{
 
     public render(){
         const onEdit = () => { 
-            this.setState({ editing: true }); 
+            this.setState({ editsMade: false, editing: true }); 
         }
 
         const onMapSheetsChanged = (mapSheets: string[]) => {
@@ -80,33 +81,30 @@ export class MapControl extends Component<{
         }
 
         const onSave = () => { 
-            const mapVisible: boolean = this.pendingMapSheets.length > 0 || Boolean(this.pendingRoutesAsJson);
+            const mapVisible: boolean = this.pendingRoutesAsJson !== '[]';
             this.setState({ 
                 mapVisible
             }, async () => {
                 if (mapVisible) {
                     this.setUpMap();
                 }
-                this.unshowSelectedMaps();
                 this.mapSheets = this.pendingMapSheets;
-                this.showSelectedMaps();
     
                 this.setRoutesFromJson(this.pendingRoutesAsJson);
 
                 this.fitBounds();
     
-                this.setState({ 
-                    editing: false,
-                });
+                this.setState({ editsMade: false, editing: false });
 
-                await this.props.saveMapChanges(
-                    this.pendingMapSheets.length > 0 ? this.pendingMapSheets : undefined,
-                    Boolean(this.pendingRoutesAsJson) ? this.pendingRoutesAsJson : undefined );
+                await this.props.saveMapChanges(this.pendingMapSheets, this.pendingRoutesAsJson);
             }); 
 
         }
         const onCancel = () => { 
-            this.setState({ editing: false }); 
+            this.setState({ editsMade: false, editing: false }); 
+        }
+        const onCancelDropdownToggle = () => {
+            this.setState({ cancelDropdownOpen: !this.state.cancelDropdownOpen }); 
         }
 
         const onResize = (e: React.SyntheticEvent, data: ResizeCallbackData) => {
@@ -157,8 +155,16 @@ export class MapControl extends Component<{
                                     />
                                 </ModalBody>
                                 <ModalFooter>
-                                    <Button color="primary" onClick={onSave} disabled={!this.state.editsMade}>Save</Button>{' '}
-                                    <Button color="secondary" onClick={onCancel}>Cancel</Button>
+                                    { !this.state.editsMade && <Button color="secondary" onClick={onCancel}>Close</Button> }                                    
+                                    { this.state.editsMade && <Button color="primary" onClick={onSave}>Save</Button> }
+                                    { this.state.editsMade && 
+                                        <ButtonDropdown color="secondary" drop={'right'} isOpen={this.state.cancelDropdownOpen} toggle={onCancelDropdownToggle}>
+                                            <DropdownToggle caret={false}>Cancel</DropdownToggle>
+                                            <DropdownMenu>
+                                                <DropdownItem color="red" onClick={onCancel}>Confirm discard changes</DropdownItem>
+                                            </DropdownMenu>
+                                        </ButtonDropdown>
+                                    }
                                 </ModalFooter>
                             </Modal>
                         </FormGroup>
@@ -169,77 +175,77 @@ export class MapControl extends Component<{
     }
 
     private setUpMap(): void {
-        if (!this.mapInitialized ) {
-            this.minimap = L.map('minimap', {
-                center: [-43.5, 172], // Central Canterbury
-                zoom: 9, // Central Canterbury
-                maxBounds: [[-33, 165], [-48, 179]], // New Zealand
-                zoomControl: true,
-                editable: true, // to enable leaflet.editable
-                drawingCursor: 'crosshair',
-                trackResize: false // we handle the resizing to the ResizableBox
-            } as L.MapOptions);
-
-            // tslint:disable-next-line:prefer-const
-            // let baseMapLayer = 
-            // L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            // 	minZoom: 6,
-            // 	maxZoom: 14,
-            // 	attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) | NZ Topo map sheets sourced from the LINZ Data Service and licensed for reuse under CC BY 4.0'
-            // }).addTo(map);
-            L.tileLayer('http://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
-                minZoom: 6,
-                maxZoom: 16,
-                subdomains:'abcd',
-                attribution: '<a href=“http://data.linz.govt.nz”>Sourced from LINZ. CC BY 4.0'
-            }).addTo(this.minimap);
-            
-
-            this.nz50LayerGroup = L.layerGroup()
-                .addTo(this.minimap);
-            this.nz50MarkerLayerGroup = L.layerGroup()
-                .addTo(this.minimap);
-
-            Object.keys(this.props.nz50MapsBySheet).forEach(mapSheet => {
-                const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
-
-                // the map sheet polygon
-                const polygon = L.polygon(nz50Map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
-
-                // the map sheet label
-                const polygonLabel = L.divIcon({className: 'sheet-div-icon',
-                    html: '<div class="sheet-code">' + nz50Map.sheetCode + '</div><div class="sheet-name">' + nz50Map.name + '</div>'});
-                // you can set .my-div-icon styles in CSS
-
-                // ideally would centre around polygon.getCenter()...
-                const markerPos = polygon.getBounds().pad(-0.25).getNorthWest();
-
-                L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50MarkerLayerGroup);
-
-                this.nz50MapPolygonsBySheet[nz50Map.sheetCode] = polygon as NZ50MapPolygon;
-            });
-
-            this.minimap.on('zoomend', () => {
-                if (this.minimap.getZoom() < 9) {
-                    if (this.minimap.hasLayer(this.nz50MarkerLayerGroup)) {
-                        this.minimap.removeLayer(this.nz50MarkerLayerGroup);
-                    }
-                } else {
-                    if (!this.minimap.hasLayer(this.nz50MarkerLayerGroup)) {
-                        this.minimap.addLayer(this.nz50MarkerLayerGroup);
-                    }
-                }
-            });
-    
-            this.resizeMap(this.initialHeight, this.initialWidth);
-    
-            this.showSelectedMaps();
-            this.setRoutesFromJson(this.pendingRoutesAsJson);
-
-            this.fitBounds();
-
-            this.mapInitialized = true;
+        if (this.minimap) {
+            this.minimap.off();
+            this.minimap.remove();
         }
+
+        this.minimap = L.map('minimap', {
+            center: [-43.5, 172], // Central Canterbury
+            zoom: 9, // Central Canterbury
+            maxBounds: [[-33, 165], [-48, 179]], // New Zealand
+            zoomControl: true,
+            editable: true, // to enable leaflet.editable
+            drawingCursor: 'crosshair',
+            trackResize: false // we handle the resizing to the ResizableBox
+        } as L.MapOptions);
+
+        // tslint:disable-next-line:prefer-const
+        // let baseMapLayer = 
+        // L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        // 	minZoom: 6,
+        // 	maxZoom: 14,
+        // 	attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) | NZ Topo map sheets sourced from the LINZ Data Service and licensed for reuse under CC BY 4.0'
+        // }).addTo(map);
+        L.tileLayer('http://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
+            minZoom: 6,
+            maxZoom: 16,
+            subdomains:'abcd',
+            attribution: '<a href=“http://data.linz.govt.nz”>Sourced from LINZ. CC BY 4.0'
+        }).addTo(this.minimap);
+        
+
+        this.nz50LayerGroup = L.layerGroup()
+            .addTo(this.minimap);
+        this.nz50MarkerLayerGroup = L.layerGroup()
+            .addTo(this.minimap);
+
+        Object.keys(this.props.nz50MapsBySheet).forEach(mapSheet => {
+            const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+
+            // the map sheet polygon
+            const polygon = L.polygon(nz50Map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
+
+            // the map sheet label
+            const polygonLabel = L.divIcon({className: 'sheet-div-icon',
+                html: '<div class="sheet-code">' + nz50Map.sheetCode + '</div><div class="sheet-name">' + nz50Map.name + '</div>'});
+            // you can set .my-div-icon styles in CSS
+
+            // ideally would centre around polygon.getCenter()...
+            const markerPos = polygon.getBounds().pad(-0.25).getNorthWest();
+
+            L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50MarkerLayerGroup);
+
+            this.nz50MapPolygonsBySheet[nz50Map.sheetCode] = polygon as NZ50MapPolygon;
+        });
+
+        this.minimap.on('zoomend', () => {
+            if (this.minimap.getZoom() < 9) {
+                if (this.minimap.hasLayer(this.nz50MarkerLayerGroup)) {
+                    this.minimap.removeLayer(this.nz50MarkerLayerGroup);
+                }
+            } else {
+                if (!this.minimap.hasLayer(this.nz50MarkerLayerGroup)) {
+                    this.minimap.addLayer(this.nz50MarkerLayerGroup);
+                }
+            }
+        });
+
+        this.resizeMap(this.initialHeight, this.initialWidth);
+
+        this.setRoutesFromJson(this.pendingRoutesAsJson);
+
+        this.fitBounds();
     }
     
     private mapSheetWithName(mapSheet: string) {
@@ -335,33 +341,4 @@ export class MapControl extends Component<{
         }
     }
 
-    // -------------------------------------------------------
-    // Selected Maps
-    // -------------------------------------------------------
-
-    private unshowSelectedMaps(): void {
-        this.mapSheets.forEach((mapSheet: string) => {
-            this.unhighlightMapSheet(mapSheet);
-        });
-    }
-
-    private showSelectedMaps(): void {
-        this.mapSheets.forEach((selectedMapSheet: string) => {
-            this.highlightMapSheet(selectedMapSheet);
-        });
-    }
-
-    private highlightMapSheet(mapSheet: string): void {
-        const polygon: NZ50MapPolygon = this.nz50MapPolygonsBySheet[mapSheet];
-        if (polygon) {
-            polygon.setStyle({ fillOpacity: 0.1});
-        }
-    }
-
-    private unhighlightMapSheet(mapSheet: string): void {
-        const polygon: NZ50MapPolygon = this.nz50MapPolygonsBySheet[mapSheet];
-        if (polygon) {
-            polygon.setStyle({ fillOpacity: 0.0});
-        }
-    }
 }

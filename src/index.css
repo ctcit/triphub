@@ -347,3 +347,61 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
    right: 0;
    text-align: center;
 }
+
+
+/* ---------------------------- */
+/* Newsletter styles            */
+/* ---------------------------- */
+.newsletter-volume-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.newsletter-volume-list-item {
+  float: left;
+}
+
+.newsletter-volume-list-link {
+  display: block;
+  border-radius: 4px;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  margin: 5px;
+  text-decoration: none;
+  min-width: 40px;
+  background-color: #007bff;
+}
+
+a.newsletter-volume-list-link:hover {
+  background-color: #0069d9;
+  color: white;
+  text-decoration: none;
+}
+
+.newsletter-volume-list-link-selected {
+  color: white;
+  background-color: #002246;
+}
+
+.newsletter-volume-list-more {
+  display: block;
+  width: 25px;
+  float: left;
+  text-align: center;
+  margin: 5px;
+  padding: 5px;
+  text-decoration: none;
+  color: #007bff;
+}
+
+.newsletter-volume-list-more a {
+  text-decoration: none;
+  color: #007bff;
+}
+
+.newsletter-volume-list-more a:hover {
+  text-decoration: none;
+  color: #0069d9;
+}

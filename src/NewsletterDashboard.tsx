@@ -17,25 +17,77 @@ class NewsletterVolumeSelector extends Component<{
         visibleCount: number
         onVolumeSelected: (volume: number) => void
     }, {
-        lastVolume: number
+        lastIndex: number,
+        firstIndex: number,
     }> {
 
     constructor(props: any) {
         super(props)
-        this.setState({lastVolume: this.props.volumes[this.props.volumes.length-1]})
+        this.state = {lastIndex: this.initialLastIndex(), firstIndex: this.initialFirstIndex()}
+        this.initialLastIndex = this.initialLastIndex.bind(this)
+        this.initialFirstIndex = this.initialFirstIndex.bind(this)
+        this.onNewerClick = this.onNewerClick.bind(this)
+        this.onOlderClick = this.onOlderClick.bind(this)
+    }
+
+    public componentDidUpdate(previousProps : any)
+    {
+        if ((this.props.volumes.length !== previousProps.volumes.length) &&
+            (this.props.volumes.length > 0))
+        {
+            this.setState({lastIndex: this.initialLastIndex(), firstIndex: this.initialFirstIndex()})
+        }
     }
 
     public render() {
-        const volumesToShow : number[] = this.props.volumes.slice(this.state.lastVolume-this.props.visibleCount, this.state.lastVolume);
-        return <ul key="volumeList" className="newsletter-volume-list">
-                {volumesToShow.map(
-                    (volume:number) =>
-                    <li key={"volume"+volume} className="newsletter-volume-list-item">
-                        <NewsletterVolumeLink volume={volume} onClick={this.props.onVolumeSelected} selected={volume===this.props.selectedVolume}/>
-                    </li>
-                    )
-                }
-            </ul>
+        const volumesToShow : number[] = this.props.volumes.slice(this.state.firstIndex, this.state.lastIndex+1);
+        return <div>
+                    <div className="newsletter-volume-list-more">
+                    { (this.state.firstIndex>0) && (
+                            <a href="#" onClick={this.onOlderClick}>
+                                <i className="fa fa-2x fa-angle-left"/>
+                            </a>
+                         )
+                     }
+                    </div>
+                    <ul key="volumeList" className="newsletter-volume-list">
+                    {volumesToShow.map(
+                        (volume:number) =>
+                        <li key={"volume"+volume} className="newsletter-volume-list-item">
+                            <NewsletterVolumeLink volume={volume} onClick={this.props.onVolumeSelected} selected={volume===this.props.selectedVolume}/>
+                        </li>
+                        )
+                    }
+                    </ul>
+                    <div className="newsletter-volume-list-more">
+                    { (this.state.lastIndex < this.props.volumes.length-1) && (
+                            <a href="#" onClick={this.onNewerClick}>
+                                <i className="fa fa-2x fa-angle-right"/>
+                            </a>
+                         )
+                     }
+                    </div>
+                </div>
+    }
+
+    private initialLastIndex() : number {
+        return (this.props.volumes.length>0) ? this.props.volumes.length-1 : 0
+    }
+
+    private initialFirstIndex() : number {
+        return Math.max(this.initialLastIndex() - this.props.visibleCount, 0)
+    }
+
+    private onOlderClick() {
+        const newLast : number = Math.max(this.state.lastIndex-1, 0)
+        const newFirst : number = Math.max(newLast - this.props.visibleCount, 0)
+        this.setState({firstIndex: newFirst, lastIndex: newLast})
+    }
+
+    private onNewerClick() {
+        const newLast : number = Math.min(this.state.lastIndex+1, this.props.volumes.length-1)
+        const newFirst : number = Math.max(newLast - this.props.visibleCount, 0)
+        this.setState({firstIndex: newFirst, lastIndex: newLast})
     }
 }
 
@@ -102,11 +154,11 @@ export class NewsletterDashboard extends Component<{
         .then((data:INewsletter[]) => {
             if (data.length > 0)
             {
-                this.setState({current:data[0]});
+                this.setState({current:data[0]})
             }
             else
             {
-                this.setState({current:{id:-1} as INewsletter});
+                this.setState({current:{id:-1} as INewsletter})
             }
         });
         this.requery()

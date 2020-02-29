@@ -84,6 +84,7 @@ export interface IArchivedRoute {
     caption: string;
     gpxfilename: string;
     gpx: string;
+    routesummary: string;
     routenotes: string;
     originatorid: string;
     left: string;

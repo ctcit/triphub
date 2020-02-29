@@ -227,6 +227,9 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
         case "GET routes/{routeId}":
             return GetRoute($con, AccessLevel($con,"Unsecured"), $id);
 
+        // case "PATCH routes/{routeId}":
+        //     return UpdateRouteSummary($con, $userid, $id, $input);
+
         default:
             die(Log($con,"ERROR","$route not supported"));
             break;

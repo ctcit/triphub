@@ -17,7 +17,8 @@ export class MapControl extends Component<{
     mapSheets: string[],
     routesAsJson: string,
     saveMapChanges: (mapSheets: string[], routesAsJson: string) => Promise<void>,
-    getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined> // TODO - replace with service
+    getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
+    updateArchivedRouteSummary: (routeId: string, routeSummary: string) => Promise<void>
 },{
     mapVisible: boolean,
     editing: boolean,
@@ -152,6 +153,7 @@ export class MapControl extends Component<{
                                         onMapSheetsChanged={onMapSheetsChanged} 
                                         onRoutesChanged={onRoutesChanged}
                                         getArchivedRoute={this.props.getArchivedRoute} // TODO replace with service
+                                        updateArchivedRouteSummary={this.props.updateArchivedRouteSummary}
                                     />
                                 </ModalBody>
                                 <ModalFooter>
@@ -175,6 +177,10 @@ export class MapControl extends Component<{
     }
 
     private setUpMap(): void {
+        // save current map height and width (if any)
+        const mapHeight: number = this.currentMapHeight();
+        const mapWidth: number = this.currentMapWidth();
+
         if (this.minimap) {
             this.minimap.off();
             this.minimap.remove();
@@ -241,7 +247,7 @@ export class MapControl extends Component<{
             }
         });
 
-        this.resizeMap(this.initialHeight, this.initialWidth);
+        this.resizeMap(mapHeight, mapWidth);
 
         this.setRoutesFromJson(this.pendingRoutesAsJson);
 
@@ -258,6 +264,16 @@ export class MapControl extends Component<{
         layerControl.style.height = Math.floor(height - 8).toString() + 'px';
         layerControl.style.width = Math.floor(width - 8).toString() + 'px';
         this.minimap.invalidateSize();
+    }
+
+    private currentMapHeight(): number {
+        const layerControl: HTMLStyleElement = document.getElementById('minimap') as HTMLStyleElement;
+        return layerControl.style.height ? parseInt(layerControl.style.height, 10) : this.initialHeight;
+    }
+
+    private currentMapWidth(): number {
+        const layerControl: HTMLStyleElement = document.getElementById('minimap') as HTMLStyleElement;
+        return layerControl.style.width ? parseInt(layerControl.style.width, 10) : this.initialWidth;
     }
 
     // -------------------------------------------------------

@@ -107,6 +107,9 @@ export class TripDetail extends Component<{
             return this.app.apiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
         }
+        const updateArchivedRouteSummary = (archivedRouteId: string, routeSummary: string): Promise<void> =>  {
+            return this.app.apiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
+        }
 
         return [
             <Form key='form'>
@@ -141,6 +144,7 @@ export class TripDetail extends Component<{
                             routesAsJson={getRoutesAsJson()} 
                             saveMapChanges={saveMapChanges}
                             getArchivedRoute={getArchivedRoute} // TODO replace with service
+                            updateArchivedRouteSummary={updateArchivedRouteSummary}
                         />
                     </Col>
                 </FormGroup>

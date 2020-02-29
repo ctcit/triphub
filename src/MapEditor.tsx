@@ -36,7 +36,8 @@ export class MapEditor extends Component<{
     routesAsJson: string,
     onMapSheetsChanged: (mapSheets: string[]) => void,
     onRoutesChanged: (routesAsJson: string) => void,
-    getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined> // TODO - replace with service
+    getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
+    updateArchivedRouteSummary: (routeId: string, routeSummary: string) => Promise<void>
 },{
     activeTab: string,
     mapSheets: string[]
@@ -64,7 +65,6 @@ export class MapEditor extends Component<{
 
     // Archived routes
     private archivedRoutesLayerGroup: L.LayerGroup<ArchivedRoutePolygon[]>;
-    private archivedRoutePolygonsById: { [id: string] : ArchivedRoutePolygon } = {};
 
     // selected map sheets
     private mapSheets: string[] = this.props.mapSheets || [];
@@ -139,7 +139,7 @@ export class MapEditor extends Component<{
             this.unhighlightSelectedMaps();
             this.hideArchivedRoutes();
             this.continueRoute();
-            setTab('EditRoute');
+            setTab('EditRoutes');
         }
         const setRoutesArchiveTab = () => {
             this.unhighlightSelectedMaps();
@@ -231,6 +231,9 @@ export class MapEditor extends Component<{
             this.endRoute();
             this.undoLastRouteEdit();
         }
+        // const updateArchivedRouteSummary = () => {
+        //     this.updateArchivedRouteSummary();
+        // }
         const importGpx = (e: any) => {
             const gpxFile = e.target.files ? e.target.files[0] : null;
             e.target.value = null; // allow selecting the same file again
@@ -311,7 +314,7 @@ export class MapEditor extends Component<{
                             </Col>
                         </Row>
                     </TabPane>
-                    <TabPane tabId="EditRoute">
+                    <TabPane tabId="EditRoutes">
                         <Row className="mb-2 ml-1"><FormText color='muted'>Click points on map to draw route, or import route from GPX file</FormText></Row>
                         <Row className="mb-2">
                             <Col sm={5}>
@@ -410,6 +413,11 @@ export class MapEditor extends Component<{
                                         placement="top" tooltipText="Undo last change">
                                             <MdUndo/>
                                     </ButtonWithTooltip>
+                                    {/* <ButtonWithTooltip id="UpdateArchivedRoutesSummary" color='danger' 
+                                        onClick={updateArchivedRouteSummary} disabled={false}
+                                        placement="top" tooltipText="Update archived route summary">
+                                            <MdWarning/>
+                                    </ButtonWithTooltip> */}
                                 </ButtonGroup>
                             </Col>
                             <Col sm={6}>
@@ -868,7 +876,7 @@ export class MapEditor extends Component<{
         return new Promise<void>((resolve, reject) => {
             this.setState({ busy: true });
             const zoom = this.map.getZoom();
-            const tolerance = this.getTolerance(Math.max(14, zoom));  // don't generalize too harshly when zoomed out
+            const tolerance = this.getTolerance(Math.max(12, zoom));  // don't generalize too harshly when zoomed out
             new L.GPX(gpx, {
                 async: true, 
                 polyline_options: {},
@@ -929,8 +937,9 @@ export class MapEditor extends Component<{
     private generalize(latLngs: L.LatLng[], tolerance: number = 25): L.LatLng[] {
         const generalizedLatLngs: L.LatLng[] = [];
         let lastLatLng: L.LatLng | null = null;
-        latLngs.forEach((latLng: L.LatLng) => {
-            if (lastLatLng === null) {
+        const lastIndex = latLngs.length - 1;
+        latLngs.forEach((latLng: L.LatLng, index: number) => {
+            if (lastLatLng === null || index === lastIndex) {
                 generalizedLatLngs.push(latLng);
                 lastLatLng = latLng;
             } else {
@@ -1076,36 +1085,32 @@ export class MapEditor extends Component<{
                 .addTo(this.map);
     
             // -----
+            const polylineOptions: any = {color: 'green', weight: 5, opacity: 0.4};
             Object.keys(this.props.archivedRoutesById).map((id: string) => {
                 const archivedRoute: IArchivedRoute = this.props.archivedRoutesById[id];
+                if (archivedRoute.routesummary) {
+                    const routesLatLngsArray: L.LatLng[][] = JSON.parse(archivedRoute.routesummary);
+                    // the route summary polylines
+                    const polylines = routesLatLngsArray.map((routeLatLngs: L.LatLng[]) => 
+                        L.polyline(routeLatLngs, polylineOptions).addTo(this.archivedRoutesLayerGroup)
+                    );
+                    polylines.forEach(polyline => {
+                        // add click event handler for polyline
+                        (polyline as any).archivedRoute = archivedRoute;
+                        polyline.on('click', event => {
+                            this.selectArchivedRoute(archivedRoute.id);
+                        });
 
-                // very rough transformation from NZGD to WGS84
-                const top = -37.55621 + ((parseFloat(archivedRoute.top) - 5837998.824) / 111561.9956) - 0.065;
-                const left = 168.58630 + ((parseFloat(archivedRoute.left) - 1252000.414) / 82972.8376) + 0.19;
-                const right = 176.39608 + ((parseFloat(archivedRoute.right) - 1900000.022) / 82972.8376) + 0.19;
-                const bottom = -44.97809 + ((parseFloat(archivedRoute.bottom) - 5009999.080) / 111561.9956) - 0.065;
-
-                const coords: L.LatLngExpression[] = [[top, left], [top, right], [bottom, right], [bottom, left]] as L.LatLngExpression[];
-
-                // the map sheet polygon
-                const polygon = L.polygon(coords, {color: 'green', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.archivedRoutesLayerGroup);
-
-                // add click event handler for polygon
-                (polygon as any).archivedRoute = archivedRoute;
-                polygon.on('click', event => {
-                    this.selectArchivedRoute(archivedRoute.id);
-                });
-
-                polygon.on('mouseover', event => {
-                    polygon.setStyle({weight: 5, fillOpacity: 0.2});
-                    infoControl.update('<b>' + archivedRoute.caption + '</b><br /><p>' + archivedRoute.routenotes + '</p>');
-                });
-                polygon.on('mouseout', event => {
-                    polygon.setStyle({weight: 2, fillOpacity: 0.0});
-                    infoControl.update(defaultInfoControlMessage);
-                });
-
-                this.archivedRoutePolygonsById[archivedRoute.id] = polygon as ArchivedRoutePolygon;
+                        polyline.on('mouseover', event => {
+                            polylines.forEach(p => { p.setStyle({weight: 10, opacity: 0.7})} );
+                            infoControl.update('<b>' + archivedRoute.caption + '</b><br /><p>' + archivedRoute.routenotes + '</p>');
+                        });
+                        polyline.on('mouseout', event => {
+                            polylines.forEach(p => { p.setStyle(polylineOptions)} );
+                            infoControl.update(defaultInfoControlMessage);
+                        });
+                    });
+                }
             });
         } else {
             this.archivedRoutesLayerGroup
@@ -1138,6 +1143,52 @@ export class MapEditor extends Component<{
             });
 
     }
+
+    // private updateArchivedRouteSummary() {
+    //     this.setState({ busy: true });
+
+    //     Object.keys(this.props.archivedRoutesById).map((archivedRouteId: string) => {
+    //         this.props.getArchivedRoute(archivedRouteId)
+    //             .then((archivedRoute: IArchivedRoute) => {
+    //                 const gpxLatLngsArray: L.LatLng[][] = [];
+    //                 if (archivedRoute.gpx) {
+    //                     const tolerance = this.getTolerance(10);
+    //                     const decimalPlaces = 3;
+    //                     new L.GPX(archivedRoute.gpx, {
+    //                         async: true, 
+    //                         polyline_options: {},
+    //                         gpx_options:{
+    //                             parseElements: ['track', 'route'] as any // yuk!
+    //                         },
+    //                         marker_options: {}
+    //                     }).on('addline', (event: any) => {
+    //                         const gpxLatLngs = (event.line as L.Polyline).getLatLngs() as L.LatLng[];
+    //                         const generalizedLatLngs = this.generalize(gpxLatLngs, tolerance);
+    //                         if (generalizedLatLngs.length > 0) {
+    //                             gpxLatLngsArray.push(generalizedLatLngs);
+    //                         }
+    //                     }).on('loaded', (event: Event) => {
+    //                         const routesSummary: string = JSON.stringify(gpxLatLngsArray.map((gpxLatLngs: L.LatLng[]) => {
+    //                             return gpxLatLngs.map((latLng: L.LatLng) => {
+    //                                 return [parseFloat(latLng.lat.toFixed(decimalPlaces)), parseFloat(latLng.lng.toFixed(decimalPlaces))]
+    //                             })
+    //                         }));
+    //                         console.log(routesSummary);
+    //                         this.props.updateArchivedRouteSummary(archivedRouteId, routesSummary)
+    //                             .then(() => {
+    //                                 this.setState({invalidGpxFile: false, busy: false });
+    //                             });
+
+    //                     }).on('error', (event: any) => {
+    //                         this.setState({invalidGpxFile: true, busy: false })
+    //                         alert('Error loading file: ' + event.err);
+    //                     });                    
+    //                 }
+    //             });
+    //     });
+    // }
+
+
 }
 
 // -------------------------------------------------------

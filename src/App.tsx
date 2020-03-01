@@ -10,7 +10,6 @@ import { Calendar } from './Calendar';
 import { TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
 import { Newsletter } from './Newsletter';
-import { NewsletterDashboard } from './NewsletterDashboard';
 
 export class App extends Component<{
     },{
@@ -194,12 +193,8 @@ export class App extends Component<{
             return <Calendar key='calendar' app={this}/> 
         } else if (this.state.path === "/newtrip") {
             return <Trip key='newtrip' app={this} isNew={true} isNewSocial={false}/> 
-        } else if (this.state.path === "/newsletterlist") {
-            return <NewsletterDashboard app={this} /> 
-        } else if (this.state.path.startsWith("/newsletters/")) {
-            return <Newsletter app={this} href={BaseUrl + this.state.path} isNew={false}/> 
-        } else if (this.state.path.startsWith("/newnewsletter")) {
-            return <Newsletter app={this} isNew={true}/> 
+        } else if (this.state.path === "/newsletter") {
+            return <Newsletter app={this}/> 
         } else if (this.state.path === "/newsocial") {
             return <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> 
         } else if (this.state.path.startsWith("/trips/")) {

@@ -42,7 +42,7 @@ function GetCurrentNewsletter($con, $userid) {
 		"SELECT * 
 		FROM
 			$newslettersTable
-		WHERE `date` > NOW()
+		WHERE `date` > NOW() AND `isCurrent` = 1
 		ORDER by date DESC LIMIT 1");
 }
 
@@ -62,6 +62,29 @@ function GetNewsletterVolumes($con, $userid, $volume) {
 
 function GetNewsletterVolume($con, $userid, $volume) {
 	return GetNewsletters($con, $userid, 0, array("volume" => $volume));
+}
+
+function SetCurrentNewsletter($con, $userId, $newsletterId)
+{
+	$newslettersTable = ConfigServer::newslettersTable;
+	// Check that the specified newsletter exists and its date isn't in the past
+	$date = SqlResultScalar($con, "SELECT 1 FROM $newslettersTable WHERE `id` = '$newsletterId' AND `date` > NOW()");
+	if ($date == null || $date != 1) {
+		return( array("result" => "fail") );
+	}
+
+	$currentNewsletters = SqlResultArray($con, "SELECT `id` FROM $newslettersTable WHERE `isCurrent` = 1");
+
+	// Unset everything else
+	foreach($currentNewsletters as $key => $newsletter) {
+		// There should only be one, but iterate just in case
+		$id = $newsletter['id'];
+		SqlResultArray($con, "UPDATE $newslettersTable SET `isCurrent` = 0 WHERE `id` = '$id'");
+	}
+
+	// Set the new current
+	SqlResultArray($con, "UPDATE $newslettersTable SET `isCurrent` = 1 WHERE `id` = '$newsletterId'");
+	return( array ( "result" => "success") );
 }
 
 ?>

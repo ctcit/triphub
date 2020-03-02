@@ -46,10 +46,12 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
 {
     $cursor = mysqli_query($con, $sql);
 
-    if (!$cursor)
+    if (!$cursor) {
+        http_response_code(500);
         die(LogMessage($con,"ERROR","Invalid query: ".
                 ((is_object($con)) ? mysqli_error($con) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false))."\n".
                 $sql));
+    }
 
     LogMessage($con,'SQL',$sql);        
     $fields = mysqli_fetch_fields($cursor);
@@ -103,10 +105,12 @@ function SqlResultScalar($con, $sql) {
 }
 
 function SqlExecOrDie($con,$sql,$returnid=false,$log=true) {
-    if (!mysqli_query($con, $sql))
+    if (!mysqli_query($con, $sql)) {
+        http_response_code(500);
         die('<pre>'.LogMessage($con,"ERROR","Invalid query: ".
                 ((is_object($con)) ? mysqli_error($con) : (($___mysqli_res = mysqli_connect_error()) ? $___mysqli_res : false))."\n".
                 $sql,$log).'</pre>');
+    }
 
     $result = $returnid ? mysqli_insert_id($con) : mysqli_affected_rows($con); 
     

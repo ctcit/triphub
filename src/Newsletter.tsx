@@ -8,6 +8,7 @@ import { INewsletter, IValidation } from './Interfaces';
 import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
+import { GetDateString } from './Utilities';
 
 
 export class Newsletter extends Component<{
@@ -99,17 +100,49 @@ export class Newsletter extends Component<{
     }
 
     private startNewNewsletter() {
+        // Get the latest newsletter to figure out the next volume/issue number
+        this.props.app.apiCall('GET', BaseUrl + "/newsletters/latest")
+        .then((newsletters:INewsletter[]) => {
+            let now : Date = new Date()
+            let newsletterDate : Date = new Date(now.getFullYear(), now.getMonth());
+            const lastAnniversaryDate : Date = (now.getMonth() >= 5) ? new Date(now.getFullYear(), 5) : new Date(now.getFullYear()-1, 5);
+            let nextVolume : number = 0;
+            let nextNumber : number = 0;
+            if (newsletters.length === 0)
+            {
+                const lastNewsletter: INewsletter = newsletters[0];
+                const lastNewsletterDate: Date = new Date(lastNewsletter.date)
+                if ( lastNewsletterDate < lastAnniversaryDate )
+                {
+                    nextVolume = lastNewsletter.volume + 1
+                    nextNumber = 0
+                }
+                else
+                {
+                    nextVolume = lastNewsletter.volume
+                    nextNumber = lastNewsletter.number + 1
+                }
+            }
+            else {
+                // PENDING - Flag to the user that these are probably wrong!
+                nextVolume = 1
+                nextNumber = 1
+            }
 
-        this.newNesletter = {
-            id: 99,
-            volume: 99,
-            number: 99,
-            date: "01/01/2001",
-            issueDate: "01/01/2001",
-            nextdeadline: "01/01/2001",
-            isCurrent: true,
-        }
-        this.setState({newsletter: this.newNesletter})
+            this.newNesletter = {
+                id: -1,
+                volume: nextVolume,
+                number: nextNumber,
+                date: GetDateString(newsletterDate),
+                // PENDING
+                issueDate: "01/01/2001",
+                nextdeadline: "01/01/2001",
+                // PENDING - make API force isCurrent=false
+                isCurrent: false,
+            }
+            this.setState({newsletter: this.newNesletter})
+            // PENDING - loading state
+        })
     }
 
     private saveNewNesletter(){
@@ -117,6 +150,7 @@ export class Newsletter extends Component<{
 
         this.props.app.apiCall('POST',BaseUrl + '/newsletters',newsletter)
             .then( (newsletters: INewsletter[]) => {
+                // PENDING - set as current
                 this.loadNewsletter(newsletters);
             })
     }

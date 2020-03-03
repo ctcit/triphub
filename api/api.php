@@ -226,6 +226,11 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
             return GetCurrentNewsletter($con, AccessLevel($con,"Privileged"));
 
+        case "POST newsletters/{newsletterId}/current":
+            // DESCRIPTION Sets the specified newsletter as current (this will unset any existing current newsletter)
+            // OUTPUT Confirmation string
+            return SetCurrentNewsletter($con, AccessLevel($con,"Privileged"), $id);
+
         case "GET newsletters/latest":
             // DESCRIPTION Gets most recent newsletter
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
@@ -254,7 +259,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$baseHref#newsletters'>newsletters</a>
             // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
-            return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input);
+            return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input,0);
 
         case "POST prettyprintjson":
             // DESCRIPTION Formats JSON
@@ -269,7 +274,8 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             return GetLogonDetails($con,'r.role in ('.ConfigServer::editorRoles.')',False);
 
         default:
-            die(Log($con,"ERROR","$route not supported"));
+            http_response_code(400);
+            die(LogMessage($con,"ERROR","$route not supported"));
             break;
     }
 }
@@ -283,6 +289,7 @@ function AccessLevel($con, $accesslevel) {
         $member = GetLogonDetails($con,'1=1',$accesslevel != "Unsecured");
     } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {
         if (ConfigServer::apiKeyUserId == 0 && $accesslevel != "Unsecured") {
+            http_response_code(401);
             die("not logged on");
         }
         if ($accesslevel != "Privileged") {
@@ -290,11 +297,13 @@ function AccessLevel($con, $accesslevel) {
         }
         $member = GetMembers($con, ConfigServer::apiKeyUserId, ConfigServer::apiKeyUserId);
     } else {
+        http_response_code(401);
         die("api key expiry");
     }
 
     if ($accesslevel == "Privileged" && $member['role'] == '')
     {
+        http_response_code(403);
         die("You are not logged on as a priviledged user.");
     }
         

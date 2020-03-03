@@ -107,10 +107,9 @@ export interface IParticipantsInfo {
 
 export interface INewsletter {
     id : number 
-    href? : string
     date : string
     issueDate : string
-    nextdeadline : string
+    nextDeadline : string
     volume : number
     number : number
     isCurrent : boolean

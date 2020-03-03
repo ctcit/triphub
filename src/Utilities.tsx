@@ -49,4 +49,12 @@ export function TitleFromId(id:string) : string {
     return id.replace('_',' ').replace(/\b\w/,x => x.toUpperCase())
 }
 
+export function GetClosestWednesday(to:Date) : Date {
+    // Date counts days of week from Sunday, zero indexed
+    const wednesday:number = 3;
+    const closestWednesday:Date = new Date(to)
+    closestWednesday.setDate(to.getDate() + (wednesday - to.getDay()))
+    return closestWednesday
+}
+
 

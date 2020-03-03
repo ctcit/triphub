@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Form, Button } from 'reactstrap';
+import { Form, Button, Badge } from 'reactstrap';
 import { SaveableControl } from './SaveableControl';
 import { Spinner, BaseUrl } from '.';
 import { App } from './App';
@@ -8,7 +8,7 @@ import { INewsletter, IValidation } from './Interfaces';
 import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
-import { GetDateString } from './Utilities';
+import { GetDateString, GetClosestWednesday } from './Utilities';
 
 
 export class Newsletter extends Component<{
@@ -58,11 +58,10 @@ export class Newsletter extends Component<{
         this.props.app.setStatus(['Loading ', Spinner])
         this.props.app.apiCall('GET', BaseUrl + "/newsletters/current")
         .then((newsletters:INewsletter[]) => {
-            if (newsletters.length === 0)
-            {
+            if (newsletters === null || newsletters.length === 0) {
                this.startNewNewsletter(); 
             }
-            else{
+            else {
                 this.loadNewsletter(newsletters);
                 // this.props.app.setStatus('Loaded Trip', 3000)
             }
@@ -75,15 +74,16 @@ export class Newsletter extends Component<{
         return [
             <TriphubNavbar key='triphubnavbar' app={this.props.app}/>,
             <h1 key="title">Manage Newsletter</h1>,
-
-            <Form key='form'>
-                <SaveableControl owner={this} id='volume' label='Volume' type='number' {...readOnly}/>
-                <SaveableControl owner={this} id='number' label='Number' type='number' {...readOnly}/>
-                <SaveableControl owner={this} id='date' label='Date' type='date' {...readOnly}/>
-                <SaveableControl owner={this} id='issueDate' label='Issue Date' type='date' {...readOnly}/>
-                <SaveableControl owner={this} id='nextdeadline' label='Next Deadline' type='date' {...readOnly}/>
-            </Form>,
-
+            this.state.isLoading && <Badge color='success'>Spinner</Badge>,
+            !this.state.isLoading &&
+                <Form key='form'>
+                    <SaveableControl owner={this} id='volume' label='Volume' type='number' {...readOnly}/>
+                    <SaveableControl owner={this} id='number' label='Number' type='number' {...readOnly}/>
+                    <SaveableControl owner={this} id='date' label='Date' type='date' {...readOnly}/>
+                    <SaveableControl owner={this} id='issueDate' label='Issue Date' type='date' {...readOnly}/>
+                    <SaveableControl owner={this} id='nextDeadline' label='Next Deadline' type='date' {...readOnly}/>
+                </Form>
+                ,
             <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={this.state.isNew && !this.state.isLoading}>
                 Save
             </Button>
@@ -103,19 +103,36 @@ export class Newsletter extends Component<{
         // Get the latest newsletter to figure out the next volume/issue number
         this.props.app.apiCall('GET', BaseUrl + "/newsletters/latest")
         .then((newsletters:INewsletter[]) => {
-            let now : Date = new Date()
-            let newsletterDate : Date = new Date(now.getFullYear(), now.getMonth());
-            const lastAnniversaryDate : Date = (now.getMonth() >= 5) ? new Date(now.getFullYear(), 5) : new Date(now.getFullYear()-1, 5);
+            const now : Date = new Date()
+            const newsletterDate : Date = new Date(now.getFullYear(), now.getMonth()+1);
+            // Date.month is indexed from 0
+            const may:number = 5;
+            const lastAnniversaryDate : Date = (now.getMonth() >= may) ? new Date(now.getFullYear(), may) : new Date(now.getFullYear()-1, may);
+
+            // Club nights are on Wednesdays
+            const closestClubNight:Date = GetClosestWednesday(newsletterDate)
+
+            // The next deadline should be the thursday before the clubnight of the next newsletter
+            // which is always 6 days before the club night
+            const nextNewsletterDate:Date = new Date(newsletterDate)
+            nextNewsletterDate.setMonth(newsletterDate.getMonth()+1)
+            const nextNewsletterClubNight:Date = GetClosestWednesday(nextNewsletterDate);
+            const nextDeadline:Date = new Date(nextNewsletterClubNight)
+            // According to https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setDate
+            // passing a negative number to setDate decrements the month accordingly (which we want)
+            nextDeadline.setDate(nextNewsletterClubNight.getDate() - 6)
+
+            // Determine volume & number
             let nextVolume : number = 0;
             let nextNumber : number = 0;
-            if (newsletters.length === 0)
+            if (newsletters !== null && newsletters.length !== 0)
             {
                 const lastNewsletter: INewsletter = newsletters[0];
                 const lastNewsletterDate: Date = new Date(lastNewsletter.date)
                 if ( lastNewsletterDate < lastAnniversaryDate )
                 {
                     nextVolume = lastNewsletter.volume + 1
-                    nextNumber = 0
+                    nextNumber = 1
                 }
                 else
                 {
@@ -135,12 +152,12 @@ export class Newsletter extends Component<{
                 number: nextNumber,
                 date: GetDateString(newsletterDate),
                 // PENDING
-                issueDate: "01/01/2001",
-                nextdeadline: "01/01/2001",
+                issueDate: GetDateString(closestClubNight),
+                nextDeadline: GetDateString(nextDeadline),
                 // PENDING - make API force isCurrent=false
                 isCurrent: false,
             }
-            this.setState({newsletter: this.newNesletter})
+            this.setState({newsletter: this.newNesletter, isLoading: false})
             // PENDING - loading state
         })
     }

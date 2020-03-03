@@ -58,11 +58,10 @@ export class Newsletter extends Component<{
         this.props.app.setStatus(['Loading ', Spinner])
         this.props.app.apiCall('GET', BaseUrl + "/newsletters/current")
         .then((newsletters:INewsletter[]) => {
-            if (newsletters.length === 0)
-            {
+            if (newsletters.length === 0) {
                this.startNewNewsletter(); 
             }
-            else{
+            else {
                 this.loadNewsletter(newsletters);
                 // this.props.app.setStatus('Loaded Trip', 3000)
             }
@@ -129,14 +128,20 @@ export class Newsletter extends Component<{
                 nextNumber = 1
             }
 
+            // Club nights are on Wednesdays
+            let closestClubNight:Date = new Date(newsletterDate)
+            closestClubNight.setDate(newsletterDate.getDate() + (3 - (newsletterDate.getDay()%7)))
+
+            // next deadline should be the thursday before the closestClubNight
+
             this.newNesletter = {
                 id: -1,
                 volume: nextVolume,
                 number: nextNumber,
                 date: GetDateString(newsletterDate),
                 // PENDING
-                issueDate: "01/01/2001",
-                nextdeadline: "01/01/2001",
+                issueDate: GetDateString(closestClubNight),
+                nextdeadline: "01-01-2001",
                 // PENDING - make API force isCurrent=false
                 isCurrent: false,
             }

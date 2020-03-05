@@ -82,8 +82,9 @@ export class App extends Component<{
 
         const request : RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
         
+        request.method = method
+
         if (data) {
-            request.method = method
             request.headers = {...request.headers, 'Content-Type': 'application/json'}
             request.body = JSON.stringify(data)
         }

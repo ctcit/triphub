@@ -36,6 +36,7 @@ export class Newsletter extends Component<{
         this.get = this.get.bind(this)
         this.set = this.set.bind(this)
         this.validate = this.validate.bind(this)
+        this.saveNewNesletter = this.saveNewNesletter.bind(this)
     }
 
     public get(id: string) : any{
@@ -62,7 +63,7 @@ export class Newsletter extends Component<{
                this.startNewNewsletter(); 
             }
             else {
-                this.loadNewsletter(newsletters);
+                this.loadNewsletter(newsletters[0]);
                 // this.props.app.setStatus('Loaded Trip', 3000)
             }
         })
@@ -74,32 +75,45 @@ export class Newsletter extends Component<{
         return [
             <TriphubNavbar key='triphubnavbar' app={this.props.app}/>,
             <h1 key="title">Manage Newsletter</h1>,
-            this.state.isLoading && <Badge color='success'>Spinner</Badge>,
+            this.state.isNew &&
+                <div><p>No current newsletter, please create a new one..</p></div>,
+            this.state.isLoading &&
+                <Badge color='success'>{Spinner}></Badge>,
             !this.state.isLoading &&
                 <Form key='form'>
                     <SaveableControl owner={this} id='volume' label='Volume' type='number' {...readOnly}/>
                     <SaveableControl owner={this} id='number' label='Number' type='number' {...readOnly}/>
                     <SaveableControl owner={this} id='date' label='Date' type='date' {...readOnly}/>
                     <SaveableControl owner={this} id='issueDate' label='Issue Date' type='date' {...readOnly}/>
-                    <SaveableControl owner={this} id='nextDeadline' label='Next Deadline' type='date' {...readOnly}/>
+                    <SaveableControl owner={this} id='nextdeadline' label='Next Deadline' type='date' {...readOnly}/>
                 </Form>
                 ,
-            <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={this.state.isNew && !this.state.isLoading}>
-                Save
-            </Button>
+            this.state.isNew &&
+                <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={this.state.isNew && !this.state.isLoading}>
+                    Save
+                </Button>,
+            !this.state.isNew &&
+                <div>
+                    <h2>Trips & Socials</h2>
+                    <h2>Trip Reports</h2>
+                    <h2>Notices</h2>
+                </div>
+
         ]
     }
 
-    private loadNewsletter(newsletters: INewsletter[]) {
+    private loadNewsletter(loaded_newsletter: INewsletter) {
         this.setState({
-            newsletter: newsletters[0],
+            newsletter: loaded_newsletter,
             isNew: false,
             isLoading: false
         });
         this.props.app.setState({ isLoading: false });
+        // Load trip reports & trips
     }
 
     private startNewNewsletter() {
+        this.setState({isNew: true})
         // Get the latest newsletter to figure out the next volume/issue number
         this.props.app.apiCall('GET', BaseUrl + "/newsletters/latest")
         .then((newsletters:INewsletter[]) => {
@@ -153,7 +167,7 @@ export class Newsletter extends Component<{
                 date: GetDateString(newsletterDate),
                 // PENDING
                 issueDate: GetDateString(closestClubNight),
-                nextDeadline: GetDateString(nextDeadline),
+                nextdeadline: GetDateString(nextDeadline),
                 // PENDING - make API force isCurrent=false
                 isCurrent: false,
             }
@@ -165,10 +179,25 @@ export class Newsletter extends Component<{
     private saveNewNesletter(){
         const newsletter = this.state.newsletter
 
+        this.setState({isLoading: true})
+
         this.props.app.apiCall('POST',BaseUrl + '/newsletters',newsletter)
             .then( (newsletters: INewsletter[]) => {
-                // PENDING - set as current
-                this.loadNewsletter(newsletters);
+                if (newsletters !== null && newsletters.length > 0)
+                {
+                    const savedNewsletter:INewsletter = newsletters[0]
+                    console.log("Saved newsletter, id="+savedNewsletter.id)
+                    this.props.app.apiCall('POST', BaseUrl + '/newsletters/'+savedNewsletter.id+'/current/')
+                    .then( () => {
+                        console.log("Succesfully set as current")
+                        this.setState({isNew: false})
+                        this.loadNewsletter(newsletters[0]);
+                    })
+                }
+                else {
+                    // PENDING - Flag failure somehow
+                    console.log("Failed to save")
+                }
             })
     }
 

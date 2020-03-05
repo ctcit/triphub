@@ -105,11 +105,13 @@ export interface IParticipantsInfo {
     deleted : IParticipant[]       
 }
 
+// The field names in these interfaces have to match column names in the db
+// exactly, hence the inconsitent capitalisation
 export interface INewsletter {
     id : number 
     date : string
     issueDate : string
-    nextDeadline : string
+    nextdeadline : string
     volume : number
     number : number
     isCurrent : boolean

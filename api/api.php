@@ -5,7 +5,6 @@
     require('config.php');
     require('trips.php');
     require('members.php');
-    require('routes.php');
 
     // Extract data from parameters 
     $method = $_SERVER['REQUEST_METHOD'];
@@ -13,7 +12,7 @@
     if (date("Ymd") < ConfigServer::apiKeyExpiry) {
         header("Access-Control-Allow-Origin: *");
         header('Access-Control-Allow-Credentials: true');
-        header('Access-Control-Allow-Headers: Api-Key, content-type');
+        header('Access-Control-Allow-Headers: Api-Key, Api-Userid, content-type');
         header('Access-Control-Max-Age: 86400');    // cache for 1 day
     }
 
@@ -64,7 +63,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
         case "GET config":
             // DESCRIPTION Gets global configuration parameters
             // OUTPUT A single <a href='$basehref#config'>config</a> record
-            return array((new ReflectionClass("ConfigClient"))->getConstants());
+            return [(new ReflectionClass("ConfigClient"))->getConstants()];
         
         case "GET members":
             // DESCRIPTION Gets members
@@ -86,11 +85,11 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT A <a href='$basehref#trips'>trip</a>
             // OUTPUT The new <a href='$basehref#trips'>trip</a>
             // INPUTENTITY trips
-            return ApiPost($con,AccessLevel($con,"Secured"),$table,$input,0);
+            return ApiPost($con,AccessLevel($con,"Secured"),$table,$input,null);
             
         case "GET trips/{tripId}":
             // DESCRIPTION Gets detail for a given trip
-            // OUTPUT <a href='$basehref#trips'>trips</a> + tripState + leaders + role + href
+            // OUTPUT <a href='$basehref#trips'>trips</a> + tripState + leaders + role
             return GetTrips($con,AccessLevel($con,"Unsecured"),$id);
         
         case "POST trips/{tripId}":
@@ -101,9 +100,19 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUTENTITY trips
             return ApiPatch($con,AccessLevel($con,"Secured"),$table,$id,$input,$id);
 
+        case "DELETE trips/{tripId}":
+            // DESCRIPTION Deletes the given trip
+            // OUTPUT Confirmation string array
+            AccessLevel($con,"Privileged");
+            SqlExecOrDie($con,"DELETE FROM ".ConfigServer::participantsTable." WHERE tripid = $id");
+            SqlExecOrDie($con,"DELETE FROM ".ConfigServer::historyTable." WHERE tripid = $id");
+            SqlExecOrDie($con,"DELETE FROM ".ConfigServer::editTable." WHERE tripid = $id");
+            SqlExecOrDie($con,"DELETE FROM ".ConfigServer::tripsTable." WHERE id = $id");
+            return ["trip $id deleted"];
+
         case "GET trips/{tripId}/participants":
             // DESCRIPTION Get participants for a given trip
-            // OUTPUT Array of <a href='$basehref#participants'>participants</a> + href
+            // OUTPUT Array of <a href='$basehref#participants'>participants</a>
             AccessLevel($con,"Secured");
             return SqlResultArray($con,"SELECT * FROM $subTable WHERE tripId=$id ORDER BY id");
 
@@ -115,8 +124,8 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
 
         case "POST trips/{tripId}/participants":
             // DESCRIPTION Creates a participant for the given trip
-            // INPUT <a href='$basehref#participants'>participants</a>
-            // OUTPUT <a href='$basehref#participants'>participants</a> + href
+            // INPUT <a href='$basehref#participants'>participant</a>
+            // OUTPUT <a href='$basehref#participants'>participant</a>
             // INPUTENTITY participants
             $input["tripId"] = $id;
             return ApiPost($con,AccessLevel($con,"Secured"),$subTable,$input,$id);
@@ -181,14 +190,14 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
 
         case "DELETE trips/{tripId}/edit/{editId}":
             // DESCRIPTION Deletes the given edit record
-            // OUTPUT Confirmation string
+            // OUTPUT Confirmation string array
             AccessLevel($con,"Secured");
             SqlExecOrDie($con,"DELETE FROM $subTable WHERE id = $subId");
-            return Array("Edit $subId deleted");
+            return ["Edit $subId deleted"];
 
-        case "POST trip/emails":
+        case "POST trips/emails":
             // DESCRIPTION Sends any necessary emails
-            // OUTPUT Array of trip indentification details for any trips that had emails send
+            // OUTPUT Array of trip identification details for any trips that had emails sent
             return PostEmails($con);
 
         case "GET maps":
@@ -196,11 +205,6 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // DESCRIPTION Gets map or public holiday resource
             // OUTPUT Array of <a href='$basehref#map'>map</a> or <a href='$basehref#holiday'>holiday</a>
             return json_decode(file_get_contents(str_replace('GET ','',$route).'.json'));
-
-        case "GET map_picker_iframe":
-            // DESCRIPTION Gets map picker html
-            // OUTPUT Array of one string containing map_picker_iframe.html
-            return Array(file_get_contents('map_picker_iframe.html'));
 
         case "POST importlegacytrips":
             // DESCRIPTION Imports legacy trips, specify 'TRUNCATE' in json to truncate tables
@@ -218,17 +222,18 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
 
         case "GET logondetails":
             // DESCRIPTION Get logon details
-            // OUTPUT id, name and role of loghed on user
-            return GetLogonDetails($con,'r.role in ('.ConfigServer::editorRoles.')',False);
+            // OUTPUT id, name and role of logged on user
+            $result = GetLogonDetails($con,'r.role in ('.ConfigServer::editorRoles.')',False);
+            $result['AccessLevel'] = AccessLevel($con,'Unsecured');
+            $result['GetMembers'] = GetMembers($con, $result['AccessLevel'],$result['AccessLevel'])[0];
+            return $result;
 
-        case "GET routes":
-            return GetRoutes($con, AccessLevel($con,"Unsecured"));
-
-        case "GET routes/{routeId}":
-            return GetRoute($con, AccessLevel($con,"Unsecured"), $id);
-
-        // case "PATCH routes/{routeId}":
-        //     return UpdateRouteSummary($con, $userid, $id, $input);
+        case "GET route":
+            header('Location: https://ctc.org.nz/db/index.php/routesRest/route', true, 301);
+            exit();
+        case "GET route/{routedId}":
+            header('Location: https://ctc.org.nz/db/index.php/routesRest/route?id=' . routeId, true, 301);
+            exit();
 
         default:
             die(Log($con,"ERROR","$route not supported"));
@@ -242,13 +247,14 @@ function TableFromEntity($entity) {
 
 function AccessLevel($con, $accesslevel) {
     if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
-        $member = GetLogonDetails($con,'1=1',$accesslevel != "Unsecured");
+        $member = GetLogonDetails($con,'true',$accesslevel != "Unsecured");
     } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {
-        if (ConfigServer::apiKeyUserId == 0 && $accesslevel != "Unsecured")
+        $userId = $_SERVER["HTTP_API_USERID"];
+        if ($userId == 0 && $accesslevel != "Unsecured")
             die("not logged on");
         if ($accesslevel != "Privileged")
-            return ConfigServer::apiKeyUserId;    
-        $member = GetMembers($con, ConfigServer::apiKeyUserId, ConfigServer::apiKeyUserId);
+            return $userId;    
+        $member = GetMembers($con, $userId, $userId)[0];
     } else {
         die("api key expiry");
     }
@@ -300,35 +306,40 @@ function History($con,$userId,$action,$table,$before,$after,$tripId)
     
     $historyTable = ConfigServer::historyTable;
 
-    if ($action == 'update') {
-        foreach ($after as $col => $val) {
-            $colSql = SqlVal($con,$col);
-            $beforeSql = SqlVal($con,$before === null ? null : $before[$col]);
-            $afterSql = SqlVal($con,$after[$col]);
+    switch ($action)
+    {
+        case 'update':
+        case 'create':
+            foreach ($after as $col => $val) {
+                $colSql = SqlVal($con,$col);
+                $beforeSql = SqlVal($con,json_encode($before === null ? null : $before[$col]));
+                $afterSql = SqlVal($con,json_encode($after[$col]));
 
-            if ($beforeSql != $afterSql) {
-                SqlExecOrDie($con,
-                    "INSERT $historyTable 
-                    SET `action` = '$action'
-                    ,   `table` = '$table'
-                    ,   `timestamp` = UTC_TIMESTAMP()
-                    ,   `userId` = $userId
-                    ,   `tripId` = $tripId
-                    ,   `participantId` = $participantId
-                    ,   `column` = $colSql
-                    ,   `before` = $beforeSql
-                    ,   `after` = $afterSql");
+                if ($beforeSql != $afterSql) {
+                    SqlExecOrDie($con,
+                        "INSERT $historyTable 
+                        SET `action` = '$action'
+                        ,   `table` = '$table'
+                        ,   `timestamp` = UTC_TIMESTAMP()
+                        ,   `userId` = $userId
+                        ,   `tripId` = $tripId
+                        ,   `participantId` = $participantId
+                        ,   `column` = $colSql
+                        ,   `before` = $beforeSql
+                        ,   `after` = $afterSql");
+                }
             }
-        }
-    } else {
-        SqlExecOrDie($con,
-            "INSERT $historyTable 
-            SET `action` = '$action'
-            ,   `table` = '$table'
-            ,   `timestamp` = UTC_TIMESTAMP()
-            ,   `userId` = $userId
-            ,   `tripId` = $tripId
-            ,   `participantId` = $participantId");
+            break;
+        default:
+            SqlExecOrDie($con,
+                "INSERT $historyTable 
+                SET `action` = '$action'
+                ,   `table` = '$table'
+                ,   `timestamp` = UTC_TIMESTAMP()
+                ,   `userId` = $userId
+                ,   `tripId` = $tripId
+                ,   `participantId` = $participantId");
+            break;
     }
 }
 
@@ -347,12 +358,12 @@ function ApiPost($con,$userId,$table,$input,$tripId){
     $sql = "INSERT $table SET $set";
     $id = SqlExecOrDie($con,$sql,true);
     $after = SqlResultArray($con,"SELECT * FROM $table WHERE id = $id");
-    History($con,$userId,"create",$table,null,$after[0],$tripId || $id);
+    History($con,$userId,"create",$table,null,$after[0],Coalesce($tripId,$id));
     return $after;
 }
 
 function SqlSetFromInput($con,$input,$table){
-    $set = array();
+    $set = [];
     $cols = SqlResultArray($con,"SHOW COLUMNS FROM $table","Field",true);
 
     foreach ($input as $col => $val) {
@@ -367,6 +378,8 @@ function SqlSetFromInput($con,$input,$table){
             strpos($sqlcol["Type"],"char") !== false || 
             strpos($sqlcol["Type"],"date") !== false) {
             $set []= "`$col`=".SqlVal($con,$val);
+        } else if (strpos($sqlcol["Type"],"json") !== false) {
+            $set []= "`$col`=".SqlVal($con,json_encode($val));
         } else {
             $sqlval = floatval($val);
             $set []= "`$col`=$sqlval";
@@ -390,17 +403,17 @@ function IsReadOnly($table, $col) {
 
 function ApiHelp($con,$basehref) {
     $html = "";
-    $content = array();
-    $entities = array();
+    $content = [];
+    $entities = [];
     $constants = (new ReflectionClass("ConfigServer"))->getConstants();
     $filehandle = fopen("api.php", "r") or die("Unable to open file!");
-    $item = Array('security'=>'Unsecured');
+    $item = ['security'=>'Unsecured'];
 
-    // Pares this file to extract enpoint information
+    // Parses this file to extract enpoint information
     while (!feof($filehandle)) {
         $line = str_replace('$basehref',$basehref,trim(fgets($filehandle)));
         if (preg_match('/case "(GET|POST|PATCH|DELETE)( (.*))?":/',$line,$matches))
-            $item['entries'] []= array("method"=>$matches[1], "path"=>$matches[3]);
+            $item['entries'] []= ["method"=>$matches[1], "path"=>$matches[3]];
         else if (preg_match('/\/\/ (DESCRIPTION|INPUT|OUTPUT|INPUTENTITY) (.*)/',$line,$matches))
             $item[strtolower($matches[1])] .= "$matches[2]<br/>";
         else if (preg_match('/AccessLevel\(\$con,"(.*?)"\)/',$line,$matches))
@@ -408,48 +421,52 @@ function ApiHelp($con,$basehref) {
 
         if (preg_match('/return .*;/',$line,$matches) && array_key_exists('entries',$item)) {
             $content [] = $item;
-            $item = Array('security'=>'Unsecured');
+            $item = ['security'=>'Unsecured'];
         }
     }
     fclose($filehandle);
 
     // Add data structure meta data for config and members, from API results
-    foreach (array("config","members") as $entity) {
+    foreach (["config","members"] as $entity) {
         $table = $constants[$entity."Table"];
         $data = ApiProcess($con,$basehref,"GET","GET $entity",$entity,null,null,null,null)[0];
-        $cols = array();
+        $cols = [];
 
         foreach ($data as $col => $val) {
-            $cols []= array("col"=>$col,"type"=>gettype($val),"comment"=>$entity == "config" ? "Current value is $val" : "",
-                            "readonly"=>IsReadOnly($table,$col) ? "Yes" : "");
+            $cols []= ["col"=>$col,
+                       "type"=>gettype($val),
+                       "comment"=>$entity == "config" ? "Current value is $val" : "",
+                       "readonly"=>IsReadOnly($table,$col) ? "Yes" : ""];
         }
         $entities[$entity] = $cols;
     }
 
     // Add data structure meta data from tables meta data
-    foreach (array("trips","participants","history","edit") as $entity) {
+    foreach (["trips","participants","history","edit"] as $entity) {
         $table = $constants[$entity."Table"];
         $sqlCols = SqlResultArray($con,"SHOW FULL COLUMNS FROM $table","Field");
-        $cols = array();
+        $cols = [];
 
         foreach ($sqlCols as $field => $col) {
-            $cols []= array("col"=>$field,"type"=>$col["Type"],"comment"=>$col["Comment"] ? $col["Comment"] : "",
-                            "readonly"=>IsReadOnly($table,$field) ? "Yes" : "");
+            $cols []= ["col"=>$field,
+                       "type"=>$col["Type"],
+                       "comment"=>$col["Comment"] ? $col["Comment"] : "",
+                       "readonly"=>IsReadOnly($table,$field) ? "Yes" : ""];
         }
         $entities[$entity] = $cols;
     }
 
     // Add data structure we haven't managed to get from above
-    $entities["subjectbody"] = array(array("col"=>"subject",  "type"=>"string","comment"=>"The email subject"),
-                                     array("col"=>"body",     "type"=>"text",  "comment"=>"The email body"));
-    $entities["json"] =        array(array("col"=>"json",     "type"=>"text",  "comment"=>"The json to format"));
-    $entities["maps"] =        array(array("col"=>"coords",   "type"=>"json",  "comment"=>"The bounding box of the map"),
-                                     array("col"=>"sheetCode","type"=>"text",  "comment"=>"The code of the map"),
-                                     array("col"=>"name",     "type"=>"text",  "comment"=>"The name of the map"));
-    $entities["holiday"] =     array(array("col"=>"date",     "type"=>"text",  "comment"=>"The date"),
-                                     array("col"=>"name",     "type"=>"text",  "comment"=>"The name of the holiday"),
-                                     array("col"=>"type",     "type"=>"text",  "comment"=>"The type of the holiday"),
-                                     array("col"=>"details",  "type"=>"text",  "comment"=>"Details of the holiday"));
+    $entities["subjectbody"] = [["col"=>"subject",  "type"=>"string","comment"=>"The email subject"],
+                                ["col"=>"body",     "type"=>"text",  "comment"=>"The email body"]];
+    $entities["json"] =        [["col"=>"json",     "type"=>"text",  "comment"=>"The json to format"]];
+    $entities["maps"] =        [["col"=>"coords",   "type"=>"json",  "comment"=>"The bounding box of the map"],
+                                ["col"=>"sheetCode","type"=>"text",  "comment"=>"The code of the map"],
+                                ["col"=>"name",     "type"=>"text",  "comment"=>"The name of the map"]];
+    $entities["holiday"] =     [["col"=>"date",     "type"=>"text",  "comment"=>"The date"],
+                                ["col"=>"name",     "type"=>"text",  "comment"=>"The name of the holiday"],
+                                ["col"=>"type",     "type"=>"text",  "comment"=>"The type of the holiday"],
+                                ["col"=>"details",  "type"=>"text",  "comment"=>"Details of the holiday"]];
 
     $html .= "<style>
                 body {font-family: arial;}

@@ -22,9 +22,7 @@ export interface ITrip {
     isNoSignup : boolean
     length : number
     logisticInfo : string
-    map1 : string
-    map2 : string
-    map3 : string
+    maps? : string[]
     mapRoute : string
     mapHtml : string
     isDeleted : boolean

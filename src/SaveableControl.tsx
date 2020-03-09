@@ -61,6 +61,10 @@ export class SaveableControl extends Component<{
     }
 
     public handleBlur(){
+        if (this.props.readOnly){
+            return
+        }
+
         const value = this.props.owner.get(this.props.id)
         
         if (value === this.state.prevValue[0] || this.props.owner.href === undefined) {
@@ -96,6 +100,10 @@ export class SaveableControl extends Component<{
     }
 
     public handleChange(event : any){
+        if (this.props.readOnly){
+            return
+        }
+
         const value = this.props.type === 'radio' ? (this.props.radioOptions || {})[event.target.value] : 
                       this.props.type === 'checkbox' ? event.target.checked : 
                       this.props.type === 'number' ? parseFloat(event.target.value) : event.target.value
@@ -117,15 +125,17 @@ export class SaveableControl extends Component<{
         const controlProp = {readOnly: this.props.readOnly, onFocus: this.handleFocus, onBlur: this.handleBlur, onChange: this.handleChange}
         const id = (this.props.owner.href || '').replace(/[/:.]/g,'')+'_'+this.props.id
         const radioOptions = this.props.radioOptions || {}
+        const labelSize = this.props.type === 'radio' || this.props.type === 'checkbox' ? 3 : 2
+        const editSize = this.props.type === 'radio' || this.props.type === 'checkbox' ? 7 : 8
 
         return  (
             <FormGroup hidden={this.props.hidden} row={true}>
-                <Label sm={2} for={this.props.id}>{this.props.label}</Label>
-                <Col sm={8}>
+                <Label sm={labelSize} for={this.props.id}>{this.props.label}</Label>
+                <Col sm={editSize}>
                     {this.props.type === 'textarea' ?
                         <Textarea id={id} {...valueProp} {...controlProp} className='form-control'/> :
                      this.props.type === 'radio'  ?
-                        Object.keys(radioOptions).map((key,i) => 
+                        Object.keys(radioOptions).map((key,i) =>
                             <Label key={`${id}_${i}`}>
                                 <Input id={`${id}_${i}`} name={id} type={this.props.type as InputType}
                                         checked={value === radioOptions[key]} value={key} {...controlProp}/>

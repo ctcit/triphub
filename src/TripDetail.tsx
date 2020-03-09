@@ -65,42 +65,20 @@ export class TripDetail extends Component<{
 
     public render(){
         const trip = this.props.owner.state.trip
+        const isNoSignup = trip.isSocial && trip.isNoSignup
         const common = {
             readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
-            owner:this
+            owner: this
         }
 
-        // BJ TODO: remove 3 map limit
-        const getMapSheets = (): string[] => {
-            const mapSheets: string[] = [];
-            ["map1", "map2", "map3"].forEach((mapFieldId: string) => {
-                const mapSheet = this.get(mapFieldId);
-                if (mapSheet && mapSheet !== "") {
-                    const parts = mapSheet.split(" ");
-                    if (parts.length > 0 && this.nz50MapsBySheet[parts[0]]) {
-                        mapSheets.push(parts[0]);
-                    }
-                }
-            });
-            return mapSheets;
-        }
+        const getMapSheets = (): string[] => (trip.maps || []).map(map => map.split(' ')[0])
+        const getRoutesAsJson = (): string => trip.mapRoute
 
-        const getRoutesAsJson = (): string => {
-            return this.get("mapRoute");
-        }
-
-        // BJ TODO: remove 3 map limit
-        const saveMapChanges = (mapSheets: string[], routesAsJson: string): Promise<void> => {
-            const body: any = {};
-
-            body.map1 = mapSheets.length > 0 ? mapSheets[0] + " " +  this.nz50MapsBySheet[mapSheets[0]].name : "";
-            body.map2 = mapSheets.length > 1 ? mapSheets[1] + " " +  this.nz50MapsBySheet[mapSheets[1]].name : "";
-            body.map3 = mapSheets.length > 2 ? mapSheets[2] + " " +  this.nz50MapsBySheet[mapSheets[2]].name : "";
-
-            body.mapRoute = routesAsJson;
-
-            return this.saveTrip(body);
-        }
+        const saveMapChanges = (mapSheets: string[], routesAsJson: string): Promise<void> =>
+            this.saveTrip({
+                maps: mapSheets.map( map => `${map} ${this.nz50MapsBySheet[mapSheets[0]].name}`),
+                mapRoute: routesAsJson
+            })
 
         // TODO Move to service
         const getArchivedRoute = (archivedRouteId: string): Promise<IArchivedRoute | undefined> =>  {
@@ -114,25 +92,26 @@ export class TripDetail extends Component<{
         return [
             <Form key='form'>
                 <SaveableControl id='title' label='Title' type='text' {...common}/>
-                <SaveableControl id='openDate' label='Open Date' type='date'  {...common}/>
-                <SaveableControl id='closeDate' label='Close Date' type='date'  {...common}/>
                 <SaveableControl id='tripDate' label='Trip Date' type='date'  {...common}/>
                 <SaveableControl id='isSocial' label='Event Type' type='radio'
                                 radioOptions={{"Social Event":true,"Tramp":false}} {...common}/>
                 <SaveableControl id='isNoSignup' label='No sign up list' type='checkbox' {...common} 
                                         hidden={!trip.isSocial}/>
-                <SaveableControl id='length' label='Length in days' type='number' 
+                <SaveableControl id='length' label='Length in days' type='number' hidden={trip.isSocial} {...common}/>
+                <SaveableControl id='openDate' label='Open Date' type='date' hidden={isNoSignup} {...common}/>
+                <SaveableControl id='closeDate' label='Close Date' type='date' hidden={isNoSignup}  {...common}/>
+                <SaveableControl id='isLimited' label='Limited Numbers' type='checkbox' {...common} 
+                                        hidden={isNoSignup}/>
+                <SaveableControl id='maxParticipants' label='Maximum trampers' type='number' {...common} 
+                                        hidden={isNoSignup || !trip.isLimited}/>
+                <SaveableControl id='departurePoint' label='Departure Point' type='text' list='departure_point_list' 
                                         hidden={trip.isSocial} {...common}/>
-                <SaveableControl id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...common}/>
-                <SaveableControl id='departureDetails' label='Departure Details' type='text' {...common}/>
+                <SaveableControl id='departureDetails' label='Departure Details' type='text'  
+                                        hidden={trip.isSocial} {...common}/>
                 <SaveableControl id='cost' label='Cost' type='text'  {...common}/>
                 <SaveableControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
-                <SaveableControl id='isLimited' label='Limited Numbers' type='checkbox' {...common} 
-                                        hidden={trip.isSocial && trip.isNoSignup}/>
-                <SaveableControl id='maxParticipants' label='Maximum trampers' type='number' {...common} 
-                                        hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)}/>
                 <SaveableControl id='description' label='Description' type='textarea'  {...common}/>
-                <SaveableControl id='logisticnfo' label='Logistic Information' type='textarea'  {...common}/>
+                <SaveableControl id='logisticInfo' label='Logistic Information' type='textarea'  {...common}/>
                 <FormGroup row={true} hidden={trip.isSocial}>
                     <Label sm={2}>Maps/Routes</Label>
                     <Col sm={10}>
@@ -157,7 +136,7 @@ export class TripDetail extends Component<{
             </datalist>,
             <datalist key='departure_point_list' id='departure_point_list'>
                 <option value='Z Papanui' />
-                <option value='Caltex Russley Road' />
+                <option value='Z Russley Road' />
             </datalist>
     ]
     }

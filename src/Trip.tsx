@@ -64,7 +64,7 @@ export class Trip extends Component<{
 
     public componentDidMount(){
         if (this.props.isNew) {
-            this.props.app.setState({isLoading: false})    
+            this.props.app.setState({isLoading: false, status: ""})    
             this.startNewEvent()
         } else {
 
@@ -153,9 +153,7 @@ export class Trip extends Component<{
                 id: -1,
                 length: 1,
                 logisticInfo: '',
-                map1: '',
-                map2: '',
-                map3: '',
+                maps: [],
                 mapHtml: '',
                 mapRoute: '[]',
                 isLimited: false,
@@ -167,7 +165,7 @@ export class Trip extends Component<{
                 tripState: this.props.isNewSocial ? TripState.OpenTrip : TripState.SuggestedTrip
             },
             participants: [
-                this.signMeUpTramper()
+                {...this.signMeUpTramper(), isLeader: true}
             ],
         }
         this.setState(this.suggestedTrip)
@@ -212,7 +210,7 @@ export class Trip extends Component<{
     }
 
     public getMaps() : string[] {
-        return [this.state.trip.map1,this.state.trip.map2,this.state.trip.map3].filter(m => m !== '')
+        return this.state.trip.maps || []
     }
 
     public getRoute() : any[] {

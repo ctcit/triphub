@@ -96,32 +96,34 @@ export class TripsGroup extends Component<{
         const trips = this.props.trips
         const id = 'tg' + trips[0].tripState
         const me = this.props.app.getMe()
+        const table =                 
+            <Table className='TripGroup' size='sm' striped={true}>
+                <thead>
+                    <tr>
+                        <th className='mobile-only'/>
+                        <th>Date</th>
+                        <th className='centered'>Length</th>
+                        <th>Title</th>
+                        <th className='desktop-only'>Grade</th>
+                        <th hidden={!me.id} className='desktop-only'>Leader</th>
+                        <th hidden={this.props.trips[0].tripState !== TripState.MyTrip}>My Role</th>
+                        <th hidden={this.props.trips[0].tripState !== TripState.SuggestedTrip} className='centered'>Approved</th>
+                        <th/>
+                    </tr>
+                </thead>
+                <tbody>
+                    {this.props.trips.map(
+                        (trip:ITrip) => <TripsLine trip={trip} key={trip.id} owner={this} />)}
+                </tbody>    
+            </Table>
 
-        return  (
+        return me.id === 0 ? table : 
             <Expandable key={id} id={id} expanded={this.props.expanded} 
             title={[TripState[trips[0].tripState].replace('Trip',' Trip') + (trips.length > 1 ? 's' : ''), 
                     <span key='count' className='trip-count'> ({trips.length})</span>]}>
-                <Table className='TripGroup' size='sm' striped={true}>
-                    <thead>
-                        <tr>
-                            <th className='mobile-only'/>
-                            <th>Date</th>
-                            <th className='centered'>Length</th>
-                            <th>Title</th>
-                            <th className='desktop-only'>Grade</th>
-                            <th hidden={!me.id} className='desktop-only'>Leader</th>
-                            <th hidden={this.props.trips[0].tripState !== TripState.MyTrip}>My Role</th>
-                            <th hidden={this.props.trips[0].tripState !== TripState.SuggestedTrip} className='centered'>Approved</th>
-                            <th/>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.props.trips.map(
-                            (trip:ITrip) => <TripsLine trip={trip} key={trip.id} owner={this} />)}
-                    </tbody>    
-                </Table>
+                {table}
             </Expandable>
-      )
+            
   }
 }
 

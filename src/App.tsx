@@ -121,7 +121,7 @@ export class App extends Component<{
     }
 
     public getArchivedRoutes() : IArchivedRoute[] {
-        return this.state.archivedRoutes;
+        return this.state.archivedRoutes || [];
     }
 
     public validateTrip(trip : ITrip) : IValidation[] {
@@ -192,21 +192,24 @@ export class App extends Component<{
 
         console.log(`path=${this.state.path}`)
 
-        if ( this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingArchivedRoutes || this.state.isLoadingMembers || this.state.isLoadingHolidays) {
+        const state = this.state
+
+        if ( state.isLoadingConfig || state.isLoadingMaps || state.isLoadingArchivedRoutes || 
+            state.isLoadingMembers || state.isLoadingHolidays) {
             return  [<TriphubNavbar key='triphubNavbar' app={this}/>,
-                     <div key='1'>Loading Configuration {this.state.isLoadingConfig ? Spinner : 'Done.'}</div>,
-                     <div key='2'>Loading Maps {this.state.isLoadingMaps ? Spinner : 'Done.'}</div>,
-                     <div key='3'>Loading Archived Routes {this.state.isLoadingArchivedRoutes ? Spinner : 'Done.'}</div>,
-                     <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
-                     <div key='5'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>]
-        } else if (this.state.path === "/calendar") {
+                     <div key='1'>Loading Configuration {state.isLoadingConfig ? Spinner : 'Done.'}</div>,
+                     <div key='2'>Loading Maps {state.isLoadingMaps ? Spinner : 'Done.'}</div>,
+                     <div key='3'>Loading Archived Routes {state.isLoadingArchivedRoutes ? Spinner : 'Done.'}</div>,
+                     <div key='4'>Loading Members {state.isLoadingMembers ? Spinner : 'Done.'}</div>,
+                     <div key='5'>Loading Holidays {state.isLoadingHolidays ? Spinner : 'Done.'}</div>]
+        } else if (state.path === "/calendar") {
             return <Calendar key='calendar' app={this}/> 
-        } else if (this.state.path === "/newtrip") {
-            return <Trip key='newtrip' app={this} isNew={true} isNewSocial={true}/> 
-        } else if (this.state.path === "/newsocial") {
+        } else if (state.path === "/newtrip") {
+            return <Trip key='newtrip' app={this} isNew={true} isNewSocial={false}/> 
+        } else if (state.path === "/newsocial") {
             return <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> 
-        } else if (this.state.path.startsWith("/trips/")) {
-            return <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> 
+        } else if (state.path.startsWith("/trips/")) {
+            return <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + state.path}/> 
         } else {
             return <TripsList key='triplist' app={this}/>
         }

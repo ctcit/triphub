@@ -11,7 +11,7 @@ $config = JFactory::getConfig();
 
 $con = ($GLOBALS["___mysqli_ston"] = mysqli_connect($config->get("host"), $config->get("user"), $config->get("password")));
 // N.B. userid here is the JOOMLA id NOT the db id. The common ground here is username.
-$username = array("id"=>$user->id,"name"=>$user->username);
+$username = ["id"=>$user->id,"name"=>$user->username];
 
 if (!$con)
     die('mysql_connect failed');
@@ -35,7 +35,7 @@ function GetLogonDetails($con,$roleclause="1=1",$dieonfail=TRUE)
 	if (count($userrow))
         return $userrow[0];
     else
-        return array("id" => 0,"name"  => '',"role"  => '');
+        return ["id" => 0,"name"  => '',"role"  => ''];
 }
 
 function SqlVal($con,$value) {
@@ -53,14 +53,13 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
 
     LogMessage($con,'SQL',$sql);        
     $fields = mysqli_fetch_fields($cursor);
-    $rows = array();
+    $rows = [];
     while (($row = mysqli_fetch_array($cursor, MYSQLI_ASSOC))) {
         foreach ($fields as $field) {
             if ($row[$field->name] != null) {
                 if (preg_match('/^is[_A-Z]/',$field->name)) {
                     $row[$field->name] = $row[$field->name] == '1';
-                }
-                else {
+                } else {
                     switch ($field->type) {
                         case MYSQLI_TYPE_BIT:
                             $row[$field->name] = $row[$field->name] == '1';
@@ -75,6 +74,9 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
                         case MYSQLI_TYPE_LONGLONG:
                         case MYSQLI_TYPE_INT24:
                             $row[$field->name] = intval($row[$field->name]);
+                            break;
+                        case MYSQLI_TYPE_JSON:
+                            $row[$field->name] = json_decode($row[$field->name]);
                             break;
                     }
                 }
@@ -115,12 +117,16 @@ function SqlExecOrDie($con,$sql,$returnid=false,$log=true) {
     return $result;
 }
 
+function Coalesce($a, $b, $c=null) {
+    return ($a != null ? $a : ($b != null ? $b : $c));
+}
+
 function PrettyPrintJson($json) {
     $text = json_encode($json, JSON_PRETTY_PRINT);
     $html = "";
     $pos = 0;
-    $stack = array();
-    $counts = array(0);
+    $stack = [];
+    $counts = [0];
     preg_match_all('/"(\\\\.|[^"])*"[:]?|[\[\]\{\}]|null|true|false|[0-9][0-9\\.]*/', $text, $matches, PREG_OFFSET_CAPTURE);
     foreach ($matches[0] as $item) {
         $match = $item[0];
@@ -132,8 +138,6 @@ function PrettyPrintJson($json) {
         if (substr($match,-1) == ':') {
             $counts[sizeof($counts)-1]--;
             $html .= "<span style='color:teal'>".htmlentities( $match )."</span>";
-        } else if (substr($match,0,10) == '"http:\/\/' || substr($match,0,11) == '"https:\/\/') {
-            $html .= "<a href='".json_decode($match)."?prettyprintjson=1'>".htmlentities( $match )."</a>";
         } else if (substr($match,0,1) == '"') {
             $html .= "<span style='color:red'>".htmlentities( $match )."</span>";
         } else if ($match == '[' || $match == '{') {
@@ -160,7 +164,7 @@ function PrettyPrintJson($json) {
 function ParseCss($text)
 {
     $text = preg_replace("/\/\*.*\*\//","",$text);
-    $css = array();
+    $css = [];
 
     foreach (explode("}",$text) as $style) {
         $stylesplit = explode("{",$style);

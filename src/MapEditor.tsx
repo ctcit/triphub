@@ -227,9 +227,11 @@ export class MapEditor extends Component<{
                 this.continueRoute();
             });
         }
-        const undoLastRouteEditWithoutContinue = () => {
+        const undoLastRouteEdit2 = () => {
             this.endRoute();
             this.undoLastRouteEdit();
+            this.infoControl.addTo(this.map);
+            this.setDefaultInfoControlMessage();
         }
         // const updateArchivedRouteSummary = () => {
         //     this.updateArchivedRouteSummary();
@@ -409,7 +411,7 @@ export class MapEditor extends Component<{
                                             <MdZoomOutMap/>
                                     </ButtonWithTooltip>
                                     <ButtonWithTooltip id="UndoButton2" color='primary' 
-                                        onClick={undoLastRouteEditWithoutContinue} disabled={!this.state.canUndoLastRouteEdit} 
+                                        onClick={undoLastRouteEdit2} disabled={!this.state.canUndoLastRouteEdit} 
                                         placement="top" tooltipText="Undo last change">
                                             <MdUndo/>
                                     </ButtonWithTooltip>
@@ -1076,7 +1078,6 @@ export class MapEditor extends Component<{
     private showArchivedRoutes(): void {
 
         const infoControl: any = this.infoControl;
-        const defaultInfoControlMessage: string = 'Hover over a route for details.  Click to import.';
 
         if (!this.archivedRoutesLayerGroup) {
             this.archivedRoutesLayerGroup = L.layerGroup()
@@ -1107,7 +1108,7 @@ export class MapEditor extends Component<{
                         });
                         polyline.on('mouseout', event => {
                             polylines.forEach(p => { p.setStyle(polylineOptions)} );
-                            infoControl.update(defaultInfoControlMessage);
+                            this.setDefaultInfoControlMessage();
                         });
                     });
                 }
@@ -1119,6 +1120,12 @@ export class MapEditor extends Component<{
                 .addTo(this.map);
         }
 
+        this.setDefaultInfoControlMessage();
+    }
+
+    private setDefaultInfoControlMessage(): void {
+        const infoControl: any = this.infoControl;
+        const defaultInfoControlMessage: string = 'Hover over a route for details.  Click to import.';
         infoControl.update(defaultInfoControlMessage);
     }
 

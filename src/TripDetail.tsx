@@ -36,14 +36,12 @@ export class TripDetail extends Component<{
         this.set = this.set.bind(this)
         this.validate = this.validate.bind(this)
 
-        // BJ TODO: move to App
         const nz50Maps: IMap[] = this.props.app.getMaps();
         this.nz50MapsBySheet = {};
         nz50Maps.forEach((nz50Map: IMap) => {
             this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
         });
 
-        // BJ TODO: move to App
         const archivedRoutes: IArchivedRoute[] = this.props.app.getArchivedRoutes();
         this.archivedRoutesById = {};
         archivedRoutes.forEach((archivedRoute: IArchivedRoute) => {
@@ -143,7 +141,7 @@ export class TripDetail extends Component<{
                             mapSheets={getMapSheets()} 
                             routesAsJson={getRoutesAsJson()} 
                             saveMapChanges={saveMapChanges}
-                            getArchivedRoute={getArchivedRoute} // TODO replace with service
+                            getArchivedRoute={getArchivedRoute}
                             updateArchivedRouteSummary={updateArchivedRouteSummary}
                         />
                     </Col>

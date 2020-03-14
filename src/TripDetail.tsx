@@ -134,7 +134,7 @@ export class TripDetail extends Component<{
                 <SaveableControl id='description' label='Description' type='textarea'  {...common}/>
                 <SaveableControl id='logisticnfo' label='Logistic Information' type='textarea'  {...common}/>
                 <FormGroup row={true} hidden={trip.isSocial}>
-                    <Label sm={2}>Maps/Routes</Label>
+                    <Label sm={2}>Routes/Maps</Label>
                     <Col sm={10}>
                         <MapControl 
                             nz50MapsBySheet={this.nz50MapsBySheet} 

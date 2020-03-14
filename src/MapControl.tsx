@@ -50,7 +50,7 @@ export class MapControl extends Component<{
         super(props);
 
         this.state = { 
-            mapVisible: this.props.routesAsJson !== '[]',
+            mapVisible: this.props.routesAsJson !== undefined && this.props.routesAsJson !== '[]',
             editing: false,
             editsMade: false,
             cancelDropdownOpen: false

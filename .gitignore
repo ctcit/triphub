@@ -23,3 +23,4 @@ yarn-error.log*
 deploy.sh
 deploy_api.sh
 install.log
+triphub-win.code-workspace

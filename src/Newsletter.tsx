@@ -8,7 +8,7 @@ import { INewsletter, IValidation } from './Interfaces';
 import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
-import { GetDateString } from './Utilities';
+import { GetDateString, IsValidDateString } from './Utilities';
 
 
 export class Newsletter extends Component<{
@@ -47,10 +47,12 @@ export class Newsletter extends Component<{
     }
 
     public validate() : IValidation[] {
-
-        // return this.state.isPrivileged && !this.state.isLoading ? [
         return [
-            {id:'volume', ok: this.state.newsletter.volume > 0, message: 'Volume number mest be greater than zero'},
+            {id:'volume', ok: this.state.newsletter.volume > 0, message: 'Volume must be greater than zero'},
+            {id:'number', ok: this.state.newsletter.number > 0, message: 'Number mest be greater than zero'},
+            {id:'date', ok: IsValidDateString(this.state.newsletter.date), message: 'Newsletter date is not valid'},
+            {id:'issueDate', ok: IsValidDateString(this.state.newsletter.issueDate), message: 'Issue date is not valid'},
+            {id:'nextdeadline', ok: IsValidDateString(this.state.newsletter.nextdeadline), message: 'Next deadline is not a valid date'},
         ];
     }
 

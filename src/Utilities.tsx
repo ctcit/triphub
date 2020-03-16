@@ -1,5 +1,5 @@
 import { IParticipant } from './Interfaces';
-var { DateTime } = require('luxon');
+import { DateTime } from 'luxon';
 
 export const DayOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 export const MonthOfYear = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];

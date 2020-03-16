@@ -160,7 +160,7 @@ export class Newsletter extends Component<{
             }
 
             // Club nights are on Wednesdays
-            let closestClubNight:Date = new Date(newsletterDate)
+            const closestClubNight:Date = new Date(newsletterDate)
             closestClubNight.setDate(newsletterDate.getDate() + (3 - (newsletterDate.getDay()%7)))
 
             // next deadline should be the thursday before the closestClubNight

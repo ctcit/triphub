@@ -8,7 +8,7 @@ import { INewsletter, IValidation } from './Interfaces';
 import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
-import { GetDateString, GetClosestWednesday } from './Utilities';
+import { GetDateString, IsValidDateString, GetClosestWednesday } from './Utilities';
 
 
 export class Newsletter extends Component<{
@@ -48,10 +48,12 @@ export class Newsletter extends Component<{
     }
 
     public validate() : IValidation[] {
-
-        // return this.state.isPrivileged && !this.state.isLoading ? [
         return [
-            {id:'volume', ok: this.state.newsletter.volume > 0, message: 'Volume number mest be greater than zero'},
+            {id:'volume', ok: this.state.newsletter.volume > 0, message: 'Volume must be greater than zero'},
+            {id:'number', ok: this.state.newsletter.number > 0, message: 'Number mest be greater than zero'},
+            {id:'date', ok: IsValidDateString(this.state.newsletter.date), message: 'Newsletter date is not valid'},
+            {id:'issueDate', ok: IsValidDateString(this.state.newsletter.issueDate), message: 'Issue date is not valid'},
+            {id:'nextdeadline', ok: IsValidDateString(this.state.newsletter.nextdeadline), message: 'Next deadline is not a valid date'},
         ];
     }
 
@@ -123,9 +125,6 @@ export class Newsletter extends Component<{
             const may:number = 5;
             const lastAnniversaryDate : Date = (now.getMonth() >= may) ? new Date(now.getFullYear(), may) : new Date(now.getFullYear()-1, may);
 
-            // Club nights are on Wednesdays
-            const closestClubNight:Date = GetClosestWednesday(newsletterDate)
-
             // The next deadline should be the thursday before the clubnight of the next newsletter
             // which is always 6 days before the club night
             const nextNewsletterDate:Date = new Date(newsletterDate)
@@ -159,6 +158,12 @@ export class Newsletter extends Component<{
                 nextVolume = 1
                 nextNumber = 1
             }
+
+            // Club nights are on Wednesdays
+            let closestClubNight:Date = new Date(newsletterDate)
+            closestClubNight.setDate(newsletterDate.getDate() + (3 - (newsletterDate.getDay()%7)))
+
+            // next deadline should be the thursday before the closestClubNight
 
             this.newNesletter = {
                 id: -1,

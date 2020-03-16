@@ -1,4 +1,5 @@
 import { IParticipant } from './Interfaces';
+var { DateTime } = require('luxon');
 
 export const DayOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 export const MonthOfYear = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -11,18 +12,22 @@ export function AddDays(date:Date, days:number):Date {
     return new Date(date.getFullYear(),date.getMonth(),date.getDate()+days)
 }
 
-export function GetDate(dateString : string) : string{
+export function GetDate(dateString : string) : string {
     const date = new Date(dateString)
     return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()]
 }
 
-export function GetFullDate(dateString : string) : string{
+export function GetFullDate(dateString : string) : string {
     const date = new Date(dateString)
     return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()] + ' ' + date.getFullYear()
 }
 
-export function GetLength(length : number) : string{
+export function GetLength(length : number) : string {
     return length === 1 ? 'Day' : length === 2 ? 'Weekend' : length + ' days'
+}
+
+export function IsValidDateString(dateString: string ) : boolean {
+    return DateTime.fromISO(dateString).isValid
 }
 
 export function GetDisplayPriority(participant: IParticipant) : number {

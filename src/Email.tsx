@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { SaveableControl } from './SaveableControl';
+import { TextInputControl, TextAreaInputControl } from './SaveableControl';
 import { App } from './App';
 import { Trip } from './Trip';
 import { IValidation } from './Interfaces';
 import { GetFullDate } from './Utilities';
-import { Col, FormGroup, Label, Button  } from 'reactstrap';
+import { Col, FormGroup, Label, Button, Form, Row  } from 'reactstrap';
 import { Spinner } from '.';
 
 export class Email extends Component<{
@@ -28,9 +28,6 @@ export class Email extends Component<{
             body: '', 
         }
         this.app = this.props.app
-        this.get = this.get.bind(this)
-        this.set = this.set.bind(this)
-        this.validate = this.validate.bind(this)
         this.send = this.send.bind(this)
     }
 
@@ -41,10 +38,6 @@ export class Email extends Component<{
         this.setState({[id]: val})
     }
 
-    public validate() : IValidation[] {
-        return this.props.app.mandatory({subject:this.get('subject'),body:this.get('body')},['subject','body'])
-    }
-
     public send() {
         this.setState({sending: true})
         this.app.apiCall('POST', this.props.owner.props.href + '/email', this.state, true)
@@ -52,19 +45,57 @@ export class Email extends Component<{
     }
 
     public render(){
+        const validations: IValidation[] = this.props.app.mandatory({subject:this.get('subject'),body:this.get('body')},['subject','body']);
+
+        const onGet = (id: string): any => {
+            return this.get(id);
+        }
+        const onSave = (id: string, value: any): Promise<void> => {
+            this.set(id, value);
+            return Promise.resolve();
+        }
+        const onGetValidationMessage = (id: string): any => {
+            const found: IValidation | undefined = validations.find(v => v.id === id && !v.ok);
+            return found ? found.message : null;
+        }
+
+        const common = {
+            'onGet': onGet,
+            'onSave': onSave,
+            'onGetValidationMessage': onGetValidationMessage
+        }
+
         return [
-            <SaveableControl key='recipients' id='recipients' type='textarea' owner={this} label='Recipients' readOnly={true}/>,
-            <SaveableControl key='subject' id='subject' type='text' owner={this} label='Subject' />,
-            <SaveableControl key='body' id='body' type='textarea' owner={this} label='Body' />,
-            <FormGroup key='button'>
-                <Label/>
-                <Col sm={10}>
-                    <Button onClick={this.send}>
-                        <span className='fa fa-paper-plane'/>
-                        {this.state.sending ? ['Sending ',Spinner] : 'Send'}
-                    </Button>
-                </Col>
-            </FormGroup>
+            <Form key='detail'>
+                <Row noGutters={true}>
+                    <Col>
+                        <TextAreaInputControl key='recipients' id='recipients' label='Recipients' readOnly={true} {...common}/>,
+                    </Col>
+                </Row>
+                <Row noGutters={true}>
+                    <Col>
+                        <TextInputControl key='subject' id='subject' label='Subject' {...common} />,
+                    </Col>
+                </Row>
+                <Row noGutters={true}>
+                    <Col>
+                        <TextAreaInputControl key='body' id='body' label='Body' {...common} />,
+                    </Col>
+                </Row>
+                <Row noGutters={true}>
+                    <Col>
+                        <FormGroup key='button'>
+                            <Label/>
+                            <Col sm={10}>
+                                <Button onClick={this.send}>
+                                    <span className='fa fa-paper-plane'/>
+                                    {this.state.sending ? ['Sending ',Spinner] : 'Send'}
+                                </Button>
+                            </Col>
+                        </FormGroup>
+                    </Col>
+                </Row>
+            </Form>
         ]
     }
 }

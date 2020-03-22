@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Button, Form } from 'reactstrap';
+import { Button, Form, Row, Col } from 'reactstrap';
 import { Component } from 'react';
 import { IMember,  IParticipant, IValidation, IParticipantsInfo } from './Interfaces';
 import { Spinner } from '.';
 import { Trip } from './Trip';
 import { App } from './App';
 import { Expandable } from './Expandable';
-import { SaveableControl } from './SaveableControl';
+import { TextInputControl, SwitchControl, TextAreaInputControl } from './SaveableControl';
 import { ToolTipIcon } from './ToolTipIcon';
 import { TripParticipants } from './TripParticipants';
 
@@ -33,9 +33,6 @@ export class TripParticipant extends Component<{
         this.state = {}
         this.href = `${this.props.trip.props.href}/participants/${this.props.participant.id}`
         this.app = this.props.app
-        this.get = this.get.bind(this)
-        this.set = this.set.bind(this)
-        this.validate = this.validate.bind(this)
         this.setDeleted = this.setDeleted.bind(this)
         this.setWaitlist = this.setWaitlist.bind(this)
         this.setMember = this.setMember.bind(this)
@@ -43,7 +40,6 @@ export class TripParticipant extends Component<{
 
     public get(id: string) : any{
         const participants = this.props.trip.state.participants
-
         return (participants.find((p:IParticipant) => p.id === this.props.participant.id) || {})[id]
     }
 
@@ -73,10 +69,8 @@ export class TripParticipant extends Component<{
         this.props.trip.setState({participants})
     }
 
-    public validate() : IValidation[] {
-        const participants = this.props.trip.state.participants
-
-        return this.app.validateParticipant(participants.find((p:IParticipant) => p.id === this.props.participant.id) as IParticipant)
+    public saveParticipant(body: any): Promise<void> {
+        return this.app.apiCall('POST', this.href as string, body, true);
     }
 
     public setDeleted() {
@@ -112,14 +106,38 @@ export class TripParticipant extends Component<{
         }
     }
 
-    public render(){
+    public render() {
+        const participants = this.props.trip.state.participants
+        const validations: IValidation[] = this.app.validateParticipant(participants.find((p:IParticipant) => p.id === this.props.participant.id) as IParticipant);
+
+
         const participant = this.props.participant
         const member = this.props.app.getMemberById(participant.memberId)
         const isPrivileged = this.props.trip.isPrivileged() || this.props.app.getMe().id === participant.memberId
         const isMemberDiff = participant.memberId === this.props.app.getMe().id &&
                              participant.memberId && (participant.emergencyContactName !== member.emergencyContactName ||
                                                       participant.emergencyContactPhone !== member.emergencyContactPhone)
-        const common = {readOnly: !isPrivileged, owner: this}
+
+        const onGet = (id: string): any => {
+            return this.get(id);
+        }
+        const onSave = (id: string, value: any): Promise<void> => {
+            this.set(id, value);
+            const body = {};
+            body[id] = value;
+            return this.saveParticipant(body);
+        }
+        const onGetValidationMessage = (id: string): any => {
+            const found: IValidation | undefined = validations.find(v => v.id === id && !v.ok);
+            return found ? found.message : null;
+        }
+        const common = {
+            readOnly: !isPrivileged,
+            'onGet': onGet,
+            'onSave': onSave,
+            'onGetValidationMessage': onGetValidationMessage
+        }
+
         const iconid = `${participant.id || 'new'}`
         const logisticInfo = (participant.logisticInfo || '').trim()
         const validation = this.app.validateParticipant(participant).filter(v => !v.ok).map(v => v.message)
@@ -179,18 +197,50 @@ export class TripParticipant extends Component<{
                 <Expandable title={title} id={`${participant.id}`} level={4} expanded={participant.id === -1} 
                             buttons={buttons.filter(b => b)} showMenu={participant.showMenu}>
                     <Form key='form' className='indentedparticipants'>
-                        <SaveableControl id='name' label='Name' type='text' list='memberlist' {...common} 
-                                                affected={['email','phone','memberid','emergency_contact']}/>
-                        <SaveableControl id='email' label='Email' type='text' {...common}/>
-                        <SaveableControl id='phone' label='Phone' type='text'  {...common}/>
-                        <SaveableControl id='emergencyContactName' label='Emergency Contact Name' type='text' {...common}/>
-                        <SaveableControl id='emergencyContactPhone' label='Emergency Contact Phone' type='text' {...common}/>
-                        <SaveableControl id='isLeader' label='Leader' type='checkbox' {...common}/>
-                        <SaveableControl id='isPlbProvider' label='Has PLB' type='checkbox' {...common}/>
-                        <SaveableControl id='isVehicleProvider' label='Has Car' type='checkbox' {...common}/>
-                        <SaveableControl id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} 
-                                                {...common}/>
-                        <SaveableControl id='logisticInfo' label='Logistic Information' type='textarea' {...common}/>
+
+                        <Row noGutters={true}>
+                            <Col md={3}>
+                                <TextInputControl id='name' label='Name' list='memberlist' {...common} /> 
+                                                {/* affected={['email','phone','memberid','emergency_contact']}/> */}
+                            </Col>
+                            <Col md={3}>
+                                <TextInputControl id='email' label='Email' {...common}/>
+                            </Col>
+                            <Col md={3}>
+                                <TextInputControl id='phone' label='Phone' {...common}/>
+                            </Col>
+                        </Row>
+
+                        <Row noGutters={true}>
+                            <Col md={3}>
+                                <TextInputControl id='emergencyContactName' label='Emergency Contact Name' {...common}/>
+                            </Col>
+                            <Col md={3}>
+                                <TextInputControl id='emergencyContactPhone' label='Emergency Contact Phone' {...common}/>
+                            </Col>
+                        </Row>
+
+                        <Row>
+                            <Col md={2}>
+                                <SwitchControl id='isLeader' label='Leader' {...common}/>
+                            </Col>
+                            <Col md={2}>
+                                <SwitchControl id='isPlbProvider' label='Has PLB' {...common}/>
+                            </Col>
+                            <Col md={2}>
+                                <SwitchControl id='isVehicleProvider' label='Has Car' {...common}/>
+                            </Col>
+                            <Col md={3}>
+                                <TextInputControl id='vehicleRego' label='Rego' hidden={!participant.isVehicleProvider} {...common}/>
+                            </Col>
+                        </Row>
+                        
+                        <Row>
+                            <Col>
+                                <TextAreaInputControl id='logisticInfo' label='Logistic Information' {...common}/>
+                            </Col>
+                        </Row>
+
                     </Form>
                 </Expandable>
             </div>

@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Form, FormGroup, Label, Col  } from 'reactstrap';
+import { Form, Col, Row } from 'reactstrap';
 import { App } from './App';
-import { SaveableControl, IControlOwner } from './SaveableControl';
+import { TextInputControl, SwitchControl, DateInputControl, NumberInputControl, TextAreaInputControl } from './SaveableControl';
 import './index.css';
 import './print.css';
 import { Trip } from './Trip';
-import { IValidation, IMap, IArchivedRoute } from './Interfaces';
+import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces';
 import { MapControl } from './MapControl';
 import { BaseUrl } from 'src';
 
@@ -14,9 +14,10 @@ export class TripDetail extends Component<{
         owner: Trip,
         app: App,
     },{
-        editMap: boolean
-        editMaps: boolean
-    }> implements IControlOwner {
+        editMap: boolean,
+        editMaps: boolean,
+        isSocialEvent: boolean
+    }> {
 
       public href?: string
       public app: App
@@ -28,13 +29,11 @@ export class TripDetail extends Component<{
         super(props)
         this.state = {
             editMap:false, 
-            editMaps:false
+            editMaps:false,
+            isSocialEvent: false
         }
         this.href = this.props.owner.props.href
         this.app = this.props.app
-        this.get = this.get.bind(this)
-        this.set = this.set.bind(this)
-        this.validate = this.validate.bind(this)
 
         const nz50Maps: IMap[] = this.props.app.getMaps();
         this.nz50MapsBySheet = {};
@@ -49,56 +48,21 @@ export class TripDetail extends Component<{
         });
     }
 
-    public validate() : IValidation[] {
-        return this.app.validateTrip(this.props.owner.state.trip)
-    }
-
     public get(id: string) : any{
         return this.props.owner.state.trip[id]
     }
 
     public set(id: string, val: any) : void {
-        this.props.owner.setState({trip: {...this.props.owner.state.trip, [id]: val}})
+        this.props.owner.setState({ trip: {...this.props.owner.state.trip, [id]: val }})
+    }
+
+    public saveTrip(body: any): Promise<void> {
+        return this.app.apiCall('POST', this.href as string, body, true);
     }
 
     public render(){
-        const trip = this.props.owner.state.trip
-        const common = {
-            readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
-            owner:this
-        }
-
-        // BJ TODO: remove 3 map limit
-        const getMapSheets = (): string[] => {
-            const mapSheets: string[] = [];
-            ["map1", "map2", "map3"].forEach((mapFieldId: string) => {
-                const mapSheet = this.get(mapFieldId);
-                if (mapSheet && mapSheet !== "") {
-                    const parts = mapSheet.split(" ");
-                    if (parts.length > 0 && this.nz50MapsBySheet[parts[0]]) {
-                        mapSheets.push(parts[0]);
-                    }
-                }
-            });
-            return mapSheets;
-        }
-
-        const getRoutesAsJson = (): string => {
-            return this.get("mapRoute");
-        }
-
-        // BJ TODO: remove 3 map limit
-        const saveMapChanges = (mapSheets: string[], routesAsJson: string): Promise<void> => {
-            const body: any = {};
-
-            body.map1 = mapSheets.length > 0 ? mapSheets[0] + " " +  this.nz50MapsBySheet[mapSheets[0]].name : "";
-            body.map2 = mapSheets.length > 1 ? mapSheets[1] + " " +  this.nz50MapsBySheet[mapSheets[1]].name : "";
-            body.map3 = mapSheets.length > 2 ? mapSheets[2] + " " +  this.nz50MapsBySheet[mapSheets[2]].name : "";
-
-            body.mapRoute = routesAsJson;
-
-            return this.saveTrip(body);
-        }
+        const trip: ITrip = this.props.owner.state.trip;
+        const validations: IValidation[] = this.app.validateTrip(this.props.owner.state.trip);
 
         // TODO Move to service
         const getArchivedRoute = (archivedRouteId: string): Promise<IArchivedRoute | undefined> =>  {
@@ -109,48 +73,123 @@ export class TripDetail extends Component<{
             return this.app.apiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
         }
 
+        const onGet = (id: string): any => {
+            return this.get(id);
+        }
+        const onSave = (id: string, value: any): Promise<void> => {
+            this.set(id, value);
+            const body = {};
+            body[id] = value;
+            return this.saveTrip(body);
+        }
+        const onGetValidationMessage = (id: string): any => {
+            const found: IValidation | undefined = validations.find(validation => validation.id === id && !validation.ok);
+            return found ? found.message : null;
+        }
+
+        const common = {
+            readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
+            owner: this,
+            'onGet': onGet,
+            'onSave': onSave,
+            'onGetValidationMessage': onGetValidationMessage
+        }
+
         return [
-            <Form key='form'>
-                <SaveableControl id='title' label='Title' type='text' {...common}/>
-                <SaveableControl id='openDate' label='Open Date' type='date'  {...common}/>
-                <SaveableControl id='closeDate' label='Close Date' type='date'  {...common}/>
-                <SaveableControl id='tripDate' label='Trip Date' type='date'  {...common}/>
-                <SaveableControl id='isSocial' label='Event Type' type='radio'
-                                radioOptions={{"Social Event":true,"Tramp":false}} {...common}/>
-                <SaveableControl id='isNoSignup' label='No sign up list' type='checkbox' {...common} 
-                                        hidden={!trip.isSocial}/>
-                <SaveableControl id='length' label='Length in days' type='number' 
-                                        hidden={trip.isSocial} {...common}/>
-                <SaveableControl id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...common}/>
-                <SaveableControl id='departureDetails' label='Departure Details' type='text' {...common}/>
-                <SaveableControl id='cost' label='Cost' type='text'  {...common}/>
-                <SaveableControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
-                <SaveableControl id='isLimited' label='Limited Numbers' type='checkbox' {...common} 
-                                        hidden={trip.isSocial && trip.isNoSignup}/>
-                <SaveableControl id='maxParticipants' label='Maximum trampers' type='number' {...common} 
-                                        hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)}/>
-                <SaveableControl id='description' label='Description' type='textarea'  {...common}/>
-                <SaveableControl id='logisticnfo' label='Logistic Information' type='textarea'  {...common}/>
-                <FormGroup row={true} hidden={trip.isSocial}>
-                    <Label sm={2}>Routes/Maps</Label>
+            <Form key='detail'>
+                <Row noGutters={true}>
+                    <Col>
+                        <TextInputControl id='title' label='Title' {...common}/>
+                    </Col>
+                </Row>
+
+                <Row noGutters={true}>
+                    <Col md={3}>
+                        <DateInputControl id='openDate' label='Open Date' {...common}/>
+                    </Col>
+                    <Col md={3}>
+                        <DateInputControl id='closeDate' label='Close Date' {...common}/>
+                    </Col>
+                    <Col md={3}>
+                        <DateInputControl id='tripDate' label='Trip Date' {...common}/>
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col md={2}>
+                        <SwitchControl id='isSocial' label='Social event' {...common}/>
+                    </Col>
+                    <Col md={2}>
+                        <SwitchControl id='isNoSignup' label='No sign up list' hidden={!trip.isSocial} {...common}/>
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col md={3}>
+                        <NumberInputControl id='length' label='Length in days' min={0} hidden={trip.isSocial} {...common}/>
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col>
+                        <TextInputControl id='departurePoint' label='Departure Point' list='departure_point_list' {...common}/>
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col>
+                        <TextInputControl id='departureDetails' label='Departure Details' {...common}/>
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col md={3}>
+                        <TextInputControl id='cost' label='Cost' {...common}/>
+                    </Col>
+                    <Col md={3}>
+                        <TextInputControl id='grade' label='Grade' list='grade_list'  {...common}/>
+                    </Col>
+                </Row>
+
+                <Row>
+                <Col md={3}>
+                        <SwitchControl id='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common}/>
+                    </Col>
+                    <Col md={3}>
+                        <NumberInputControl id='maxParticipants' label='Maximum trampers' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col>
+                        <TextAreaInputControl id='description' label='Description' {...common}/>
+                    </Col>
+                </Row>
+
+                <Row>
+                    <Col>
+                        <TextAreaInputControl id='logisticnfo' label='Logistic Information' {...common}/>
+                    </Col>
+                </Row>
+    
+                <Row>
                     <Col sm={10}>
                         <MapControl 
+                            routesId='routes' routesLabel='Routes'
+                            mapsId='maps' mapsLabel='Maps'
                             nz50MapsBySheet={this.nz50MapsBySheet} 
                             archivedRoutesById={this.archivedRoutesById}
-                            readOnly={common.readOnly} 
-                            mapSheets={getMapSheets()} 
-                            routesAsJson={getRoutesAsJson()} 
-                            saveMapChanges={saveMapChanges}
                             getArchivedRoute={getArchivedRoute}
                             updateArchivedRouteSummary={updateArchivedRouteSummary}
+                            {...common}
                         />
                     </Col>
-                </FormGroup>
+                </Row>
             </Form>,
             <datalist key='grade_list' id='grade_list'>
                 <option value='Easy' />
-                <option value='Mod' />
-                <option value='ModHard' />
+                <option value='Moderate' />
+                <option value='Moderate/Hard' />
                 <option value='Hard' />
             </datalist>,
             <datalist key='departure_point_list' id='departure_point_list'>
@@ -158,10 +197,6 @@ export class TripDetail extends Component<{
                 <option value='Caltex Russley Road' />
             </datalist>
     ]
-    }
-
-    public saveTrip(body: any): Promise<void> {
-        return this.app.apiCall('POST', this.href as string, body, true);
     }
 
 }

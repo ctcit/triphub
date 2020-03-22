@@ -190,25 +190,31 @@ export class App extends Component<{
 
     public render(){
 
-        console.log(`path=${this.state.path}`)
+        console.log(`path=${this.state.path}`);
 
-        if ( this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingArchivedRoutes || this.state.isLoadingMembers || this.state.isLoadingHolidays) {
-            return  [<TriphubNavbar key='triphubNavbar' app={this}/>,
+        return (
+            this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingArchivedRoutes || this.state.isLoadingMembers || this.state.isLoadingHolidays ?
+                 [<TriphubNavbar key='triphubNavbar' app={this}/>,
                      <div key='1'>Loading Configuration {this.state.isLoadingConfig ? Spinner : 'Done.'}</div>,
                      <div key='2'>Loading Maps {this.state.isLoadingMaps ? Spinner : 'Done.'}</div>,
                      <div key='3'>Loading Archived Routes {this.state.isLoadingArchivedRoutes ? Spinner : 'Done.'}</div>,
                      <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
-                     <div key='5'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>]
-        } else if (this.state.path === "/calendar") {
-            return <Calendar key='calendar' app={this}/> 
-        } else if (this.state.path === "/newtrip") {
-            return <Trip key='newtrip' app={this} isNew={true} isNewSocial={true}/> 
-        } else if (this.state.path === "/newsocial") {
-            return <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> 
-        } else if (this.state.path.startsWith("/trips/")) {
-            return <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> 
-        } else {
-            return <TripsList key='triplist' app={this}/>
-        }
+                     <div key='5'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>
+                ] :
+
+            this.state.path === "/calendar" ?
+                <Calendar key='calendar' app={this}/> :
+
+            this.state.path === "/newtrip" ?
+                <Trip key='newtrip' app={this} isNew={true} isNewSocial={true}/> :
+
+            this.state.path === "/newsocial" ?
+                <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> :
+
+            this.state.path.startsWith("/trips/") ?
+                <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> :
+
+                <TripsList key='triplist' app={this}/>
+        );
     }
 }

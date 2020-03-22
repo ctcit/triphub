@@ -1,25 +1,34 @@
 import * as L from 'leaflet';
 import * as React from 'react';
 import { Component } from 'react';
-import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu } from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Form } from 'reactstrap';
 import { MapEditor } from './MapEditor';
 import FormGroup from 'reactstrap/lib/FormGroup';
 import Button from 'reactstrap/lib/Button';
 import { IMap, IArchivedRoute } from './Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
+import { ControlWrapper } from './SaveableControl';
 
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 
+
 export class MapControl extends Component<{
-    readOnly: boolean,
+    routesId : string, 
+    routesLabel : string,
+    mapsId : string, 
+    mapsLabel : string,
+    hidden? : boolean,
+    readOnly? : boolean,
+    list? : any,
+    onGet: (id: string) => any,
+    onSave: (id: string, value: any) => Promise<void>,
+    onGetValidationMessage?: (id: string) => string,
     nz50MapsBySheet: { [mapSheet: string] : IMap },
     archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute },
-    mapSheets: string[],
-    routesAsJson: string,
-    saveMapChanges: (mapSheets: string[], routesAsJson: string) => Promise<void>,
     getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     updateArchivedRouteSummary: (routeId: string, routeSummary: string) => Promise<void>
 },{
+    saving : boolean,
     mapVisible: boolean,
     editing: boolean,
     editsMade: boolean,
@@ -49,16 +58,19 @@ export class MapControl extends Component<{
     constructor(props:any) {
         super(props);
 
+        const routesAsJson: string = this.getRoutes();
+        this.mapSheets = this.getMapSheets();
+
+        this.pendingRoutesAsJson = routesAsJson || '[]';
+        this.pendingMapSheets = this.mapSheets;
+
         this.state = { 
-            mapVisible: this.props.routesAsJson !== undefined && this.props.routesAsJson !== '[]',
+            saving: false,
+            mapVisible: routesAsJson !== undefined && routesAsJson !== '[]',
             editing: false,
             editsMade: false,
             cancelDropdownOpen: false
         };
-        this.mapSheets = this.props.mapSheets;
-
-        this.pendingRoutesAsJson = this.props.routesAsJson || '[]';
-        this.pendingMapSheets = this.props.mapSheets;
     }
 
     public componentDidMount() {
@@ -67,7 +79,8 @@ export class MapControl extends Component<{
         }
     }
 
-    public render(){
+   public render(){
+
         const onEdit = () => { 
             this.setState({ editsMade: false, editing: true }); 
         }
@@ -97,9 +110,10 @@ export class MapControl extends Component<{
     
                 this.setState({ editsMade: false, editing: false });
 
-                await this.props.saveMapChanges(this.pendingMapSheets, this.pendingRoutesAsJson);
+                this.setState({saving: true});
+                this.saveMapChanges(this.pendingMapSheets, this.pendingRoutesAsJson)
+                    .then(() => this.setState({saving: false}));
             }); 
-
         }
         const onCancel = () => { 
             this.setState({ editsMade: false, editing: false }); 
@@ -113,37 +127,48 @@ export class MapControl extends Component<{
         }
 
         return (
-            <FormGroup>
+            <Form key='routesMaps'>
                 <Row>
                     <Col sm={'auto'}>
-                    { this.state.mapVisible &&
-                        <ResizableBox width={this.initialWidth} height={this.initialHeight} minConstraints={[200, 200]} onResize={onResize}>
-                            <div id="minimap"/>
-                        </ResizableBox>
-                    }
-                    { !this.state.mapVisible &&
+                        <ControlWrapper id={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+                        { this.state.mapVisible &&
+                            <ResizableBox width={this.initialWidth} height={this.initialHeight} minConstraints={[200, 200]} onResize={onResize}>
+                                <div id="minimap"/>
+                            </ResizableBox>
+                        }
+                        { !this.state.mapVisible &&
                             <FormText color="muted">No routes specified</FormText>
-                    }
+                        }
+                        </ControlWrapper>
                     </Col>
                     <Col sm={4}>
-                    {
-                        this.mapSheets.length > 0 &&
+                        <ControlWrapper id={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+                        { this.mapSheets.length > 0 &&
                             <ListGroup>
                                 { this.mapSheets.map((mapSheet: string) => 
-                                    <ListGroupItem sm={3} key={mapSheet} color="primary">{this.mapSheetWithName(mapSheet)}</ListGroupItem>
+                                    <ListGroupItem sm={3} key={mapSheet} color="primary">
+                                        <span className='fa fa-map-o'/>
+                                        {' ' + this.mapSheetWithName(mapSheet)}
+                                    </ListGroupItem>
                                 )}
                             </ListGroup>
-                    }
-                    {
-                        this.mapSheets.length === 0 &&
-                            <FormText color="muted">No maps selected</FormText>
-                    }
+                        }
+                        {
+                            this.mapSheets.length === 0 &&
+                                <FormText color="muted">No maps selected</FormText>
+                        }
+                        </ControlWrapper>
                     </Col>
-                    <Col sm={2}>
+                </Row>
+                <Row>
+                    <Col sm={3}>
                         <FormGroup row={true} key='mapeditor'>
-                            <Button onClick={onEdit} hidden={this.props.readOnly}>Edit</Button>
+                            <Button onClick={onEdit} hidden={this.props.readOnly}>
+                                <span className='fa fa-map'/>
+                                Edit Routes/Maps
+                            </Button>
                             <Modal isOpen={this.state.editing} toggle={onSave} size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}}>
-                                <ModalHeader toggle={onSave}>Maps and Routes</ModalHeader>
+                                <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
                                 <ModalBody>
                                     <MapEditor 
                                         nz50MapsBySheet={this.props.nz50MapsBySheet} 
@@ -172,10 +197,41 @@ export class MapControl extends Component<{
                         </FormGroup>
                     </Col>
                 </Row>
-            </FormGroup>
-        );
+            </Form>
+         );
     }
 
+    // BJ TODO: remove 3 map limit
+    private getMapSheets(): string[] {
+        const mapSheets: string[] = [];
+        ["map1", "map2", "map3"].forEach((mapFieldId: string) => {
+            const mapSheet = this.props.onGet(mapFieldId);
+            if (mapSheet && mapSheet !== "") {
+                const parts = mapSheet.split(" ");
+                if (parts.length > 0 && this.props.nz50MapsBySheet[parts[0]]) {
+                    mapSheets.push(parts[0]);
+                }
+            }
+        });
+        return mapSheets;
+    }
+
+    private getRoutes(): string {
+        return this.props.onGet("mapRoute") as string;
+    }
+
+    // BJ TODO: remove 3 map limit
+    private saveMapChanges = (mapSheets: string[], routesAsJson: string): Promise<void> => {
+        return Promise.all([
+            this.props.onSave('map1', mapSheets.length > 0 ? mapSheets[0] + " " +  this.props.nz50MapsBySheet[mapSheets[0]].name : ""),
+            this.props.onSave('map2', mapSheets.length > 1 ? mapSheets[1] + " " +  this.props.nz50MapsBySheet[mapSheets[1]].name : ""),
+            this.props.onSave('map3', mapSheets.length > 2 ? mapSheets[2] + " " +  this.props.nz50MapsBySheet[mapSheets[2]].name : ""),
+            this.props.onSave('mapRoute', routesAsJson)
+        ]).then(
+            () => Promise.resolve(),
+            () => Promise.resolve());
+    }
+    
     private setUpMap(): void {
         // save current map height and width (if any)
         const mapHeight: number = this.currentMapHeight();
@@ -193,7 +249,8 @@ export class MapControl extends Component<{
             zoomControl: true,
             editable: true, // to enable leaflet.editable
             drawingCursor: 'crosshair',
-            trackResize: false // we handle the resizing to the ResizableBox
+            trackResize: false, // we handle the resizing to the ResizableBox,
+            scrollWheelZoom: false
         } as L.MapOptions);
 
         // tslint:disable-next-line:prefer-const

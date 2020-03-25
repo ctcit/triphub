@@ -6,7 +6,7 @@ import { Spinner } from '.';
 import { Trip } from './Trip';
 import { App } from './App';
 import { Expandable } from './Expandable';
-import { TextInputControl, SwitchControl, TextAreaInputControl } from './SaveableControl';
+import { InputControl, SwitchControl, TextAreaInputControl } from './Control';
 import { ToolTipIcon } from './ToolTipIcon';
 import { TripParticipants } from './TripParticipants';
 
@@ -200,23 +200,22 @@ export class TripParticipant extends Component<{
 
                         <Row noGutters={true}>
                             <Col md={3}>
-                                <TextInputControl id='name' label='Name' list='memberlist' {...common} /> 
-                                                {/* affected={['email','phone','memberid','emergency_contact']}/> */}
+                                <InputControl id='name' label='Name' type='text' list='memberlist' {...common} /> 
                             </Col>
                             <Col md={3}>
-                                <TextInputControl id='email' label='Email' {...common}/>
+                                <InputControl id='email' label='Email' type='text' {...common}/>
                             </Col>
                             <Col md={3}>
-                                <TextInputControl id='phone' label='Phone' {...common}/>
+                                <InputControl id='phone' label='Phone' type='text' {...common}/>
                             </Col>
                         </Row>
 
                         <Row noGutters={true}>
                             <Col md={3}>
-                                <TextInputControl id='emergencyContactName' label='Emergency Contact Name' {...common}/>
+                                <InputControl id='emergencyContactName' label='Emergency Contact Name' type='text' {...common}/>
                             </Col>
                             <Col md={3}>
-                                <TextInputControl id='emergencyContactPhone' label='Emergency Contact Phone' {...common}/>
+                                <InputControl id='emergencyContactPhone' label='Emergency Contact Phone' type='text' {...common}/>
                             </Col>
                         </Row>
 
@@ -231,7 +230,7 @@ export class TripParticipant extends Component<{
                                 <SwitchControl id='isVehicleProvider' label='Has Car' {...common}/>
                             </Col>
                             <Col md={3}>
-                                <TextInputControl id='vehicleRego' label='Rego' hidden={!participant.isVehicleProvider} {...common}/>
+                                <InputControl id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} {...common}/>
                             </Col>
                         </Row>
                         

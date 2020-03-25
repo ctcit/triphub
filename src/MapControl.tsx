@@ -7,7 +7,7 @@ import FormGroup from 'reactstrap/lib/FormGroup';
 import Button from 'reactstrap/lib/Button';
 import { IMap, IArchivedRoute } from './Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
-import { ControlWrapper } from './SaveableControl';
+import { ControlWrapper } from './Control';
 
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 

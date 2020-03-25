@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Form, Col, Row } from 'reactstrap';
 import { App } from './App';
-import { TextInputControl, SwitchControl, DateInputControl, NumberInputControl, TextAreaInputControl } from './SaveableControl';
+import { SwitchControl, TextAreaInputControl, InputControl } from './Control';
 import './index.css';
 import './print.css';
 import { Trip } from './Trip';
@@ -99,19 +99,19 @@ export class TripDetail extends Component<{
             <Form key='detail'>
                 <Row noGutters={true}>
                     <Col>
-                        <TextInputControl id='title' label='Title' {...common}/>
+                        <InputControl id='title' label='Title' type='text' {...common}/>
                     </Col>
                 </Row>
 
                 <Row noGutters={true}>
                     <Col md={3}>
-                        <DateInputControl id='openDate' label='Open Date' {...common}/>
+                        <InputControl id='openDate' label='Open Date' type='date' {...common}/>
                     </Col>
                     <Col md={3}>
-                        <DateInputControl id='closeDate' label='Close Date' {...common}/>
+                        <InputControl id='closeDate' label='Close Date' type='date' {...common}/>
                     </Col>
                     <Col md={3}>
-                        <DateInputControl id='tripDate' label='Trip Date' {...common}/>
+                        <InputControl id='tripDate' label='Trip Date' type='date' {...common}/>
                     </Col>
                 </Row>
 
@@ -126,28 +126,28 @@ export class TripDetail extends Component<{
 
                 <Row>
                     <Col md={3}>
-                        <NumberInputControl id='length' label='Length in days' min={0} hidden={trip.isSocial} {...common}/>
+                        <InputControl id='length' label='Length in days'  type='number' min={0} hidden={trip.isSocial} {...common}/>
                     </Col>
                 </Row>
 
                 <Row>
                     <Col>
-                        <TextInputControl id='departurePoint' label='Departure Point' list='departure_point_list' {...common}/>
+                        <InputControl id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...common}/>
                     </Col>
                 </Row>
 
                 <Row>
                     <Col>
-                        <TextInputControl id='departureDetails' label='Departure Details' {...common}/>
+                        <InputControl id='departureDetails' label='Departure Details' type='text' {...common}/>
                     </Col>
                 </Row>
 
                 <Row>
                     <Col md={3}>
-                        <TextInputControl id='cost' label='Cost' {...common}/>
+                        <InputControl id='cost' label='Cost' type='text' {...common}/>
                     </Col>
                     <Col md={3}>
-                        <TextInputControl id='grade' label='Grade' list='grade_list'  {...common}/>
+                        <InputControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
                     </Col>
                 </Row>
 
@@ -156,7 +156,7 @@ export class TripDetail extends Component<{
                         <SwitchControl id='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common}/>
                     </Col>
                     <Col md={3}>
-                        <NumberInputControl id='maxParticipants' label='Maximum trampers' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
+                        <InputControl id='maxParticipants' label='Maximum trampers' type='number' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
                     </Col>
                 </Row>
 

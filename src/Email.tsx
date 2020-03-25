@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { TextInputControl, TextAreaInputControl } from './SaveableControl';
+import { InputControl, TextAreaInputControl } from './Control';
 import { App } from './App';
 import { Trip } from './Trip';
 import { IValidation } from './Interfaces';
@@ -74,7 +74,7 @@ export class Email extends Component<{
                 </Row>
                 <Row noGutters={true}>
                     <Col>
-                        <TextInputControl key='subject' id='subject' label='Subject' {...common} />,
+                        <InputControl key='subject' id='subject' label='Subject' type='text' {...common} />,
                     </Col>
                 </Row>
                 <Row noGutters={true}>

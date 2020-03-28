@@ -19,6 +19,7 @@ export class MapControl extends Component<{
     mapsLabel : string,
     hidden? : boolean,
     readOnly? : boolean,
+    isLoading: boolean,
     list? : any,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,
@@ -130,7 +131,7 @@ export class MapControl extends Component<{
             <Form key='routesMaps'>
                 <Row>
                     <Col sm={'auto'}>
-                        <ControlWrapper id={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+                        <ControlWrapper id={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
                         { this.state.mapVisible &&
                             <ResizableBox width={this.initialWidth} height={this.initialHeight} minConstraints={[200, 200]} onResize={onResize}>
                                 <div id="minimap"/>
@@ -142,7 +143,7 @@ export class MapControl extends Component<{
                         </ControlWrapper>
                     </Col>
                     <Col sm={4}>
-                        <ControlWrapper id={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+                        <ControlWrapper id={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
                         { this.mapSheets.length > 0 &&
                             <ListGroup>
                                 { this.mapSheets.map((mapSheet: string) => 

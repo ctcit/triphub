@@ -18,18 +18,19 @@ import { ToolTipIcon } from './ToolTipIcon';
 
 
 export class Trip extends Component<{
-    isNew: boolean
-    isNewSocial: boolean
-    href?: string
+    isNew: boolean,
+    isNewSocial: boolean,
+    href?: string,
     app: App    
 },{
-    trip: ITrip
-    editId: number
-    editHref: string
-    editIsEdited: boolean
-    editList: IEdit[]
-    editHeartbeatId?: any
-    participants: IParticipant[]
+    trip: ITrip,
+    editId: number,
+    editHref: string,
+    editIsEdited: boolean,
+    editList: IEdit[],
+    editHeartbeatId?: any,
+    participants: IParticipant[],
+    isLoading: boolean,
     isSaving: boolean
 }> {
 
@@ -44,6 +45,7 @@ export class Trip extends Component<{
             editList: [],
             participants: [],
             trip: {id:0} as ITrip,
+            isLoading: false,
             isSaving: true,
         }
         this.requeryParticipants = this.requeryParticipants.bind(this)
@@ -64,10 +66,12 @@ export class Trip extends Component<{
 
     public componentDidMount(){
         if (this.props.isNew) {
+            this.setState({isLoading: false});
             this.props.app.setState({isLoading: false})    
             this.startNewEvent()
         } else {
-
+            this.setState({isLoading: true});
+            this.props.app.setState({isLoading: true})
             this.props.app.setStatus(['Loading ', Spinner])
             this.props.app.apiCall('POST',this.props.href + '/edit',{stamp:new Date().toISOString()})
                 .then((editList:IEdit[]) => {
@@ -77,15 +81,19 @@ export class Trip extends Component<{
                         editHref: `${this.props.href}/edit/${editList[0].id}`,
                         editIsEdited: false,
                         editHeartbeatId: setInterval(this.editHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
-                    })        
-            })
+                    });
+                });
 
             this.props.app.apiCall('GET',this.props.href as string)
                 .then((trip:ITrip) => {
-                    this.setState({trip:trip[0]})
+                    this.setState({
+                        trip:trip[0],
+                        isLoading: false
+                    });
+                    this.props.app.setState({isLoading: false});
                 })
             
-            this.requeryParticipants()
+            this.requeryParticipants();
         }
     }
 
@@ -229,17 +237,18 @@ export class Trip extends Component<{
     }
 
     public render(){
-        const trip = this.state.trip
-        const app = this.props.app
-        const isNew = this.props.isNew
+        const trip = this.state.trip;
+        const app = this.props.app;
+        const isLoading = this.state.isLoading;
+        const isNew = this.props.isNew;
         const history = () => <History key={'History' + trip.id} owner={this} app={this.props.app}/>
-        const info = this.getParticipantsInfo()
-        const tripWarnings = app.validateTrip(this.state.trip).filter(i => !i.ok)
-        const tripWarning = tripWarnings.length && !this.props.app.state.isLoading
+        const info = this.getParticipantsInfo();
+        const tripWarnings = app.validateTrip(this.state.trip).filter(i => !i.ok);
+        const tripWarning = tripWarnings.length && !isLoading
                                     ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={tripWarnings[0].message} className='warning-icon'/> 
                                     : null
         const participantWarnings = info.moveable.map(p => app.validateParticipant(p).filter(i => !i.ok)).filter(vm => vm.length)
-        const participantWarning = participantWarnings.length && !this.props.app.state.isLoading
+        const participantWarning = participantWarnings.length && !isLoading
                                     ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0][0].message} className='warning-icon'/> 
                                     : null
         const participantCount = <span key='count' className='TripCount'>
@@ -249,25 +258,25 @@ export class Trip extends Component<{
         return [
             <TriphubNavbar key='triphubnavbar' app={this.props.app}>
                 <Button color='primary' onClick={this.deleteTrip} 
-                        hidden={this.props.app.state.isLoading || isNew || trip.isDeleted || !this.isPrivileged()}>
+                        hidden={isLoading || isNew || trip.isDeleted || !this.isPrivileged()}>
                     <span className='fa fa-remove'/> 
                     Delete this trip
                 </Button>
                 <Button color='primary' onClick={this.deleteTrip} 
-                        hidden={this.props.app.state.isLoading || isNew || !trip.isDeleted || !this.isPrivileged()}>
+                        hidden={isLoading || isNew || !trip.isDeleted || !this.isPrivileged()}>
                     Undelete this trip
                 </Button>
                 <Button color='primary' onClick={this.approveTrip}  
-                        hidden={this.props.app.state.isLoading || isNew || trip.isApproved  || !this.isPrivileged(true)}>
+                        hidden={isLoading || isNew || trip.isApproved  || !this.isPrivileged(true)}>
                     <span key='approvetripicon' className='fa fa-thumbs-o-up'/> 
                     Approve this trip
                 </Button>
                 <Button color='primary' onClick={this.approveTrip} 
-                        hidden={this.props.app.state.isLoading || isNew || !trip.isApproved || !this.isPrivileged(true)}>
+                        hidden={isLoading || isNew || !trip.isApproved || !this.isPrivileged(true)}>
                     <span key='unapprovetripicon' className='fa fa-thumbs-o-down'/> 
                     Remove Approval
                 </Button>
-                <ButtonGroup hidden={this.props.app.state.isLoading || !isNew}>
+                <ButtonGroup hidden={isLoading || !isNew}>
                     <Button color='primary' disabled={true}>
                         <span key='suggesttriplabelicon' className='fa fa-lightbulb-o'/> 
                         Suggest a trip:
@@ -303,19 +312,19 @@ export class Trip extends Component<{
             </div>,
             <Expandable key='detail' id='detail' 
                         title={[this.state.trip.title, tripWarning, <span key='icon' className='fa fa-map-marker section-icon'/>]} level={2} expanded={true}>  
-                <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app}/>
+                <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app} isLoading={isLoading} />
             </Expandable>,
             this.state.trip.isSocial && this.state.trip.isNoSignup ? null :
             <Expandable key='participants' id='participants' 
                         title={['Participants', participantWarning, participantCount, <span key='icon' className='fa fa-user section-icon'/>]} 
                         level={2} expanded={true}>  
-                <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this} app={this.props.app} />
+                <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this} app={this.props.app} isLoading={isLoading} />
             </Expandable>,
             this.props.isNew || !this.isPrivileged() ? null :
             <Expandable key={`email${this.state.trip.id}_${this.state.participants.length}`} id='email'
                         title={['Email', <span key='icon' className='fa fa-paper-plane section-icon'/>]}
                         level={2} expanded={false}>  
-                <Email  owner={this} app={this.props.app}/>
+                <Email  owner={this} app={this.props.app} isLoading={isLoading} />
             </Expandable>,
             this.props.isNew ? null : 
             <Expandable key='history' id='history'

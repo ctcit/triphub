@@ -15,6 +15,7 @@ export class TripParticipant extends Component<{
         trip: Trip
         owner: TripParticipants
         app: App
+        loading: boolean
         canWaitList?: boolean
         canUnwaitList?: boolean
         info: IParticipantsInfo
@@ -133,6 +134,7 @@ export class TripParticipant extends Component<{
         }
         const common = {
             readOnly: !isPrivileged,
+            isLoading: this.props.loading,
             'onGet': onGet,
             'onSave': onSave,
             'onGetValidationMessage': onGetValidationMessage

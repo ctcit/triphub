@@ -13,6 +13,7 @@ import { BaseUrl } from 'src';
 export class TripDetail extends Component<{
         owner: Trip,
         app: App,
+        isLoading: boolean
     },{
         editMap: boolean,
         editMaps: boolean,
@@ -89,6 +90,7 @@ export class TripDetail extends Component<{
 
         const common = {
             readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
+            isLoading: this.props.isLoading,
             owner: this,
             'onGet': onGet,
             'onSave': onSave,
@@ -115,7 +117,7 @@ export class TripDetail extends Component<{
                     </Col>
                 </Row>
 
-                <Row>
+                <Row noGutters={true}>
                     <Col md={2}>
                         <SwitchControl id='isSocial' label='Social event' {...common}/>
                     </Col>
@@ -124,25 +126,25 @@ export class TripDetail extends Component<{
                     </Col>
                 </Row>
 
-                <Row>
+                <Row noGutters={true}>
                     <Col md={3}>
                         <InputControl id='length' label='Length in days'  type='number' min={0} hidden={trip.isSocial} {...common}/>
                     </Col>
                 </Row>
 
-                <Row>
+                <Row noGutters={true}>
                     <Col>
                         <InputControl id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...common}/>
                     </Col>
                 </Row>
 
-                <Row>
+                <Row noGutters={true}>
                     <Col>
                         <InputControl id='departureDetails' label='Departure Details' type='text' {...common}/>
                     </Col>
                 </Row>
 
-                <Row>
+                <Row noGutters={true}>
                     <Col md={3}>
                         <InputControl id='cost' label='Cost' type='text' {...common}/>
                     </Col>
@@ -151,7 +153,7 @@ export class TripDetail extends Component<{
                     </Col>
                 </Row>
 
-                <Row>
+                <Row noGutters={true}>
                 <Col md={3}>
                         <SwitchControl id='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common}/>
                     </Col>
@@ -160,19 +162,19 @@ export class TripDetail extends Component<{
                     </Col>
                 </Row>
 
-                <Row>
+                <Row noGutters={true}>
                     <Col>
                         <TextAreaInputControl id='description' label='Description' {...common}/>
                     </Col>
                 </Row>
 
-                <Row>
+                <Row noGutters={true}>
                     <Col>
                         <TextAreaInputControl id='logisticnfo' label='Logistic Information' {...common}/>
                     </Col>
                 </Row>
     
-                <Row>
+                <Row noGutters={true}>
                     <Col sm={10}>
                         <MapControl 
                             routesId='routes' routesLabel='Routes'

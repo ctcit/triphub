@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
 import { Component } from 'react';
 import * as React from 'react';
-import { Badge, FormGroup, Input, FormText  } from 'reactstrap';
+import { Badge, FormGroup, Input, FormText, Row } from 'reactstrap';
 import './index.css';
 import { Spinner } from '.';
 import Textarea from 'react-textarea-autosize';
@@ -14,6 +14,7 @@ export class ControlWrapper extends Component<{
         label : string,
         hidden? : boolean,
         disabled?: boolean,
+        isLoading: boolean,
         onGetValidationMessage?: (id: string) => string,
         saving : boolean
     }, {
@@ -26,11 +27,13 @@ export class ControlWrapper extends Component<{
     public render() {
         const validationMessage = this.props.onGetValidationMessage ? this.props.onGetValidationMessage(this.props.id) : null;
         return  (
-            <FormGroup hidden={this.props.hidden} disabled={this.props.disabled}>
-                <FormText for={this.props.id} color='muted'>{this.props.label}</FormText>
+            <FormGroup hidden={this.props.hidden} disabled={this.props.disabled || this.props.isLoading}>
+                <Row noGutters={true}>
+                    <FormText for={this.props.id} color='muted'>{this.props.label}</FormText>
+                    <Badge color='success' hidden={!this.props.saving} className='ml-sm-2' tabIndex={-1}>Saving {Spinner}</Badge>
+                </Row>
                 {this.props.children}
-                <Badge color='warning' hidden={!validationMessage} size='sm' tabIndex={-1}>{validationMessage}</Badge>
-                <Badge color='success' hidden={!this.props.saving} size='sm' tabIndex={-1}>Saving {Spinner}</Badge>
+                <Badge color='warning' hidden={!validationMessage || this.props.isLoading} size='sm' tabIndex={-1}>{validationMessage}</Badge>
             </FormGroup>
       )
     }
@@ -41,6 +44,7 @@ export class InputControl extends Component<{
     label : string,
     hidden? : boolean,
     readOnly? : boolean,
+    isLoading: boolean,
     validationMessage?: string,
     type: InputType,
     list? : any,
@@ -82,7 +86,7 @@ export class InputControl extends Component<{
         } 
         
         return  (
-            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
                 <Input id={this.props.id} type={this.props.type} readOnly={this.props.readOnly} list={this.props.list} min={this.props.min} max={this.props.max}  
                     value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='off'/>
             </ControlWrapper>
@@ -96,6 +100,7 @@ export class TextAreaInputControl extends Component<{
     label : string,
     hidden? : boolean,
     readOnly? : boolean,
+    isLoading: boolean,
     validationMessage?: string,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,
@@ -132,7 +137,7 @@ export class TextAreaInputControl extends Component<{
             }
         } 
         return  (
-            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
                 <Textarea id={this.props.id} className='form-control' readOnly={this.props.readOnly}  
                     value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} />
             </ControlWrapper>
@@ -144,6 +149,7 @@ export class SwitchControl extends Component<{
     id : string, 
     label : string,
     hidden? : boolean,
+    isLoading: boolean,
     validationMessage?: string,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,
@@ -165,7 +171,7 @@ export class SwitchControl extends Component<{
                 .then(() => this.setState({saving: false}));
         }                
         return  (
-            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
                 <Switch id={this.props.id} checked={value} onChange={onChange} className="react-switch" />
             </ControlWrapper>
       )

@@ -11,6 +11,7 @@ import { Spinner } from '.';
 export class Email extends Component<{
     owner: Trip
     app : App
+    isLoading: boolean    
 },{
     recipients?: string
     subject? : string
@@ -60,6 +61,7 @@ export class Email extends Component<{
         }
 
         const common = {
+            isLoading: this.props.isLoading,
             'onGet': onGet,
             'onSave': onSave,
             'onGetValidationMessage': onGetValidationMessage

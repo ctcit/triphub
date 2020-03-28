@@ -11,6 +11,7 @@ import { TripParticipant } from './TripParticipant';
 export class TripParticipants extends Component<{
         trip: Trip,    
         app: App,
+        isLoading: boolean
     },{
         namePrefix?: string
     }> {
@@ -113,7 +114,6 @@ export class TripParticipants extends Component<{
         const me = this.props.app.getMe()
         const anon = !me.id
         const info = this.props.trip.getParticipantsInfo()
-        const loading = this.props.app.state.isLoading
         const isPrivileged = this.props.trip.isPrivileged()
         const isOpen = this.props.trip.state.trip.isOpen || isPrivileged
         const isNewTrip = this.props.trip.props.isNew
@@ -125,16 +125,16 @@ export class TripParticipants extends Component<{
         return  [
             <Navbar key='navbar' color='light' light={true} expand='md'>
             {[
-                <Button key={'signmeup' + info.all.length} onClick={this.signMeUp} hidden={loading || isNewTrip || imOnList || !isOpen}>
+                <Button key={'signmeup' + info.all.length} onClick={this.signMeUp} hidden={this.props.isLoading || isNewTrip || imOnList || !isOpen}>
                     <span className='fa fa-pencil wiggle'/> 
                     {this.props.trip.state.isSaving ? ['Signing up ',Spinner] : 'Sign me up!'}
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                 </Button>,
-                <Button key={'signup' + info.all.length} onClick={this.signUpTramper} hidden={loading || isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
+                <Button key={'signup' + info.all.length} onClick={this.signUpTramper} hidden={this.props.isLoading || isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
                     <span className='fa fa-user-plus'/> Sign up a tramper
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                 </Button>,
-                <ButtonGroup key={'signupcomplete' + info.all.length}  hidden={loading || isNewTrip || !hasNewTramper || !isOpen}>
+                <ButtonGroup key={'signupcomplete' + info.all.length}  hidden={this.props.isLoading || isNewTrip || !hasNewTramper || !isOpen}>
                     <Button onClick={this.signUpTramper} disabled={true}>
                         <span className='fa fa-user-plus'/> Sign up a tramper:
                     </Button>
@@ -145,7 +145,7 @@ export class TripParticipants extends Component<{
                         Cancel
                     </Button>
                 </ButtonGroup>,
-                <span key={'participants' + info.all.length} hidden={loading || isNewTrip}>
+                <span key={'participants' + info.all.length} hidden={this.props.isLoading || isNewTrip}>
                     &nbsp; {info.early.length} Participants
                 </span>
             ]}
@@ -155,7 +155,7 @@ export class TripParticipants extends Component<{
                     {
                         info.current.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip} 
-                                    owner={this} app={this.props.app} canWaitList={info.late.length !== 0} ref={this.participant}
+                                    owner={this} app={this.props.app} loading={this.props.isLoading} canWaitList={info.late.length !== 0} ref={this.participant}
                                     info={info}/>)
                     }
                 </ListGroupItem>
@@ -164,7 +164,7 @@ export class TripParticipants extends Component<{
                     {
                         info.late.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip} 
-                                    owner={this} app={this.props.app} canUnwaitList={true} info={info}/>)
+                                    owner={this} app={this.props.app} loading={this.props.isLoading} canUnwaitList={true} info={info}/>)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={isNewTrip || info.deleted.length === 0}>
@@ -172,7 +172,7 @@ export class TripParticipants extends Component<{
                     {
                         info.deleted.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip} 
-                                    owner={this} app={this.props.app} info={info}/>)
+                                    owner={this} app={this.props.app} loading={this.props.isLoading} info={info}/>)
                     }
                 </ListGroupItem>
             </ListGroup>,

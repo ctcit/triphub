@@ -308,11 +308,23 @@ function History($con,$userId,$action,$table,$before,$after,$tripId)
 
     switch ($action)
     {
-        case 'update':
         case 'create':
+            $afterSql = SqlVal($con,json_encode($after));
+            SqlExecOrDie($con,
+                "INSERT $historyTable 
+                SET `action` = '$action'
+                ,   `table` = '$table'
+                ,   `timestamp` = UTC_TIMESTAMP()
+                ,   `userId` = $userId
+                ,   `tripId` = $tripId
+                ,   `participantId` = $participantId
+                ,   `after` = $afterSql");
+            break;
+ 
+        case 'update':
             foreach ($after as $col => $val) {
                 $colSql = SqlVal($con,$col);
-                $beforeSql = SqlVal($con,json_encode($before === null ? null : $before[$col]));
+                $beforeSql = SqlVal($con,json_encode($before[$col]));
                 $afterSql = SqlVal($con,json_encode($after[$col]));
 
                 if ($beforeSql != $afterSql) {
@@ -329,16 +341,6 @@ function History($con,$userId,$action,$table,$before,$after,$tripId)
                         ,   `after` = $afterSql");
                 }
             }
-            break;
-        default:
-            SqlExecOrDie($con,
-                "INSERT $historyTable 
-                SET `action` = '$action'
-                ,   `table` = '$table'
-                ,   `timestamp` = UTC_TIMESTAMP()
-                ,   `userId` = $userId
-                ,   `tripId` = $tripId
-                ,   `participantId` = $participantId");
             break;
     }
 }

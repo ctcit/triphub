@@ -19,11 +19,13 @@ button>span.fa {
 h3 {
   margin-left: 20px
 }
-h4 {
+
+h4,h6,table.changehistory {
   margin-left: 30px
 }
-table.changehistory{
-  margin-left: 4em
+
+table.changehistory th {
+  vertical-align: top;
 }
 
 .centered {
@@ -53,6 +55,11 @@ table.changehistory{
 
 .warning-icon {
   color: #ffc107
+}
+
+.blank {
+  color: grey;
+  font-style: italic;
 }
 
 @media screen and (min-width: 992px) {

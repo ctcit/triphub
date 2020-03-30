@@ -1,16 +1,16 @@
 @media screen {
 .print-only {
-display: none;
+	display: none;
 }
 }
 
 @media print {
 button, .mobileonly, .noprint, div#sidebar, header, footer, nav {
-display: none;
+	display: none;
 }
 
 input, textarea, iframe, body.site {
-border: none !important;
+	border: none !important;
 }
 }
 
@@ -19,74 +19,84 @@ border: none !important;
 }
 
 .printabletriplist td, th {
-background-color: white;
+	background-color: white;
 }
 
 .printabletriplist h1 {
-font-size: 24pt;
+	font-size: 24pt;
 }
 
 .printabletriplist h2 {
-font-size: 18pt;
+	font-size: 18pt;
 }
 
 table.triplistparams {
-border: none;
-width: 100%;
+	border: none;
+	width: 100%;
 }
 
 table.triplistparams th,
 table.triplistparams td {
-border: none;
-font-size: 11pt;
-vertical-align: middle;
+	border: none;
+	font-size: 11pt;
+	vertical-align: middle;
 }
 
 table.triplistparams th {
-width: 7%;
-font-size: 11pt;
-font-weight: bold;
+	width: 7%;
+	font-size: 11pt;
+	font-weight: bold;
 }
 
 table.participants {
-width: 100%;
+	width: 100%;
+	border-collapse: collapse;
 }
 
 table.participants td, th {
-height: 25px;
-vertical-align: middle;
-padding-left: 6px;
-font-size: 11pt;
+	height: 25px;
+	vertical-align: middle;
+	padding-left: 6px;
+	font-size: 11pt;
+}
+
+.bordercell {
+	border: 1px solid grey;
 }
 
 th.namecol {
-width: 35%;
+	width: 35%;
 }
 
 th.emailcol {
-width: 30%;
+	width: 30%;
 }
 
 th.phonecol {
-width: 20%;
+	width: 20%;
 }
 
 th.carcol {
-width: 4%;
+	width: 4%;
 }
 
 th.plbcol {
-width: 4%;
+	width: 4%;
 }
 
 table.footertable {
-width: 100%;
+	width: 100%;
 }
 
 table.footertable th {
-font-weight: bold;
-width: 50%;
+	font-weight: bold;
+	width: 50%;
 }
+
+.vehiclerego, .logisticinfo {
+	vertical-align: top;
+}
+
 
 @media print {
 iframe{

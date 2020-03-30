@@ -14,7 +14,7 @@ export class Expandable extends Component<{
     title? : any
     tablerow? : any
     expandClassName? : string
-    ondemand?: ()=>any
+    onDemand?: ()=>any
     showMenu?: boolean
 },{
     expanded : boolean
@@ -27,7 +27,8 @@ constructor(props: any){
 }
 
 public render(){
-    const toggle = () => this.setState({expanded: !this.state.expanded, demanded: this.state.demanded || (this.props.ondemand && this.props.ondemand())})
+    const toggle = () => this.setState({expanded: !this.state.expanded, 
+                                        demanded: this.state.demanded || (this.props.onDemand && this.props.onDemand())})
     const toggleMenu = () => this.setState({showMenu: !this.state.showMenu})
     const onMouseEnter = () => this.setState({showMenu: true})
     const onMouseLeave = () => this.setState({showMenu: false})

@@ -10,7 +10,7 @@ import registerServiceWorker from './registerServiceWorker';
 // use this chrome plugin to get this working if running locally using "npm start"
 // https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en
 export const BaseUrl = 'https://ctc.org.nz/triphub.alastair/api/api.php'
-export const BaseOpt = {'Api-Key':'6bc3ed05-66a4-4012-96bd-c7192df95997', 'Api-UserId':'0'}
+export const BaseOpt = {'Api-Key':'6bc3ed05-66a4-4012-96bd-c7192df95997', 'Api-UserId':'125'}
 export const Spinner = <span className='fa fa-spinner fa-spin' key='spinner'/>
 
 ReactDOM.render(<App/>, document.getElementById('root'))

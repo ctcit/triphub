@@ -102,16 +102,16 @@ function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
 			die(Log($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]"));
 	}
 
-	$emailJson = mysqli_real_escape_string($con,json_encode($email));
+	$emailJson = SqlVal($con,json_encode($email));
 	$id = SqlExecOrDie($con, "INSERT $historyTable 
 								SET	`tripId` = $tripId, 
 								`userId` = $userId, 
 								`action` = 'email', 
 								`timestamp` = UTC_TIMESTAMP(),
-								`after` = '$emailJson'", true);
+								`after` = $emailJson", true);
 	SqlExecOrDie($con, "UPDATE $tripsTable
-							SET historyId = $id
-							WHERE id = $tripId");
+						SET historyId = $id
+						WHERE id = $tripId");
 
 	return $email;
 }
@@ -188,11 +188,8 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$oldParticipants	= $participants;
 	$changes    		= SqlResultArray($con,"SELECT *
 											   FROM $historyTable 
-											   WHERE id IN (
-												   SELECT MIN(id) 
-												   FROM $historyTable 
-												   WHERE tripId = $id AND id > $trip[historyId] AND `column` != 'id'
-												   GROUP BY coalesce(participantId,0),`column`)");
+											   WHERE tripId = $id AND id > $trip[historyId]
+											   ORDER BY id DESC");
 	$tripsInfo			= SqlResultArray($con,"SHOW FULL COLUMNS FROM $tripsTable", "Field");
 	$participantsInfo	= SqlResultArray($con,"SHOW FULL COLUMNS FROM $participantsTable", "Field");
 	$css				= ParseCss(file_get_contents("trips.css"));
@@ -211,11 +208,18 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 
 	// re-create old version of trip into $oldTrip and $oldParticipants
 	foreach ($changes as $change) {
-		if ($change['table'] == $tripsTable) {
-			$oldTrip[$change['column']] = $change['before'];
-		} else if ($change['table'] == $participantsTable) {
-			$oldParticipants[$change['participantId']][$change['column']] = $change['before'];
-			$oldParticipants[$change['participantId']]['isCreated'] = $change['action'] == 'create';
+		$before = $change['before'];
+		$column = $change['column'];
+		switch("$change[action] $change[table]") {
+			case "create $participantsTable":
+				$oldParticipants[$change['participantId']]['isCreated'] = true;
+				break;
+			case "update $tripsTable":
+				$oldTrip[$column] = $before;
+				break;
+			case "update $participantsTable":
+				$oldParticipants[$change['participantId']][$column] = $before;
+				break;
 		}
 	}
 
@@ -295,6 +299,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		(count($notes) == 0 ? "" : "<h3>Please note:</h3>\n<ul>".implode("\n",$notes)."</ul>\n").
 		"<h3>Current trip details:</h3>\n".
 		"<table style='$border'>$header</table>\n".
+		"<h3>Current people:</h3>\n".
 		"<table style='$border'>$detail</table>\n".
 		"<table style='$border'>$legend</table>\n";
 	$email['messageId'] = MakeGuid();

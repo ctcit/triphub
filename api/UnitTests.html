@@ -23,6 +23,7 @@
                 data: method == 'GET' || method == 'DELETE' ? null : JSON.stringify(data),
                 headers: { 'Api-Key': '6bc3ed05-66a4-4012-96bd-c7192df95997', "Api-Userid": 125 },
                 success: function (data, status) {
+                    console.log(data)
                     check && check(data)
                     if (--submitWaiting == 0)
                         taskNext()
@@ -35,7 +36,7 @@
         }
 
         function message(msg) {
-            $("<div>").appendTo($('#result'))
+            return $("<div>").appendTo($('#result'))
                 .append($("<span>").text(msg))
         }
 
@@ -53,7 +54,7 @@
 
         function assertTrue(condition, msg) {
             if (!condition) {
-                message(`Testing Failed: ${msg || "No message"}`)
+                message(`Testing Failed: ${msg || "No message"}`).css('color','red')
                 tasks = []
             }
         }
@@ -77,7 +78,7 @@
                     console.log(`${i + 1}/${names.length} ${name}`)
                     window[name]()
                 }),
-                () => message("Testing success")]
+                () => message("Testing success").css({color:'green',fontWeight:'bold'})]
 
             taskNext()
         })
@@ -93,14 +94,13 @@
         }
 
         function test_get_logondetails() {
-            submit('GET', 'logondetails', {}, console.log)
+            submit('GET', 'logondetails')
         }
 
         function test_get_members() {
             submit('GET', 'members', {}, result => {
                 assertTrue(result.length > 1)
                 assertEquals(Object.keys(result[0]), ['id', 'name', 'email', 'phone', 'emergencyContactName', 'emergencyContactPhone', 'role', 'isMe', 'isMember'])
-                console.log(result)
             })
         }
 
@@ -122,39 +122,40 @@
             }
 
             sequence(
+                () => submit('POST', `trips/emails`),
                 () => submit('POST', 'trips', trip, t => tripId = t[0].id),
                 () => submit('POST', `trips/${tripId}/participants`, { memberId: 125, name: 'Alastair Brown', isLeader: true }),
                 () => submit('POST', `trips/${tripId}/participants`, { memberId: 2218, name: "Nick Edwards" }, p => nickId = p[0].id),
                 () => submit('POST', `trips/${tripId}/participants`, { memberId: 520, name: "Bruce James" }, p => bruceId = p[0].id),
-                () => submit('GET', `trips/${tripId}`, {}, t => {assertEquals(t[0].title, 'test trip'); console.log(t[0])}),
+                () => submit('GET', `trips/${tripId}`, {}, t => { assertEquals(t[0].title, 'test trip'); console.log(t[0]) }),
                 () => submit('GET', `trips/${tripId}/participants`, {}, p => assertEquals(p.length, 3))
             )
         }
 
         function test_email_initial() {
-            submit('POST', `trips/emails`, {}, trips => {
-                messageHtml(trips[0].email.html)
-                assertEquals(trips.length, 1)
-            })
+            sequence(
+                () => submit('GET', `trips/${tripId}/history`),
+                () => submit('POST', `trips/emails`, {}, trips => assertEquals(trips.length, 1))
+            )
         }
 
         function test_email_after_participant_change() {
             sequence(
                 () => submit('POST', `trips/${tripId}/participants/${bruceId}`, { displayPriority: nickId - 0.5 }, console.log),
-                () => submit('GET', `trips/${tripId}/history`, {}, history => assertEquals(history.length, 66)),
+                () => submit('GET', `trips/${tripId}/history`, {}, history => assertEquals(history.length, 6)),
                 () => submit('POST', `trips/emails`, {}, trips => {
                     messageHtml(trips[0].email.html)
                     assertEquals(trips.length, 1)
                     assertContains(trips[0].email.html, "<b>Bruce James</b> has changed from <b>waitlisted</b> to <b>listed</b>")
                     assertContains(trips[0].email.html, "<b>Nick Edwards</b> has changed from <b>listed</b> to <b>waitlisted</b>")
                 })
-            );
+            )
         }
 
         function test_email_after_trip_change() {
             sequence(
                 () => submit('POST', `trips/${tripId}`, { isLimited: false }),
-                () => submit('GET', `trips/${tripId}/history`, {}, history => assertEquals(history.length, 68)),
+                () => submit('GET', `trips/${tripId}/history`, {}, history => assertEquals(history.length, 8)),
                 () => submit('POST', `trips/emails`, {}, trips => {
                     messageHtml(trips[0].email.html)
                     assertEquals(trips.length, 1)
@@ -166,9 +167,10 @@
         function test_email_after_signup() {
             sequence(
                 () => submit('POST', `trips/${tripId}/participants`, { memberId: 432, name: "Doug Forster" }, p => dougId = p[0].id),
+                () => submit('GET', `trips/${tripId}/history`),
+                () => submit('GET', `trips/${tripId}`),
                 () => submit('POST', `trips/emails`, {}, trips => {
                     messageHtml(trips[0].email.html)
-                    console.log(trips[0].email)
                     assertEquals(trips.length, 1)
                     assertContains(trips[0].email.html, "<b>Doug Forster</b> has signed up and is <b>listed</b>")
                 })
@@ -177,10 +179,9 @@
 
         function test_email_after_delete() {
             sequence(
-                () => submit('POST', `trips/${tripId}/participants/${bruceId}`, { isDeleted: true }, console.log),
+                () => submit('POST', `trips/${tripId}/participants/${bruceId}`, { isDeleted: true }),
                 () => submit('POST', `trips/emails`, {}, trips => {
                     messageHtml(trips[0].email.html)
-                    console.log(trips[0].email)
                     assertEquals(trips.length, 1)
                     assertContains(trips[0].email.html, "<b>Bruce James</b> has changed from <b>listed</b> to <b>removed</b>")
                 })

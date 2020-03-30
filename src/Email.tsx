@@ -15,7 +15,7 @@ export class Email extends Component<{
     recipients?: string
     subject? : string
     body? : string
-    sending? : boolean
+    sending? : any
 }>{
     public app : App
 
@@ -23,9 +23,10 @@ export class Email extends Component<{
         super(props)
 
         this.state = {
-            recipients: this.props.owner.state.participants.filter(p => p.isDeleted).map(p => p.email).join('; '),
+            recipients: this.props.owner.state.participants.filter(p => !p.isDeleted).map(p => p.email).join('; '),
             subject: `Re: ${this.props.owner.state.trip.title} on ${GetFullDate(this.props.owner.state.trip.tripDate)}`,
             body: '', 
+            sending: 'Send'
         }
         this.app = this.props.app
         this.get = this.get.bind(this)
@@ -46,9 +47,9 @@ export class Email extends Component<{
     }
 
     public send() {
-        this.setState({sending: true})
+        this.setState({sending: ['Sending ',Spinner]})
         this.app.apiCall('POST', this.props.owner.props.href + '/email', this.state, true)
-            .then(() => this.setState({sending: false}))
+            .then(() => this.setState({sending: 'Sent'}))
     }
 
     public render(){
@@ -61,7 +62,7 @@ export class Email extends Component<{
                 <Col sm={10}>
                     <Button onClick={this.send}>
                         <span className='fa fa-paper-plane'/>
-                        {this.state.sending ? ['Sending ',Spinner] : 'Send'}
+                        {this.state.sending}
                     </Button>
                 </Col>
             </FormGroup>

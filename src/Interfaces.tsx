@@ -120,3 +120,20 @@ export interface IParticipantsInfo {
     deleted : IParticipant[]       
 }
 
+export interface IHistoryItem {
+    id : number
+    timestamp : string
+    action : string
+    table : string
+    userId : number
+    tripId : number
+    participantId? : number
+    column? : string
+    before? : any
+    after? : any
+    subject? : string
+    html? : string
+    recipients? : IMember[]
+    filteredRecipients? : IMember[]
+}
+

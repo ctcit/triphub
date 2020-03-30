@@ -1,35 +1,35 @@
 import { IParticipant } from './Interfaces';
 
-export const DayOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-export const MonthOfYear = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+export const DayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+export const MonthOfYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function GetDateString(date: Date):string {
-    return `${date.getFullYear()}-${(date.getMonth()+101).toString().substr(1,2)}-${(date.getDate()+100).toString().substr(1,2)}`
+export function GetDateString(date: Date): string {
+    return `${date.getFullYear()}-${(date.getMonth() + 101).toString().substr(1, 2)}-${(date.getDate() + 100).toString().substr(1, 2)}`
 }
 
-export function AddDays(date:Date, days:number):Date {
-    return new Date(date.getFullYear(),date.getMonth(),date.getDate()+days)
+export function AddDays(date: Date, days: number): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
 }
 
-export function GetDate(dateString : string) : string{
+export function GetDate(dateString: string): string {
     const date = new Date(dateString)
     return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()]
 }
 
-export function GetFullDate(dateString : string) : string{
+export function GetFullDate(dateString: string): string {
     const date = new Date(dateString)
     return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()] + ' ' + date.getFullYear()
 }
 
-export function GetLength(length : number) : string{
+export function GetLength(length: number): string {
     return length === 1 ? 'Day' : length === 2 ? 'Weekend' : length + ' days'
 }
 
-export function GetDisplayPriority(participant: IParticipant) : number {
+export function GetDisplayPriority(participant: IParticipant): number {
     return participant.displayPriority || participant.id
 }
 
-export function CountWhile(func: (x: number) => boolean) : number {
+export function CountWhile(func: (x: number) => boolean): number {
     let i = 0;
     while (func(i)) {
         i++
@@ -37,7 +37,7 @@ export function CountWhile(func: (x: number) => boolean) : number {
     return i
 }
 
-export function SafeJsonParse(json : string, defaultValue : any) : any{
+export function SafeJsonParse(json: string, defaultValue: any): any {
     try {
         return JSON.parse(json);
     } catch (err) {
@@ -45,8 +45,14 @@ export function SafeJsonParse(json : string, defaultValue : any) : any{
     }
 }
 
-export function TitleFromId(id:string) : string {
-    return id.replace('_',' ').replace(/\b\w/,x => x.toUpperCase())
+export function TitleFromId(id: string): string {
+    return id.replace('_', ' ')
+             .replace(/\b[a-z]/g, x => x.toUpperCase())
+             .replace(/[a-z][A-Z]/g, x => x.substr(0, 1) + ' ' + x.substr(1))
+}
+
+export function ReverseString(str: string):string {
+    return str.split("").reverse().join("")
 }
 
 

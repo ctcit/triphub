@@ -18,7 +18,7 @@ export class TripPrint extends Component<{
     public render() {
         const trip = this.props.trip.state.trip
         const info = this.props.trip.getParticipantsInfo()
-        const participants = info.early
+        const participants = info.current
         const leaders = participants.filter(p => p.isLeader)
         const blanks = []
 
@@ -48,30 +48,30 @@ export class TripPrint extends Component<{
                 <table className='participants'>
                     <thead>
                         <tr>
-                            <th className='namecol'>Name</th>
-                            <th className='emailcol'>Email</th>
-                            <th className='phonecol'>Phone</th>
-                            <th className='carcol'>Car?</th>
-                            <th className='plbcol'>PLB?</th>
+                            <th className='bordercell namecol'>Name</th>
+                            <th className='bordercell emailcol'>Email</th>
+                            <th className='bordercell phonecol'>Phone</th>
+                            <th className='bordercell carcol'>Car?</th>
+                            <th className='bordercell plbcol'>PLB?</th>
                         </tr>
                     </thead>
                     <tbody>
                         {participants.map(p =>
                             <tr key={p.id}>
-                                <td>{p.name}</td>
-                                <td>{p.email}</td>
-                                <td>{p.phone}</td>
-                                <td><span hidden={!p.isVehicleProvider} className='fa fa-check'/></td>
-                                <td><span hidden={!p.isPlbProvider} className='fa fa-check'/></td>
+                                <td className='bordercell'>{p.name}</td>
+                                <td className='bordercell'>{p.email}</td>
+                                <td className='bordercell'>{p.phone}</td>
+                                <td className='bordercell'><span hidden={!p.isVehicleProvider} className='fa fa-check'/></td>
+                                <td className='bordercell'><span hidden={!p.isPlbProvider} className='fa fa-check'/></td>
                             </tr>
                         )}
                         {blanks.map(b =>
                             <tr key={b}>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
-                                <td>&nbsp;</td>
+                                <td className='bordercell'>&nbsp;</td>
+                                <td className='bordercell'>&nbsp;</td>
+                                <td className='bordercell'>&nbsp;</td>
+                                <td className='bordercell'>&nbsp;</td>
+                                <td className='bordercell'>&nbsp;</td>
                             </tr>
                         )}
                     </tbody>
@@ -80,18 +80,19 @@ export class TripPrint extends Component<{
                 <table className='footertable'>
                     <thead>
                         <tr>
-                            <th className='notecolheader'>Notes</th>
-                            <th className='numberplateheader'>Number plates</th>
+                            <th className='logisticinfo'>Notes</th>
+                            <th className='vehiclerego'>Number plates</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>
+                            <td className='logisticinfo'>
+                                <div key={0}>{trip.logisticInfo}</div>
                                 {participants.filter(p => (p.logisticInfo || '') !== '').map(p =>
                                     <div key={p.id}>{p.name}: {p.logisticInfo}</div>
                                 )}
                             </td>
-                            <td>
+                            <td className='vehiclerego'>
                                 {participants.filter(p => p.isVehicleProvider).map(p =>
                                     <div key={p.id}>{p.name}: {p.vehicleRego}</div>
                                 )}

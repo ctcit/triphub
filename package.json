@@ -2,7 +2,7 @@
   "name": "triphub",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://localhost/triphub",
+  "homepage": "https://ctc.org.nz/triphub.dev/web",
   "dependencies": {
     "@types/luxon": "^1.21.0",
     "@types/react-resizable": "^1.7.2",

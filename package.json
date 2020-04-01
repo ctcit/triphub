@@ -2,8 +2,9 @@
   "name": "triphub",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://ctc.org.nz/triphub.dev/web",
+  "homepage": "https://localhost/triphub",
   "dependencies": {
+    "@types/luxon": "^1.21.0",
     "@types/react-resizable": "^1.7.2",
     "@types/react-resize-detector": "^4.2.0",
     "@types/react-textarea-autosize": "^4.3.3",
@@ -12,6 +13,7 @@
     "font-awesome": "^4.7.0",
     "leaflet": "^1.6.0",
     "leaflet-gpx": "^1.4.0",
+    "luxon": "^1.22.0",
     "react": "^16.12.0",
     "react-dnd": "^5.0.0",
     "react-dnd-html5-backend": "^3.0.2",

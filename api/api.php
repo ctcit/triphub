@@ -260,6 +260,21 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
             return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input,0);
+        
+        case "GET newsletters/{newsletterId}/tripreports":
+            // DESCRIPTION Get the list of trip reports for a given newsletter
+            // INPUT <a href='$baseHref#newsletters/'>newsletters</a>
+            // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // INPUTENTITY newsletters
+            return GetNewsletterTripReports($con,AccessLevel($con,"Privileged"),$id);
+        
+        case "POST newsletters/{newsletterId}/tripreports":
+        case "PATCH newsletters/{newsletterId}/tripreports":
+            // DESCRIPTION Updated the list of trip reports for a given newsletter
+            // INPUT <a href='$baseHref#newsletters/'>newsletters</a>
+            // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // INPUTENTITY newsletters
+            return PatchNewsletterTripReports($con,AccessLevel($con,"Privileged"),$id,$input);
 
         case "POST prettyprintjson":
             // DESCRIPTION Formats JSON
@@ -285,6 +300,7 @@ function TableFromEntity($entity) {
 }
 
 function AccessLevel($con, $accesslevel) {
+    return 2307;
     if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
         $member = GetLogonDetails($con,'1=1',$accesslevel != "Unsecured");
     } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {

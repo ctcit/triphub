@@ -116,3 +116,22 @@ export interface INewsletter {
     number : number
     isCurrent : boolean
 }
+
+export interface ITripReport {
+        id : number
+        trip_type : string
+        year : number
+        month : number
+        day : number
+        duration : number
+        date_display : string
+        user_set_date_display : boolean
+        title : string
+        upload_date :string
+}
+
+export interface INewsletterTripReport {
+    tripreport: number,
+    newsletter: number,
+    publish: boolean
+}

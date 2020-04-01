@@ -2,13 +2,14 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Form, Button, Badge } from 'reactstrap';
 import { SaveableControl } from './SaveableControl';
-import { Spinner, BaseUrl } from '.';
+import { Spinner, BaseUrl, NewsletterGenerateUrl } from '.';
 import { App } from './App';
 import { INewsletter, IValidation } from './Interfaces';
 import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
 import { GetDateString, IsValidDateString, GetClosestWednesday } from './Utilities';
+import { TripReportList } from './TripReportList';
 
 
 export class Newsletter extends Component<{
@@ -91,16 +92,23 @@ export class Newsletter extends Component<{
                 </Form>
                 ,
             this.state.isNew &&
-                <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={this.state.isNew && !this.state.isLoading}>
+                <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!this.state.isLoading}>
                     Save
                 </Button>,
             !this.state.isNew &&
-                <div>
+                <div key="details">
+                    <Button key="generate" color='primary' onClick={this.generate} visible={!this.state.isLoading}>
+                        Generate
+                    </Button>
                     <h2>Trips & Socials</h2>
+                    <p>All approved trips with a trip start date after the newsletter date, and which are
+                       open by the newsletter date will automatically be included.</p>
+
                     <h2>Trip Reports</h2>
+                    <TripReportList app={this.app} newsletterId={this.state.newsletter.id}/>
+
                     <h2>Notices</h2>
                 </div>
-
         ]
     }
 
@@ -204,6 +212,10 @@ export class Newsletter extends Component<{
                     console.log("Failed to save")
                 }
             })
+    }
+
+    private generate() {
+        window.location.href = NewsletterGenerateUrl
     }
 
 }

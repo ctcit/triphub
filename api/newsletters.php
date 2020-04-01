@@ -87,4 +87,47 @@ function SetCurrentNewsletter($con, $userId, $newsletterId)
 	return( array ( "result" => "success") );
 }
 
+function GetNewsletterTripReports($con, $userId, $newsletterId)
+{
+	$table = ConfigServer::newsletterTripReportsTable;
+
+	$query = "SELECT `newsletter`, `tripreport`, `publish` FROM $table where `newsletter` = '$newsletterId'";
+
+	return SqlResultArray($con, $query);
+}
+
+function PatchNewsletterTripReports($con, $userId, $newsletterId, $tripReportList)
+{
+	$table = ConfigServer::newsletterTripReportsTable;
+
+	foreach ($tripReportList as $col => $tripReport)
+	{
+		$tripReportId = $tripReport["tripreport"];
+		$publish = $tripReport["publish"];
+
+		if ($newsletterId != $tripReport["newsletter"])
+		{
+			die("Invalid data");
+		}
+
+		$existsQuery = "SELECT COUNT(*) FROM $table WHERE
+					   `newsletter` = '$newsletterId' AND `tripreport` = '$tripReportId'";
+		if (SqlResultScalar($con, $existsQuery) != 0)
+		{
+			$updateQuery = "UPDATE $table SET `publish` = '$publish' WHERE
+						`newsletter` = '$newsletterId' AND `tripreport` = '$tripReportId'";
+			SqlExecOrDie($con, $updateQuery);
+		}
+		else
+		{
+			// Didn't exist, insert instead
+			$insertQuery = "INSERT INTO $table (`newsletter`, `tripreport`, `publish` )
+							VALUES( '$newsletterId', '$tripReportId', '$publish' )";
+			SqlExecOrDie($con, $insertQuery);
+		}
+	}
+
+	return GetNewsletterTripReports($con, $userId, $newsletterId);
+}
+
 ?>

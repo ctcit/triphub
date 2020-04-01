@@ -18,7 +18,7 @@ export class TriphubNavbar extends Component<{
         const alltrips = () => this.props.app.setPath('/')
         const calendar = () => this.props.app.setPath('/calendar')
         const newtrip = () => this.props.app.setPath('/newtrip')
-        const newsletter = () => this.props.app.setPath('/newsletterlist')
+        const newsletter = () => this.props.app.setPath('/newsletter')
         const newsocial = () => this.props.app.setPath('/newsocial')
         const revokePrivileges = () => this.props.app.setState({isPrivileged:false})
         const me = this.props.app.getMe()

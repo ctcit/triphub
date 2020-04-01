@@ -62,4 +62,7 @@ export function GetClosestWednesday(to:Date) : Date {
     return closestWednesday
 }
 
+export function CapitaliseFirstLetter(input:string) : string {
+    return input.charAt(0).toUpperCase() + input.slice(1);
+}
 

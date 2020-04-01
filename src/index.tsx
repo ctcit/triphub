@@ -9,9 +9,12 @@ import registerServiceWorker from './registerServiceWorker';
 
 // use this chrome plugin to get this working if running locally using "npm start"
 // https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en
+
 export const BaseUrl = 'https://ctc.org.nz/triphub.dev/api/api.php'
-export const BaseOpt = {'Api-Key':'6bc3ed05-66a4-4012-96bd-c7192df95997'}
+export const DbApiURL = 'http://ctc.org.nz/db/index.php/rest'
+export const BaseOpt = { 'Accept': 'application/json'}
 export const Spinner = <span className='fa fa-spinner fa-spin' key='spinner'/>
+export const NewsletterGenerateUrl = '/newsletter/generate.php?expand=newsletter.odt'
 
 ReactDOM.render(<App/>, document.getElementById('root'))
 registerServiceWorker()

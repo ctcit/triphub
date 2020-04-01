@@ -25,6 +25,7 @@ class ConfigServer
 	const newsletterTripReportsTable    = "newsletter.newsletter_tripreports";
 	const rolesTable          = "ctc.roles";
 	const memberrolesTable    = "ctc.members_roles";
+	const routesTable         = "ctc.routes";
 	const tripsTable          = "triphub.trips";
 	const participantsTable   = "triphub.participants";
 	const historyTable        = "triphub.history";

@@ -3,7 +3,7 @@ import 'font-awesome/css/font-awesome.min.css';
 import { Component } from 'react';
 import * as React from 'react';
 import { BaseOpt, BaseUrl, Spinner } from '.';
-import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant, IHoliday } from './Interfaces';
+import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant, IHoliday, IArchivedRoute } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
@@ -19,12 +19,14 @@ export class App extends Component<{
       isLoading: boolean
       isLoadingConfig: boolean
       isLoadingMaps: boolean
+      isLoadingArchivedRoutes: boolean
       isLoadingMembers: boolean
       isLoadingHolidays: boolean
       isPrivileged: boolean
       members: IMember[]
       membersById: { [id: number]: IMember }
-      maps: IMap[]
+      maps: IMap[],
+      archivedRoutes: IArchivedRoute[],
       holidayMap: { [id: string]: IHoliday }
       config: IConfig
       statusId?: any
@@ -41,12 +43,14 @@ export class App extends Component<{
             isLoading: false,
             isLoadingConfig: true,
             isLoadingMaps: true,
+            isLoadingArchivedRoutes: true,
             isLoadingMembers: true,
             isLoadingHolidays: true,
             isPrivileged: false,
             members: [],
             membersById: {},
             maps: [],
+            archivedRoutes: [],
             holidayMap: {},
             status: ['Loading ', Spinner],
             statusShow: true,
@@ -118,6 +122,10 @@ export class App extends Component<{
         return this.state.maps
     }
 
+    public getArchivedRoutes() : IArchivedRoute[] {
+        return this.state.archivedRoutes;
+    }
+
     public validateTrip(trip : ITrip) : IValidation[] {
 
         return this.state.isPrivileged && !this.state.isLoading ? [
@@ -168,6 +176,8 @@ export class App extends Component<{
             .then(config => this.setState({config:config[0], isLoadingConfig: false}));
         this.apiCall('GET',BaseUrl + '/maps')
             .then(maps => this.setState({maps, isLoadingMaps: false}));
+        this.apiCall('GET',BaseUrl + '/routes')
+            .then(archivedRoutes => this.setState({archivedRoutes, isLoadingArchivedRoutes: false}));
         this.apiCall('GET',BaseUrl + '/public_holidays')
             .then(holidays => {
                 const holidayMap = {}
@@ -182,26 +192,34 @@ export class App extends Component<{
 
     public render(){
 
-        console.log(`path=${this.state.path}`)
+        console.log(`path=${this.state.path}`);
 
-        if ( this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingMembers || this.state.isLoadingHolidays) {
-            return  [<TriphubNavbar key='triphubNavbar' app={this}/>,
+        return (
+            this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingArchivedRoutes || this.state.isLoadingMembers || this.state.isLoadingHolidays ?
+                 [<TriphubNavbar key='triphubNavbar' app={this}/>,
                      <div key='1'>Loading Configuration {this.state.isLoadingConfig ? Spinner : 'Done.'}</div>,
                      <div key='2'>Loading Maps {this.state.isLoadingMaps ? Spinner : 'Done.'}</div>,
-                     <div key='3'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
-                     <div key='4'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>]
-        } else if (this.state.path === "/calendar") {
-            return <Calendar key='calendar' app={this}/> 
-        } else if (this.state.path === "/newtrip") {
-            return <Trip key='newtrip' app={this} isNew={true} isNewSocial={false}/> 
-        } else if (this.state.path === "/newsletter") {
-            return <Newsletter app={this}/> 
-        } else if (this.state.path === "/newsocial") {
-            return <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> 
-        } else if (this.state.path.startsWith("/trips/")) {
-            return <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> 
-        } else {
-            return <TripsList key='triplist' app={this}/>
-        }
+                     <div key='3'>Loading Archived Routes {this.state.isLoadingArchivedRoutes ? Spinner : 'Done.'}</div>,
+                     <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
+                     <div key='5'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>
+                ] :
+
+            this.state.path === "/calendar" ?
+                <Calendar key='calendar' app={this}/> :
+
+            this.state.path === "/newtrip" ?
+                <Trip key='newtrip' app={this} isNew={true} isNewSocial={true}/> :
+
+            this.state.path === "/newsocial" ?
+                <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> :
+
+            this.state.path === "/newsletter" ?
+                <Newsletter app={this}/> :
+
+            this.state.path.startsWith("/trips/") ?
+                <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> :
+
+                <TripsList key='triplist' app={this}/>
+        );
     }
 }

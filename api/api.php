@@ -6,6 +6,7 @@
     require('trips.php');
     require('members.php');
     require('newsletters.php');
+    require('routes.php');
 
     // Extract data from parameters 
     $method = $_SERVER['REQUEST_METHOD'];
@@ -287,6 +288,15 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // DESCRIPTION Get logon details
             // OUTPUT id, name and role of loghed on user
             return GetLogonDetails($con,'r.role in ('.ConfigServer::editorRoles.')',False);
+
+        case "GET routes":
+            return GetRoutes($con, AccessLevel($con,"Unsecured"));
+
+        case "GET routes/{routeId}":
+            return GetRoute($con, AccessLevel($con,"Unsecured"), $id);
+
+        // case "PATCH routes/{routeId}":
+        //     return UpdateRouteSummary($con, $userid, $id, $input);
 
         default:
             http_response_code(400);

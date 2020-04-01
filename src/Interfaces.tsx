@@ -79,6 +79,23 @@ export interface IMap {
     name : string
 }
 
+export interface IArchivedRoute {
+    id: string;
+    caption: string;
+    gpxfilename: string;
+    gpx: string;
+    routesummary: string;
+    routenotes: string;
+    originatorid: string;
+    left: string;
+    top: string;
+    right: string;
+    bottom: string;
+    trackdate: string; // "2015-01-10"
+    firstName: string;
+    lastName: string;
+}
+
 export interface IHoliday {
     date : string
     name : string

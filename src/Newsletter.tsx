@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { Form, Button, Badge } from 'reactstrap';
-import { SaveableControl } from './SaveableControl';
+import { InputControl } from './Control';
 import { Spinner, BaseUrl, NewsletterGenerateUrl } from '.';
 import { App } from './App';
 import { INewsletter, IValidation } from './Interfaces';
@@ -34,11 +34,9 @@ export class Newsletter extends Component<{
             isLoading: true
         }
         this.app = this.props.app
-        this.get = this.get.bind(this)
-        this.set = this.set.bind(this)
-        this.validate = this.validate.bind(this)
         this.saveNewNesletter = this.saveNewNesletter.bind(this)
     }
+
 
     public get(id: string) : any{
         return this.state.newsletter[id]
@@ -73,8 +71,33 @@ export class Newsletter extends Component<{
             
     }
 
+
     public render(){
-        const readOnly = {readOnly: false};
+        const validations : IValidation[] = this.validate();
+
+        const onGet = (id: string): any => {
+            return this.get(id);
+        }
+        const onSave = (id: string, value: any): Promise<void> => {
+            this.set(id, value);
+            const body = {};
+            body[id] = value;
+            return this.saveNewsletter(body);
+        }
+        const onGetValidationMessage = (id: string): any => {
+            const found: IValidation | undefined = validations.find(validation => validation.id === id && !validation.ok);
+            return found ? found.message : null;
+        }
+
+        const common = {
+            readOnly: false,
+            isLoading: this.state.isLoading,
+            owner: this,
+            'onGet': onGet,
+            'onSave': onSave,
+            'onGetValidationMessage': onGetValidationMessage
+        }
+
         return [
             <TriphubNavbar key='triphubnavbar' app={this.props.app}/>,
             <h1 key="title">Manage Newsletter</h1>,
@@ -84,11 +107,11 @@ export class Newsletter extends Component<{
                 <Badge color='success'>{Spinner}></Badge>,
             !this.state.isLoading &&
                 <Form key='form'>
-                    <SaveableControl owner={this} id='volume' label='Volume' type='number' {...readOnly}/>
-                    <SaveableControl owner={this} id='number' label='Number' type='number' {...readOnly}/>
-                    <SaveableControl owner={this} id='date' label='Date' type='date' {...readOnly}/>
-                    <SaveableControl owner={this} id='issueDate' label='Issue Date' type='date' {...readOnly}/>
-                    <SaveableControl owner={this} id='nextdeadline' label='Next Deadline' type='date' {...readOnly}/>
+                    <InputControl id='volume' label='Volume' type='number' {...common}/>
+                    <InputControl id='number' label='Number' type='number' {...common}/>
+                    <InputControl id='date' label='Date' type='date' {...common}/>
+                    <InputControl id='issueDate' label='Issue Date' type='date' {...common}/>
+                    <InputControl id='nextdeadline' label='Next Deadline' type='date' {...common}/>
                 </Form>
                 ,
             this.state.isNew &&
@@ -189,12 +212,16 @@ export class Newsletter extends Component<{
         })
     }
 
+    private saveNewsletter(body: any): Promise<any> {
+        return this.app.apiCall('POST', BaseUrl + '/newsletters/' + this.state.newsletter.id, body, false);
+    }
+
     private saveNewNesletter(){
         const newsletter = this.state.newsletter
 
         this.setState({isLoading: true})
 
-        this.props.app.apiCall('POST',BaseUrl + '/newsletters',newsletter)
+        this.saveNewsletter(newsletter)
             .then( (newsletters: INewsletter[]) => {
                 if (newsletters !== null && newsletters.length > 0)
                 {

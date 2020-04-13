@@ -22,6 +22,7 @@ class ConfigServer
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";
 	const newslettersTable    = "newsletter.newsletters";
+	const noticesTable        = "newsletter.notices";
 	const newsletterTripReportsTable    = "newsletter.newsletter_tripreports";
 	const rolesTable          = "ctc.roles";
 	const memberrolesTable    = "ctc.members_roles";

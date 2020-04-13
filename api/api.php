@@ -40,9 +40,9 @@
             header('Content-Type: text/html');
             echo $result;
         } else {
-            if (intval($_GET["prettyprintjson"])) {
+            if (array_key_exists("prettyprintjson", $_GET) && intval($_GET["prettyprintjson"])) {
                 header('Content-Type: text/html');
-                echo PrettyPrintJson($result);
+                echo PrettyPrintJson($result); 
             } else {
                 header('Content-Type: application/json');
                 echo json_encode($result);
@@ -221,6 +221,21 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // DESCRIPTION Gets newsletter
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
             return GetNewsletters($con, AccessLevel($con,"Privileged"), $id);
+        
+        case "POST newsletters":
+            // DESCRIPTION Creates a new newsletter
+            // INPUT A <a href='$baseHref#newsletters'>newsletter</a>
+            // OUTPUT The new <a href='$baseHref#tripsnewsletters'>newsletter</a>
+            // INPUTENTITY newsletters
+            return ApiPost($con, AccessLevel($con,"Privileged"),$table,$input);
+
+        case "POST newsletters/{newsletterId}":
+        case "PATCH newsletters/{newsletterId}":
+            // DESCRIPTION Updates detail for a given newsletter
+            // INPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // INPUTENTITY newsletters
+            return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input,0);
 
         case "GET newsletters/current":
             // DESCRIPTION Gets current newsletter, if it exists
@@ -246,22 +261,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // DESCRIPTION Gets all the newsletters of a specific volume
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
             return GetNewsletterVolume($con, AccessLevel($con,"Privileged"), $subId);
-        
-        case "POST newsletters":
-            // DESCRIPTION Creates a new newsletter
-            // INPUT A <a href='$baseHref#newsletters'>newsletter</a>
-            // OUTPUT The new <a href='$baseHref#tripsnewsletters'>newsletter</a>
-            // INPUTENTITY newsletters
-            return ApiPost($con, AccessLevel($con,"Privileged"),$table,$input);
 
-        case "POST newsletters/{newsletterId}":
-        case "PATCH newsletters/{newsletterId}":
-            // DESCRIPTION Updates detail for a given newsletter
-            // INPUT <a href='$baseHref#newsletters'>newsletters</a>
-            // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
-            // INPUTENTITY newsletters
-            return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input,0);
-        
         case "GET newsletters/{newsletterId}/tripreports":
             // DESCRIPTION Get the list of trip reports for a given newsletter
             // INPUT <a href='$baseHref#newsletters/'>newsletters</a>
@@ -271,7 +271,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
         
         case "POST newsletters/{newsletterId}/tripreports":
         case "PATCH newsletters/{newsletterId}/tripreports":
-            // DESCRIPTION Updated the list of trip reports for a given newsletter
+            // DESCRIPTION Update the list of trip reports for a given newsletter
             // INPUT <a href='$baseHref#newsletters/'>newsletters</a>
             // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
@@ -297,6 +297,37 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
 
         // case "PATCH routes/{routeId}":
         //     return UpdateRouteSummary($con, $userid, $id, $input);
+        
+        case "GET notices":
+            // DESCRIPTION Get newsletter notices. May specify a limit and offset as query paramenters
+            // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
+            return GetNotices($con, AccessLevel($con,"Privileged"), 0, $query);
+        
+        case "GET notices/current":
+            // DESCRIPTION Get newsletter notices where the expiry date is after the current
+            //             newsletter date (if there is no current newsletter won't return anything).
+            // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
+            return GetCurrentNotices($con, AccessLevel($con,"Privileged"), 0, $query);
+
+        case "GET notices/{noticeId}":
+            // DESCRIPTION Gets notice
+            // OUTPUT Single <a href='$baseHref#notices'>notice</a>
+            return GetNewsletters($con, AccessLevel($con,"Privileged"), $id);
+        
+        case "POST notices":
+            // DESCRIPTION Creates a new notice
+            // INPUT A <a href='$baseHref#notices'>notice</a>
+            // OUTPUT The new <a href='$baseHref#notices'>notice</a>
+            // INPUTENTITY notices
+            return ApiPost($con, AccessLevel($con,"Privileged"),$table,$input);
+
+        case "POST notices/{noticeId}":
+        case "PATCH notices/{noticeId}":
+            // DESCRIPTION Updates detail for a given notice
+            // INPUT <a href='$baseHref#notices'>notice</a>
+            // OUTPUT <a href='$baseHref#notices'>notice</a>
+            // INPUTENTITY notices
+            return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input,0);
 
         default:
             http_response_code(400);
@@ -306,7 +337,16 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
 }
 
 function TableFromEntity($entity) {
-    return (new ReflectionClass("ConfigServer"))->getConstants()[$entity.'Table'];
+    $configServer = (new ReflectionClass("ConfigServer"))->getConstants();
+    $key = $entity.'Table';
+    if (array_key_exists($key, $configServer))
+    {
+        return $configServer[$key];
+    }
+    else
+    {
+        return null;
+    }
 }
 
 function AccessLevel($con, $accesslevel) {

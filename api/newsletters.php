@@ -130,4 +130,41 @@ function PatchNewsletterTripReports($con, $userId, $newsletterId, $tripReportLis
 	return GetNewsletterTripReports($con, $userId, $newsletterId);
 }
 
-?>
+function GetNotices($con, $userid, $id = 0, $query = null) {
+	$noticesTable = ConfigServer::noticesTable;
+	$newslettersTable = ConfigServer::newslettersTable;
+    $limit = (array_key_exists("limit", $query)) ? "limit $query[limit]" : "";
+    $offset = (array_key_exists("offset", $query)) ? "offset $query[offset]" : "";
+	$where = "";
+	if ($id != 0)
+	{
+		$where = "WHERE id = $id";
+    }
+    else
+    {
+		if (array_key_exists("expiry", $query))
+		{
+			$where = "WHERE `date` >= '$query[expiry]'";
+        }
+	}
+    return SqlResultArray($con,
+        "SELECT `id`, `order`, `section`, `date`, `publish`, `title`, `text` 
+        FROM $noticesTable
+        $where
+        ORDER by `date` DESC $limit $offset");
+}
+
+function GetCurrentNotices($con, $userid, $id = 0, $query = array()) {
+	$newslettersTable = ConfigServer::newslettersTable;
+    $expiry = SqlResultScalar($con, "SELECT date FROM $newslettersTable WHERE `isCurrent` = 1");
+
+    if ($expiry != null)
+    {
+        $query["expiry"] = $expiry;
+        return GetNotices($con, $userid, $id, $query);
+    }
+    else
+    {
+        return array();
+    }
+}

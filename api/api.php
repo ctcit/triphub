@@ -308,6 +308,11 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             //             newsletter date (if there is no current newsletter won't return anything).
             // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
             return GetCurrentNotices($con, AccessLevel($con,"Privileged"), 0, $query);
+        
+        case "GET notices/expired":
+            // DESCRIPTION Get expired newsletter notices. May specify a limit and offset as query paramenters
+            // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
+            return GetExpiredNotices($con, AccessLevel($con,"Privileged"), 0, $query);
 
         case "GET notices/{noticeId}":
             // DESCRIPTION Gets notice
@@ -500,6 +505,7 @@ function IsReadOnly($table, $col) {
              $table === ConfigServer::participantsTable ||
              $table === ConfigServer::historyTable || 
              $table === ConfigServer::newslettersTable || 
+             $table === ConfigServer::noticesTable || 
              $table === ConfigServer::editTable)
         return $col === 'id';
     else

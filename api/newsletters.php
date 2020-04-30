@@ -130,7 +130,7 @@ function PatchNewsletterTripReports($con, $userId, $newsletterId, $tripReportLis
 	return GetNewsletterTripReports($con, $userId, $newsletterId);
 }
 
-function GetNotices($con, $userid, $id = 0, $query = null) {
+function GetNotices($con, $userid, $id = 0, $query = null, $sort_by_expiry = false) {
 	$noticesTable = ConfigServer::noticesTable;
 	$newslettersTable = ConfigServer::newslettersTable;
     $limit = (array_key_exists("limit", $query)) ? "limit $query[limit]" : "";
@@ -142,16 +142,29 @@ function GetNotices($con, $userid, $id = 0, $query = null) {
     }
     else
     {
-		if (array_key_exists("expiry", $query))
+		if (array_key_exists("date_after", $query))
 		{
-			$where = "WHERE `date` >= '$query[expiry]'";
+			$where = "WHERE `date` >= '$query[date_after]'";
         }
+		else if (array_key_exists("date_before", $query))
+		{
+			$where = "WHERE `date` < '$query[date_before]'";
+        }
+	}
+	$order = "";
+	if ($sort_by_expiry)
+	{
+		$order = "ORDER by `date` DESC";
+	}
+	else
+	{
+		$order = "ORDER by `order` ASC";
 	}
     return SqlResultArray($con,
         "SELECT `id`, `order`, `section`, `date`, `publish`, `title`, `text` 
         FROM $noticesTable
         $where
-        ORDER by `date` DESC $limit $offset");
+        $order $limit $offset");
 }
 
 function GetCurrentNotices($con, $userid, $id = 0, $query = array()) {
@@ -160,8 +173,23 @@ function GetCurrentNotices($con, $userid, $id = 0, $query = array()) {
 
     if ($expiry != null)
     {
-        $query["expiry"] = $expiry;
+        $query["date_after"] = $expiry;
         return GetNotices($con, $userid, $id, $query);
+    }
+    else
+    {
+        return array();
+    }
+}
+
+function GetExpiredNotices($con, $userid, $id = 0, $query = array()) {
+	$newslettersTable = ConfigServer::newslettersTable;
+    $expiry = SqlResultScalar($con, "SELECT date FROM $newslettersTable WHERE `isCurrent` = 1");
+
+    if ($expiry != null)
+    {
+        $query["date_before"] = $expiry;
+        return GetNotices($con, $userid, $id, $query, true);
     }
     else
     {

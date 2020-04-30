@@ -1,0 +1,366 @@
+import * as React from 'react';
+import * as ReactModal from 'react-modal';
+import { Component } from 'react';
+import { App } from './App';
+import { INotice, IValidation } from './Interfaces';
+import './index.css';
+import './print.css';
+import Table from 'reactstrap/lib/Table';
+import { BaseUrl } from '.';
+import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from './Control';
+import Button from 'reactstrap/lib/Button';
+import { IsValidDateString, GetDateString, GetStartOfNextMonth } from './Utilities';
+
+class Section {
+    public name: string
+    public title: string
+}
+
+
+const Sections: Section[] = [
+    { name: "Notice", title: "Notices" },
+    { name: "Classified", title: "Classifieds" },
+    { name: "Obituary", title: "Obituaries" }
+]
+
+class NoticeDetail extends Component<{
+    app: App,
+    notice: INotice
+}, {
+    isLoading: boolean
+}> {
+
+    public app: App;
+
+    constructor(props: any) {
+        super(props)
+        this.state = {
+            isLoading: false
+        }
+        this.app = this.props.app
+    }
+
+    public render() {
+        const validations: IValidation[] = this.validate();
+
+        const onGet = (id: string): any => {
+            return this.props.notice[id];
+        }
+
+        const onSave = (id: string, value: any): Promise<void> => {
+            this.props.notice[id] = value;
+            // Don't actually save
+            return Promise.resolve();
+        }
+
+        const onGetValidationMessage = (id: string): any => {
+            const found: IValidation | undefined = validations.find(validation => validation.id === id && !validation.ok);
+            return found ? found.message : null;
+        }
+
+        const common = {
+            readOnly: false,
+            isLoading: this.state.isLoading,
+            owner: this,
+            'onGet': onGet,
+            'onSave': onSave,
+            'onGetValidationMessage': onGetValidationMessage
+        }
+
+        const section_options = {}
+        for( const section of Sections )
+        {
+            section_options[section.name] = section.name
+        }
+        return <div>
+            <h2>Edit Notice</h2>
+            <InputControl id='title' label='Title' type='text' {...common} />
+            <InputControl id='date' label='Expiry Date' type='date' {...common} />
+            <SelectControl id='section' label='Section' options={section_options} {...common} />
+            <TextAreaInputControl id='text' label='Text' {...common} />
+            <SwitchControl id='publish' label='Publish' {...common} />
+            <datalist key='section_list' id='section_list'>
+                {Sections.map(section => <option value={section.name} key={section.name}>{section.name}</option>)
+                }
+            </datalist>
+        </div>;
+    }
+
+    private validate(): IValidation[] {
+        return [
+            { id: 'title', ok: this.props.notice.title.length > 0, message: 'Must set a title!' },
+            { id: 'text', ok: this.props.notice.text.length > 0, message: 'Must set some body text!' },
+            { id: 'date', ok: IsValidDateString(this.props.notice.date), message: 'Expiry date is not valid' },
+        ];
+    }
+
+}
+
+export class NoticeList extends Component<{
+    app: App,
+}, {
+    notices: INotice[],
+    expiredNotices: INotice[],
+    showDetailFor: INotice | null,
+    showAllExpired: boolean,
+}> {
+
+    public app: App;
+    private readonly expiredLimit : number = 10;
+
+    constructor(props: any) {
+        super(props)
+        this.state = {
+            notices: [],
+            expiredNotices: [],
+            showDetailFor: null,
+            showAllExpired: false,
+        }
+        this.app = this.props.app
+        this.handleSaveDetail = this.handleSaveDetail.bind(this)
+        this.handleCancelDetail = this.handleCancelDetail.bind(this)
+        this.handleEditNotice = this.handleEditNotice.bind(this)
+        this.handleNewNotice = this.handleNewNotice.bind(this)
+        this.handleShowAll = this.handleShowAll.bind(this)
+    }
+
+    public componentDidMount() {
+        this.requery();
+    }
+
+    public render() {
+        return [
+            <Button onClick={this.handleNewNotice} key="newNoticeButton" color="primary">New Notice</Button>,
+            Sections.map((section: Section) =>
+            <div key={section.name + "Notices"}>
+                <h3>{section.title}</h3>
+                <Table className='TripGroup table-fixed' size='sm' striped={true}>
+                    <thead>
+                        <tr>
+                            <th className='mobile-only' />
+                            <th style={{ width: "50%" }}>Title</th>
+                            <th style={{ width: "20%" }}>Expiry</th>
+                            <th style={{ width: "15%" }}>Publish</th>
+                            <th style={{ width: "15%" }}/>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {this.state.notices.filter(n => n.section === section.name).map((notice, index, section_notices) => {
+                            const onGet = (id: string): any => {
+                                return notice.publish
+                            }
+                            const onSave = (id: string, value: any): any => {
+                                return this.setPublishNotice(notice, value)
+                            }
+                            const onGetValidationMessage = (id: string): any => {
+                                return ''
+                            }
+                            const onClick = (): any => {
+                                return this.handleEditNotice(notice);
+                            }
+                            const onUpClick = (): any => {
+                                return this.moveNoticeUp(notice);
+                            }
+                            const onDownClick = (): any => {
+                                return this.moveNoticeDown(notice);
+                            }
+                            return <tr key={"notice"+section.name+index}>
+                                    <td className="mobile-only"  onClick={onClick}/>
+                                    <td onClick={onClick}>{notice.title}</td>
+                                    <td onClick={onClick}>{notice.date}</td>
+                                    <td><SwitchControl id='publish' label='' isLoading={false} onGet={onGet}
+                                        onSave={onSave} onGetValidationMessage={onGetValidationMessage} /></td>
+                                    <td>
+                                       {(index!==0) && <Button onClick={onUpClick}><span className='fa fa-arrow-up' style={{marginRight: '0'}}/></Button> }
+                                       {(index!==section_notices.length-1) && <Button onClick={onDownClick}><span className='fa fa-arrow-down' style={{marginRight: '0'}}/></Button>}
+                                    </td>
+                                  </tr>
+                        })
+                        }
+                    </tbody>
+                </Table>
+            </div>
+            ),
+            <div key="ExpiredNotices">
+                <h3>Expired Notices</h3>
+                <Table className="TripGroup" size='sm' striped={true}>
+                    <thead>
+                        <tr>
+                            <th className='mobile-only'/>
+                            <th>Title</th>
+                            <th>Expired</th>
+                            <th>Section</th>
+                            <th/>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {
+                            this.state.expiredNotices.map( (notice:INotice) => {
+                                const onAddClick = ():any => {
+                                    return this.addToCurrentNewsletter(notice);
+                                }
+                                return <tr key={notice.title}>
+                                            <td>{notice.title}</td>
+                                            <td>{notice.date}</td>
+                                            <td>{notice.section}</td>
+                                            <td><Button onClick={onAddClick} color='primary'>Add</Button></td>
+                                       </tr>
+                            })
+                        }
+                    </tbody>
+                </Table>
+                {!this.state.showAllExpired && <Button onClick={this.handleShowAll} color="primary" className="mr-1">Show All</Button>}
+            </div>,
+            <ReactModal
+                key="notice-edit-modal"
+                isOpen={this.state.showDetailFor != null}
+                contentLabel={"Notice Detail"}
+                style={{
+                    overlay: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                    },
+                    content: {
+                        top: '20%',
+                        left: '20%',
+                        right: '20%',
+                        bottom: '20%',
+                        border: '1px solid #ccc',
+                    }
+                }}>
+                {(this.state.showDetailFor != null) &&
+
+                    <NoticeDetail notice={this.state.showDetailFor} app={this.app} />
+                }
+                <Button onClick={this.handleSaveDetail} color="primary" className="mr-1">Save</Button>
+                <Button onClick={this.handleCancelDetail} className="mr-1">Cancel</Button>
+            </ReactModal>
+        ];
+    }
+
+    public handleSaveDetail() {
+        if (this.state.showDetailFor != null ) {
+            this.saveNotice(this.state.showDetailFor.id, this.state.showDetailFor)
+            .then( ( notice : INotice[] ) => {
+                this.requery();
+                this.setState({ showDetailFor: null })
+            })
+        }
+    }
+
+    public handleCancelDetail() {
+        this.setState({ showDetailFor: null })
+    }
+
+    public handleEditNotice(notice: INotice) {
+        this.setState({ showDetailFor: {...notice} })
+    }
+
+    public handleNewNotice() {
+        const newNotice = { id: -1, title: "", text: "", date: GetDateString( GetStartOfNextMonth() ), publish: true, section: "Notice", order: this.getNextOrder() }
+        this.setState({ showDetailFor: {...newNotice} })
+    }
+
+    private saveNotice(id: number, body: any): Promise<any> {
+        if ( id === -1 ) {
+            // New notice
+            return this.app.apiCall('POST', BaseUrl + '/notices/', body, false);
+        } else {
+            // Updating an existing notice
+            return this.app.apiCall('POST', BaseUrl + '/notices/' + id, body, false);
+        }
+    }
+
+    private addToCurrentNewsletter( notice : INotice ) {
+        notice.date = GetDateString( GetStartOfNextMonth() )
+        notice.order = this.getNextOrder()
+        this.saveNotice(notice.id, notice).then( () => {
+            this.requery()
+        })
+    }
+
+    private setPublishNotice(notice: INotice, publish: boolean): Promise<void> {
+        notice.publish = publish;
+        return this.props.app.apiCall('PATCH', BaseUrl + "/notices/" + notice.id, notice)
+    }
+
+    private requery() {
+        this.requeryCurrent();
+        this.requeryExpired();
+    }
+    
+    private requeryCurrent() {
+        this.props.app.apiCall('GET', BaseUrl + "/notices/current")
+        .then((notices: INotice[]) => {
+            this.setState({ notices: this.filterNotices(notices) })
+        })
+    }
+
+    private requeryExpired(apply_limit:boolean = true) {
+        let limit = ""
+        if (apply_limit) {
+            limit = "?limit="+this.expiredLimit
+        }
+        this.props.app.apiCall('GET', BaseUrl + "/notices/expired"+limit)
+        .then((expiredNotices: INotice[]) => {
+            this.setState({ expiredNotices: this.filterNotices(expiredNotices) })
+        })
+    }
+
+    private filterNotices(notices:INotice[]) : INotice[] {
+        const valid_section_names : string[] = Sections.map( s => s.name )
+        return notices.filter( (notice) => valid_section_names.includes(notice.section) )
+    }
+
+    private handleShowAll() {
+        this.setState({showAllExpired: true})
+        this.requeryExpired(false)
+    }
+
+    private moveNoticeUp(notice:INotice) {
+        this.moveNotice(notice, true)
+    }
+
+    private moveNoticeDown(notice:INotice) {
+        this.moveNotice(notice, false)
+    }
+
+    private moveNotice(notice:INotice, up: boolean) {
+        // The simplest way to implement this is to:
+        //  - Assume that the number space for ordering is shared
+        //    between all sections, but..
+        //  - We don't care about the order for expired notices
+        //  - When we expire a notice we don't change the order of any notice
+        //  - When we un-expire a notice, or create a new notice, we set it's order to the next available
+        //    order number (e.g. the max order amongst un-expired orders plus one)
+        //  - When a notice changes section the order does not change (this does
+        //    mean that the initial order within it's new section will appear a bit
+        //    random, but the user can change it, and has the nice feature that if
+        //    you change a notice's section then change it back it will be in the
+        //    same place it was to start with)
+        //  - This means that each non-expired has a unique order, BUT the order
+        //    numbers are not contiguous.
+        //  SO, to move a notice up or down, we need to find the notice in the
+        //  same section with the next lowes/highest order, then just swap their orders
+        const section_notices = this.state.notices.filter( n => n.section === notice.section)
+        // "Up" -> lower order
+        const otherNotice = (up) ? section_notices.reverse().find( n => n.order < notice.order) : section_notices.find( n => n.order > notice.order)
+        if (otherNotice != null) {
+            // If we didn't find a notice with order the same
+            // as newOrder then the operation doesn't make sense so do nothing
+            const oldOrder = notice.order
+            notice.order = otherNotice.order
+            otherNotice.order = oldOrder
+            this.saveNotice(notice.id, {order: notice.order})
+            otherNotice.order = oldOrder
+            this.saveNotice(otherNotice.id, {order: otherNotice.order})
+            this.state.notices.sort( (n0, n1) => n0.order - n1.order)
+            this.setState({notices: this.state.notices})
+        }
+
+    }
+
+    private getNextOrder() {
+        return this.state.notices[this.state.notices.length-1].order + 1
+    }
+
+}

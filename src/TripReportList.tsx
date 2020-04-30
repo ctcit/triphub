@@ -1,14 +1,11 @@
 
 import * as React from 'react';
 import { Component } from 'react';
-// import { Form, Button, Badge } from 'reactstrap';
-// import { SaveableControl } from './SaveableControl';
 import { Spinner, DbApiURL, BaseUrl  } from '.';
 import { App } from './App';
 import { ITripReport, INewsletterTripReport } from './Interfaces';
 import './index.css';
 import './print.css';
-// import { TriphubNavbar } from './TriphubNavBar';
 import { CapitaliseFirstLetter } from './Utilities';
 import Table from 'reactstrap/lib/Table';
 import { SwitchControl } from './Control';
@@ -35,30 +32,8 @@ export class TripReportList extends Component<{
             tripreports: []
         }
         this.app = this.props.app
-        // this.get = this.get.bind(this)
-        // this.set = this.set.bind(this)
-        // this.validate = this.validate.bind(this)
     }
 
-    /*
-    public get(id: string) : any{
-        return this.state.newsletter[id]
-    }
-
-    public set(id: string, val: any) : void {
-        this.state.newsletter[id] = val;
-    }
-
-    public validate() : IValidation[] {
-        return [
-            {id:'volume', ok: this.state.newsletter.volume > 0, message: 'Volume must be greater than zero'},
-            {id:'number', ok: this.state.newsletter.number > 0, message: 'Number mest be greater than zero'},
-            {id:'date', ok: IsValidDateString(this.state.newsletter.date), message: 'Newsletter date is not valid'},
-            {id:'issueDate', ok: IsValidDateString(this.state.newsletter.issueDate), message: 'Issue date is not valid'},
-            {id:'nextdeadline', ok: IsValidDateString(this.state.newsletter.nextdeadline), message: 'Next deadline is not a valid date'},
-        ];
-    }
-    */
 
     public componentDidMount() {
         this.props.app.setStatus(['Loading ', Spinner])
@@ -87,12 +62,9 @@ export class TripReportList extends Component<{
                 this.props.app.apiCall('POST', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", newsletterTripReports)
             })
         })
-            
     }
 
     public render() {
-
-
         return  <Table className='TripGroup' size='sm' striped={true}>
                     <thead>
                         <tr>
@@ -100,7 +72,7 @@ export class TripReportList extends Component<{
                             <th>Date</th>
                             <th>Title</th>
                             <th>Type</th>
-                            <th>Selected</th>
+                            <th>Publish</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -62,6 +62,11 @@ export function GetClosestWednesday(to:Date) : Date {
     return closestWednesday
 }
 
+export function GetStartOfNextMonth() : Date {
+    const now = new Date();
+    return new Date( now.getFullYear(), now.getMonth() +1, 1)
+}
+
 export function CapitaliseFirstLetter(input:string) : string {
     return input.charAt(0).toUpperCase() + input.slice(1);
 }

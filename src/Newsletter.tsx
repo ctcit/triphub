@@ -10,6 +10,7 @@ import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
 import { GetDateString, IsValidDateString, GetClosestWednesday } from './Utilities';
 import { TripReportList } from './TripReportList';
+import { NoticeList } from './NoticeList';
 
 
 export class Newsletter extends Component<{
@@ -131,6 +132,7 @@ export class Newsletter extends Component<{
                     <TripReportList app={this.app} newsletterId={this.state.newsletter.id}/>
 
                     <h2>Notices</h2>
+                    <NoticeList app={this.app}/>
                 </div>
         ]
     }

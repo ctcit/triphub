@@ -5,6 +5,7 @@
   "homepage": "https://ctc.org.nz/triphub.dev/web",
   "dependencies": {
     "@types/luxon": "^1.21.0",
+    "@types/react-modal": "^3.10.5",
     "@types/react-resizable": "^1.7.2",
     "@types/react-resize-detector": "^4.2.0",
     "@types/react-textarea-autosize": "^4.3.3",
@@ -19,6 +20,7 @@
     "react-dnd-html5-backend": "^3.0.2",
     "react-dom": "^16.12.0",
     "react-icons": "^3.8.0",
+    "react-modal": "^3.11.2",
     "react-resizable": "^1.10.1",
     "react-resize-detector": "^4.2.1",
     "react-scripts-ts": "^3.1.0",

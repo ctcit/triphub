@@ -92,7 +92,6 @@ export class InputControl extends Component<{
             </ControlWrapper>
       )
    }
-
 }
 
 export class TextAreaInputControl extends Component<{
@@ -176,4 +175,55 @@ export class SwitchControl extends Component<{
             </ControlWrapper>
       )
     }
+}
+
+export class SelectControl extends Component<{
+    id : string, 
+    label : string,
+    hidden? : boolean,
+    readOnly? : boolean,
+    isLoading: boolean,
+    onGet: (id: string) => any,
+    onSave: (id: string, value: any) => Promise<void>,
+    onGetValidationMessage: (id: string) => string,
+    options: object
+}, {
+    oldValue: any,
+    value: any,
+    saving : boolean
+}> {
+
+    constructor(props : any)     {
+        super(props);
+        const oldValue = this.props.onGet(this.props.id);
+        this.state = {oldValue, value: oldValue, saving: false}
+    }
+
+    public render() {
+        const onFocus = (): void => {
+            const oldValue = this.props.onGet(this.props.id);
+            this.setState({ oldValue, value: oldValue });
+        }
+        const onChange = (event: React.ChangeEvent) => {
+            const newValue = (event.target as any).value;
+            this.setState({ value: newValue });
+        }
+        const onBlur = () => {
+            if (this.state.oldValue !== this.state.value) {
+                this.setState({saving: true});
+                this.props.onSave(this.props.id, this.state.value)
+                    .then(() => this.setState({saving: false}));
+            }
+        } 
+        
+        return  (
+            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+                <Input id={this.props.id} type="select" readOnly={this.props.readOnly} value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='off'>
+                    {Object.keys(this.props.options).map( (key:any) => {
+                        return <option value={key} key={key}>{this.props.options[key]}</option>
+                    })}
+                </Input>
+            </ControlWrapper>
+      )
+   }
 }

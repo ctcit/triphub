@@ -38,14 +38,16 @@ export class TriphubNavbar extends Component<{
                     Suggest a trip
                 </Button>
                 <Button color='primary' onClick={newsletter} hidden={!this.props.app.state.isPrivileged} >
+                    <span className='fa fa-newspaper-o'/> 
                     Manage Newsletter
                 </Button>
                 <Button color='primary' onClick={newsocial} disabled={this.props.app.state.isLoading} 
                     hidden={!me.id || !this.props.app.state.isPrivileged}>
-                    <span className='fa fa-glass'/> 
+                    <span className='fa fa-users'/> 
                     Add a social event
                 </Button>
                 <Button color='primary' onClick={revokePrivileges} hidden={!this.props.app.state.isPrivileged} >
+                    <span className='fa fa-ban'/> 
                     Revoke Privileges
                 </Button>
                 {this.props.children}

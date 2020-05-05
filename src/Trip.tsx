@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { Badge, Button, ButtonGroup } from 'reactstrap';
-import { BaseUrl, Spinner } from '.';
+import { BaseUrl } from '.';
 import { App } from './App';
+import { Spinner } from './Widgets';
 import { IEdit,  IParticipant, ITrip, TripState, IParticipantsInfo } from './Interfaces';
 import { GetDateString, AddDays, GetDisplayPriority, SafeJsonParse } from './Utilities';
 import { TripDetail } from './TripDetail';

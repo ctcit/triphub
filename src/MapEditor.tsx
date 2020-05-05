@@ -16,7 +16,7 @@ import classnames from 'classnames';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import * as Popper from 'popper.js';
 import ReactResizeDetector from 'react-resize-detector';
-import { Spinner } from 'src';
+import { Spinner } from './Widgets';
 
 type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 type ArchivedRoutePolygon = L.Polygon & {archivedRoute: { id: string }};

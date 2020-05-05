@@ -5,7 +5,7 @@ import { Component } from 'react';
 import * as React from 'react';
 import { App } from './App';
 import { Button } from 'reactstrap';
-import { BaseUrl, Spinner } from '.';
+import { BaseUrl } from '.';
 import { ITrip, TripState } from './Interfaces';
 import { GetDate, GetLength } from './Utilities';
 import './index.css';
@@ -13,6 +13,7 @@ import { Expandable } from './Expandable';
 import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
+import { Spinner } from './Widgets';
 
 class TripsLine extends Component<{
     owner: TripsGroup,

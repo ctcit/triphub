@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'font-awesome/css/font-awesome.min.css';
 import { Component } from 'react';
 import * as React from 'react';
-import { BaseOpt, BaseUrl, Spinner } from '.';
+import { BaseOpt, BaseUrl } from '.';
 import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant, IHoliday, IArchivedRoute } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
@@ -10,6 +10,7 @@ import { Calendar } from './Calendar';
 import { TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
 import { Newsletter } from './Newsletter';
+import { Spinner } from './Widgets';
 
 export class App extends Component<{
     },{

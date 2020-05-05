@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Button, Form, Row, Col } from 'reactstrap';
 import { Component } from 'react';
 import { IMember,  IParticipant, IValidation, IParticipantsInfo } from './Interfaces';
-import { Spinner } from '.';
+import { Spinner } from './Widgets';
 import { Trip } from './Trip';
 import { App } from './App';
 import { Expandable } from './Expandable';

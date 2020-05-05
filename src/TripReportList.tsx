@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import { Component } from 'react';
-import { Spinner, DbApiURL, BaseUrl  } from '.';
+import { DbApiURL, BaseUrl  } from '.';
 import { App } from './App';
 import { ITripReport, INewsletterTripReport } from './Interfaces';
 import './index.css';
@@ -36,7 +36,6 @@ export class TripReportList extends Component<{
 
 
     public componentDidMount() {
-        this.props.app.setStatus(['Loading ', Spinner])
         this.props.app.apiCall('GET', DbApiURL + "/recenttripreports/99999/90")
         .then((tripReports : ITripReport[]) => {
             this.props.app.apiCall('GET', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports")

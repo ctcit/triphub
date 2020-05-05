@@ -4,7 +4,7 @@ import { Component } from 'react';
 import * as React from 'react';
 import { Badge, FormGroup, Input, FormText, Row } from 'reactstrap';
 import './index.css';
-import { Spinner } from '.';
+import { Spinner } from './Widgets';
 import Textarea from 'react-textarea-autosize';
 import Switch from "react-switch";
 import { InputType } from 'reactstrap/lib/Input';

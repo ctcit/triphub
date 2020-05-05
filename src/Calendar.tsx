@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { App } from './App';
-import { Spinner, BaseUrl } from '.';
+import { BaseUrl } from '.';
 import { ITrip, TripState } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile } from './Utilities';
 import Button from 'reactstrap/lib/Button';
@@ -9,6 +9,7 @@ import ButtonGroup from 'reactstrap/lib/ButtonGroup';
 import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
 import Badge from 'reactstrap/lib/Badge';
+import { Spinner } from './Widgets';
 
 interface ICalendarItem {
     id: number

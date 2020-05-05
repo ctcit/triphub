@@ -417,4 +417,15 @@ a.newsletter-volume-list-link:hover {
   border-radius: 5px;
 }
 
+.full-width-loading-wrapper
+{
+  text-align: center;
+}
+
+.full-width-loading
+{
+  display: inline-block;
+  padding: 0 30px;
+}
+
 

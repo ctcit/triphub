@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Form, Button, Badge } from 'reactstrap';
+import { Form, Button } from 'reactstrap';
 import { InputControl } from './Control';
-import { Spinner, BaseUrl, NewsletterGenerateUrl } from '.';
+import { BaseUrl, NewsletterGenerateUrl } from '.';
 import { App } from './App';
 import { INewsletter, IValidation } from './Interfaces';
 import './index.css';
@@ -11,6 +11,7 @@ import { TriphubNavbar } from './TriphubNavBar';
 import { GetDateString, IsValidDateString, GetClosestWednesday } from './Utilities';
 import { TripReportList } from './TripReportList';
 import { NoticeList } from './NoticeList';
+import { FullWidthLoading, Spinner } from './Widgets';
 
 
 export class Newsletter extends Component<{
@@ -66,7 +67,7 @@ export class Newsletter extends Component<{
             }
             else {
                 this.loadNewsletter(newsletters[0]);
-                // this.props.app.setStatus('Loaded Trip', 3000)
+                this.props.app.setStatus('Loaded', 3000)
             }
         })
             
@@ -99,14 +100,17 @@ export class Newsletter extends Component<{
             'onGetValidationMessage': onGetValidationMessage
         }
 
+        const {newsletter, isLoading, isNew} = this.state
+        const app = this.app
+
         return [
-            <TriphubNavbar key='triphubnavbar' app={this.props.app}/>,
+            <TriphubNavbar key='triphubnavbar' app={app}/>,
             <h1 key="title">Manage Newsletter</h1>,
-            this.state.isNew &&
+            isNew &&
                 <div><p>No current newsletter, please create a new one..</p></div>,
-            this.state.isLoading &&
-                <Badge color='success'>{Spinner}></Badge>,
-            !this.state.isLoading &&
+            isLoading &&
+                <FullWidthLoading />,
+            !isLoading &&
                 <Form key='form'>
                     <InputControl id='volume' label='Volume' type='number' {...common}/>
                     <InputControl id='number' label='Number' type='number' {...common}/>
@@ -115,13 +119,13 @@ export class Newsletter extends Component<{
                     <InputControl id='nextdeadline' label='Next Deadline' type='date' {...common}/>
                 </Form>
                 ,
-            this.state.isNew &&
-                <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!this.state.isLoading}>
+            isNew &&
+                <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!isLoading}>
                     Save
                 </Button>,
-            !this.state.isNew &&
+            !isNew &&
                 <div key="details">
-                    <Button key="generate" color='primary' onClick={this.generate} visible={!this.state.isLoading}>
+                    <Button key="generate" color='primary' onClick={this.generate} visible={!isLoading}>
                         Generate
                     </Button>
                     <h2>Trips & Socials</h2>
@@ -129,10 +133,10 @@ export class Newsletter extends Component<{
                        open by the newsletter date will automatically be included.</p>
 
                     <h2>Trip Reports</h2>
-                    <TripReportList app={this.app} newsletterId={this.state.newsletter.id}/>
+                    <TripReportList app={app} newsletterId={newsletter.id}/>
 
                     <h2>Notices</h2>
-                    <NoticeList app={this.app}/>
+                    <NoticeList app={app}/>
                 </div>
         ]
     }
@@ -158,15 +162,19 @@ export class Newsletter extends Component<{
             const may:number = 5;
             const lastAnniversaryDate : Date = (now.getMonth() >= may) ? new Date(now.getFullYear(), may) : new Date(now.getFullYear()-1, may);
 
-            // The next deadline should be the thursday before the clubnight of the next newsletter
-            // which is always 6 days before the club night
             const nextNewsletterDate:Date = new Date(newsletterDate)
             nextNewsletterDate.setMonth(newsletterDate.getMonth()+1)
             const nextNewsletterClubNight:Date = GetClosestWednesday(nextNewsletterDate);
+            // The next deadline should be the thursday before the clubnight of the next newsletter
+            // which is always 6 days before the club night
             const nextDeadline:Date = new Date(nextNewsletterClubNight)
             // According to https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/setDate
             // passing a negative number to setDate decrements the month accordingly (which we want)
             nextDeadline.setDate(nextNewsletterClubNight.getDate() - 6)
+
+            // Club nights are on Wednesdays
+            const closestClubNight:Date = new Date(newsletterDate)
+            closestClubNight.setDate(newsletterDate.getDate() + (3 - (newsletterDate.getDay()%7)))
 
             // Determine volume & number
             let nextVolume : number = 0;
@@ -192,25 +200,18 @@ export class Newsletter extends Component<{
                 nextNumber = 1
             }
 
-            // Club nights are on Wednesdays
-            const closestClubNight:Date = new Date(newsletterDate)
-            closestClubNight.setDate(newsletterDate.getDate() + (3 - (newsletterDate.getDay()%7)))
-
-            // next deadline should be the thursday before the closestClubNight
-
             this.newNesletter = {
                 id: -1,
                 volume: nextVolume,
                 number: nextNumber,
                 date: GetDateString(newsletterDate),
-                // PENDING
                 issueDate: GetDateString(closestClubNight),
                 nextdeadline: GetDateString(nextDeadline),
                 // PENDING - make API force isCurrent=false
                 isCurrent: false,
             }
             this.setState({newsletter: this.newNesletter, isLoading: false})
-            // PENDING - loading state
+            this.props.app.setStatus('Loaded', 3000)
         })
     }
 
@@ -223,24 +224,24 @@ export class Newsletter extends Component<{
 
         this.setState({isLoading: true})
 
-        this.saveNewsletter(newsletter)
-            .then( (newsletters: INewsletter[]) => {
-                if (newsletters !== null && newsletters.length > 0)
-                {
-                    const savedNewsletter:INewsletter = newsletters[0]
-                    console.log("Saved newsletter, id="+savedNewsletter.id)
-                    this.props.app.apiCall('POST', BaseUrl + '/newsletters/'+savedNewsletter.id+'/current/')
-                    .then( () => {
-                        console.log("Succesfully set as current")
-                        this.setState({isNew: false})
-                        this.loadNewsletter(newsletters[0]);
-                    })
-                }
-                else {
-                    // PENDING - Flag failure somehow
-                    console.log("Failed to save")
-                }
-            })
+        this.app.apiCall('POST', BaseUrl + '/newsletters/', newsletter, false)
+        .then( (newsletters: INewsletter[]) => {
+            if (newsletters !== null && newsletters.length > 0)
+            {
+                const savedNewsletter:INewsletter = newsletters[0]
+                console.log("Saved newsletter, id="+savedNewsletter.id)
+                this.props.app.apiCall('POST', BaseUrl + '/newsletters/'+savedNewsletter.id+'/current/')
+                .then( () => {
+                    console.log("Succesfully set as current")
+                    this.setState({isNew: false})
+                    this.loadNewsletter(newsletters[0]);
+                })
+            }
+            else {
+                // PENDING - Flag failure somehow
+                console.log("Failed to save")
+            }
+        })
     }
 
     private generate() {

@@ -6,7 +6,7 @@ import { Trip } from './Trip';
 import { IValidation } from './Interfaces';
 import { GetFullDate } from './Utilities';
 import { Col, FormGroup, Label, Button, Form, Row  } from 'reactstrap';
-import { Spinner } from '.';
+import { Spinner } from './Widgets';
 
 export class Email extends Component<{
     owner: Trip

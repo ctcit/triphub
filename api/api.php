@@ -355,7 +355,6 @@ function TableFromEntity($entity) {
 }
 
 function AccessLevel($con, $accesslevel) {
-    return 2307;
     if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
         $member = GetLogonDetails($con,'1=1',$accesslevel != "Unsecured");
     } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {

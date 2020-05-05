@@ -13,7 +13,6 @@ import registerServiceWorker from './registerServiceWorker';
 export const BaseUrl = 'https://ctc.org.nz/triphub.dev/api/api.php'
 export const DbApiURL = 'http://ctc.org.nz/db/index.php/rest'
 export const BaseOpt = { 'Accept': 'application/json'}
-export const Spinner = <span className='fa fa-spinner fa-spin' key='spinner'/>
 export const NewsletterGenerateUrl = '/newsletter/generate.php?expand=newsletter.odt'
 
 ReactDOM.render(<App/>, document.getElementById('root'))

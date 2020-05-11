@@ -39,7 +39,11 @@ function GetLogonDetails($con,$roleclause="1=1",$dieonfail=TRUE)
 }
 
 function SqlVal($con,$value) {
-    return $value === null ? "null" : "'".mysqli_real_escape_string($con,$value)."'";
+    if ( $value === null ) {
+        return "null";
+    } else {
+        return $value === false ? "'0'" : "'".mysqli_real_escape_string($con,$value)."'";
+    }
 }
 
 function SqlResultArray($con,$sql,$keycol='',$keyupper=false)

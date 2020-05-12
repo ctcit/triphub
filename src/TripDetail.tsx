@@ -13,11 +13,11 @@ import { BaseUrl } from 'src';
 export class TripDetail extends Component<{
         owner: Trip,
         app: App,
-        isLoading: boolean
+        isLoading: boolean,
+        forceValidation?: boolean,
     },{
         editMap: boolean,
         editMaps: boolean,
-        isSocialEvent: boolean
     }> {
 
       public href?: string
@@ -31,7 +31,6 @@ export class TripDetail extends Component<{
         this.state = {
             editMap:false, 
             editMaps:false,
-            isSocialEvent: false
         }
         this.href = this.props.owner.props.href
         this.app = this.props.app
@@ -49,21 +48,32 @@ export class TripDetail extends Component<{
         });
     }
 
-    public get(id: string) : any{
+    public get(id: string) : any {
         return this.props.owner.state.trip[id]
     }
 
     public set(id: string, val: any) : void {
-        this.props.owner.setState({ trip: {...this.props.owner.state.trip, [id]: val }})
+        // Use an update function rather than setting the value directly,
+        // as setState is not guaranteed to execute immediately, so passing
+        // the current value of state here leads to data loss if two sets get bunched
+        this.props.owner.setState( (state) => {
+            return {trip: {...state.trip, [id]: val}}
+         })
     }
 
     public saveTrip(body: any): Promise<void> {
-        return this.app.apiCall('POST', this.href as string, body, true);
+        if (this.href !== undefined) {
+            return this.app.apiCall('POST', this.href as string, body, true);
+        }
+        else {
+            return Promise.resolve()
+        }
     }
 
     public render(){
         const trip: ITrip = this.props.owner.state.trip;
         const validations: IValidation[] = this.app.validateTrip(this.props.owner.state.trip);
+        const isSocial = trip.isSocial
 
         // TODO Move to service
         const getArchivedRoute = (archivedRouteId: string): Promise<IArchivedRoute | undefined> =>  {
@@ -88,41 +98,66 @@ export class TripDetail extends Component<{
             return found ? found.message : null;
         }
 
+        const onGetInverted = (id: string): any => {
+            return !this.get(id);
+        }
+        const onSaveInverted = (id: string, value: any): Promise<void> => {
+            this.set(id, !value);
+            const body = {};
+            body[id] = !value;
+            return this.saveTrip(body);
+        }
+
         const common = {
             readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
             isLoading: this.props.isLoading,
             owner: this,
+            forceValidation: this.props.forceValidation,
             'onGet': onGet,
             'onSave': onSave,
             'onGetValidationMessage': onGetValidationMessage
         }
 
+        const commonInverted = {...common, 'onGet': onGetInverted, 'onSave': onSaveInverted }
+
         return [
-            <Form key='detail'>
+            <Form key='detail' className="form">
                 <Row noGutters={true}>
                     <Col>
                         <InputControl id='title' label='Title' type='text' {...common}/>
                     </Col>
                 </Row>
 
-                <Row noGutters={true}>
+                <Row noGutters={true} hidden={isSocial}>
                     <Col md={3}>
-                        <InputControl id='openDate' label='Open Date' type='date' {...common}/>
+                        <InputControl id='openDate' label='Open Date' type='date' helpText='When sign-up opens' {...common}/>
                     </Col>
                     <Col md={3}>
-                        <InputControl id='closeDate' label='Close Date' type='date' {...common}/>
+                        <InputControl id='closeDate' label='Close Date' type='date' helpText='When sign-up closes' {...common}/>
                     </Col>
                     <Col md={3}>
                         <InputControl id='tripDate' label='Trip Date' type='date' {...common}/>
                     </Col>
                 </Row>
 
-                <Row noGutters={true}>
-                    <Col md={2}>
-                        <SwitchControl id='isSocial' label='Social event' {...common}/>
+                <Row noGutters={true} hidden={!isSocial}>
+                    <Col md={3}>
+                        <InputControl id='tripDate' label='Social Date' type='date' {...common}/>
                     </Col>
+                </Row>
+
+                <Row noGutters={true}hidden={!trip.isSocial} >
                     <Col md={2}>
-                        <SwitchControl id='isNoSignup' label='No sign up list' hidden={!trip.isSocial} {...common}/>
+                        <SwitchControl id='isNoSignup' label='Sign up list' {...commonInverted}/>
+                    </Col>
+                </Row>
+
+                <Row noGutters={true} hidden={!isSocial || trip.isNoSignup}>
+                    <Col md={3}>
+                        <InputControl id='openDate' label='Open Date' type='date' helpText='When sign-up opens' {...common}/>
+                    </Col>
+                    <Col md={3}>
+                        <InputControl id='closeDate' label='Close Date' type='date' helpText='When sign-up closes' {...common}/>
                     </Col>
                 </Row>
 
@@ -134,19 +169,23 @@ export class TripDetail extends Component<{
 
                 <Row noGutters={true}>
                     <Col>
-                        <InputControl id='departurePoint' label='Departure Point' type='text' list='departure_point_list' {...common}/>
+                        <InputControl id='departurePoint' label={isSocial ? 'Location' : 'Departure Point'} type='text'
+                            list={isSocial ? 'social_location_list' : 'departure_point_list'} {...common}/>
                     </Col>
                 </Row>
 
                 <Row noGutters={true}>
                     <Col>
-                        <InputControl id='departureDetails' label='Departure Details' type='text' {...common}/>
+                        <InputControl hidden={isSocial} id='departureDetails' label='Departure Details' type='text'
+                            helpText='Time, any special arrangements' {...common}/>
+                        <InputControl hidden={!isSocial} id='departureDetails' label='Time' type='text' helpText='Time, any special arrangements' {...common}/>
                     </Col>
                 </Row>
 
                 <Row noGutters={true}>
                     <Col md={3}>
-                        <InputControl id='cost' label='Cost' type='text' {...common}/>
+                        <InputControl hidden={isSocial} id='cost' label='Cost' type='text' helpText='Estimated cost, including transport, huts etc' {...common}/>
+                        <InputControl hidden={!isSocial} id='cost' label='Cost' type='text' helpText='Leave blank for free events' {...common}/>
                     </Col>
                     <Col md={3}>
                         <InputControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
@@ -154,11 +193,12 @@ export class TripDetail extends Component<{
                 </Row>
 
                 <Row noGutters={true}>
-                <Col md={3}>
+                    <Col md={3}>
                         <SwitchControl id='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common}/>
                     </Col>
                     <Col md={3}>
-                        <InputControl id='maxParticipants' label='Maximum trampers' type='number' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
+                        <InputControl id='maxParticipants' label={isSocial ? 'Maximum Atendees' : 'Maximum trampers'}
+                          type='number' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
                     </Col>
                 </Row>
 
@@ -170,7 +210,8 @@ export class TripDetail extends Component<{
 
                 <Row noGutters={true}>
                     <Col>
-                        <TextAreaInputControl id='logisticnfo' label='Logistic Information' {...common}/>
+                        <TextAreaInputControl id='logisticnfo' label='Logistic Information'
+                            helpText='Any additional information related to travel, accomodation etc' {...common}/>
                     </Col>
                 </Row>
     
@@ -190,13 +231,17 @@ export class TripDetail extends Component<{
             </Form>,
             <datalist key='grade_list' id='grade_list'>
                 <option value='Easy' />
+                <option value='Easy/Moderate' />
                 <option value='Moderate' />
                 <option value='Moderate/Hard' />
                 <option value='Hard' />
             </datalist>,
             <datalist key='departure_point_list' id='departure_point_list'>
                 <option value='Z Papanui' />
-                <option value='Caltex Russley Road' />
+                <option value='Z (formerly Caltex) Russley' />
+            </datalist>,
+            <datalist key='social_location_list' id='social_location_list'>
+                <option value='Club Rooms (110 Walthan Road)' />
             </datalist>
     ]
     }

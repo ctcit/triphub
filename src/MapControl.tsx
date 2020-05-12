@@ -162,7 +162,7 @@ export class MapControl extends Component<{
                     </Col>
                 </Row>
                 <Row>
-                    <Col sm={3}>
+                    <Col sm={4}>
                         <FormGroup row={true} key='mapeditor'>
                             <Button onClick={onEdit} hidden={this.props.readOnly}>
                                 <span className='fa fa-map'/>

@@ -24,7 +24,7 @@ export class TriphubNavbar extends Component<{
         const me = this.props.app.getMe()
 
         return (
-            <Navbar color='light' light={true} expand='md'>
+            <Navbar color='white' light={true} expand='md'>
                 <Button color='primary' onClick={alltrips} disabled={this.props.app.state.isLoading}>
                     <span className='fa fa-bars'/> 
                     All trips

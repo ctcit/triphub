@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Badge, Button, ButtonGroup } from 'reactstrap';
+import { Badge, Button } from 'reactstrap';
 import { BaseUrl } from '.';
 import { App } from './App';
 import { Spinner } from './Widgets';
@@ -12,6 +12,7 @@ import { History } from './History';
 import { Expandable } from './Expandable';
 import { Email } from './Email';
 import { TripPrint } from './TripPrint';
+import { TripHubPill } from './Widgets';
 import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
@@ -32,7 +33,8 @@ export class Trip extends Component<{
     editHeartbeatId?: any,
     participants: IParticipant[],
     isLoading: boolean,
-    isSaving: boolean
+    isSaving: boolean,
+    showValidationMessage: boolean,
 }> {
 
       public suggestedTrip: {trip: ITrip, participants: IParticipant[]};
@@ -48,6 +50,7 @@ export class Trip extends Component<{
             trip: {id:0} as ITrip,
             isLoading: false,
             isSaving: true,
+            showValidationMessage: false,
         }
         this.requeryParticipants = this.requeryParticipants.bind(this)
         this.startNewEvent = this.startNewEvent.bind(this) 
@@ -134,10 +137,10 @@ export class Trip extends Component<{
                 emergencyContactName: '', emergencyContactPhone: ''}
     }
 
-    public signMeUpTramper() : IParticipant {
+    public signMeUpTramper(isLeader: boolean = false) : IParticipant {
         const me = this.props.app.getMe()
         return {...this.blankTramper(), 
-                memberId: me.id, name: me.name, email: me.email, phone: me.phone, 
+                memberId: me.id, name: me.name, email: me.email, phone: me.phone, isLeader,
                 emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone}
     }
 
@@ -176,7 +179,7 @@ export class Trip extends Component<{
                 tripState: this.props.isNewSocial ? TripState.OpenTrip : TripState.SuggestedTrip
             },
             participants: [
-                this.signMeUpTramper()
+                this.signMeUpTramper(true)
             ],
         }
         this.setState(this.suggestedTrip)
@@ -185,12 +188,19 @@ export class Trip extends Component<{
     public saveSuggestedTrip(){
         const trip = this.state.trip
         const participants = this.state.participants
+        const tripWarnings = this.props.app.validateTrip(this.state.trip).filter(i => !i.ok);
 
-        this.props.app.apiCall('POST',BaseUrl + '/trips',trip)
-            .then(data => { 
-                    this.props.app.apiCall('POST',data.href + '/participants',participants[0])
-                        .then(() => this.props.app.setPath('/'))
-                })
+        if (tripWarnings.length > 0) {
+            this.setState({showValidationMessage: true})
+        }
+        else
+        {
+            this.props.app.apiCall('POST',BaseUrl + '/trips',trip)
+                .then(data => { 
+                        this.props.app.apiCall('POST',data.href + '/participants',participants[0])
+                            .then(() => this.props.app.setPath('/'))
+                    })
+            }
         }
 
     public cancelSuggestedTrip(){
@@ -244,10 +254,10 @@ export class Trip extends Component<{
         const isNew = this.props.isNew;
         const history = () => <History key={'History' + trip.id} owner={this} app={this.props.app}/>
         const info = this.getParticipantsInfo();
-        const tripWarnings = app.validateTrip(this.state.trip).filter(i => !i.ok);
-        const tripWarning = tripWarnings.length && !isLoading
-                                    ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={tripWarnings[0].message} className='warning-icon'/> 
-                                    : null
+        const tripWarnings = this.props.app.validateTrip(this.state.trip).filter(i => !i.ok);
+        // const tripWarning = tripWarnings.length && !isLoading
+        //                             ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={tripWarnings[0].message} className='warning-icon'/> 
+        //                             : null
         const participantWarnings = info.moveable.map(p => app.validateParticipant(p).filter(i => !i.ok)).filter(vm => vm.length)
         const participantWarning = participantWarnings.length && !isLoading
                                     ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0][0].message} className='warning-icon'/> 
@@ -277,18 +287,6 @@ export class Trip extends Component<{
                     <span key='unapprovetripicon' className='fa fa-thumbs-o-down'/> 
                     Remove Approval
                 </Button>
-                <ButtonGroup hidden={isLoading || !isNew}>
-                    <Button color='primary' disabled={true}>
-                        <span key='suggesttriplabelicon' className='fa fa-lightbulb-o'/> 
-                        Suggest a trip:
-                    </Button>
-                    <Button color='primary' onClick={this.saveSuggestedTrip}>
-                        Save
-                    </Button>
-                    <Button color='primary' onClick={this.cancelSuggestedTrip}>
-                        Cancel
-                    </Button>
-                </ButtonGroup>
             </TriphubNavbar>,
             <div key='tripstatus'>
                 {this.state.editList
@@ -300,21 +298,30 @@ export class Trip extends Component<{
                         </Badge>
                     </ToolTipIcon>)}
                 {trip.id <= 0
-                    ? <Badge pill={true}>New trip</Badge>
+                    ? <TripHubPill>New trip - not saved!</TripHubPill>
                     : trip.tripState === TripState.DeletedTrip 
-                    ? <Badge pill={true}>This trip has been deleted</Badge>
+                    ? <TripHubPill>This trip has been deleted</TripHubPill>
                     : trip.tripState === TripState.SuggestedTrip && !trip.isApproved
-                    ? <Badge pill={true}>This trip has has only been suggested, and not yet approved</Badge>
-                    : trip.tripState === TripState.SuggestedTrip && trip.isApproved
-                    ? <Badge pill={true}>This trip has has been suggested, and is approved</Badge>
+                    ? <TripHubPill>This trip has has only been suggested, and not yet approved</TripHubPill>
                     : !trip.isOpen
-                    ? <Badge pill={true}>This trip is closed, please contact the leader</Badge>
+                    ? <TripHubPill>This trip is closed, please contact the leader</TripHubPill>
                     : null}
             </div>,
             <Expandable key='detail' id='detail' 
-                        title={[this.state.trip.title, tripWarning, <span key='icon' className='fa fa-map-marker section-icon'/>]} level={2} expanded={true}>  
-                <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app} isLoading={isLoading} />
+                        title={[this.state.trip.title, <span key='icon' className='fa fa-map-marker section-icon'/>]} level={2} expanded={true}>  
+                <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app} isLoading={isLoading} forceValidation={this.state.showValidationMessage}/>
             </Expandable>,
+            <div hidden={isLoading || !isNew} key='saveCancel' className="py-2">
+                <Button color='primary' onClick={this.saveSuggestedTrip} className="px-1">
+                    Save
+                </Button>
+                <Button color='primary' onClick={this.cancelSuggestedTrip} className="px-1">
+                    Cancel
+                </Button>
+            </div>,
+            <div className="alert alert-danger" role="alert" hidden={!this.state.showValidationMessage || tripWarnings.length === 0} key='validation'>
+                Some trip details are missing or incorrect. Please correct before saving.
+            </div>,
             this.state.trip.isSocial && this.state.trip.isNoSignup ? null :
             <Expandable key='participants' id='participants' 
                         title={['Participants', participantWarning, participantCount, <span key='icon' className='fa fa-user section-icon'/>]} 

@@ -4,6 +4,10 @@ body {
   font-family: sans-serif;
 }
 
+#root {
+  max-width: 1100px
+}
+
 td>span.fa,
 h3>span>button,
 h4>span>button,
@@ -26,12 +30,36 @@ table.changehistory{
   margin-left: 4em
 }
 
+.triphub-navbar {
+  color: whit;
+}
+
+.triphub-form-help {
+  color: seagreen;
+  font-style: italic;
+}
+
+.pill {
+  font-size: 0.85rem;
+}
+
 .centered {
   text-align: center
 }
 
+/*
+.triphub-input {
+  max-width: 850px;
+}
+*/
+
+.textarea
+{
+  min-height: 80px;
+}
+
 .form-group {
-  margin-left: 2em
+  margin-left: 2em;
 }
 
 .TripGroup {

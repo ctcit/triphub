@@ -198,7 +198,7 @@ export class TripParticipant extends Component<{
                  onDragOver={onDragOver} onDragStart={onDragStart} draggable={!participant.isLeader}>
                 <Expandable title={title} id={`${participant.id}`} level={4} expanded={participant.id === -1} 
                             buttons={buttons.filter(b => b)} showMenu={participant.showMenu}>
-                    <Form key='form' className='indentedparticipants'>
+                    <Form key='form' className='indentedparticipants form'>
 
                         <Row noGutters={true}>
                             <Col md={3}>

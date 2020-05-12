@@ -209,7 +209,7 @@ export class App extends Component<{
                 <Calendar key='calendar' app={this}/> :
 
             this.state.path === "/newtrip" ?
-                <Trip key='newtrip' app={this} isNew={true} isNewSocial={true}/> :
+                <Trip key='newtrip' app={this} isNew={true} isNewSocial={false}/> :
 
             this.state.path === "/newsocial" ?
                 <Trip key='newsocial' app={this} isNew={true} isNewSocial={true}/> :

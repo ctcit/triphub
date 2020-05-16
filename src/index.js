@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { Button, ButtonGroup, Badge, Navbar, Collapse, Fade, Input, Form, FormGroup, Label, Col, Tooltip  } from 'reactstrap';
-import registerServiceWorker from './registerServiceWorker';
+// import registerServiceWorker from './registerServiceWorker';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
 import autosize from 'autosize';
@@ -687,4 +687,4 @@ class TripsController extends Component {
 }
 
 ReactDOM.render(<TripsController/>, document.getElementById('root'))
-registerServiceWorker()
+// registerServiceWorker()

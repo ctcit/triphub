@@ -4,7 +4,7 @@ import 'font-awesome/css/font-awesome.min.css';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
-import registerServiceWorker from './registerServiceWorker';
+// import registerServiceWorker from './registerServiceWorker';
 // import autosize from 'autosize';
 
 // use this chrome plugin to get this working if running locally using "npm start"
@@ -16,5 +16,5 @@ export const BaseOpt = { 'Accept': 'application/json'}
 export const NewsletterGenerateUrl = '/newsletter/generate.php?expand=newsletter.odt'
 
 ReactDOM.render(<App/>, document.getElementById('root'))
-registerServiceWorker()
+// registerServiceWorker()
 

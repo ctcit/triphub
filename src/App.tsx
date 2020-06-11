@@ -40,7 +40,7 @@ export class App extends Component<{
         super(props)
         this.state = {
             config: { editRefreshInSec: 10, printLines: 25, calendarStartOfWeek: 1 },
-            path: window.location.hash.replace('#',''),
+            path: window.top.location.hash.replace('#',''),
             isLoading: false,
             isLoadingConfig: true,
             isLoadingMaps: true,
@@ -61,9 +61,21 @@ export class App extends Component<{
         this.getMembers = this.getMembers.bind(this)
         this.getMe = this.getMe.bind(this)
         this.getMaps = this.getMaps.bind(this)
+        this.changePath = this.changePath.bind(this)
+        this.handlePopState = this.handlePopState.bind(this)
         this.trip = React.createRef()
         this.triplist = React.createRef()
         this.calendar = React.createRef()
+        window.top.onpopstate = this.handlePopState
+    }
+
+    public handlePopState(event: PopStateEvent) {
+        if (event.state !== null) {
+            this.changePath(event.state.path)
+        }
+        else {
+            this.changePath("/")
+        }
     }
 
     public setStatus(status : any, keepFor? : number) : void {
@@ -75,11 +87,10 @@ export class App extends Component<{
     }
 
     public setPath(path: string) : void {
-        window.location.hash = "#" + path
-        window.scrollTo(0,0)
-        this.setState({path})
+        window.top.history.pushState({path}, path, "#"+path);
+        this.changePath(path)
     }
-    
+
     public async apiCall(method:string, url:string, data?:any, isTripEdit?: boolean): Promise<any> {
         if (isTripEdit && this.trip.current && this.trip.current.state.editHref && !this.trip.current.state.editIsEdited) {
             this.trip.current.setState({editIsEdited: true})
@@ -223,4 +234,10 @@ export class App extends Component<{
                 <TripsList key='triplist' app={this}/>
         );
     }
+
+    private changePath(path: string) : void {
+        window.scrollTo(0,0)
+        this.setState({path})
+    }
+
 }

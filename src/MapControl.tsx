@@ -37,7 +37,7 @@ export class MapControl extends Component<{
 }>{
     // the leaflet map
     private initialHeight: number = 400;
-    private  initialWidth: number = 500;
+    private  initialWidth: number = 420;
     private minimap: L.Map;
 
     // NZ50 map sheets grid

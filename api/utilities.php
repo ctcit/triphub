@@ -13,29 +13,32 @@ $con = ($GLOBALS["___mysqli_ston"] = mysqli_connect($config->get("host"), $confi
 // N.B. userid here is the JOOMLA id NOT the db id. The common ground here is username.
 $username = array("id"=>$user->id,"name"=>$user->username);
 
-if (!$con)
+if (!$con) {
     die('mysql_connect failed');
+}
 $con->set_charset('utf8mb4');
 
-function GetLogonDetails($con,$roleclause="1=1",$dieonfail=TRUE)
+function GetLogonDetails($con, $dieonfail=TRUE)
 {
+	$memberRolesTable = ConfigServer::memberRolesTable;
     $user = JFactory::getUser();
     $userrow = SqlResultArray($con,
             "SELECT m.id
             ,       loginname as name
-            ,       coalesce(r.role,'') as role
+            ,       mr.role as role
             FROM ctc.members             m
-            LEFT JOIN ctc.members_roles  mr  on mr.memberid = m.id
-            LEFT JOIN ctc.roles          r   on r.id = mr.roleid
-            where loginname = ".SqlVal($con,$user->username)." and $roleclause");
+            LEFT JOIN $memberRolesTable  mr  on mr.memberId = m.id
+            where loginname = ".SqlVal($con,$user->username));
 
-    if ($dieonfail && count($userrow) == 0)
+    if ($dieonfail && count($userrow) == 0) {
         die("You are not logged on.");
+    }
 
-	if (count($userrow))
+    if (count($userrow)) {
         return $userrow[0];
-    else
+    } else {
         return array("id" => 0,"name"  => '',"role"  => '');
+    }
 }
 
 function SqlVal($con,$value) {
@@ -65,8 +68,7 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
             if ($row[$field->name] != null) {
                 if (preg_match('/^is[_A-Z]/',$field->name)) {
                     $row[$field->name] = $row[$field->name] == '1';
-                }
-                else {
+                } else {
                     switch ($field->type) {
                         case MYSQLI_TYPE_BIT:
                             $row[$field->name] = $row[$field->name] == '1';
@@ -87,12 +89,13 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
             }
         }
 
-        if ($keycol == '')
+        if ($keycol == '') {
             $rows []= $row;
-        else if ($keyupper)
+        } else if ($keyupper) {
             $rows[strtoupper($row[$keycol])] = $row;
-        else
+        } else {
             $rows[$row[$keycol]] = $row;
+        }
     }
     mysqli_free_result($cursor);
 

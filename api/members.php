@@ -1,28 +1,18 @@
 <?php
 
 function GetMembers($con, $userid, $id = 0) {
-	$editorRoles       = ConfigServer::editorRoles;
-	$newMemberRoles    = ConfigServer::newMemberRoles;
+	$newMembersRepView  = ConfigServer::newMembersRepView;
 	$membersTable      = ConfigServer::membersTable;
 	$membershipsTable  = ConfigServer::membershipsTable;
-	$rolesTable        = ConfigServer::rolesTable;
-	$memberrolesTable  = ConfigServer::memberrolesTable;
+	$memberRolesTable  = ConfigServer::memberRolesTable;
 	$tripsTable		   = ConfigServer::tripsTable;
 	$participantsTable = ConfigServer::participantsTable;
 	$where			   = $id === 0 ? "" : "WHERE id = $id";
 
 	if ($userid == 0)
-		return SqlResultArray($con,
-			"SELECT
-				m.id,
-				concat(trim(m.firstname),' ',trim(m.lastname)) as name,
-				r.role,
-				0 AS isMe,
-				1 AS isMember
-			FROM $membersTable      m
-			JOIN $memberrolesTable  mr ON mr.memberId = m.id
-			JOIN $rolesTable        r  ON r.id = mr.roleid
-			WHERE r.role IN ($newMemberRoles)");
+	{
+		return SqlResultArray($con, "SELECT * FROM $newMembersRepView");
+	}
 
 	return SqlResultArray($con,
 		"SELECT * 
@@ -37,15 +27,12 @@ function GetMembers($con, $userid, $id = 0) {
 					(CASE m.workphone WHEN '' THEN null ELSE m.workphone end)) as phone,
 				m.emergencyContactName,
 				m.emergencyContactPhone,
-				(SELECT r.role
-				 FROM	$memberrolesTable  mr
-				 JOIN 	$rolesTable        r   on r.id = mr.roleid and r.role in ($editorRoles) 
-				 WHERE  mr.memberId = m.id
-				 LIMIT 1) AS role,
+				mr.role AS role,
 				(CASE WHEN m.id = $userid THEN 1 ELSE 0 END) AS isMe,
 				1 AS isMember
 			FROM $membersTable             m
 			JOIN $membershipsTable         ms  on ms.id = m.membershipId
+			JOIN $memberRolesTable         mr  on mr.memberId = m.id
 			WHERE ms.statusAdmin = 'Active'
 			UNION
 			SELECT 
@@ -55,7 +42,7 @@ function GetMembers($con, $userid, $id = 0) {
 				p.phone,
 				p.emergencyContactName,
 				p.emergencyContactPhone,
-				null as role,
+				'NonMember' as role,
 				0 as isMe,
 				0 as isMember
 			FROM 

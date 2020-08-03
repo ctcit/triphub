@@ -1,7 +1,7 @@
 <?php
 
     define('_JEXEC', 1);
-    require_once( 'alastair.php' );
+    require_once( 'utilities.php' );
     require('config.php');
     require('trips.php');
     require('members.php');
@@ -72,29 +72,29 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
         case "GET members":
             // DESCRIPTION Gets members
             // OUTPUT Array of <a href='$basehref#members'>members</a>
-            return GetMembers($con, AccessLevel($con,"Unsecured"));
+            return GetMembers($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
 
         case "GET members/{memberId}":
             // DESCRIPTION Gets member
             // OUTPUT Single <a href='$basehref#members'>members</a>
-            return GetMembers($con, AccessLevel($con,"Unsecured"), $id);
+            return GetMembers($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $id);
 
         case "GET trips":
             // DESCRIPTION Gets all trips whose close date is after the current date less one week
             // OUTPUT Array of <a href='$basehref#trips'>trips</a> + tripState + leaders
-            return GetTrips($con, AccessLevel($con,"Unsecured"));
+            return GetTrips($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
         
         case "POST trips":
             // DESCRIPTION Creates a new trip
             // INPUT A <a href='$basehref#trips'>trip</a>
             // OUTPUT The new <a href='$basehref#trips'>trip</a>
             // INPUTENTITY trips
-            return ApiPost($con,AccessLevel($con,"Secured"),$table,$input,0);
+            return ApiPost($con,UserIdIfHasRoleOrDie($con,"TripLeader"),$table,$input,0);
             
         case "GET trips/{tripId}":
             // DESCRIPTION Gets detail for a given trip
             // OUTPUT <a href='$basehref#trips'>trips</a> + tripState + leaders + role + href
-            return GetTrips($con,AccessLevel($con,"Unsecured"),$id);
+            return GetTrips($con,UserIdIfHasRoleOrDie($con,"NonPrivileged"),$id);
         
         case "POST trips/{tripId}":
         case "PATCH trips/{tripId}":
@@ -102,18 +102,18 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$basehref#trips'>trips</a>
             // OUTPUT <a href='$basehref#trips'>trips</a>
             // INPUTENTITY trips
-            return ApiPatch($con,AccessLevel($con,"Secured"),$table,$id,$input,$id);
+            return ApiPatch($con,UserIdIfHasRoleOrDie($con,"TripLeader"),$table,$id,$input,$id);
 
         case "GET trips/{tripId}/participants":
             // DESCRIPTION Get participants for a given trip
             // OUTPUT Array of <a href='$basehref#participants'>participants</a> + href
-            AccessLevel($con,"Secured");
+            UserIdIfHasRoleOrDie($con,"Member");
             return SqlResultArray($con,"SELECT * FROM $subTable WHERE tripId=$id ORDER BY id");
 
         case "GET trips/{tripId}/html":
             // DESCRIPTION Get trip detail and participants as HTML
             // OUTPUT HTML
-            AccessLevel($con,"Secured");
+            UserIdIfHasRoleOrDie($con,"Member");
             return GetTripHtml($con,$id)['html'];
 
         case "POST trips/{tripId}/participants":
@@ -122,7 +122,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT <a href='$basehref#participants'>participants</a> + href
             // INPUTENTITY participants
             $input["tripId"] = $id;
-            return ApiPost($con,AccessLevel($con,"Secured"),$subTable,$input,$id);
+            return ApiPost($con,UserIdIfHasRoleOrDie($con,"Member"),$subTable,$input,$id);
 
         case "POST trips/{tripId}/edit":
             // DESCRIPTION Creates a new edit record for the given trip
@@ -130,7 +130,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Array of all current <a href='$basehref#edit'>edits</a> for trip. The first is the one just created.
             // INPUTENTITY edit
             $input["tripId"] = $id;
-            $input["userId"] = AccessLevel($con,"Unsecured");
+            $input["userId"] = UserIdIfHasRoleOrDie($con,"Member");
             ApiPost($con,$input["userId"],$subTable,$input,$id);
             DeleteTripEdits($con);
             return SqlResultArray($con,"SELECT * from $subTable WHERE tripId = $id ORDER BY id DESC");
@@ -138,6 +138,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
         case "GET trips/{tripId}/history":
             // DESCRIPTION Gets change history for a given trip
             // OUTPUT Array of <a href='$basehref#history'>history</a>
+            UserIdIfHasRoleOrDie($con,"Member");
             return SqlResultArray($con,"SELECT * FROM $subTable WHERE tripId=$id ORDER BY id");
             
         case "POST trips/{tripId}/email":
@@ -145,13 +146,15 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$basehref#subjectbody'>subject + body</a>
             // OUTPUT Confirmation string
             // INPUTENTITY subjectbody
-            SendEmail($con,$id,AccessLevel($con,"Secured"),$input['subject'],$input['body']);
+            UserIdIfHasRoleOrDie($con,"Member");
+            SendEmail($con,$id,UserIdIfHasRoleOrDie($con,"Secured"),$input['subject'],$input['body']);
             $input['result'] = "Email sent for trip $id";
             return $input;
     
         case "GET trips/{tripId}/participants/{participantId}":
             // DESCRIPTION Gets participants detail for a given trip
             // OUTPUT The <a href='$basehref#participants'>participant</a>
+            UserIdIfHasRoleOrDie($con,"Member");
             return SqlResultArray($con,"SELECT * FROM $subTable WHERE id=$subId ORDER BY id")[0];
         
         case "POST trips/{tripId}/participants/{participantId}":
@@ -160,7 +163,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT A <a href='$basehref#participants'>participant</a>
             // OUTPUT The updated <a href='$basehref#participants'>participant</a>
             // INPUTENTITY participants
-            return ApiPatch($con,AccessLevel($con,"Secured"),$subTable,$subId,$input,$id);
+            return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Member"),$subTable,$subId,$input,$id);
         
         case "POST trips/{tripId}/edit/{editId}":
         case "PATCH trips/{tripId}/edit/{editId}":
@@ -169,7 +172,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Array of <a href='$basehref#edit'>edit</a>
             // OUTPUT Returns all the current edits associated with the same trip
             // INPUTENTITY edit
-            ApiPatch($con,AccessLevel($con,"Unsecured"),$subTable,$subId,$input,$id);
+            ApiPatch($con,UserIdIfHasRoleOrDie($con,"Member"),$subTable,$subId,$input,$id);
             DeleteTripEdits($con);
             return SqlResultArray($con,"SELECT * from $subTable WHERE tripId = $id ORDER BY id DESC");
 
@@ -178,20 +181,21 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // DESCRIPTION Sets emergency contact details for member
             // OUTPUT Single <a href='$basehref#members'>member</a>
             // INPUTENTITY members
-            $userId = AccessLevel($con,"Secured");
+            $userId = UserIdIfHasRoleOrDie($con,"Member");
             ApiPatch($con,$userId,$subTable,$subId,$input,$id);
             return GetMembers($con, $userId, $subId);
 
         case "DELETE trips/{tripId}/edit/{editId}":
             // DESCRIPTION Deletes the given edit record
             // OUTPUT Confirmation string
-            AccessLevel($con,"Secured");
+            UserIdIfHasRoleOrDie($con,"Webmaster");
             SqlExecOrDie($con,"DELETE FROM $subTable WHERE id = $subId");
             return Array("Edit $subId deleted");
 
         case "POST trip/emails":
             // DESCRIPTION Sends any necessary emails
             // OUTPUT Array of trip indentification details for any trips that had emails send
+            UserIdIfHasRoleOrDie($con,"Member");
             return PostEmails($con);
 
         case "GET maps":
@@ -209,25 +213,25 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // DESCRIPTION Imports legacy trips, specify 'TRUNCATE' in json to truncate tables
             // OUTPUT Counts of trips and participants affected
             // INPUTENTITY json
-            AccessLevel($con,"Privileged");
+            UserIdIfHasRoleOrDie($con,"Webmaster");
             return ImportLegacyTrips($con, $input['json'] == 'TRUNCATE');
         
         case "GET newsletters":
             // DESCRIPTION Gets newsletters. Optional ?since=YYYY-MM-DD
             // OUTPUT Array of <a href='$baseHref#newsletters'>newsletters</a>
-            return GetNewsletters($con, AccessLevel($con,"Privileged"), 0, $query);
+            return GetNewsletters($con, UserIdIfHasRoleOrDie($con,"Admin"), 0, $query);
 
         case "GET newsletters/{newsletterId}":
             // DESCRIPTION Gets newsletter
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetNewsletters($con, AccessLevel($con,"Privileged"), $id);
+            return GetNewsletters($con, UserIdIfHasRoleOrDie($con,"Admin"), $id);
         
         case "POST newsletters":
             // DESCRIPTION Creates a new newsletter
             // INPUT A <a href='$baseHref#newsletters'>newsletter</a>
             // OUTPUT The new <a href='$baseHref#tripsnewsletters'>newsletter</a>
             // INPUTENTITY newsletters
-            return ApiPost($con, AccessLevel($con,"Privileged"),$table,$input);
+            return ApiPost($con, UserIdIfHasRoleOrDie($con,"Admin"),$table,$input);
 
         case "POST newsletters/{newsletterId}":
         case "PATCH newsletters/{newsletterId}":
@@ -235,39 +239,39 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$baseHref#newsletters'>newsletters</a>
             // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
-            return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input,0);
+            return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
 
         case "GET newsletters/current":
             // DESCRIPTION Gets current newsletter, if it exists
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetCurrentNewsletter($con, AccessLevel($con,"Privileged"));
+            return GetCurrentNewsletter($con, UserIdIfHasRoleOrDie($con,"Admin"));
 
         case "POST newsletters/{newsletterId}/current":
             // DESCRIPTION Sets the specified newsletter as current (this will unset any existing current newsletter)
             // OUTPUT Confirmation string
-            return SetCurrentNewsletter($con, AccessLevel($con,"Privileged"), $id);
+            return SetCurrentNewsletter($con, UserIdIfHasRoleOrDie($con,"Admin"), $id);
 
         case "GET newsletters/latest":
             // DESCRIPTION Gets most recent newsletter
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetLatestNewsletter($con, AccessLevel($con,"Privileged"));
+            return GetLatestNewsletter($con, UserIdIfHasRoleOrDie($con,"Admin"));
 
         case "GET newsletters/volumes":
             // DESCRIPTION Gets available volumes
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetNewsletterVolumes($con, AccessLevel($con,"Privileged"));
+            return GetNewsletterVolumes($con, UserIdIfHasRoleOrDie($con,"Admin"));
 
         case "GET newsletters/volumes/{volumeId}":
             // DESCRIPTION Gets all the newsletters of a specific volume
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
-            return GetNewsletterVolume($con, AccessLevel($con,"Privileged"), $subId);
+            return GetNewsletterVolume($con, UserIdIfHasRoleOrDie($con,"Admin"), $subId);
 
         case "GET newsletters/{newsletterId}/tripreports":
             // DESCRIPTION Get the list of trip reports for a given newsletter
             // INPUT <a href='$baseHref#newsletters/'>newsletters</a>
             // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
-            return GetNewsletterTripReports($con,AccessLevel($con,"Privileged"),$id);
+            return GetNewsletterTripReports($con,UserIdIfHasRoleOrDie($con,"Admin"),$id);
         
         case "POST newsletters/{newsletterId}/tripreports":
         case "PATCH newsletters/{newsletterId}/tripreports":
@@ -275,7 +279,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$baseHref#newsletters/'>newsletters</a>
             // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
-            return PatchNewsletterTripReports($con,AccessLevel($con,"Privileged"),$id,$input);
+            return PatchNewsletterTripReports($con,UserIdIfHasRoleOrDie($con,"Admin"),$id,$input);
 
         case "POST prettyprintjson":
             // DESCRIPTION Formats JSON
@@ -284,16 +288,18 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUTENTITY json
             return json_decode($input['json']);
 
+            /*
         case "GET logondetails":
             // DESCRIPTION Get logon details
-            // OUTPUT id, name and role of loghed on user
+            // OUTPUT id, name and role of logged on user
             return GetLogonDetails($con,'r.role in ('.ConfigServer::editorRoles.')',False);
+            */
 
         case "GET routes":
-            return GetRoutes($con, AccessLevel($con,"Unsecured"));
+            return GetRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
 
         case "GET routes/{routeId}":
-            return GetRoute($con, AccessLevel($con,"Unsecured"), $id);
+            return GetRoute($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $id);
 
         // case "PATCH routes/{routeId}":
         //     return UpdateRouteSummary($con, $userid, $id, $input);
@@ -301,30 +307,30 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
         case "GET notices":
             // DESCRIPTION Get newsletter notices. May specify a limit and offset as query paramenters
             // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
-            return GetNotices($con, AccessLevel($con,"Privileged"), 0, $query);
+            return GetNotices($con, UserIdIfHasRoleOrDie($con,"Admin"), 0, $query);
         
         case "GET notices/current":
             // DESCRIPTION Get newsletter notices where the expiry date is after the current
             //             newsletter date (if there is no current newsletter won't return anything).
             // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
-            return GetCurrentNotices($con, AccessLevel($con,"Privileged"), 0, $query);
+            return GetCurrentNotices($con, UserIdIfHasRoleOrDie($con,"Admin"), 0, $query);
         
         case "GET notices/expired":
             // DESCRIPTION Get expired newsletter notices. May specify a limit and offset as query paramenters
             // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
-            return GetExpiredNotices($con, AccessLevel($con,"Privileged"), 0, $query);
+            return GetExpiredNotices($con, UserIdIfHasRoleOrDie($con,"Admin"), 0, $query);
 
         case "GET notices/{noticeId}":
             // DESCRIPTION Gets notice
             // OUTPUT Single <a href='$baseHref#notices'>notice</a>
-            return GetNewsletters($con, AccessLevel($con,"Privileged"), $id);
+            return GetNewsletters($con, UserIdIfHasRoleOrDie($con,"Admin"), $id);
         
         case "POST notices":
             // DESCRIPTION Creates a new notice
             // INPUT A <a href='$baseHref#notices'>notice</a>
             // OUTPUT The new <a href='$baseHref#notices'>notice</a>
             // INPUTENTITY notices
-            return ApiPost($con, AccessLevel($con,"Privileged"),$table,$input);
+            return ApiPost($con, UserIdIfHasRoleOrDie($con,"Admin"),$table,$input);
 
         case "POST notices/{noticeId}":
         case "PATCH notices/{noticeId}":
@@ -332,7 +338,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$baseHref#notices'>notice</a>
             // OUTPUT <a href='$baseHref#notices'>notice</a>
             // INPUTENTITY notices
-            return ApiPatch($con,AccessLevel($con,"Privileged"),$table,$id,$input,0);
+            return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
 
         default:
             http_response_code(400);
@@ -354,27 +360,47 @@ function TableFromEntity($entity) {
     }
 }
 
-function AccessLevel($con, $accesslevel) {
+// Specify a required role. If the current user has a role equal to or more
+// privileged than that specified will return the user Id, otherwise will die
+// and return a HTTP error code.
+// Access levels are:
+// * NonPrivileged
+// * Member
+// * TripLeader
+// * Admin
+// * Webmaster
+function UserIdIfHasRoleOrDie($con, $requiredRole="NonPrivileged") {
     if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
-        $member = GetLogonDetails($con,'1=1',$accesslevel != "Unsecured");
+        // Not using an API key - get user logon details
+        $member = GetLogonDetails($con, false);
     } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {
-        if (ConfigServer::apiKeyUserId == 0 && $accesslevel != "Unsecured") {
-            http_response_code(401);
-            die("not logged on");
-        }
-        if ($accesslevel != "Privileged") {
-            return ConfigServer::apiKeyUserId;    
-        }
+        // Using an API key and it hasn't expired
         $member = GetMembers($con, ConfigServer::apiKeyUserId, ConfigServer::apiKeyUserId);
     } else {
+        // Using an API key but expired
         http_response_code(401);
-        die("api key expiry");
+        die("API key expired");
     }
 
-    if ($accesslevel == "Privileged" && $member['role'] == '')
+    $roles = array(
+        "NonPrivileged" => 0,
+        "Member" => 1,
+        "TripLeader" => 2,
+        "Admin" => 3,
+        "Webmaster" => 4
+    );
+
+    if (!array_key_exists($requiredRole, $roles)) {
+        die("Invalid role $requiredRole!");
+    }
+    $requiredRoleNum = $roles[$requiredRole];
+    $userRoleNum = $roles[$member['role']];
+    
+    if ( $userRoleNum < $requiredRoleNum )
     {
+        // User is not privilieged enough
         http_response_code(403);
-        die("You are not logged on as a priviledged user.");
+        die("You do not have permission to access this function ($userRoleNum, $requiredRoleNum)");
     }
         
     return $member['id'];
@@ -518,7 +544,7 @@ function ApiHelp($con,$basehref) {
     $entities = array();
     $constants = (new ReflectionClass("ConfigServer"))->getConstants();
     $filehandle = fopen("api.php", "r") or die("Unable to open file!");
-    $item = Array('security'=>'Unsecured');
+    $item = Array('security'=>'NonPrivileged');
 
     // Pares this file to extract enpoint information
     while (!feof($filehandle)) {
@@ -527,12 +553,12 @@ function ApiHelp($con,$basehref) {
             $item['entries'] []= array("method"=>$matches[1], "path"=>$matches[3]);
         else if (preg_match('/\/\/ (DESCRIPTION|INPUT|OUTPUT|INPUTENTITY) (.*)/',$line,$matches))
             $item[strtolower($matches[1])] .= "$matches[2]<br/>";
-        else if (preg_match('/AccessLevel\(\$con,"(.*?)"\)/',$line,$matches))
+        else if (preg_match('/UserIdIfHasRoleOrDie\(\$con,"(.*?)"\)/',$line,$matches))
             $item["security"] = "$matches[1]";
 
         if (preg_match('/return .*;/',$line,$matches) && array_key_exists('entries',$item)) {
             $content [] = $item;
-            $item = Array('security'=>'Unsecured');
+            $item = Array('security'=>'NonPrivileged');
         }
     }
     fclose($filehandle);

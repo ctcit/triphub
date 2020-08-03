@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Form, Row, Col } from 'reactstrap';
+import { Button, Form, Row, Col, Container } from 'reactstrap';
 import { Component } from 'react';
 import { IMember,  IParticipant, IValidation, IParticipantsInfo } from './Interfaces';
 import { Spinner } from './Widgets';
@@ -199,49 +199,51 @@ export class TripParticipant extends Component<{
                 <Expandable title={title} id={`${participant.id}`} level={4} expanded={participant.id === -1} 
                             buttons={buttons.filter(b => b)} showMenu={participant.showMenu}>
                     <Form key='form' className='indentedparticipants form'>
+                       <Container fluid={true}>
+    
+                            <Row>
+                                <Col sm={4}>
+                                    <InputControl id='name' label='Name' type='text' list='memberlist' {...common} /> 
+                                </Col>
+                                <Col sm={4}>
+                                    <InputControl id='email' label='Email' type='text' {...common}/>
+                                </Col>
+                                <Col sm={4}>
+                                    <InputControl id='phone' label='Phone' type='text' {...common}/>
+                                </Col>
+                            </Row>
 
-                        <Row noGutters={true}>
-                            <Col md={3}>
-                                <InputControl id='name' label='Name' type='text' list='memberlist' {...common} /> 
-                            </Col>
-                            <Col md={3}>
-                                <InputControl id='email' label='Email' type='text' {...common}/>
-                            </Col>
-                            <Col md={3}>
-                                <InputControl id='phone' label='Phone' type='text' {...common}/>
-                            </Col>
-                        </Row>
+                            <Row>
+                                <Col sm={4}>
+                                    <InputControl id='emergencyContactName' label='Emergency Contact Name' type='text' {...common}/>
+                                </Col>
+                                <Col sm={4}>
+                                    <InputControl id='emergencyContactPhone' label='Emergency Contact Phone' type='text' {...common}/>
+                                </Col>
+                            </Row>
 
-                        <Row noGutters={true}>
-                            <Col md={3}>
-                                <InputControl id='emergencyContactName' label='Emergency Contact Name' type='text' {...common}/>
-                            </Col>
-                            <Col md={3}>
-                                <InputControl id='emergencyContactPhone' label='Emergency Contact Phone' type='text' {...common}/>
-                            </Col>
-                        </Row>
-
-                        <Row>
-                            <Col md={2}>
-                                <SwitchControl id='isLeader' label='Leader' {...common}/>
-                            </Col>
-                            <Col md={2}>
-                                <SwitchControl id='isPlbProvider' label='Has PLB' {...common}/>
-                            </Col>
-                            <Col md={2}>
-                                <SwitchControl id='isVehicleProvider' label='Has Car' {...common}/>
-                            </Col>
-                            <Col md={3}>
-                                <InputControl id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} {...common}/>
-                            </Col>
-                        </Row>
-                        
-                        <Row>
-                            <Col>
-                                <TextAreaInputControl id='logisticInfo' label='Logistic Information' {...common}/>
-                            </Col>
-                        </Row>
-
+                            <Row>
+                                <Col sm={3}>
+                                    <SwitchControl id='isLeader' label='Leader' {...common}/>
+                                </Col>
+                                <Col sm={3}>
+                                    <SwitchControl id='isPlbProvider' label='Has PLB' {...common}/>
+                                </Col>
+                                <Col sm={3}>
+                                    <SwitchControl id='isVehicleProvider' label='Has Car' {...common}/>
+                                </Col>
+                                <Col sm={3}>
+                                    <InputControl id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} {...common}/>
+                                </Col>
+                            </Row>
+                            
+                            <Row>
+                                <Col>
+                                    <TextAreaInputControl id='logisticInfo' label='Logistic Information' {...common}/>
+                                </Col>
+                            </Row>
+ 
+                        </Container>
                     </Form>
                 </Expandable>
             </div>

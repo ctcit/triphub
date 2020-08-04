@@ -191,7 +191,7 @@ export class SwitchControl extends Component<{
         }                
         return  (
             <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
-                <Switch id={this.props.id} checked={value} onChange={onChange} className="react-switch" readOnly={this.props.readOnly} />
+                <Switch id={this.props.id} checked={value} onChange={onChange} className="react-switch" disabled={this.props.readOnly} />
             </ControlWrapper>
       )
     }

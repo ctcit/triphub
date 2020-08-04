@@ -109,7 +109,7 @@ export class TripDetail extends Component<{
         }
 
         const common = {
-            readOnly: trip.id !== -1 && !this.props.owner.isPrivileged(), 
+            readOnly: trip.id !== -1 && !this.props.owner.canEditTrip(), 
             isLoading: this.props.isLoading,
             owner: this,
             forceValidation: this.props.forceValidation,

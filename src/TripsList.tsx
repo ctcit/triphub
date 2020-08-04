@@ -15,6 +15,7 @@ import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
 import { Spinner } from './Widgets';
 import { SwitchControl } from './Control';
+import { Role } from './Interfaces';
 
 class TripsLine extends Component<{
     owner: TripsGroup,
@@ -29,7 +30,7 @@ class TripsLine extends Component<{
         this.props.owner.props.app.setPath('/trips/' + this.props.trip.id)
     }
 
-    public render(){
+    public render() {
         const app = this.props.owner.props.app
         const trip = this.props.trip
         const id = trip.id
@@ -55,6 +56,8 @@ class TripsLine extends Component<{
             return ''
         }
 
+        const myRole = this.props.owner.props.app.state.role 
+
         const tablerow = [
             <td key={'date' + id} onClick={this.onClick}>
                 {GetDate(trip.tripDate)}{extractWarnings(/date/)}
@@ -77,7 +80,8 @@ class TripsLine extends Component<{
             </td>,
             <td key={'approved' + id} hidden={trip.tripState !== TripState.SuggestedTrip} className='centered'>
                 <SwitchControl id='isApproved' label='' isLoading={false} onGetValidationMessage={onGetValidationMessage}
-                    readOnly={trip.id !== -1} onGet={onGetApproved} onSave={onSaveApproved} />
+                    readOnly={myRole < Role.Admin}
+                    onGet={onGetApproved} onSave={onSaveApproved} />
             </td>,
             <td key={'link' + id} className="">
                 {extractWarnings(/./)}
@@ -178,11 +182,17 @@ export class TripsList extends Component<{
 
     public render(){
         const groups = this.state.groups.filter((group:ITrip[]) => group.length)
+        const role : Role = this.props.app.state.role
+        const isAdmin = role >= Role.Admin
+        const isTripLeader = role >= Role.TripLeader
         return [
             <TriphubNavbar key='triphubNavbar' app={this.props.app}/>,
             groups
-                .filter((group:ITrip[]) => this.props.app.state.isPrivileged || 
-                                            (group[0].tripState !== TripState.SuggestedTrip && group[0].tripState !== TripState.DeletedTrip))
+                // Only Tripleaders+ can see suggested trips
+                // Only Admin+ can see deleted trips
+                .filter((group:ITrip[]) => ( (group[0].tripState !== TripState.SuggestedTrip && group[0].tripState !== TripState.DeletedTrip) ||
+                                             (group[0].tripState === TripState.SuggestedTrip && isTripLeader) ||
+                                             (group[0].tripState === TripState.DeletedTrip && isAdmin) ) )
                 .map((group:ITrip[],i) => 
                 <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripState} 
                             app={this.props.app} expanded={i <= 1}/>)

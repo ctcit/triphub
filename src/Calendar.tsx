@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import { App } from './App';
 import { BaseUrl } from '.';
-import { ITrip, TripState } from './Interfaces';
+import { ITrip, TripState, Role } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile } from './Utilities';
 import Button from 'reactstrap/lib/Button';
 import ButtonGroup from 'reactstrap/lib/ButtonGroup';
@@ -93,7 +93,7 @@ class CalendarWeek extends Component<{
                     slots.push(' ')
                     slots.push(
                         <Badge key={item.id} id={`badge${item.id}`} onDragStart={onDragStart} 
-                                draggable={this.props.calendar.props.app.state.isPrivileged}
+                                draggable={this.props.calendar.props.app.state.role >= Role.Admin}
                                 className={isSelected ? 'selected' : ''}>
                             {item.field !== 'tripDate' ? '' : <span onClick={onLink}>&gt;&gt;</span>}
                             <span onClick={onSelect}>{text}</span>

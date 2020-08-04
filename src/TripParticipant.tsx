@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button, Form, Row, Col, Container } from 'reactstrap';
 import { Component } from 'react';
-import { IMember,  IParticipant, IValidation, IParticipantsInfo } from './Interfaces';
+import { IMember,  IParticipant, IValidation, IParticipantsInfo, Role } from './Interfaces';
 import { Spinner } from './Widgets';
 import { Trip } from './Trip';
 import { App } from './App';
@@ -114,7 +114,8 @@ export class TripParticipant extends Component<{
 
         const participant = this.props.participant
         const member = this.props.app.getMemberById(participant.memberId)
-        const isPrivileged = this.props.trip.isPrivileged() || this.props.app.getMe().id === participant.memberId
+        const canEdit = this.props.trip.canEditTrip() || this.props.app.getMe().id === participant.memberId
+        const canEditLeader = this.props.app.state.role >= Role.Admin
         const isMemberDiff = participant.memberId === this.props.app.getMe().id &&
                              participant.memberId && (participant.emergencyContactName !== member.emergencyContactName ||
                                                       participant.emergencyContactPhone !== member.emergencyContactPhone)
@@ -133,7 +134,7 @@ export class TripParticipant extends Component<{
             return found ? found.message : null;
         }
         const common = {
-            readOnly: !isPrivileged,
+            readOnly: !canEdit,
             isLoading: this.props.loading,
             'onGet': onGet,
             'onSave': onSave,
@@ -162,28 +163,28 @@ export class TripParticipant extends Component<{
             participant.memberId === 0 && participant.id !== -1 ? <ToolTipIcon key='nonmember' icon='id-badge' tooltip={`${participant.name} is not a member of the CTC`} id={iconid}/> : '',' ',
         ]
         const buttons = [
-            canMoveUp && isPrivileged ?
+            canMoveUp && canEdit ?
             <Button key='moveup' onClick={onMoveUp}>
                 <span className='fa fa-angle-up'/>
             </Button> : null,
-            canMoveDown && isPrivileged ?
+            canMoveDown && canEdit ?
             <Button key='movedown' onClick={onMoveDown}>
                 <span className='fa fa-angle-down'/>
             </Button> : null,
-            !participant.isDeleted && participant.id > 0 && isPrivileged ? 
+            !participant.isDeleted && participant.id > 0 && canEdit ? 
             <Button key='delete' onClick={this.setDeleted}>
                 <span className='fa fa-remove'/> 
                 {this.state.isSaveOp ? ['Deleting ', Spinner] : 'Delete'}
             </Button> : null,
-            participant.isDeleted && participant.id > 0 && isPrivileged ? 
+            participant.isDeleted && participant.id > 0 && canEdit ? 
             <Button key='undelete' onClick={this.setDeleted}>
                 {this.state.isSaveOp ? ['Signing back up ', Spinner] : 'Sign back up'}
             </Button> : null,
-            this.props.canWaitList && this.props.trip.isPrivileged(true) ? 
+            this.props.canWaitList && this.props.trip.canEditTrip() ? 
             <Button key='waitlist' onClick={this.setWaitlist}>
                 {this.state.isWaitlistOp ? ['Adding to wait list ', Spinner] : 'Add to wait list'}
             </Button> : null,
-            this.props.canUnwaitList && this.props.trip.isPrivileged(true) ? 
+            this.props.canUnwaitList && this.props.trip.canEditTrip() ? 
             <Button key='unwaitlist' onClick={this.setWaitlist}>
                 {this.state.isWaitlistOp ? ['Removing from wait list ', Spinner] : 'Remove from wait list'}
             </Button> : null,
@@ -224,7 +225,7 @@ export class TripParticipant extends Component<{
 
                             <Row>
                                 <Col sm={3}>
-                                    <SwitchControl id='isLeader' label='Leader' {...common}/>
+                                    <SwitchControl id='isLeader' label='Leader' {...{...common, readOnly:!canEditLeader}}/>
                                 </Col>
                                 <Col sm={3}>
                                     <SwitchControl id='isPlbProvider' label='Has PLB' {...common}/>

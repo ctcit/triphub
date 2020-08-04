@@ -1,5 +1,7 @@
 export enum TripState { MyTrip, OpenTrip, ClosedTrip, SuggestedTrip, DeletedTrip }
 
+export enum Role { NonMember, Member, TripLeader, Admin, Webmaster }
+
 export interface IValidation {
     id : string
     ok : boolean
@@ -62,7 +64,6 @@ export interface IMember {
     emergencyContactName : string
     emergencyContactPhone : string
     role : string
-    otherRole : string
     isMe : boolean
     isMember : boolean
 }

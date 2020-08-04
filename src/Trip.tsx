@@ -4,7 +4,7 @@ import { Badge, Button } from 'reactstrap';
 import { BaseUrl } from '.';
 import { App } from './App';
 import { Spinner } from './Widgets';
-import { IEdit,  IParticipant, ITrip, TripState, IParticipantsInfo } from './Interfaces';
+import { IEdit,  IParticipant, ITrip, TripState, IParticipantsInfo, Role } from './Interfaces';
 import { GetDateString, AddDays, GetDisplayPriority, SafeJsonParse } from './Utilities';
 import { TripDetail } from './TripDetail';
 import { TripParticipants } from './TripParticipants';
@@ -62,10 +62,14 @@ export class Trip extends Component<{
         this.getParticipantsInfo = this.getParticipantsInfo.bind(this)
     }
 
-    public isPrivileged(roleonly?: boolean) : boolean {
+    public canEditTrip() : boolean {
         const me = this.props.app.getMe()
-        return this.props.app.state.isPrivileged || 
-                (!roleonly && !!this.state.participants.find((p:IParticipant) => me.id === p.memberId && p.isLeader))
+        return this.props.app.state.role >= Role.Admin || 
+                ( !!this.state.participants.find((p:IParticipant) => me.id === p.memberId && p.isLeader))
+    }
+
+    public canApproveTrip() : boolean {
+        return this.props.app.state.role >= Role.Admin 
     }
 
     public componentDidMount(){
@@ -197,7 +201,9 @@ export class Trip extends Component<{
         {
             this.props.app.apiCall('POST',BaseUrl + '/trips',trip)
                 .then(data => { 
-                        this.props.app.apiCall('POST',data.href + '/participants',participants[0])
+                        const newTrip = data[0] as ITrip
+                        const url = BaseUrl + '/trips/'+newTrip.id + '/participants'
+                        this.props.app.apiCall('POST', url ,participants[0])
                             .then(() => this.props.app.setPath('/'))
                     })
             }
@@ -269,21 +275,21 @@ export class Trip extends Component<{
         return [
             <TriphubNavbar key='triphubnavbar' app={this.props.app}>
                 <Button color='primary' onClick={this.deleteTrip} 
-                        hidden={isLoading || isNew || trip.isDeleted || !this.isPrivileged()}>
+                        hidden={isLoading || isNew || trip.isDeleted || !this.canEditTrip()}>
                     <span className='fa fa-remove'/> 
                     Delete this trip
                 </Button>
                 <Button color='primary' onClick={this.deleteTrip} 
-                        hidden={isLoading || isNew || !trip.isDeleted || !this.isPrivileged()}>
+                        hidden={isLoading || isNew || !trip.isDeleted || !this.canEditTrip()}>
                     Undelete this trip
                 </Button>
                 <Button color='primary' onClick={this.approveTrip}  
-                        hidden={isLoading || isNew || trip.isApproved  || !this.isPrivileged(true)}>
+                        hidden={isLoading || isNew || trip.isApproved  || !this.canApproveTrip()}>
                     <span key='approvetripicon' className='fa fa-thumbs-o-up'/> 
                     Approve this trip
                 </Button>
                 <Button color='primary' onClick={this.approveTrip} 
-                        hidden={isLoading || isNew || !trip.isApproved || !this.isPrivileged(true)}>
+                        hidden={isLoading || isNew || !trip.isApproved || !this.canApproveTrip()}>
                     <span key='unapprovetripicon' className='fa fa-thumbs-o-down'/> 
                     Remove Approval
                 </Button>
@@ -312,10 +318,10 @@ export class Trip extends Component<{
                 <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app} isLoading={isLoading} forceValidation={this.state.showValidationMessage}/>
             </Expandable>,
             <div hidden={isLoading || !isNew} key='saveCancel' className="py-2">
-                <Button color='primary' onClick={this.saveSuggestedTrip} className="px-1">
+                <Button color='primary' onClick={this.saveSuggestedTrip} className="px-2">
                     Save
                 </Button>
-                <Button color='primary' onClick={this.cancelSuggestedTrip} className="px-1">
+                <Button color='primary' onClick={this.cancelSuggestedTrip} className="px-2">
                     Cancel
                 </Button>
             </div>,
@@ -328,16 +334,16 @@ export class Trip extends Component<{
                         level={2} expanded={true}>  
                 <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this} app={this.props.app} isLoading={isLoading} />
             </Expandable>,
-            this.props.isNew || !this.isPrivileged() ? null :
+            this.props.isNew || !this.canEditTrip() ? null :
             <Expandable key={`email${this.state.trip.id}_${this.state.participants.length}`} id='email'
                         title={['Email', <span key='icon' className='fa fa-paper-plane section-icon'/>]}
                         level={2} expanded={false}>  
                 <Email  owner={this} app={this.props.app} isLoading={isLoading} />
             </Expandable>,
-            this.props.isNew ? null : 
+            ( (this.props.app.state.role < Role.Admin) || this.props.isNew ) ? null : 
             <Expandable key='history' id='history'
                         title={['History', <span key='icon' className='fa fa-history section-icon'/>]}
-                        level={2} expanded={false} ondemand={history}>  
+                        level={2} expanded={false} ondemand={history}>
                 History ...
             </Expandable>,
             <TripPrint key='tripprint' trip={this} app={this.props.app}/>,

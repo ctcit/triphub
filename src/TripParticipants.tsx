@@ -114,7 +114,7 @@ export class TripParticipants extends Component<{
         const me = this.props.app.getMe()
         const anon = !me.id
         const info = this.props.trip.getParticipantsInfo()
-        const isPrivileged = this.props.trip.isPrivileged()
+        const isPrivileged = this.props.trip.canEditTrip()
         const isOpen = this.props.trip.state.trip.isOpen || isPrivileged
         const isNewTrip = this.props.trip.props.isNew
         const hasNewTramper = !!info.all.find((p:IParticipant) => p.id === -1)

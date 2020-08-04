@@ -3,7 +3,7 @@ import 'font-awesome/css/font-awesome.min.css';
 import { Component } from 'react';
 import * as React from 'react';
 import { BaseOpt, BaseUrl } from '.';
-import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant, IHoliday, IArchivedRoute } from './Interfaces';
+import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant, IHoliday, IArchivedRoute, Role } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
@@ -23,7 +23,7 @@ export class App extends Component<{
       isLoadingArchivedRoutes: boolean
       isLoadingMembers: boolean
       isLoadingHolidays: boolean
-      isPrivileged: boolean
+      role: Role
       members: IMember[]
       membersById: { [id: number]: IMember }
       maps: IMap[],
@@ -47,7 +47,7 @@ export class App extends Component<{
             isLoadingArchivedRoutes: true,
             isLoadingMembers: true,
             isLoadingHolidays: true,
-            isPrivileged: false,
+            role: Role.NonMember,
             members: [],
             membersById: {},
             maps: [],
@@ -140,7 +140,7 @@ export class App extends Component<{
 
     public validateTrip(trip : ITrip) : IValidation[] {
 
-        return this.state.isPrivileged && !this.state.isLoading ? [
+        return (this.state.role >= Role.Admin) && !this.state.isLoading ? [
             {id:'title', ok: !trip.isDeleted, message: 'This trip has been deleted'},
             ...this.mandatory(trip,['title','description']),
             ...this.mandatory(trip,trip.isSocial ? [] : ['cost','grade','departure_point']),
@@ -168,16 +168,17 @@ export class App extends Component<{
             .then((members : IMember[]) => {
 
                 const membersById: {[id: number]: IMember} = {}
-                let isPrivileged = false
-
+                let myRole = Role.NonMember
                 for (const member of members) {
                     if (member.id) {
                         membersById[member.id] = member
-                        isPrivileged = isPrivileged || (member.isMe && member.role != null)
+                        if (member.isMe) {
+                            myRole = Role[member.role]
+                        }
                     }
                 }
 
-                this.setState({isPrivileged, members, membersById, isLoadingMembers: false})
+                this.setState({role: myRole, members, membersById, isLoadingMembers: false})
             })
     }
 

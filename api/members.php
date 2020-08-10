@@ -14,8 +14,7 @@ function GetMembers($con, $userid, $id = 0) {
 		return SqlResultArray($con, "SELECT * FROM $newMembersRepView");
 	}
 
-	return SqlResultArray($con,
-		"SELECT * 
+	$query = "SELECT * 
 		FROM
 			(SELECT	
 				m.id,
@@ -54,7 +53,9 @@ function GetMembers($con, $userid, $id = 0) {
 				GROUP BY p.name) 		nonmember
 			JOIN $participantsTable 	p ON nonmember.id = p.id) u
 		$where
-		ORDER by name");
+		ORDER by name";
+
+	return SqlResultArray($con, $query);
 }
 
 ?>

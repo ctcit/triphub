@@ -33,8 +33,8 @@ class ConfigServer
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
 	const apiKey              = "6bc3ed05-66a4-4012-96bd-c7192df95997";
-	const apiKeyExpiry        = "20200930";
-	const apiKeyUserId	      = 125;
+	const apiKeyExpiry        = "20201230";
+	const apiKeyUserId	      = 2218;
 }
 
 ?>

@@ -375,7 +375,15 @@ function UserIdIfHasRoleOrDie($con, $requiredRole="NonPrivileged") {
         $member = GetLogonDetails($con, false);
     } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {
         // Using an API key and it hasn't expired
-        $member = GetMembers($con, ConfigServer::apiKeyUserId, ConfigServer::apiKeyUserId);
+        $members = GetMembers($con, ConfigServer::apiKeyUserId, ConfigServer::apiKeyUserId);
+        if (count($members) == 1)
+        {
+            $member = $members[0];
+        }
+        else
+        {
+            die("Error - GetMembers returned ".count($members));
+        }
     } else {
         // Using an API key but expired
         http_response_code(401);
@@ -395,7 +403,7 @@ function UserIdIfHasRoleOrDie($con, $requiredRole="NonPrivileged") {
     }
     $requiredRoleNum = $roles[$requiredRole];
     $userRoleNum = $roles[$member['role']];
-    
+
     if ( $userRoleNum < $requiredRoleNum )
     {
         // User is not privilieged enough

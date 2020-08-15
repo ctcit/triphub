@@ -1,5 +1,5 @@
 /* ---------------------------- */
-/*  */
+/*  General */
 /* ---------------------------- */
 
 body {
@@ -8,9 +8,6 @@ body {
   font-family: sans-serif;
 }
 
-#root {
-  max-width: 1100px
-}
 
 td>span.fa,
 h3>span>button,
@@ -66,13 +63,13 @@ table.changehistory{
 /* Triphub Navbar */
 /* ---------------------------- */
 
-.triphub-navbar-brand {
+.triphub-navbar {
   color: white; /* hack */
 }
 
-.triphub-navbar-dropdown {
-  color: white; /* hack */
-  
+.triphub-navbar:hover {
+  color: lightblue; /* hack */
+  cursor: pointer
 }
 
 .triphub-form-help {
@@ -162,16 +159,29 @@ table.changehistory{
   100%{-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
 }
 
+/* ---------------------------- */
+/* Calendar */
+/* ---------------------------- */
+
 .calendar-hidden {
   opacity: 0;
 }
+
 .calendar {
-  max-width: 500px;
+  margin-top: 1rem;
 }
 
-.calendar .badge{
+.calendar .label {
+  background-color: rgb(235, 235, 235);
+  font-weight: bold;
+}
+
+.calendar .badge {
   padding: 3px;
   cursor: pointer;
+  color: black;
+  background-color: lightgray;
+  font-size: medium;
 }
 
 .calendar td {
@@ -179,10 +189,10 @@ table.changehistory{
   height: 30px;
   border-left: 1px solid darkgray;
   border-right: 1px solid darkgray;
-  border-top: none;
-  border-bottom: none;
+  border-top:  1px solid darkgray;
+  border-bottom:  1px solid darkgray;
   vertical-align: top;
-  padding: 0px !important;
+  padding: 5px !important;
 }
 
 .calendar td.top {
@@ -190,54 +200,43 @@ table.changehistory{
 }
 
 .calendar .selected {
-  background-color: blue
+  background-color: rgb(245, 253, 131)
 }
 
 .calendar td.jan,
+.calendar td.mar,
 .calendar td.may,
-.calendar td.sep {
-  background-color: #a0a0a0
+.calendar td.jul,
+.calendar td.sep,
+.calendar td.nov {
+  background-color: rgb(226, 247, 253)
 }
 
 .calendar td.janweekend,
+.calendar td.marweekend,
 .calendar td.mayweekend,
-.calendar td.sepweekend {
-  background-color: #e0e0e0
+.calendar td.julweekend,
+.calendar td.sepweekend,
+.calendar td.novweekend {
+  background-color: rgb(195, 218, 226)
 }
 
 .calendar td.feb,
+.calendar td.apr,
 .calendar td.jun,
-.calendar td.oct {
-  background-color: #A0A0ff
+.calendar td.aug,
+.calendar td.oct,
+.calendar td.dec {
+  background-color: white
 }
 
 .calendar td.febweekend,
-.calendar td.junweekend,
-.calendar td.octweekend {
-  background-color: #e0e0ff
-}
-
-.calendar td.mar,
-.calendar td.jul,
-.calendar td.nov {
-  background-color: #80ff80
-}
-
-.calendar td.marweekend,
-.calendar td.julweekend,
-.calendar td.novweekend {
-  background-color: #e0ffe0
-}
-
-.calendar td.apr,
-.calendar td.aug,
-.calendar td.dec {
-  background-color: #ffff00
-}
 .calendar td.aprweekend,
+.calendar td.junweekend,
 .calendar td.augweekend,
+.calendar td.octweekend,
 .calendar td.decweekend {
-  background-color: #ffff80
+  background-color: rgb(226, 226, 226)
 }
 
 .calendar td.today {

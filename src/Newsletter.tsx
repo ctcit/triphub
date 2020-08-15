@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Form, Button } from 'reactstrap';
+import { Form, Button, Container, Row, Col } from 'reactstrap';
 import { InputControl } from './Control';
 import { BaseUrl, NewsletterGenerateUrl } from '.';
 import { App } from './App';
@@ -105,39 +105,57 @@ export class Newsletter extends Component<{
 
         return [
             <TriphubNavbar key='triphubnavbar' app={app}/>,
-            <h1 key="title">Manage Newsletter</h1>,
-            isNew &&
-                <div><p>No current newsletter, please create a new one..</p></div>,
-            isLoading &&
-                <FullWidthLoading />,
-            !isLoading &&
-                <Form key='form'>
-                    <InputControl id='volume' label='Volume' type='number' {...common}/>
-                    <InputControl id='number' label='Number' type='number' {...common}/>
-                    <InputControl id='date' label='Date' type='date' {...common}/>
-                    <InputControl id='issueDate' label='Issue Date' type='date' {...common}/>
-                    <InputControl id='nextdeadline' label='Next Deadline' type='date' {...common}/>
-                </Form>
-                ,
-            isNew &&
-                <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!isLoading}>
-                    Save
-                </Button>,
-            !isNew &&
-                <div key="details">
-                    <Button key="generate" color='primary' onClick={this.generate} visible={!isLoading}>
-                        Generate
+
+            <Container key='newsletter' fluid={true}>
+                <h1 key="title">Manage Newsletter</h1>
+                {isNew && <div><p>No current newsletter, please create a new one..</p></div>}
+                {isLoading && <FullWidthLoading />}
+                {!isLoading &&
+                    <Form key='form'>
+                        <Row>
+                            <Col sm={5} md={4}>
+                                <InputControl id='volume' label='Volume' type='number' {...common}/>
+                            </Col>
+                            <Col sm={5} md={4}>
+                                <InputControl id='number' label='Number' type='number' {...common}/>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col sm={5} md={4}>
+                                <InputControl id='date' label='Date' type='date' {...common}/>
+                            </Col>
+                            <Col sm={5} md={4}>
+                                <InputControl id='issueDate' label='Issue Date' type='date' {...common}/>
+                            </Col>
+                            <Col sm={5} md={4}>
+                                <InputControl id='nextdeadline' label='Next Deadline' type='date' {...common}/>
+                            </Col>
+                        </Row>
+
+                    </Form>
+                }
+                {isNew &&
+                    <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!isLoading}>
+                        Save
                     </Button>
-                    <h2>Trips & Socials</h2>
-                    <p>All approved trips with a trip start date after the newsletter date, and which are
-                       open by the newsletter date will automatically be included.</p>
+                }
+                {!isNew &&
+                    <div key="details">
+                        <Button key="generate" color='primary' onClick={this.generate} visible={!isLoading}>
+                            Generate
+                        </Button>
+                        <h2>Trips and Socials</h2>
+                        <p>All approved trips with a trip start date after the newsletter date, and which are
+                        open by the newsletter date will automatically be included.</p>
 
-                    <h2>Trip Reports</h2>
-                    <TripReportList app={app} newsletterId={newsletter.id}/>
+                        <h2>Trip Reports</h2>
+                        <TripReportList app={app} newsletterId={newsletter.id}/>
 
-                    <h2>Notices</h2>
-                    <NoticeList app={app}/>
-                </div>
+                        <h2>Notices</h2>
+                        <NoticeList app={app}/>
+                    </div>
+                }
+            </Container>
         ]
     }
 

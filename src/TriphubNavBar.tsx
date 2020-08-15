@@ -49,49 +49,53 @@ export class TriphubNavbar extends Component<{
 
         return (
             <Navbar color='primary' inverse={true} toggleable={true} expand="md">
-                <NavbarBrand className='triphub-navbar-brand' href="#home">
+                <NavbarBrand className='triphub-navbar' href="#home">
                     <img src="/CTCLogo.png" width="40" height="40" className="d-inline-block" />
                     <b>Trips</b>
                 </NavbarBrand>
                 <NavbarToggler onClick={toggle}/>
                 <Collapse  isOpen={this.state.isOpen} navbar={true}>
                     <Nav justified={false} fill={true} >
-                        {/* <NavItem>
-                            <Button color='primary' onClick={alltrips} disabled={this.props.app.state.isLoading}>
-                                <span className='fa fa-bars'/> 
-                                All trips
-                            </Button>
-                        </NavItem> */}
                         <NavItem>
-                            <Button color='primary' onClick={calendar} disabled={this.props.app.state.isLoading}>
-                                <span className='fa fa-calendar'/> 
-                                Calendar
-                            </Button>
+                            <NavLink onClick={calendar} disabled={this.props.app.state.isLoading}
+                                hidden={this.props.app.state.path === '/calendar'}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-calendar fa-fw'/>
+                                    Calendar
+                                </span>
+                            </NavLink>
                         </NavItem>
                         <NavItem>
-                            <Button color='primary' onClick={newtrip} disabled={this.props.app.state.isLoading} 
-                                hidden={this.props.app.state.role < Role.TripLeader}>
-                                <span className='fa fa-lightbulb-o'/> 
-                                Suggest a trip
-                            </Button>
+                            <NavLink  onClick={newtrip} disabled={this.props.app.state.isLoading} 
+                                hidden={this.props.app.state.role < Role.TripLeader || this.props.app.state.path === '/newtrip'}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-lightbulb-o fa-fw'/> 
+                                    Suggest a trip
+                                </span>
+                            </NavLink>
                         </NavItem>
                         <NavItem>
-                            <Button color='primary' onClick={newsletter} hidden={this.props.app.state.role < Role.Admin}>
-                                <span className='fa fa-newspaper-o'/> 
-                                Manage Newsletter
-                            </Button>
+                            <NavLink onClick={newsletter} 
+                                hidden={this.props.app.state.role < Role.Admin || this.props.app.state.path === '/newsletter'}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-newspaper-o fa-fw'/> 
+                                    Manage Newsletter
+                                </span>
+                            </NavLink>
                         </NavItem>
                         <NavItem>
-                            <Button color='primary' onClick={newsocial} disabled={this.props.app.state.isLoading} 
-                                hidden={this.props.app.state.role < Role.Admin}>
-                                <span className='fa fa-users'/> 
-                                Add a social event
-                            </Button>
+                            <NavLink onClick={newsocial} disabled={this.props.app.state.isLoading} 
+                                hidden={this.props.app.state.role < Role.Admin || this.props.app.state.path === '/newSocial'}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-users fa-fw'/> 
+                                    Add a social event
+                                </span>
+                            </NavLink>
                         </NavItem>
                         {this.props.children}
                         <Dropdown nav={true} isOpen={this.state.priviledgesDropdownIsOpen} toggle={togglePriviledgesDropdown}
                                 hidden={this.props.app.state.role < Role.Webmaster}>
-                            <DropdownToggle className="triphub-navbar-dropdown" nav={true} caret={true}>
+                            <DropdownToggle className='triphub-navbar' nav={true} caret={true}>
                                 <span className='fa fa-ban fa-fw'/> 
                                 Set Privileges
                             </DropdownToggle>

@@ -14,6 +14,7 @@ import Dropdown from 'reactstrap/lib/Dropdown';
 import DropdownToggle from 'reactstrap/lib/DropdownToggle';
 import DropdownMenu from 'reactstrap/lib/DropdownMenu';
 import DropdownItem from 'reactstrap/lib/DropdownItem';
+import Container from 'reactstrap/lib/Container';
 
 interface ICalendarItem {
     id: number
@@ -52,7 +53,7 @@ class CalendarWeek extends Component<{
         for (let row = 0; row < rowCount; row++)
         {
             const cells = row === 0 ? [<td key={GetDateString(this.props.week.date)} 
-                                            className='calendar-label' rowSpan={rowCount}>{label}</td>] : []
+                                            className='calendar label' rowSpan={rowCount}>{label}</td>] : []
 
             for (let col = 0; col < 7;) {
                 let colSpan = 1
@@ -81,7 +82,7 @@ class CalendarWeek extends Component<{
                 for (const item of items) {
 
                     if (item.field === '') {
-                        slots.push(<b key={item.id}>{item.text}</b>)
+                        slots.push(<span key={item.id}>{item.text}</span>)
                         continue
                     }
 
@@ -277,7 +278,7 @@ export class Calendar extends Component<{
         return [
             <TriphubNavbar key='triphubNavbar' app={this.props.app}>
                 <Dropdown nav={true} isOpen={this.state.showDropdownIsOpen} toggle={toggleShowDropdown}>
-                    <DropdownToggle className="triphub-navbar-dropdown" nav={true} caret={true}>
+                    <DropdownToggle className="triphub-navbar" nav={true} caret={true}>
                         <span className='fa fa-filter fa-fw'/> 
                         Filter trips
                     </DropdownToggle>
@@ -312,17 +313,20 @@ export class Calendar extends Component<{
                     </DropdownMenu>
                 </Dropdown>
             </TriphubNavbar>,
-            <Table key='calendar' className='calendar'>
-                <tbody>
-                    <tr>
-                        <td className='label'/>
-                        {DayOfWeek.map((_,i) => <td key={i} className='label'>
-                                                    {DayOfWeek[(i + config.calendarStartOfWeek) % 7]}
-                                                </td>)}
-                    </tr>
-                    {this.weeks.map(week => <CalendarWeek key={week.date.toISOString().substr(0,10)} week={week} calendar={this}/>)}
-                </tbody>
-            </Table>
+
+            <Container key='calendar' fluid={true}>
+                <Table className='calendar'>
+                    <tbody>
+                        <tr>
+                            <td className='label'/>
+                            {DayOfWeek.map((_,i) => <td key={i} className='label'>
+                                                        {DayOfWeek[(i + config.calendarStartOfWeek) % 7]}
+                                                    </td>)}
+                        </tr>
+                        {this.weeks.map(week => <CalendarWeek key={week.date.toISOString().substr(0,10)} week={week} calendar={this}/>)}
+                    </tbody>
+                </Table>
+            </Container>
         ]
     }
 }

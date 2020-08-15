@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Badge, Button } from 'reactstrap';
+import { Badge, Button, NavLink } from 'reactstrap';
 import { BaseUrl } from '.';
 import { App } from './App';
 import { Spinner } from './Widgets';
@@ -276,25 +276,30 @@ export class Trip extends Component<{
 
         return [
             <TriphubNavbar key='triphubnavbar' app={this.props.app}>
-                <Button color='primary' onClick={this.deleteTrip} 
-                        hidden={isLoading || isNew || trip.isDeleted || !this.canEditTrip()}>
-                    <span className='fa fa-remove'/> 
-                    Delete this trip
-                </Button>
-                <Button color='primary' onClick={this.deleteTrip} 
-                        hidden={isLoading || isNew || !trip.isDeleted || !this.canEditTrip()}>
-                    Undelete this trip
-                </Button>
-                <Button color='primary' onClick={this.approveTrip}  
-                        hidden={isLoading || isNew || trip.isApproved  || !this.canApproveTrip()}>
-                    <span key='approvetripicon' className='fa fa-thumbs-o-up'/> 
-                    Approve this trip
-                </Button>
-                <Button color='primary' onClick={this.approveTrip} 
-                        hidden={isLoading || isNew || !trip.isApproved || !this.canApproveTrip()}>
-                    <span key='unapprovetripicon' className='fa fa-thumbs-o-down'/> 
-                    Remove Approval
-                </Button>
+                <NavLink onClick={this.deleteTrip} hidden={isLoading || isNew || trip.isDeleted || !this.canEditTrip()}>
+                    <span className='triphub-navbar'>
+                        <span className='fa fa-remove fa-fw'/> 
+                        Delete this trip
+                    </span>
+                </NavLink>
+                <NavLink onClick={this.deleteTrip} hidden={isLoading || isNew || !trip.isDeleted || !this.canEditTrip()}>
+                    <span className='triphub-navbar'>
+                        <span className='fa fa-undo fa-fw'/> 
+                        Undelete this trip
+                    </span>
+                </NavLink>
+                <NavLink onClick={this.approveTrip} hidden={isLoading || isNew || trip.isApproved  || !this.canApproveTrip()}>
+                    <span className='triphub-navbar'>
+                        <span key='approvetripicon' className='fa fa-thumbs-o-up fa-fw'/> 
+                        Approve this trip
+                    </span>
+                </NavLink>
+                <NavLink onClick={this.approveTrip} hidden={isLoading || isNew || !trip.isApproved || !this.canApproveTrip()}>
+                    <span className='triphub-navbar'>
+                        <span key='unapprovetripicon' className='fa fa-thumbs-o-down fa-fw'/> 
+                        Remove Approval
+                    </span>
+                </NavLink>
             </TriphubNavbar>,
 
             <Container key="triphubtripdetail" fluid={true}>

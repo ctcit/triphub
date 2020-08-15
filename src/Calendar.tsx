@@ -10,6 +10,10 @@ import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
 import Badge from 'reactstrap/lib/Badge';
 import { Spinner } from './Widgets';
+import Dropdown from 'reactstrap/lib/Dropdown';
+import DropdownToggle from 'reactstrap/lib/DropdownToggle';
+import DropdownMenu from 'reactstrap/lib/DropdownMenu';
+import DropdownItem from 'reactstrap/lib/DropdownItem';
 
 interface ICalendarItem {
     id: number
@@ -123,6 +127,7 @@ export class Calendar extends Component<{
         app: App
     },{
         trips: ITrip[];
+        showDropdownIsOpen: boolean
         openClose: boolean
         state: StateFilter
         length: LengthFilter
@@ -133,7 +138,13 @@ export class Calendar extends Component<{
 
     constructor(props: any){
         super(props)
-        this.state = {openClose: false,length: LengthFilter.Trips, state: StateFilter.Open, selected: 0, trips: []}
+        this.state = {
+            showDropdownIsOpen: false,
+            openClose: false,
+            length: LengthFilter.Trips, 
+            state: StateFilter.Open, 
+            selected: 0, trips: [],
+        }
         this.processTrips = this.processTrips.bind(this)
         this.requery = this.requery.bind(this)
         this.showItem = this.showItem.bind(this)
@@ -249,8 +260,8 @@ export class Calendar extends Component<{
 
         const config = this.props.app.state.config
         const state = this.state
-        const showOpenAndClose = () => this.setState({openClose: true})
-        const hideOpenAndClose = () => this.setState({openClose: false})
+        const toggleShowDropdown = () => this.setState({showDropdownIsOpen: !this.state.showDropdownIsOpen});
+        const toggelShowOpenAndCloseDates = () => this.setState({openClose: !this.state.openClose})
         const stateFilterMyTrips = () => this.setState({state: StateFilter.MyTrips})
         const stateFilterOpen = () => this.setState({state: StateFilter.Open})
         const stateFilterSuggested = () => this.setState({state: StateFilter.Suggested})
@@ -265,26 +276,41 @@ export class Calendar extends Component<{
 
         return [
             <TriphubNavbar key='triphubNavbar' app={this.props.app}>
-                <ButtonGroup>
-                    <Button color='secondary' disabled={true}>Show open and close dates:</Button>
-                    <Button color='primary' onClick={showOpenAndClose} active={state.openClose}>Yes</Button>
-                    <Button color='primary' onClick={hideOpenAndClose} active={!state.openClose}>No</Button>
-                </ButtonGroup>
-                <ButtonGroup>
-                    <Button color='secondary' disabled={true}>Trip Filter:</Button>
-                    <Button color='primary' onClick={stateFilterMyTrips} active={state.state === StateFilter.MyTrips}>My Trips</Button>
-                    <Button color='primary' onClick={stateFilterOpen} active={state.state === StateFilter.Open}>Open</Button>
-                    <Button color='primary' onClick={stateFilterSuggested} active={state.state === StateFilter.Suggested}>Suggested</Button>
-                    <Button color='primary' onClick={stateFilterAll} active={state.state === StateFilter.All}>All</Button>
-                </ButtonGroup>
-                <ButtonGroup>
-                    <Button color='secondary' disabled={true}>Length Filter:</Button>
-                    <Button color='primary' onClick={lengthFilterDay} active={state.length === LengthFilter.Day}>Day</Button>
-                    <Button color='primary' onClick={lengthFilterWeekend} active={state.length === LengthFilter.Weekend}>Weekend</Button>
-                    <Button color='primary' onClick={lengthFilterTrips} active={state.length === LengthFilter.Trips}>Trip</Button>
-                    <Button color='primary' onClick={lengthFilterSocial} active={state.length === LengthFilter.Social}>Social</Button>
-                    <Button color='primary' onClick={lengthFilterAll} active={state.length === LengthFilter.All}>All</Button>
-                </ButtonGroup>
+                <Dropdown nav={true} isOpen={this.state.showDropdownIsOpen} toggle={toggleShowDropdown}>
+                    <DropdownToggle className="triphub-navbar-dropdown" nav={true} caret={true}>
+                        <span className='fa fa-filter fa-fw'/> 
+                        Filter trips
+                    </DropdownToggle>
+                    <DropdownMenu color='primary'>
+
+                        <DropdownItem header={true}>Trip State</DropdownItem>
+                        <DropdownItem onClick={stateFilterMyTrips}>
+                            <span className={'fa ' + (state.state === StateFilter.MyTrips ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Mine</DropdownItem>
+                        <DropdownItem onClick={stateFilterOpen}>
+                            <span className={'fa ' + (state.state === StateFilter.Open ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Open</DropdownItem>
+                        <DropdownItem onClick={stateFilterSuggested}>
+                            <span className={'fa ' + (state.state === StateFilter.Suggested ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Suggested</DropdownItem>
+                        <DropdownItem onClick={stateFilterAll}>
+                            <span className={'fa ' + (state.state === StateFilter.All ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>All</DropdownItem>
+
+                        <DropdownItem divider={true}/>
+                        <DropdownItem header={true}>Trip Length/Type</DropdownItem>
+                        <DropdownItem onClick={lengthFilterDay}>
+                            <span className={'fa ' + (state.length === LengthFilter.Day ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Day</DropdownItem>
+                        <DropdownItem onClick={lengthFilterWeekend}>
+                            <span className={'fa ' + (state.length === LengthFilter.Weekend ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Weekend</DropdownItem>
+                        <DropdownItem onClick={lengthFilterTrips}>
+                            <span className={'fa ' + (state.length === LengthFilter.Trips ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Trip</DropdownItem>
+                        <DropdownItem onClick={lengthFilterSocial}>
+                            <span className={'fa ' + (state.length === LengthFilter.Social ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Social</DropdownItem>
+                        <DropdownItem onClick={lengthFilterAll}>
+                            <span className={'fa ' + (state.length === LengthFilter.All ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>All</DropdownItem>
+
+                        <DropdownItem divider={true}/>
+                        <DropdownItem onClick={toggelShowOpenAndCloseDates}>
+                            <span className={'fa ' + (state.openClose ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Show open and close dates</DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>
             </TriphubNavbar>,
             <Table key='calendar' className='calendar'>
                 <tbody>

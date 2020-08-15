@@ -1,3 +1,7 @@
+/* ---------------------------- */
+/*  */
+/* ---------------------------- */
+
 body {
   margin: 0;
   padding: 0;
@@ -20,23 +24,14 @@ button>span.fa {
   margin-right: 5px;
 }
 
-h3 {
+/* h3 {
   margin-left: 20px
 }
 h4 {
   margin-left: 30px
-}
+} */
 table.changehistory{
   margin-left: 4em
-}
-
-.triphub-navbar {
-  color: whit;
-}
-
-.triphub-form-help {
-  color: seagreen;
-  font-style: italic;
 }
 
 .pill {
@@ -58,26 +53,74 @@ table.changehistory{
   min-height: 80px;
 }
 
-.form-group {
-  margin-left: 2em;
+/* ---------------------------- */
+/* Triphub Navbar */
+/* ---------------------------- */
+
+.triphub-navbar-brand {
+  color: white; /* hack */
+}
+
+.triphub-navbar-dropdown {
+  color: white; /* hack */
+  
+}
+
+.triphub-form-help {
+  color: seagreen;
+  font-style: italic;
+}
+
+/* ---------------------------- */
+/* Tripgroup  */
+/* ---------------------------- */
+
+.trip-group {
+}
+
+.trip-group-header {
+  background-color: #d6e5f8d8; 
 }
 
 .TripGroup {
-  margin-left: 40px
+  /* margin-left: 40px */
 }
 
 .TripGroup td {
   cursor: pointer
 }
 
-.trip-count {
-  color: lightgray
+/* ---------------------------- */
+/* Trip detail section  */
+/* ---------------------------- */
+
+.trip-section {
 }
 
-.section-icon {
-  float: right;
-  margin-right: 5px;
+.trip-section-header {
+  background-color: #d6e5f8d8; 
 }
+
+/* ---------------------------- */
+/* Accordian control */
+/* ---------------------------- */
+
+.accordian {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border: none
+}
+
+.accordian-header {
+}
+
+.accordian-expand {
+  float: right;
+}
+
+/* ---------------------------- */
+/* */
+/* ---------------------------- */
 
 .warning-icon {
   color: #ffc107
@@ -205,7 +248,10 @@ table.changehistory{
   border-color: grey;
   border-style: solid;
 }
-.sheet-div-icon { text-align: center; }
+.sheet-div-icon { 
+  text-align: center; 
+  min-width: 100px; /* hack */
+}
 .sheet-code { font-size: 14pt; font-weight: bold; }
 .sheet-name { font-size: 11pt; font-weight: bold }
 

@@ -10,7 +10,10 @@ import { Calendar } from './Calendar';
 import { TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
 import { Newsletter } from './Newsletter';
-import { Spinner } from './Widgets';
+import { Spinner, Done } from './Widgets';
+import Alert from 'reactstrap/lib/Alert';
+import Container from 'reactstrap/lib/Container';
+import Jumbotron from 'reactstrap/lib/Jumbotron';
 
 export class App extends Component<{
     },{
@@ -209,12 +212,18 @@ export class App extends Component<{
 
         return (
             this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingArchivedRoutes || this.state.isLoadingMembers || this.state.isLoadingHolidays ?
-                 [<TriphubNavbar key='triphubNavbar' app={this}/>,
-                     <div key='1'>Loading Configuration {this.state.isLoadingConfig ? Spinner : 'Done.'}</div>,
-                     <div key='2'>Loading Maps {this.state.isLoadingMaps ? Spinner : 'Done.'}</div>,
-                     <div key='3'>Loading Archived Routes {this.state.isLoadingArchivedRoutes ? Spinner : 'Done.'}</div>,
-                     <div key='4'>Loading Members {this.state.isLoadingMembers ? Spinner : 'Done.'}</div>,
-                     <div key='5'>Loading Holidays {this.state.isLoadingHolidays ? Spinner : 'Done.'}</div>
+                 [
+                    <TriphubNavbar key='triphubNavbar' app={this}/>,
+
+                    <Container key="loadingContainer">
+                        <Jumbotron key='loadingAlert' variant='primary'>
+                            <div key='1'>{this.state.isLoadingConfig ? Spinner : Done} Loading Configuration</div>
+                            <div key='2'>{this.state.isLoadingMaps ? Spinner : Done} Loading Maps</div>
+                            <div key='3'>{this.state.isLoadingArchivedRoutes ? Spinner : Done} Loading Archived Routes</div>
+                            <div key='4'>{this.state.isLoadingMembers ? Spinner : Done} Loading Members</div>
+                            <div key='5'>{this.state.isLoadingHolidays ? Spinner : Done} Loading Holidays</div>
+                        </Jumbotron>
+                    </Container>
                 ] :
 
             this.state.path === "/calendar" ?

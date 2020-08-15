@@ -150,6 +150,7 @@ export class TripParticipants extends Component<{
                 </span>
             ]}
             </Navbar>,
+            
             <ListGroup key='participants'>
                 <ListGroupItem>
                     {

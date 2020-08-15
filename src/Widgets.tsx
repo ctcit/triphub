@@ -2,6 +2,7 @@ import * as React from 'react';
 import Badge from 'reactstrap/lib/Badge';
 
 export const Spinner = <span className='fa fa-spinner fa-spin' key='spinner'/>
+export const Done = <span className='fa fa-check' key='done'/>
 
 export const FullWidthLoading = () => (
     <div className="full-width-loading-wrapper">

@@ -4,7 +4,7 @@ import './index.css';
 import { Component } from 'react';
 import * as React from 'react';
 import { App } from './App';
-import { Button } from 'reactstrap';
+import { Button, Container, Form, Collapse, Jumbotron, Card, CardHeader } from 'reactstrap';
 import { BaseUrl } from '.';
 import { ITrip, TripState } from './Interfaces';
 import { GetDate, GetLength } from './Utilities';
@@ -16,6 +16,7 @@ import { ToolTipIcon } from './ToolTipIcon';
 import { Spinner } from './Widgets';
 import { SwitchControl } from './Control';
 import { Role } from './Interfaces';
+import { Accordian } from './Accordian';
 
 class TripsLine extends Component<{
     owner: TripsGroup,
@@ -115,29 +116,34 @@ export class TripsGroup extends Component<{
         const me = this.props.app.getMe()
 
         return  (
-            <Expandable key={id} id={id} expanded={this.props.expanded} 
-            title={[TripState[trips[0].tripState].replace('Trip',' Trip') + (trips.length > 1 ? 's' : ''), 
-                    <span key='count' className='trip-count'> ({trips.length})</span>]}>
-                <Table className='TripGroup' size='sm' striped={true}>
-                    <thead>
-                        <tr>
-                            <th className='mobile-only'/>
-                            <th>Date</th>
-                            <th className='centered'>Length</th>
-                            <th>Title</th>
-                            <th className='desktop-only'>Grade</th>
-                            <th hidden={!me.id} className='desktop-only'>Leader</th>
-                            <th hidden={this.props.trips[0].tripState !== TripState.MyTrip}>My Role</th>
-                            <th hidden={this.props.trips[0].tripState !== TripState.SuggestedTrip} className='centered'>Approved</th>
-                            <th className=''/>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.props.trips.map(
-                            (trip:ITrip) => <TripsLine trip={trip} key={trip.id} owner={this} />)}
-                    </tbody>    
-                </Table>
-            </Expandable>
+            <Container fluid={true}>
+                <Accordian id={id} className='trip-group' headerClassName='trip-group-header' expanded={this.props.expanded}
+                    title={<span>
+                            <b>{TripState[trips[0].tripState].replace('Trip',' Trip') + (trips.length > 1 ? 's' : '')}</b>
+                            <span key='count' className='trip-count'> ({trips.length})</span>
+                        </span>
+                    }>
+                    <Table className='TripGroup' size='sm' striped={true} reflow={false}>
+                        <thead>
+                            <tr>
+                                <th className='mobile-only'/>
+                                <th>Date</th>
+                                <th className='centered'>Length</th>
+                                <th>Title</th>
+                                <th className='desktop-only'>Grade</th>
+                                <th hidden={!me.id} className='desktop-only'>Leader</th>
+                                <th hidden={this.props.trips[0].tripState !== TripState.MyTrip}>My Role</th>
+                                <th hidden={this.props.trips[0].tripState !== TripState.SuggestedTrip} className='centered'>Approved</th>
+                                <th className=''/>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {this.props.trips.map(
+                                (trip:ITrip) => <TripsLine trip={trip} key={trip.id} owner={this} />)}
+                        </tbody>    
+                    </Table>
+                </Accordian>
+            </Container>
       )
   }
 }

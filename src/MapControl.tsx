@@ -1,7 +1,7 @@
 import * as L from 'leaflet';
 import * as React from 'react';
 import { Component } from 'react';
-import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Form } from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Form, Container } from 'reactstrap';
 import { MapEditor } from './MapEditor';
 import FormGroup from 'reactstrap/lib/FormGroup';
 import Button from 'reactstrap/lib/Button';
@@ -128,7 +128,7 @@ export class MapControl extends Component<{
         }
 
         return (
-            <Form key='routesMaps'>
+            <div>
                 <Row>
                     <Col sm={'auto'}>
                         <ControlWrapper id={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
@@ -163,42 +163,40 @@ export class MapControl extends Component<{
                 </Row>
                 <Row>
                     <Col sm={4}>
-                        <FormGroup row={true} key='mapeditor'>
-                            <Button onClick={onEdit} hidden={this.props.readOnly}>
-                                <span className='fa fa-map'/>
-                                Edit Routes/Maps
-                            </Button>
-                            <Modal isOpen={this.state.editing} toggle={onSave} size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}}>
-                                <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
-                                <ModalBody>
-                                    <MapEditor 
-                                        nz50MapsBySheet={this.props.nz50MapsBySheet} 
-                                        archivedRoutesById={this.props.archivedRoutesById}
-                                        mapSheets={this.mapSheets} 
-                                        routesAsJson={this.getRoutesAsJson()}
-                                        onMapSheetsChanged={onMapSheetsChanged} 
-                                        onRoutesChanged={onRoutesChanged}
-                                        getArchivedRoute={this.props.getArchivedRoute} // TODO replace with service
-                                        updateArchivedRouteSummary={this.props.updateArchivedRouteSummary}
-                                    />
-                                </ModalBody>
-                                <ModalFooter>
-                                    { !this.state.editsMade && <Button color="secondary" onClick={onCancel}>Close</Button> }                                    
-                                    { this.state.editsMade && <Button color="primary" onClick={onSave}>Save</Button> }
-                                    { this.state.editsMade && 
-                                        <ButtonDropdown color="secondary" drop={'right'} isOpen={this.state.cancelDropdownOpen} toggle={onCancelDropdownToggle}>
-                                            <DropdownToggle caret={false}>Cancel</DropdownToggle>
-                                            <DropdownMenu>
-                                                <DropdownItem color="red" onClick={onCancel}>Confirm discard changes</DropdownItem>
-                                            </DropdownMenu>
-                                        </ButtonDropdown>
-                                    }
-                                </ModalFooter>
-                            </Modal>
-                        </FormGroup>
+                        <Button onClick={onEdit} hidden={this.props.readOnly}>
+                            <span className='fa fa-map'/>
+                            Edit Routes/Maps
+                        </Button>
+                        <Modal isOpen={this.state.editing} toggle={onSave} size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}}>
+                            <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
+                            <ModalBody>
+                                <MapEditor 
+                                    nz50MapsBySheet={this.props.nz50MapsBySheet} 
+                                    archivedRoutesById={this.props.archivedRoutesById}
+                                    mapSheets={this.mapSheets} 
+                                    routesAsJson={this.getRoutesAsJson()}
+                                    onMapSheetsChanged={onMapSheetsChanged} 
+                                    onRoutesChanged={onRoutesChanged}
+                                    getArchivedRoute={this.props.getArchivedRoute} // TODO replace with service
+                                    updateArchivedRouteSummary={this.props.updateArchivedRouteSummary}
+                                />
+                            </ModalBody>
+                            <ModalFooter>
+                                { !this.state.editsMade && <Button color="secondary" onClick={onCancel}>Close</Button> }                                    
+                                { this.state.editsMade && <Button color="primary" onClick={onSave}>Save</Button> }
+                                { this.state.editsMade && 
+                                    <ButtonDropdown color="secondary" drop={'right'} isOpen={this.state.cancelDropdownOpen} toggle={onCancelDropdownToggle}>
+                                        <DropdownToggle caret={false}>Cancel</DropdownToggle>
+                                        <DropdownMenu>
+                                            <DropdownItem color="red" onClick={onCancel}>Confirm discard changes</DropdownItem>
+                                        </DropdownMenu>
+                                    </ButtonDropdown>
+                                }
+                            </ModalFooter>
+                        </Modal>
                     </Col>
                 </Row>
-            </Form>
+            </div>
          );
     }
 

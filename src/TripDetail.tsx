@@ -122,99 +122,97 @@ export class TripDetail extends Component<{
 
         return [
             <Form key='detail' className="form">
-                <Container fluid={true}>
-                    <Row>
-                        <Col>
-                            <InputControl id='title' label='Title' type='text' {...common}/>
-                        </Col>
-                    </Row>
+                <Row>
+                    <Col>
+                        <InputControl id='title' label='Title' type='text' {...common}/>
+                    </Col>
+                </Row>
 
-                    <Row>
-                        <Col sm={5} md={4}>
-                            <InputControl id='tripDate' label={isSocial ? 'Social Date' : 'Trip Date'} type='date' {...common}/>
-                        </Col>
-                        <Col sm={5} md={4} hidden={isSocial}>
-                            <InputControl id='length' label='Length in days'  type='number' min={0} hidden={trip.isSocial} {...common}/>
-                        </Col>
-                    </Row>
+                <Row>
+                    <Col sm={5} md={4}>
+                        <InputControl id='tripDate' label={isSocial ? 'Social Date' : 'Trip Date'} type='date' {...common}/>
+                    </Col>
+                    <Col sm={5} md={4} hidden={isSocial}>
+                        <InputControl id='length' label='Length in days'  type='number' min={0} hidden={trip.isSocial} {...common}/>
+                    </Col>
+                </Row>
 
-                    <Row>
-                        <Col sm={2} md={3} hidden={!trip.isSocial}>
-                            <SwitchControl id='isNoSignup' label='Sign up list' {...commonInverted}/>
-                        </Col>
-                        <Col sm={5} md={4} hidden={isSocial && trip.isNoSignup}>
-                            <InputControl id='openDate' label='Open Date' type='date' helpText='When sign-up opens' {...common}/>
-                        </Col>
-                        <Col sm={5} md={4} hidden={isSocial && trip.isNoSignup}>
-                            <InputControl id='closeDate' label='Close Date' type='date' helpText='When sign-up closes' {...common}/>
-                        </Col>
-                    </Row>
+                <Row>
+                    <Col sm={2} md={3} hidden={!trip.isSocial}>
+                        <SwitchControl id='isNoSignup' label='Sign up list' {...commonInverted}/>
+                    </Col>
+                    <Col sm={5} md={4} hidden={isSocial && trip.isNoSignup}>
+                        <InputControl id='openDate' label='Open Date' type='date' helpText='When sign-up opens' {...common}/>
+                    </Col>
+                    <Col sm={5} md={4} hidden={isSocial && trip.isNoSignup}>
+                        <InputControl id='closeDate' label='Close Date' type='date' helpText='When sign-up closes' {...common}/>
+                    </Col>
+                </Row>
 
-                    <Row>
-                        <Col>
-                            <InputControl id='departurePoint' 
-                                label={isSocial ? 'Location' : 'Departure Point'} 
-                                type='text'
-                                list={isSocial ? 'social_location_list' : 'departure_point_list'} 
-                                {...common}/>
-                        </Col>
-                    </Row>
+                <Row>
+                    <Col>
+                        <InputControl id='departurePoint' 
+                            label={isSocial ? 'Location' : 'Departure Point'} 
+                            type='text'
+                            list={isSocial ? 'social_location_list' : 'departure_point_list'} 
+                            {...common}/>
+                    </Col>
+                </Row>
 
-                    <Row>
-                        <Col>
-                            <InputControl hidden={isSocial} id='departureDetails' label='Departure Details' type='text'
-                                helpText='Time, any special arrangements' {...common}/>
-                            <InputControl hidden={!isSocial} id='departureDetails' label='Time' type='text' helpText='Time, any special arrangements' {...common}/>
-                        </Col>
-                    </Row>
+                <Row>
+                    <Col>
+                        <InputControl hidden={isSocial} id='departureDetails' label='Departure Details' type='text'
+                            helpText='Time, any special arrangements' {...common}/>
+                        <InputControl hidden={!isSocial} id='departureDetails' label='Time' type='text' helpText='Time, any special arrangements' {...common}/>
+                    </Col>
+                </Row>
 
-                    <Row>
-                        <Col sm={4}>
-                            <InputControl hidden={isSocial} id='cost' label='Cost' type='text' helpText='Estimated cost, including transport, huts etc' {...common}/>
-                            <InputControl hidden={!isSocial} id='cost' label='Cost' type='text' helpText='Leave blank for free events' {...common}/>
-                        </Col>
-                        <Col sm={8}>
-                            <InputControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
-                        </Col>
-                    </Row>
+                <Row>
+                    <Col sm={4}>
+                        <InputControl hidden={isSocial} id='cost' label='Cost' type='text' helpText='Estimated cost, including transport, huts etc' {...common}/>
+                        <InputControl hidden={!isSocial} id='cost' label='Cost' type='text' helpText='Leave blank for free events' {...common}/>
+                    </Col>
+                    <Col sm={8}>
+                        <InputControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
+                    </Col>
+                </Row>
 
-                    <Row>
-                        <Col sm={5} md={4}>
-                            <SwitchControl id='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common}/>
-                        </Col>
-                        <Col sm={5} md={4}>
-                            <InputControl id='maxParticipants' label={isSocial ? 'Maximum Atendees' : 'Maximum trampers'}
-                            type='number' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
-                        </Col>
-                    </Row>
+                <Row>
+                    <Col sm={5} md={4}>
+                        <SwitchControl id='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common}/>
+                    </Col>
+                    <Col sm={5} md={4}>
+                        <InputControl id='maxParticipants' label={isSocial ? 'Maximum Atendees' : 'Maximum trampers'}
+                        type='number' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
+                    </Col>
+                </Row>
 
-                    <Row>
-                        <Col>
-                            <TextAreaInputControl id='description' label='Description' {...common}/>
-                        </Col>
-                    </Row>
+                <Row>
+                    <Col>
+                        <TextAreaInputControl id='description' label='Description' {...common}/>
+                    </Col>
+                </Row>
 
-                    <Row>
-                        <Col>
-                            <TextAreaInputControl id='logisticnfo' label='Logistic Information'
-                                helpText='Any additional information related to travel, accomodation etc' {...common}/>
-                        </Col>
-                    </Row>
-        
-                    <Row>
-                        <Col sm={10}>
-                            <MapControl 
-                                routesId='routes' routesLabel='Routes'
-                                mapsId='maps' mapsLabel='Maps'
-                                nz50MapsBySheet={this.nz50MapsBySheet} 
-                                archivedRoutesById={this.archivedRoutesById}
-                                getArchivedRoute={getArchivedRoute}
-                                updateArchivedRouteSummary={updateArchivedRouteSummary}
-                                {...common}
-                            />
-                        </Col>
-                    </Row>
-                </Container>
+                <Row>
+                    <Col>
+                        <TextAreaInputControl id='logisticnfo' label='Logistic Information'
+                            helpText='Any additional information related to travel, accomodation etc' {...common}/>
+                    </Col>
+                </Row>
+    
+                <Row>
+                    <Col sm={10}>
+                        <MapControl 
+                            routesId='routes' routesLabel='Routes'
+                            mapsId='maps' mapsLabel='Maps'
+                            nz50MapsBySheet={this.nz50MapsBySheet} 
+                            archivedRoutesById={this.archivedRoutesById}
+                            getArchivedRoute={getArchivedRoute}
+                            updateArchivedRouteSummary={updateArchivedRouteSummary}
+                            {...common}
+                        />
+                    </Col>
+                </Row>
             </Form>,
             <datalist key='grade_list' id='grade_list'>
                 <option value='Easy' />

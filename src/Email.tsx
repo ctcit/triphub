@@ -5,7 +5,7 @@ import { App } from './App';
 import { Trip } from './Trip';
 import { IValidation } from './Interfaces';
 import { GetFullDate } from './Utilities';
-import { Col, FormGroup, Label, Button, Form, Row  } from 'reactstrap';
+import { Col, FormGroup, Label, Button, Form, Row, Container  } from 'reactstrap';
 import { Spinner } from './Widgets';
 
 export class Email extends Component<{
@@ -69,22 +69,22 @@ export class Email extends Component<{
 
         return [
             <Form key='detail'>
-                <Row noGutters={true}>
+                <Row>
                     <Col>
-                        <TextAreaInputControl key='recipients' id='recipients' label='Recipients' readOnly={true} {...common}/>,
+                        <TextAreaInputControl key='recipients' id='recipients' label='Recipients' readOnly={true} {...common}/>
                     </Col>
                 </Row>
-                <Row noGutters={true}>
+                <Row>
                     <Col>
-                        <InputControl key='subject' id='subject' label='Subject' type='text' {...common} />,
+                        <InputControl key='subject' id='subject' label='Subject' type='text' {...common} />
                     </Col>
                 </Row>
-                <Row noGutters={true}>
+                <Row>
                     <Col>
-                        <TextAreaInputControl key='body' id='body' label='Body' {...common} />,
+                        <TextAreaInputControl key='body' id='body' label='Body' {...common} />
                     </Col>
                 </Row>
-                <Row noGutters={true}>
+                <Row>
                     <Col>
                         <FormGroup key='button'>
                             <Label/>

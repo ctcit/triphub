@@ -17,6 +17,8 @@ import './index.css';
 import './print.css';
 import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
+import { Accordian } from './Accordian';
+import Container from 'reactstrap/lib/Container';
 
 
 export class Trip extends Component<{
@@ -266,7 +268,7 @@ export class Trip extends Component<{
         //                             : null
         const participantWarnings = info.moveable.map(p => app.validateParticipant(p).filter(i => !i.ok)).filter(vm => vm.length)
         const participantWarning = participantWarnings.length && !isLoading
-                                    ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0][0].message} className='warning-icon'/> 
+                                    ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0][0].message} className='fw warning-icon'/> 
                                     : null
         const participantCount = <span key='count' className='TripCount'>
                                     {` (${info.leaders.length+info.early.length}${info.late.length ? '+'+info.late.length : ''})`}
@@ -294,59 +296,67 @@ export class Trip extends Component<{
                     Remove Approval
                 </Button>
             </TriphubNavbar>,
-            <div key='tripstatus'>
-                {this.state.editList
-                    .filter((item:IEdit) => item.id !== this.state.editId)
-                    .map((item:IEdit) =>
-                    <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
-                        <Badge pill={true}>
-                            {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
-                        </Badge>
-                    </ToolTipIcon>)}
-                {trip.id <= 0
-                    ? <TripHubPill>New trip - not saved!</TripHubPill>
-                    : trip.tripState === TripState.DeletedTrip 
-                    ? <TripHubPill>This trip has been deleted</TripHubPill>
-                    : trip.tripState === TripState.SuggestedTrip && !trip.isApproved
-                    ? <TripHubPill>This trip has has only been suggested, and not yet approved</TripHubPill>
-                    : !trip.isOpen
-                    ? <TripHubPill>This trip is closed, please contact the leader</TripHubPill>
-                    : null}
-            </div>,
-            <Expandable key='detail' id='detail' 
-                        title={[this.state.trip.title, <span key='icon' className='fa fa-map-marker section-icon'/>]} level={2} expanded={true}>  
-                <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app} isLoading={isLoading} forceValidation={this.state.showValidationMessage}/>
-            </Expandable>,
-            <div hidden={isLoading || !isNew} key='saveCancel' className="py-2">
-                <Button color='primary' onClick={this.saveSuggestedTrip} className="px-2">
-                    Save
-                </Button>
-                <Button color='primary' onClick={this.cancelSuggestedTrip} className="px-2">
-                    Cancel
-                </Button>
-            </div>,
-            <div className="alert alert-danger" role="alert" hidden={!this.state.showValidationMessage || tripWarnings.length === 0} key='validation'>
-                Some trip details are missing or incorrect. Please correct before saving.
-            </div>,
-            this.state.trip.isSocial && this.state.trip.isNoSignup ? null :
-            <Expandable key='participants' id='participants' 
-                        title={['Participants', participantWarning, participantCount, <span key='icon' className='fa fa-user section-icon'/>]} 
-                        level={2} expanded={true}>  
-                <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this} app={this.props.app} isLoading={isLoading} />
-            </Expandable>,
-            this.props.isNew || !this.canEditTrip() ? null :
-            <Expandable key={`email${this.state.trip.id}_${this.state.participants.length}`} id='email'
-                        title={['Email', <span key='icon' className='fa fa-paper-plane section-icon'/>]}
-                        level={2} expanded={false}>  
-                <Email  owner={this} app={this.props.app} isLoading={isLoading} />
-            </Expandable>,
-            ( (this.props.app.state.role < Role.Admin) || this.props.isNew ) ? null : 
-            <Expandable key='history' id='history'
-                        title={['History', <span key='icon' className='fa fa-history section-icon'/>]}
-                        level={2} expanded={false} ondemand={history}>
-                History ...
-            </Expandable>,
-            <TripPrint key='tripprint' trip={this} app={this.props.app}/>,
+
+            <Container key="triphubtripdetail" fluid={true}>
+                <div key='tripstatus'>
+                    {this.state.editList
+                        .filter((item:IEdit) => item.id !== this.state.editId)
+                        .map((item:IEdit) =>
+                        <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
+                            <Badge pill={true}>
+                                {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
+                            </Badge>
+                        </ToolTipIcon>)}
+                    {trip.id <= 0
+                        ? <TripHubPill>New trip - not saved!</TripHubPill>
+                        : trip.tripState === TripState.DeletedTrip 
+                        ? <TripHubPill>This trip has been deleted</TripHubPill>
+                        : trip.tripState === TripState.SuggestedTrip && !trip.isApproved
+                        ? <TripHubPill>This trip has has only been suggested, and not yet approved</TripHubPill>
+                        : !trip.isOpen
+                        ? <TripHubPill>This trip is closed, please contact the leader</TripHubPill>
+                        : null}
+                </div>
+                <Accordian key='detail' id='detail' className='trip-section' headerClassName='trip-section-header'
+                            title={<span><b><span key='icon' className='fa fa-map-marker fa-fw'/>{this.state.trip.title}</b></span>}
+                            expanded={true}>
+                    <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app} isLoading={isLoading} forceValidation={this.state.showValidationMessage}/>
+                </Accordian>
+                <div hidden={isLoading || !isNew} key='saveCancel' className="py-2">
+                    <Button color='primary' onClick={this.saveSuggestedTrip} className="px-2">
+                        Save
+                    </Button>
+                    <Button color='primary' onClick={this.cancelSuggestedTrip} className="px-2">
+                        Cancel
+                    </Button>
+                </div>
+                <div className="alert alert-danger" role="alert" hidden={!this.state.showValidationMessage || tripWarnings.length === 0} key='validation'>
+                    Some trip details are missing or incorrect. Please correct before saving.
+                </div>
+                {this.state.trip.isSocial && this.state.trip.isNoSignup ? null :
+                    <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
+                                title={<span><b><span key='icon' className='fa fa-user fa-fw'/>{['Participants', participantWarning, participantCount]}</b></span>}
+                                expanded={true}>  
+                        <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this} app={this.props.app} isLoading={isLoading} />
+                    </Accordian>
+                }
+                {this.props.isNew || !this.canEditTrip() ? null :
+                    <Accordian key={`email${this.state.trip.id}_${this.state.participants.length}`} id='email'
+                                className='trip-section' headerClassName='trip-section-header'
+                                title={<span><b><span key='icon' className='fa fa-paper-plane fa-fw'/>Email</b></span>}
+                                expanded={false}>  
+                        <Email  owner={this} app={this.props.app} isLoading={isLoading} />
+                    </Accordian>
+                }
+                {((this.props.app.state.role < Role.Admin) || this.props.isNew) ? null : 
+                    <Accordian key='history' id='history' className='trip-section' headerClassName='trip-section-header'
+                                title={<span><b><span key='icon' className='fa fa-history fa-fw'/>History</b></span>}
+                                expanded={false} ondemand={history}>
+                        History ...
+                    </Accordian>
+                }
+                <TripPrint key='tripprint' trip={this} app={this.props.app}/>
+            </Container>
         ]
     }
 

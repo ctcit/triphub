@@ -30,7 +30,7 @@ export class ControlWrapper extends Component<{
         return  (
             <FormGroup hidden={this.props.hidden} disabled={this.props.disabled || this.props.isLoading}>
                 <Row noGutters={true}>
-                    <FormText for={this.props.id} color='muted'>{this.props.label}</FormText>
+                    <FormText id={this.props.id} color='muted'>{this.props.label}</FormText>
                     <Badge color='success' hidden={!this.props.saving} className='ml-sm-2' tabIndex={-1}>Saving {Spinner}</Badge>
                 </Row>
                 {this.props.children}
@@ -98,7 +98,7 @@ export class InputControl extends Component<{
             <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
                onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText}>
                 <Input id={this.props.id} type={this.props.type} readOnly={this.props.readOnly} list={this.props.list} min={this.props.min} max={this.props.max}  
-                    value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='off'
+                    value={this.state.value || ""} onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='off'
                     className={className} />
             </ControlWrapper>
       )
@@ -191,7 +191,7 @@ export class SwitchControl extends Component<{
         }                
         return  (
             <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
-                <Switch id={this.props.id} checked={value} onChange={onChange} className="react-switch" disabled={this.props.readOnly} />
+                <Switch id={this.props.id} checked={value || false} onChange={onChange} className="react-switch" disabled={this.props.readOnly} />
             </ControlWrapper>
       )
     }

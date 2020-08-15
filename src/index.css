@@ -54,6 +54,15 @@ table.changehistory{
 }
 
 /* ---------------------------- */
+/* Triphub Loading container */
+/* ---------------------------- */
+
+.triphub-loading-container {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ---------------------------- */
 /* Triphub Navbar */
 /* ---------------------------- */
 

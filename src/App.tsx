@@ -215,7 +215,7 @@ export class App extends Component<{
                  [
                     <TriphubNavbar key='triphubNavbar' app={this}/>,
 
-                    <Container key="loadingContainer">
+                    <Container key="loadingContainer" className="triphub-loading-container">
                         <Jumbotron key='loadingAlert' variant='primary'>
                             <div key='1'>{this.state.isLoadingConfig ? Spinner : Done} Loading Configuration</div>
                             <div key='2'>{this.state.isLoadingMaps ? Spinner : Done} Loading Maps</div>

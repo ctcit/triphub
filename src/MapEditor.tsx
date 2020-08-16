@@ -1203,11 +1203,11 @@ export class MapEditor extends Component<{
 
 export class ButtonWithTooltip extends Component<{
     id: string,
-    color: string,
-    disabled: boolean,
+    color?: string,
+    disabled?: boolean,
     onClick: () => void,
     tooltipText: string,
-    placement: Popper.Placement
+    placement?: Popper.Placement
 },{
     tooltipOpen: boolean ,
 }>{

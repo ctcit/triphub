@@ -90,7 +90,7 @@ export class TripParticipants extends Component<{
                                     : GetDisplayPriority(target)/2 + GetDisplayPriority(info.moveable[nextIndex])/2
         }
 
-        return this.setParticipant(id, {isDeleted:false,displayPriority:displayPriority.toString()},showMenu)
+        return this.setParticipant(id, {isDeleted:false,displayPriority:displayPriority.toString()}, showMenu)
     }
 
     public setParticipant(id : number, props : {}, showMenu?: boolean) : Promise<any> {
@@ -126,7 +126,7 @@ export class TripParticipants extends Component<{
             <Navbar key='navbar' color='light' light={true} expand='md'>
             {[
                 <Button key={'signmeup' + info.all.length} onClick={this.signMeUp} hidden={this.props.isLoading || isNewTrip || imOnList || !isOpen}>
-                    <span className='fa fa-pencil wiggle'/> 
+                    <span className='fa fa-smfa-pencil wiggle'/> 
                     {this.props.trip.state.isSaving ? ['Signing up ',Spinner] : 'Sign me up!'}
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                 </Button>,
@@ -161,7 +161,7 @@ export class TripParticipants extends Component<{
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={info.late.length === 0}>
-                    <div onDragOver={onDragOver} onDrop={onDropOnWaitlist}>Waitlist</div>
+                    <div onDragOver={onDragOver} onDrop={onDropOnWaitlist}><b>Waitlist</b></div>
                     {
                         info.late.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip} 
@@ -169,7 +169,7 @@ export class TripParticipants extends Component<{
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={isNewTrip || info.deleted.length === 0}>
-                    <div onDragOver={onDragOver} onDrop={this.onDropOnDeleted}>Deleted</div>
+                    <div onDragOver={onDragOver} onDrop={this.onDropOnDeleted}><b>Deleted</b></div>
                     {
                         info.deleted.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip} 

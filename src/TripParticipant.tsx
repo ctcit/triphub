@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Form, Row, Col, Container } from 'reactstrap';
+import { Button, Form, Row, Col, Container, ButtonGroup } from 'reactstrap';
 import { Component } from 'react';
 import { IMember,  IParticipant, IValidation, IParticipantsInfo, Role } from './Interfaces';
 import { Spinner } from './Widgets';
@@ -9,6 +9,8 @@ import { Expandable } from './Expandable';
 import { InputControl, SwitchControl, TextAreaInputControl } from './Control';
 import { ToolTipIcon } from './ToolTipIcon';
 import { TripParticipants } from './TripParticipants';
+import { Accordian } from './Accordian';
+import { ButtonWithTooltip } from './MapEditor';
 
 export class TripParticipant extends Component<{
         participant: IParticipant
@@ -24,6 +26,7 @@ export class TripParticipant extends Component<{
         isSaveOp?: boolean,
         isWaitlistOp?: boolean,
         isMemberOp?: boolean,
+        showMenu : boolean
     }> {
 
     public href?: string;
@@ -31,7 +34,7 @@ export class TripParticipant extends Component<{
 
     constructor(props : any){
         super(props)
-        this.state = {}
+        this.state = {showMenu: false}
         this.href = `${this.props.trip.props.href}/participants/${this.props.participant.id}`
         this.app = this.props.app
         this.setDeleted = this.setDeleted.bind(this)
@@ -150,8 +153,9 @@ export class TripParticipant extends Component<{
         const onDragStart = (ev:any) => ev.dataTransfer.setData('id', participant.id)
         const onDragOver = (ev:any) => ev.preventDefault()
         const onDrop = (ev:any) => this.props.owner.setPosition(parseInt(ev.dataTransfer.getData('id'),10), participant)
-        const onMoveUp = (ev:any) => this.props.owner.setPosition(participant.id,this.props.info.moveable[moveableIndex-1],true)
-        const onMoveDown = (ev:any) => this.props.owner.setPosition(participant.id,this.props.info.moveable[moveableIndex+1],true)
+        const onMoveUp = () => this.props.owner.setPosition(participant.id,this.props.info.moveable[moveableIndex-1],true)
+        const onMoveDown = () => this.props.owner.setPosition(participant.id,this.props.info.moveable[moveableIndex+1],true)
+
 
         const title = [
             participant.name === '' ? 'New Tramper' : participant.name,' ',
@@ -164,41 +168,51 @@ export class TripParticipant extends Component<{
         ]
         const buttons = [
             canMoveUp && canEdit ?
-            <Button key='moveup' onClick={onMoveUp}>
-                <span className='fa fa-angle-up'/>
-            </Button> : null,
+                <ButtonWithTooltip key='moveup' id='moveup' onClick={onMoveUp} tooltipText="Move up">
+                    <span className='fa fa-sm fa-angle-up'/>
+                </ButtonWithTooltip> : null,
             canMoveDown && canEdit ?
-            <Button key='movedown' onClick={onMoveDown}>
-                <span className='fa fa-angle-down'/>
-            </Button> : null,
+                <ButtonWithTooltip key='movedown' id='movedown' onClick={onMoveDown} tooltipText="Move down">
+                    <span className='fa fa-angle-down'/>
+                </ButtonWithTooltip> : null,
             !participant.isDeleted && participant.id > 0 && canEdit ? 
-            <Button key='delete' onClick={this.setDeleted}>
-                <span className='fa fa-remove'/> 
-                {this.state.isSaveOp ? ['Deleting ', Spinner] : 'Delete'}
-            </Button> : null,
+                <ButtonWithTooltip key='delete' id='delete' onClick={this.setDeleted} tooltipText="Delete">
+                    <span className='fa fa-remove'/> 
+                    {this.state.isSaveOp ? ['Deleting ', Spinner] : ''}
+                </ButtonWithTooltip> : null,
             participant.isDeleted && participant.id > 0 && canEdit ? 
-            <Button key='undelete' onClick={this.setDeleted}>
-                {this.state.isSaveOp ? ['Signing back up ', Spinner] : 'Sign back up'}
-            </Button> : null,
+                <ButtonWithTooltip key='undelete' id='undelete' onClick={this.setDeleted} tooltipText="Sign back up">
+                    <span className='fa fa-sm fa-pencil wiggle'/> 
+                    {this.state.isSaveOp ? ['Signing up ', Spinner] : ''}
+                </ButtonWithTooltip> : null,
             this.props.canWaitList && this.props.trip.canEditTrip() ? 
-            <Button key='waitlist' onClick={this.setWaitlist}>
-                {this.state.isWaitlistOp ? ['Adding to wait list ', Spinner] : 'Add to wait list'}
-            </Button> : null,
+                <ButtonWithTooltip key='waitlist' id='waitlist' onClick={this.setWaitlist} tooltipText="Add to wait list">
+                    <span className='fa fa-sm fa-user-plus'/> 
+                    {this.state.isWaitlistOp ? ['Adding ', Spinner] : ''}
+                </ButtonWithTooltip> : null,
             this.props.canUnwaitList && this.props.trip.canEditTrip() ? 
-            <Button key='unwaitlist' onClick={this.setWaitlist}>
-                {this.state.isWaitlistOp ? ['Removing from wait list ', Spinner] : 'Remove from wait list'}
-            </Button> : null,
+                <ButtonWithTooltip key='unwaitlist' id='unwaitlist' onClick={this.setWaitlist} tooltipText="Remove from wait list">
+                    <span className='fa fa-sm fa-user-times'/> 
+                    {this.state.isWaitlistOp ? ['Removing ', Spinner] : ''}
+                </ButtonWithTooltip> : null,
             isMemberDiff ?
-            <Button key='ecdupdate' onClick={this.setMember}>
-                {this.state.isMemberOp ? ['Updating emergency contact details ', Spinner] : 'Update emergency contact details'}
-            </Button> : null,
+                <ButtonWithTooltip key='ecdupdate' id='ecdupdate' onClick={this.setMember} tooltipText="Update emergency contact details">
+                    <span className='fa fa-sm fa-phone'/> 
+                    {this.state.isMemberOp ? ['Updating ', Spinner] : ''}
+                </ButtonWithTooltip> : null,
         ]
 
         return (  
             <div onDrop={participant.isDeleted ? this.props.owner.onDropOnDeleted : onDrop} 
                  onDragOver={onDragOver} onDragStart={onDragStart} draggable={!participant.isLeader}>
-                <Expandable title={title} id={`${participant.id}`} level={4} expanded={participant.id === -1} 
-                            buttons={buttons.filter(b => b)} showMenu={participant.showMenu}>
+
+                <Accordian id={`${participant.id}`}  className='participant' headerClassName='participant-header' expanded={participant.id === -1} 
+                    title={<span>{title}
+                               <ButtonGroup className='participant-buttons'>
+                                   {buttons}
+                               </ButtonGroup>
+                          </span>
+                    }>
                     <Form key='form' className='indentedparticipants form'>
                        <Container fluid={true}>
     
@@ -246,7 +260,7 @@ export class TripParticipant extends Component<{
  
                         </Container>
                     </Form>
-                </Expandable>
+                </Accordian>
             </div>
         )
     }

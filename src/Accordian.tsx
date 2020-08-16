@@ -31,9 +31,9 @@ public render() {
 
     return [(
             <Card className={'accordian ' + this.props.className}>
-                <CardHeader className={'accordian-header ' + this.props.headerClassName} onClick={toggle}>
-                    {this.props.title}
+                <CardHeader className={this.props.headerClassName + ' accordian-header'} onClick={toggle}>
                     <span className={'accordian-expand ' + (this.state.expanded ? 'fa fa-chevron-up' : 'fa fa-chevron-down')}/>
+                    {this.props.title}
                 </CardHeader>
                 <Collapse key={this.props.id} id={this.props.id} isOpen={this.state.expanded}>
                     {this.state.demanded || this.props.children}

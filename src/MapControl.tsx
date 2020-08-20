@@ -259,13 +259,20 @@ export class MapControl extends Component<{
         // 	maxZoom: 14,
         // 	attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) | NZ Topo map sheets sourced from the LINZ Data Service and licensed for reuse under CC BY 4.0'
         // }).addTo(map);
-        L.tileLayer('http://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
+        const topoLayer = L.tileLayer('http://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
             minZoom: 6,
             maxZoom: 16,
             subdomains:'abcd',
             attribution: '<a href=“http://data.linz.govt.nz”>Sourced from LINZ. CC BY 4.0'
         }).addTo(this.minimap);
-        
+        const aerialLayer = L.tileLayer('https://basemaps.linz.govt.nz/v1/tiles/aerial/EPSG:3857/{z}/{x}/{y}.webp?api=c01eg2pqbm71b75z3547szpb60k', {
+            minZoom: 6,
+            maxZoom: 16,
+            subdomains:'abcd',
+            attribution: '© <a href="//www.linz.govt.nz/linz-copyright">LINZ CC BY 4.0</a> © <a href="//www.linz.govt.nz/data/linz-data/linz-basemaps/data-attribution">Imagery Basemap contributors</a>'
+        });
+        L.control.layers({ "Topo": topoLayer, "Aerial": aerialLayer}, {})
+            .addTo(this.minimap);
 
         this.nz50LayerGroup = L.layerGroup()
             .addTo(this.minimap);

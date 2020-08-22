@@ -105,6 +105,18 @@ table.changehistory{
 }
 
 /* ---------------------------- */
+/* Trip list */
+/* ---------------------------- */
+
+.trip-list-buttons .btn {
+  margin: -2px 2px;
+  padding: 0px 3px;
+  height: 25px;
+  width: 25px;
+}
+
+
+/* ---------------------------- */
 /* Trip detail section  */
 /* ---------------------------- */
 
@@ -136,7 +148,7 @@ table.changehistory{
 
 .participant-buttons .btn {
   margin: -2px 2px;
-  padding: 0px 3px;
+  padding: 0px 5px;
   height: 25px;
   width: 25px;
 }
@@ -156,6 +168,12 @@ table.changehistory{
 
 .accordian-expand {
   float: right;
+}
+
+/* ---------------------------- */
+/* ExpandableTableRow */
+/* ---------------------------- */
+.expandable-table-row-expand {
 }
 
 /* ---------------------------- */

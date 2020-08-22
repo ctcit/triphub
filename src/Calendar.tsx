@@ -105,7 +105,7 @@ class CalendarWeek extends Component<{
                                     {item.field !== 'tripDate' ? 
                                         <span>{text}</span> : 
                                         <ButtonGroup className='calendar-trip-buttons'>
-                                            <ButtonWithTooltip id={`open-${item.id}`} onClick={onLink} tooltipText="Open trip">
+                                            <ButtonWithTooltip id={`open-${item.id}`} onClick={onLink} tooltipText="Go to trip">
                                                 <span className='fas fa-hiking'/>  
                                             </ButtonWithTooltip>
                                             <div className='calendar-trip-name'>

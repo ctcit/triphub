@@ -168,35 +168,35 @@ export class TripParticipant extends Component<{
         ]
         const buttons = [
             canMoveUp && canEdit ?
-                <ButtonWithTooltip key='moveup' id='moveup' onClick={onMoveUp} tooltipText="Move up">
+                <ButtonWithTooltip key='moveup' id={'moveup' + participant.id} onClick={onMoveUp} tooltipText="Move up">
                     <span className='fa fa-sm fa-angle-up'/>
                 </ButtonWithTooltip> : null,
             canMoveDown && canEdit ?
-                <ButtonWithTooltip key='movedown' id='movedown' onClick={onMoveDown} tooltipText="Move down">
+                <ButtonWithTooltip key='movedown' id={'movedown' + participant.id} onClick={onMoveDown} tooltipText="Move down">
                     <span className='fa fa-angle-down'/>
                 </ButtonWithTooltip> : null,
             !participant.isDeleted && participant.id > 0 && canEdit ? 
-                <ButtonWithTooltip key='delete' id='delete' onClick={this.setDeleted} tooltipText="Delete">
-                    <span className='fa fa-remove'/> 
+                <ButtonWithTooltip key='delete' id={'delete' + participant.id} onClick={this.setDeleted} tooltipText="Delete">
+                    <span className='fa fa-trash'/> 
                     {this.state.isSaveOp ? ['Deleting ', Spinner] : ''}
                 </ButtonWithTooltip> : null,
             participant.isDeleted && participant.id > 0 && canEdit ? 
-                <ButtonWithTooltip key='undelete' id='undelete' onClick={this.setDeleted} tooltipText="Sign back up">
-                    <span className='fa fa-sm fa-pencil wiggle'/> 
+                <ButtonWithTooltip key='undelete' id={'undelete' + participant.id} onClick={this.setDeleted} tooltipText="Sign back up">
+                    <span className='fa fa-sm fa-pen'/> 
                     {this.state.isSaveOp ? ['Signing up ', Spinner] : ''}
                 </ButtonWithTooltip> : null,
             this.props.canWaitList && this.props.trip.canEditTrip() ? 
-                <ButtonWithTooltip key='waitlist' id='waitlist' onClick={this.setWaitlist} tooltipText="Add to wait list">
+                <ButtonWithTooltip key='waitlist' id={'waitlist' + participant.id} onClick={this.setWaitlist} tooltipText="Add to wait list">
                     <span className='fa fa-sm fa-user-plus'/> 
                     {this.state.isWaitlistOp ? ['Adding ', Spinner] : ''}
                 </ButtonWithTooltip> : null,
             this.props.canUnwaitList && this.props.trip.canEditTrip() ? 
-                <ButtonWithTooltip key='unwaitlist' id='unwaitlist' onClick={this.setWaitlist} tooltipText="Remove from wait list">
+                <ButtonWithTooltip key='unwaitlist' id={'unwaitlist' + participant.id} onClick={this.setWaitlist} tooltipText="Remove from wait list">
                     <span className='fa fa-sm fa-user-times'/> 
                     {this.state.isWaitlistOp ? ['Removing ', Spinner] : ''}
                 </ButtonWithTooltip> : null,
             isMemberDiff ?
-                <ButtonWithTooltip key='ecdupdate' id='ecdupdate' onClick={this.setMember} tooltipText="Update emergency contact details">
+                <ButtonWithTooltip key='ecdupdate' id={'ecdupdate' + participant.id} onClick={this.setMember} tooltipText="Update emergency contact details">
                     <span className='fa fa-sm fa-phone'/> 
                     {this.state.isMemberOp ? ['Updating ', Spinner] : ''}
                 </ButtonWithTooltip> : null,

@@ -3,12 +3,11 @@ import './index.css';
 import { Component } from 'react';
 import * as React from 'react';
 import { App } from './App';
-import { Button, Container, Form, Collapse, Jumbotron, Card, CardHeader } from 'reactstrap';
+import { Button, Container, Form, Collapse, Jumbotron, Card, CardHeader, ButtonGroup } from 'reactstrap';
 import { BaseUrl } from '.';
 import { ITrip, TripState } from './Interfaces';
 import { GetDate, GetLength } from './Utilities';
 import './index.css';
-import { Expandable } from './Expandable';
 import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
@@ -16,6 +15,8 @@ import { Spinner } from './Widgets';
 import { SwitchControl } from './Control';
 import { Role } from './Interfaces';
 import { Accordian } from './Accordian';
+import { ButtonWithTooltip } from './MapEditor';
+import { ExpandableTableRow } from './ExpandableTableRow';
 
 class TripsLine extends Component<{
     owner: TripsGroup,
@@ -59,6 +60,14 @@ class TripsLine extends Component<{
         const myRole = this.props.owner.props.app.state.role 
 
         const tablerow = [
+            <td key={'open' + id}>
+                {extractWarnings(/./)}
+                <ButtonGroup className='trip-list-buttons'>
+                    <ButtonWithTooltip id={`open-${id}`} onClick={this.onClick} tooltipText="Go to trip">
+                        <span className='fas fa-hiking'/>  
+                    </ButtonWithTooltip>
+                </ButtonGroup>
+            </td>,
             <td key={'date' + id} onClick={this.onClick}>
                 {GetDate(trip.tripDate)}{extractWarnings(/date/)}
             </td>,
@@ -82,18 +91,14 @@ class TripsLine extends Component<{
                 <SwitchControl id='isApproved' label='' isLoading={false} onGetValidationMessage={onGetValidationMessage}
                     readOnly={myRole < Role.Admin}
                     onGet={onGetApproved} onSave={onSaveApproved} />
-            </td>,
-            <td key={'link' + id} className="">
-                {extractWarnings(/./)}
-                <Button color='link' onClick={this.onClick}>▶</Button>
             </td>
         ]
 
         return (
-            <Expandable id={'trip' + id} tablerow={tablerow} expandClassName='mobile-only'>
+            <ExpandableTableRow id={'trip' + id} tablerow={tablerow} expandClassName='mobile-only'>
                 <div><strong>Grade: </strong>{trip.grade}</div>
                 <div><strong>Leader: </strong>{trip.leaders}</div>
-            </Expandable>
+            </ExpandableTableRow>
         )
     }
 }
@@ -125,7 +130,7 @@ export class TripsGroup extends Component<{
                     <Table className='TripGroup' size='sm' striped={true} reflow={false}>
                         <thead>
                             <tr>
-                                <th className='mobile-only'/>
+                                <th />
                                 <th>Date</th>
                                 <th className='centered'>Length</th>
                                 <th>Title</th>
@@ -133,7 +138,7 @@ export class TripsGroup extends Component<{
                                 <th hidden={!me.id} className='desktop-only'>Leader</th>
                                 <th hidden={this.props.trips[0].tripState !== TripState.MyTrip}>My Role</th>
                                 <th hidden={this.props.trips[0].tripState !== TripState.SuggestedTrip} className='centered'>Approved</th>
-                                <th className=''/>
+                                <th className='mobile-only'/>
                             </tr>
                         </thead>
                         <tbody>

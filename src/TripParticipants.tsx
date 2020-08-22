@@ -126,7 +126,7 @@ export class TripParticipants extends Component<{
             <Navbar key='navbar' color='light' light={true} expand='md'>
             {[
                 <Button key={'signmeup' + info.all.length} onClick={this.signMeUp} hidden={this.props.isLoading || isNewTrip || imOnList || !isOpen}>
-                    <span className='fa fa-smfa-pencil wiggle'/> 
+                    <span className='fa fa-pen wiggle'/> 
                     {this.props.trip.state.isSaving ? ['Signing up ',Spinner] : 'Sign me up!'}
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                 </Button>,

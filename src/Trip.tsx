@@ -278,26 +278,26 @@ export class Trip extends Component<{
             <TriphubNavbar key='triphubnavbar' app={this.props.app}>
                 <NavLink onClick={this.deleteTrip} hidden={isLoading || isNew || trip.isDeleted || !this.canEditTrip()}>
                     <span className='triphub-navbar'>
-                        <span className='fa fa-remove fa-fw'/> 
-                        Delete this trip
+                        <span className='fa fa-trash fa-fw'/> 
+                        &nbsp; Delete this trip
                     </span>
                 </NavLink>
                 <NavLink onClick={this.deleteTrip} hidden={isLoading || isNew || !trip.isDeleted || !this.canEditTrip()}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-undo fa-fw'/> 
-                        Undelete this trip
+                        &nbsp; Undelete this trip
                     </span>
                 </NavLink>
                 <NavLink onClick={this.approveTrip} hidden={isLoading || isNew || trip.isApproved  || !this.canApproveTrip()}>
                     <span className='triphub-navbar'>
-                        <span key='approvetripicon' className='fa fa-thumbs-o-up fa-fw'/> 
-                        Approve this trip
+                        <span key='approvetripicon' className='fa fa-thumbs-up fa-fw'/> 
+                        &nbsp; Approve this trip
                     </span>
                 </NavLink>
                 <NavLink onClick={this.approveTrip} hidden={isLoading || isNew || !trip.isApproved || !this.canApproveTrip()}>
                     <span className='triphub-navbar'>
-                        <span key='unapprovetripicon' className='fa fa-thumbs-o-down fa-fw'/> 
-                        Remove Approval
+                        <span key='unapprovetripicon' className='fa fa-thumbs-down fa-fw'/> 
+                        &nbsp; Remove Approval
                     </span>
                 </NavLink>
             </TriphubNavbar>,

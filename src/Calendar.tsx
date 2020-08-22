@@ -105,7 +105,7 @@ class CalendarWeek extends Component<{
                                     {item.field !== 'tripDate' ? 
                                         <span>{text}</span> : 
                                         <ButtonGroup className='calendar-trip-buttons'>
-                                            <ButtonWithTooltip id={`show-${item.id}`} onClick={onLink} tooltipText="Show trip">
+                                            <ButtonWithTooltip id={`open-${item.id}`} onClick={onLink} tooltipText="Open trip">
                                                 <span className='fas fa-hiking'/>  
                                             </ButtonWithTooltip>
                                             <div className='calendar-trip-name'>
@@ -288,44 +288,46 @@ export class Calendar extends Component<{
 
         this.processTrips()
 
+
+        const filterElement: JSX.Element = (
+            <Dropdown key='filterDropdown' nav={true} isOpen={this.state.showDropdownIsOpen} toggle={toggleShowDropdown}>
+                <DropdownToggle className="triphub-navbar" nav={true} caret={true}>
+                    <span className='fa fa-filter'/> 
+                    &nbsp; Filter trips
+                </DropdownToggle>
+                <DropdownMenu color='primary'>
+
+                    <DropdownItem header={true}>Trip State</DropdownItem>
+                    <DropdownItem onClick={stateFilterMyTrips}>
+                        <span className={'fa ' + (state.state === StateFilter.MyTrips ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Mine</DropdownItem>
+                    <DropdownItem onClick={stateFilterOpen}>
+                        <span className={'fa ' + (state.state === StateFilter.Open ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Open</DropdownItem>
+                    <DropdownItem onClick={stateFilterSuggested}>
+                        <span className={'fa ' + (state.state === StateFilter.Suggested ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Suggested</DropdownItem>
+                    <DropdownItem onClick={stateFilterAll}>
+                        <span className={'fa ' + (state.state === StateFilter.All ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>All</DropdownItem>
+
+                    <DropdownItem divider={true}/>
+                    <DropdownItem header={true}>Trip Length/Type</DropdownItem>
+                    <DropdownItem onClick={lengthFilterDay}>
+                        <span className={'fa ' + (state.length === LengthFilter.Day ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Day</DropdownItem>
+                    <DropdownItem onClick={lengthFilterWeekend}>
+                        <span className={'fa ' + (state.length === LengthFilter.Weekend ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Weekend</DropdownItem>
+                    <DropdownItem onClick={lengthFilterTrips}>
+                        <span className={'fa ' + (state.length === LengthFilter.Trips ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Trip</DropdownItem>
+                    <DropdownItem onClick={lengthFilterSocial}>
+                        <span className={'fa ' + (state.length === LengthFilter.Social ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Social</DropdownItem>
+                    <DropdownItem onClick={lengthFilterAll}>
+                        <span className={'fa ' + (state.length === LengthFilter.All ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>All</DropdownItem>
+
+                    <DropdownItem divider={true}/>
+                    <DropdownItem onClick={toggelShowOpenAndCloseDates}>
+                        <span className={'fa ' + (state.openClose ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Show open and close dates</DropdownItem>
+                </DropdownMenu>
+            </Dropdown>)
+
         return [
-            <TriphubNavbar key='triphubNavbar' app={this.props.app}>
-                <Dropdown nav={true} isOpen={this.state.showDropdownIsOpen} toggle={toggleShowDropdown}>
-                    <DropdownToggle className="triphub-navbar" nav={true} caret={true}>
-                        <span className='fa fa-filter fa-fw'/> 
-                        Filter trips
-                    </DropdownToggle>
-                    <DropdownMenu color='primary'>
-
-                        <DropdownItem header={true}>Trip State</DropdownItem>
-                        <DropdownItem onClick={stateFilterMyTrips}>
-                            <span className={'fa ' + (state.state === StateFilter.MyTrips ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Mine</DropdownItem>
-                        <DropdownItem onClick={stateFilterOpen}>
-                            <span className={'fa ' + (state.state === StateFilter.Open ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Open</DropdownItem>
-                        <DropdownItem onClick={stateFilterSuggested}>
-                            <span className={'fa ' + (state.state === StateFilter.Suggested ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Suggested</DropdownItem>
-                        <DropdownItem onClick={stateFilterAll}>
-                            <span className={'fa ' + (state.state === StateFilter.All ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>All</DropdownItem>
-
-                        <DropdownItem divider={true}/>
-                        <DropdownItem header={true}>Trip Length/Type</DropdownItem>
-                        <DropdownItem onClick={lengthFilterDay}>
-                            <span className={'fa ' + (state.length === LengthFilter.Day ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Day</DropdownItem>
-                        <DropdownItem onClick={lengthFilterWeekend}>
-                            <span className={'fa ' + (state.length === LengthFilter.Weekend ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Weekend</DropdownItem>
-                        <DropdownItem onClick={lengthFilterTrips}>
-                            <span className={'fa ' + (state.length === LengthFilter.Trips ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Trip</DropdownItem>
-                        <DropdownItem onClick={lengthFilterSocial}>
-                            <span className={'fa ' + (state.length === LengthFilter.Social ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Social</DropdownItem>
-                        <DropdownItem onClick={lengthFilterAll}>
-                            <span className={'fa ' + (state.length === LengthFilter.All ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>All</DropdownItem>
-
-                        <DropdownItem divider={true}/>
-                        <DropdownItem onClick={toggelShowOpenAndCloseDates}>
-                            <span className={'fa ' + (state.openClose ? 'fa-check' : 'fa-fw') + ' fa-fw'}/>Show open and close dates</DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>
-            </TriphubNavbar>,
+            <TriphubNavbar key='triphubNavbar' app={this.props.app} priorityNavItems={[filterElement]}/>,
 
             <Container key='calendar' fluid={true}>
                 <Table className='calendar' responsive={true}>

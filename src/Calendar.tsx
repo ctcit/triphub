@@ -15,6 +15,7 @@ import DropdownToggle from 'reactstrap/lib/DropdownToggle';
 import DropdownMenu from 'reactstrap/lib/DropdownMenu';
 import DropdownItem from 'reactstrap/lib/DropdownItem';
 import Container from 'reactstrap/lib/Container';
+import { ButtonWithTooltip } from './MapEditor';
 
 interface ICalendarItem {
     id: number
@@ -88,11 +89,11 @@ class CalendarWeek extends Component<{
 
                     colSpan = CountWhile(x => col+x < 7 && days[col+x][row] && days[col+x][row].indexOf(item) >= 0);
 
-                    const charlimit = 15 * colSpan
+                    const text = item.text
+
                     const onLink = () => this.props.calendar.props.app.setPath('/trips/' + item.trip.id)
                     const onSelect = () => this.props.calendar.setState({selected: item.trip.id})
                     const onDragStart = (ev:any) => ev.dataTransfer.setData('id', item.id)
-                    const text = item.text.length < charlimit ? item.text : item.text.substr(0,charlimit)+'...'
                     const isSelected = item.trip && this.props.calendar.state.selected === item.trip.id
 
                     slots.push(' ')
@@ -100,8 +101,20 @@ class CalendarWeek extends Component<{
                         <Badge key={item.id} id={`badge${item.id}`} onDragStart={onDragStart} 
                                 draggable={this.props.calendar.props.app.state.role >= Role.Admin}
                                 className={isSelected ? 'selected' : ''}>
-                            {item.field !== 'tripDate' ? '' : <span onClick={onLink}>&gt;&gt;</span>}
-                            <span onClick={onSelect}>{text}</span>
+                                    <span>
+                                    {item.field !== 'tripDate' ? 
+                                        <span>{text}</span> : 
+                                        <ButtonGroup className='calendar-trip-buttons'>
+                                            <ButtonWithTooltip id={`show-${item.id}`} onClick={onLink} tooltipText="Show trip">
+                                                <span className='fas fa-hiking'/>  
+                                            </ButtonWithTooltip>
+                                            <div className='calendar-trip-name'>
+                                                <ButtonWithTooltip id={`select-${item.id}`} color='transparent' onClick={onSelect} tooltipText={text}>
+                                                    {text}  
+                                                </ButtonWithTooltip>
+                                            </div>
+                                        </ButtonGroup>}
+                                    </span>
                         </Badge>)
                 }
 
@@ -315,7 +328,7 @@ export class Calendar extends Component<{
             </TriphubNavbar>,
 
             <Container key='calendar' fluid={true}>
-                <Table className='calendar'>
+                <Table className='calendar' responsive={true}>
                     <tbody>
                         <tr>
                             <td className='label'/>

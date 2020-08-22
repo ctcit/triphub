@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://ctc.org.nz/triphub.dev/web",
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.14.0",
     "@types/luxon": "^1.21.0",
     "@types/react-modal": "^3.10.5",
     "@types/react-resizable": "^1.7.2",
@@ -11,7 +12,6 @@
     "@types/react-textarea-autosize": "^4.3.3",
     "bootstrap": "^4.4.1",
     "classnames": "^2.2.6",
-    "font-awesome": "^4.7.0",
     "leaflet": "^1.6.0",
     "leaflet-gpx": "^1.4.0",
     "luxon": "^1.22.0",

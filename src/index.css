@@ -214,12 +214,16 @@ table.changehistory{
   padding: 3px;
   cursor: pointer;
   color: black;
-  background-color: lightgray;
+  background-color: lightgreen;
   font-size: medium;
 }
 
 .calendar td {
-  width: 30px;
+  min-width: 30px;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   height: 30px;
   border-left: 1px solid darkgray;
   border-right: 1px solid darkgray;
@@ -275,6 +279,20 @@ table.changehistory{
 
 .calendar td.today {
   background-color: pink
+}
+
+.calendar-trip-buttons .btn {
+  margin: -2px 2px;
+  padding: 0px 3px;
+  height: 25px;
+  width: 25px;
+}
+
+.calendar-trip-name .btn {
+  width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------------------------- */

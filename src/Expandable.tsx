@@ -11,7 +11,6 @@ export class Expandable extends Component<{
     level? : number
     expanded? : boolean
     title? : any
-    tablerow? : any
     expandClassName? : string
     ondemand?: ()=>any
     showMenu?: boolean
@@ -25,32 +24,18 @@ constructor(props: any){
     this.state = {expanded: props.expanded, showMenu: props.expanded || props.showMenu}
 }
 
-public render(){
-    const toggle = () => this.setState({expanded: !this.state.expanded, demanded: this.state.demanded || (this.props.ondemand && this.props.ondemand())})
-    const toggleMenu = () => this.setState({showMenu: !this.state.showMenu})
-    const onMouseEnter = () => this.setState({showMenu: true})
-    const onMouseLeave = () => this.setState({showMenu: false})
-    const collapse = <Collapse key={'collapse' + this.props.id} isOpen={this.state.expanded} className='noprint'>
-                        {this.state.demanded || this.props.children}
-                    </Collapse>
-    const button = <Button key='button' color='link' onClick={toggle} type='button' style={{width:'2em'}}>
-                        {this.state.demanded || this.props.children ? (this.state.expanded ? '◢' : '▶') : ' '}
-                    </Button>
+    public render(){
+        const toggle = () => this.setState({expanded: !this.state.expanded, demanded: this.state.demanded || (this.props.ondemand && this.props.ondemand())})
+        const toggleMenu = () => this.setState({showMenu: !this.state.showMenu})
+        const onMouseEnter = () => this.setState({showMenu: true})
+        const onMouseLeave = () => this.setState({showMenu: false})
+        const collapse = <Collapse key={'collapse' + this.props.id} isOpen={this.state.expanded} className='noprint'>
+                            {this.state.demanded || this.props.children}
+                        </Collapse>
+        const button = <Button key='button' color='link' onClick={toggle} type='button' style={{width:'2em'}}>
+                            {this.state.demanded || this.props.children ? (this.state.expanded ? '◢' : '▶') : ' '}
+                        </Button>
 
-    if (this.props.tablerow) {
-        return [
-            <tr key={'exp' + this.props.id} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
-                <td className={this.props.expandClassName}>{button}</td>
-                {this.props.tablerow}
-            </tr>,
-            <tr key={'expbody' + this.props.id}>
-                <td style={{padding: 0}}/>
-                <td colSpan={9} style={{padding: 0}}>{collapse}</td>
-            </tr>,
-            <tr key={'expodd' + this.props.id}/>
-        ]
-
-    } else {
         const HLevel = `h${this.props.level || 1}`
 
         return [
@@ -65,5 +50,4 @@ public render(){
             collapse
         ]
     }
-}
 }

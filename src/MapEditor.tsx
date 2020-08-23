@@ -288,17 +288,17 @@ export class MapEditor extends Component<{
                         <Row className="mb-2">
                             <Col sm={2}>
                                 <ButtonGroup>
-                                    <ButtonWithTooltip id="ZoomToRoutesButton1" color='primary' 
+                                    <ButtonWithTooltip id="ZoomToRoutesButton1" color='secondary' 
                                         onClick={zoomToRoutes} disabled={this.state.routes.length === 0} 
                                         placement="top" tooltipText="Zoom to route extents">
                                             <MdZoomOutMap/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
                                         onClick={selectRouteMaps} disabled={this.state.routes.length === 0 }  
                                         placement="top" tooltipText="Select maps overlapping the route">
                                             <MdGridOff/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="ClearSelectedMapsButton" color='primary' 
+                                    <ButtonWithTooltip id="ClearSelectedMapsButton" color='secondary' 
                                         onClick={clearSelectedMaps} disabled={false} 
                                         placement="top" tooltipText="Clear all selected maps">
                                             <MdClear/>
@@ -321,66 +321,66 @@ export class MapEditor extends Component<{
                         <Row className="mb-2">
                             <Col sm={5}>
                                 <ButtonGroup>
-                                    <ButtonWithTooltip id="ZoomToRoutesButton2" color='primary' 
+                                    <ButtonWithTooltip id="ZoomToRoutesButton2" color='secondary' 
                                         onClick={zoomToRoutes} disabled={this.state.routes.length === 0} 
                                         placement="top" tooltipText="Zoom to route extents">
                                             <MdZoomOutMap/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="PreviousRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="PreviousRouteButton" color='secondary' 
                                         onClick={previousRoute} disabled={this.state.currentRouteIndex <= 0} 
                                         placement="top" tooltipText="Edit the previous route">
                                             <MdNavigateBefore/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="NextRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="NextRouteButton" color='secondary' 
                                         onClick={nextRoute} disabled={this.state.currentRouteIndex >= this.state.routes.length - 1} 
                                         placement="top" tooltipText="Edit the next route">
                                             <MdNavigateNext/>
                                     </ButtonWithTooltip>
                                 </ButtonGroup>
                                 <ButtonGroup>
-                                    <ButtonWithTooltip id="SimplifyRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="SimplifyRouteButton" color='secondary' 
                                         onClick={generalizeRoute} disabled={this.state.routes.length === 0} 
                                         placement="top" tooltipText="Simplify route for current zoom level">
                                             <MdTimeline/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="JoinRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="JoinRouteButton" color='secondary' 
                                         onClick={joinRoute} disabled={this.state.currentRouteIndex >= this.state.routes.length - 1} 
                                         placement="top" tooltipText="Join current route with the next route">
                                             <GiJoint/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="SplitRouteButton" color={this.state.splitMode ? 'danger' : 'primary'} 
+                                    <ButtonWithTooltip id="SplitRouteButton" color={this.state.splitMode ? 'danger' : 'secondary'} 
                                         onClick={splitRoute} disabled={this.state.currentRouteIndex < 0} 
                                         placement="top" tooltipText="Split the current route at the next vertex clicked">
                                             <MdContentCut/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="SwapRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="SwapRouteButton" color='secondary' 
                                         onClick={swapRoute} disabled={this.state.currentRouteIndex >= this.state.routes.length - 1} 
                                         placement="top" tooltipText="Swap the current route with the next route">
                                             <IoMdSwap/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="ReverseRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="ReverseRouteButton" color='secondary' 
                                         onClick={reverseRoute} disabled={this.state.currentRouteIndex < 0} 
                                         placement="top" tooltipText="Reverse the direction of the current route">
                                             <AiOutlineRollback/>
                                     </ButtonWithTooltip>
                                 </ButtonGroup>
                                 <ButtonGroup>
-                                    <ButtonWithTooltip id="AddRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="AddRouteButton" color='secondary' 
                                         onClick={addRoute} disabled={false} 
                                         placement="top" tooltipText="Add new route">
                                         <MdAddCircle/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="DeleteRouteButton" color='primary' 
+                                    <ButtonWithTooltip id="DeleteRouteButton" color='secondary' 
                                         onClick={deleteRoute} disabled={this.state.routes.length === 0}  
                                         placement="top" tooltipText="Delete current route">
                                             <MdClear/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="ClearAllRoutesButton" color='primary' 
+                                    <ButtonWithTooltip id="ClearAllRoutesButton" color='secondary' 
                                         onClick={clearAllRoutes} disabled={this.state.routes.length === 0}  
                                         placement="top" tooltipText="Clear all routes">
                                             <MdClearAll/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="UndoButton1" color='primary' 
+                                    <ButtonWithTooltip id="UndoButton1" color='secondary' 
                                         onClick={undoLastRouteEdit} disabled={!this.state.canUndoLastRouteEdit} 
                                         placement="top" tooltipText="Undo last change">
                                             <MdUndo/>
@@ -405,12 +405,12 @@ export class MapEditor extends Component<{
                         <Row className="mb-2">
                             <Col sm={2}>
                                 <ButtonGroup>
-                                    <ButtonWithTooltip id="ZoomToRoutesButton3" color='primary' 
+                                    <ButtonWithTooltip id="ZoomToRoutesButton3" color='secondary' 
                                         onClick={zoomToRoutes} disabled={this.state.routes.length === 0} 
                                         placement="top" tooltipText="Zoom to route extents">
                                             <MdZoomOutMap/>
                                     </ButtonWithTooltip>
-                                    <ButtonWithTooltip id="UndoButton2" color='primary' 
+                                    <ButtonWithTooltip id="UndoButton2" color='secondary' 
                                         onClick={undoLastRouteEdit2} disabled={!this.state.canUndoLastRouteEdit} 
                                         placement="top" tooltipText="Undo last change">
                                             <MdUndo/>

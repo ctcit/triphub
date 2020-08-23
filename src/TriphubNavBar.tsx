@@ -142,7 +142,7 @@ export class TriphubNavbar extends Component<{
         return (
             <Navbar color='primary' inverse={true} toggleable={true} expand={false}>
                 <NavbarBrand className='triphub-navbar' href="#home">
-                    <img src="/CTCLogo.png" width="40" height="40" className="d-inline-block" />
+                    <img src="CTCLogo.png" width="40" height="40" className="d-inline-block" />
                     <b>Trips</b>
                 </NavbarBrand>
                 <Nav className="mr-auto" justified={false} fill={false} >

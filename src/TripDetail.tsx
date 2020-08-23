@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Form, Col, Row, Container } from 'reactstrap';
 import { App } from './App';
-import { SwitchControl, TextAreaInputControl, InputControl } from './Control';
+import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl } from './Control';
 import './index.css';
 import './print.css';
 import { Trip } from './Trip';
@@ -151,10 +151,9 @@ export class TripDetail extends Component<{
 
                 <Row>
                     <Col>
-                        <InputControl id='departurePoint' 
+                        <ComboBoxControl id='departurePoint' 
                             label={isSocial ? 'Location' : 'Departure Point'} 
-                            type='text'
-                            list={isSocial ? 'social_location_list' : 'departure_point_list'} 
+                            options={isSocial ? ['Club Rooms (110 Walthan Road)'] : ['Z Papanui', 'Z (formerly Caltex) Russley']}
                             {...common}/>
                     </Col>
                 </Row>
@@ -173,7 +172,7 @@ export class TripDetail extends Component<{
                         <InputControl hidden={!isSocial} id='cost' label='Cost' type='text' helpText='Leave blank for free events' {...common}/>
                     </Col>
                     <Col sm={8}>
-                        <InputControl id='grade' label='Grade' type='text' list='grade_list'  {...common}/>
+                        <ComboBoxControl id='grade' label='Grade' options={['Easy', 'Easy/Moderate', 'Moderate', 'Moderate/Hard', 'Hard']}  {...common}/>
                     </Col>
                 </Row>
 
@@ -214,21 +213,7 @@ export class TripDetail extends Component<{
                     </Col>
                 </Row>
             </Form>,
-            <datalist key='grade_list' id='grade_list'>
-                <option value='Easy' />
-                <option value='Easy/Moderate' />
-                <option value='Moderate' />
-                <option value='Moderate/Hard' />
-                <option value='Hard' />
-            </datalist>,
-            <datalist key='departure_point_list' id='departure_point_list'>
-                <option value='Z Papanui' />
-                <option value='Z (formerly Caltex) Russley' />
-            </datalist>,
-            <datalist key='social_location_list' id='social_location_list'>
-                <option value='Club Rooms (110 Walthan Road)' />
-            </datalist>
-    ]
+        ]
     }
 
 }

@@ -1,7 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Component } from 'react';
 import * as React from 'react';
-import { Badge, FormGroup, Input, FormText, Row } from 'reactstrap';
+import { Badge, FormGroup, Input, FormText, Row, DropdownToggle, DropdownMenu, DropdownItem, ButtonDropdown, InputGroup } from 'reactstrap';
 import './index.css';
 import { Spinner } from './Widgets';
 import Textarea from 'react-textarea-autosize';
@@ -237,11 +237,84 @@ export class SelectControl extends Component<{
         
         return  (
             <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
-                <Input id={this.props.id} type="select" readOnly={this.props.readOnly} value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='off'>
+                <Input id={this.props.id} type="select" readOnly={this.props.readOnly} value={this.state.value} 
+                    onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='off'>
                     {Object.keys(this.props.options).map( (key:any) => {
                         return <option value={key} key={key}>{this.props.options[key]}</option>
                     })}
                 </Input>
+            </ControlWrapper>
+      )
+   }
+}
+
+export class ComboBoxControl extends Component<{
+    id : string, 
+    label : string,
+    hidden? : boolean,
+    readOnly? : boolean,
+    isLoading: boolean,
+    onGet: (id: string) => any,
+    onSave: (id: string, value: any) => Promise<void>,
+    onGetValidationMessage: (id: string) => string,
+    options: object
+}, {
+    dropdownOpen: boolean,
+    oldValue: any,
+    value: any,
+    saving : boolean
+}> {
+
+    constructor(props : any)     {
+        super(props);
+        const oldValue = this.props.onGet(this.props.id);
+        this.state = {dropdownOpen: false, oldValue, value: oldValue, saving: false}
+    }
+
+    public render() {
+        const dropdownToggle = (): void => 
+        {
+            this.setState({ dropdownOpen: !this.state.dropdownOpen });
+        }
+        const onFocus = (): void => {
+            const oldValue = this.props.onGet(this.props.id);
+            this.setState({ oldValue, value: oldValue });
+            setTimeout(() => this.setState({ dropdownOpen: true }), 300); // Hack to ensure dropdown stays open
+        }
+        const onChange = (event: React.ChangeEvent) => {
+            const newValue = (event.target as any).value;
+            this.setState({ value: newValue });
+        }
+        const onBlur = () => {
+            if (this.state.oldValue !== this.state.value) {
+                this.setState({saving: true});
+                this.props.onSave(this.props.id, this.state.value)
+                    .then(() => this.setState({saving: false}));
+            }
+        } 
+        const onClick = (event: any) => {
+            const newValue = event.currentTarget.textContent;
+            if (this.state.oldValue !== newValue) {
+                this.setState({value: newValue, saving: true});
+                this.props.onSave(this.props.id, newValue)
+                    .then(() => this.setState({saving: false}));
+            }
+        }
+        
+        return  (
+            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+                <InputGroup>
+                    <Input id={this.props.id} type="text" readOnly={this.props.readOnly} value={this.state.value} 
+                        onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='off'/>
+                    <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={dropdownToggle} hidden={this.props.readOnly}>
+                        <DropdownToggle color='transparent' caret={true}/>
+                        <DropdownMenu right={true}>
+                            {Object.keys(this.props.options).map( (key:any) => {
+                                    return <div key={key} onClick={onClick}><DropdownItem>{this.props.options[key]}</DropdownItem></div>
+                                })}
+                        </DropdownMenu>
+                    </ButtonDropdown>
+                </InputGroup>
             </ControlWrapper>
       )
    }

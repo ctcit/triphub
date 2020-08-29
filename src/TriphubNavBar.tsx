@@ -60,6 +60,18 @@ export class TriphubNavbar extends Component<{
 
         const navItems: JSX.Element[] = [];
 
+        if (this.props.app.state.inIFrame && this.props.app.state.path !== '') {
+            navItems.push(
+            <NavItem>
+                <NavLink onClick={alltrips} disabled={this.props.app.state.isLoading}>
+                    <span className='triphub-navbar'>
+                        <span className='fa fa-bars fa-fw'/>
+                        &nbsp; All trips
+                    </span>
+                </NavLink>
+            </NavItem>)
+        }
+
         if (this.props.app.state.path !== '/calendar') {
             navItems.push(
             <NavItem>
@@ -136,20 +148,20 @@ export class TriphubNavbar extends Component<{
         const bannerAndToggleApproxWidth = 230;
         const navItemAprroxWidth = 170; // 120 - 200px
         const nonCollapsedCount = Math.min(navItems.length, Math.floor(Math.max(0, this.state.windowWidth - bannerAndToggleApproxWidth) / navItemAprroxWidth));
-        const nonCollapsableNavItems: JSX.Element[] = navItems.slice(0, nonCollapsedCount);
-        const collapsableNavItems: JSX.Element[] = navItems.slice(nonCollapsedCount);
+        const nonCollapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? navItems : navItems.slice(0, nonCollapsedCount);
+        const collapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? [] : navItems.slice(nonCollapsedCount);
     
         return (
             <Navbar color='primary' inverse={true} toggleable={true} expand={false}>
-                <NavbarBrand className='triphub-navbar' href="#home">
+                <NavbarBrand className='triphub-navbar' href="#home" hidden={this.props.app.state.inIFrame}>
                     <img src="CTCLogo.png" width="40" height="40" className="d-inline-block" />
                     <b>Trips</b>
                 </NavbarBrand>
                 <Nav className="mr-auto" justified={false} fill={false} >
                     {nonCollapsableNavItems}
                 </Nav>
-                <NavbarToggler onClick={toggle} hidden={collapsableNavItems.length === 0}/>
-                <Collapse  isOpen={this.state.isOpen} navbar={true}>
+                <NavbarToggler onClick={toggle} hidden={this.props.app.state.inIFrame || collapsableNavItems.length === 0}/>
+                <Collapse  isOpen={this.state.isOpen} navbar={true} hidden={this.props.app.state.inIFrame}>
                     <Nav className="mr-auto" justified={false} fill={false} >
                         {collapsableNavItems}
                     </Nav>

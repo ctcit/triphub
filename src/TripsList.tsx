@@ -11,7 +11,7 @@ import './index.css';
 import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
-import { Spinner } from './Widgets';
+import { Spinner, Done } from './Widgets';
 import { SwitchControl } from './Control';
 import { Role } from './Interfaces';
 import { Accordian } from './Accordian';
@@ -120,7 +120,7 @@ export class TripsGroup extends Component<{
         const me = this.props.app.getMe()
 
         return  (
-            <Container fluid={true}>
+            <Container className={this.props.app.containerClassName()} fluid={true}>
                 <Accordian id={id} className='trip-group' headerClassName='trip-group-header' expanded={this.props.expanded}
                     title={<span>
                             <b>{TripState[trips[0].tripState].replace('Trip',' Trip') + (trips.length > 1 ? 's' : '')}</b>
@@ -191,21 +191,30 @@ export class TripsList extends Component<{
     }
 
     public render(){
+        const isLoading = this.props.app.state.isLoading;
         const groups = this.state.groups.filter((group:ITrip[]) => group.length)
         const role : Role = this.props.app.state.role
         const isAdmin = role >= Role.Admin
         const isTripLeader = role >= Role.TripLeader
         return [
             <TriphubNavbar key='triphubNavbar' app={this.props.app}/>,
-            groups
-                // Only Tripleaders+ can see suggested trips
-                // Only Admin+ can see deleted trips
-                .filter((group:ITrip[]) => ( (group[0].tripState !== TripState.SuggestedTrip && group[0].tripState !== TripState.DeletedTrip) ||
-                                             (group[0].tripState === TripState.SuggestedTrip && isTripLeader) ||
-                                             (group[0].tripState === TripState.DeletedTrip && isAdmin) ) )
-                .map((group:ITrip[],i) => 
-                <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripState} 
-                            app={this.props.app} expanded={i <= 1}/>)
+            (isLoading ? 
+                <Container key="loadingContainer" className={this.props.app.containerClassName() + "triphub-loading-container"}>
+                    <Jumbotron key='loadingAlert' variant='primary'>
+                        <div key='1'>{isLoading ? Spinner : Done} Loading Trips</div>
+                    </Jumbotron>
+                </Container> :
+
+                groups
+                    // Only Tripleaders+ can see suggested trips
+                    // Only Admin+ can see deleted trips
+                    .filter((group:ITrip[]) => ( (group[0].tripState !== TripState.SuggestedTrip && group[0].tripState !== TripState.DeletedTrip) ||
+                                                (group[0].tripState === TripState.SuggestedTrip && isTripLeader) ||
+                                                (group[0].tripState === TripState.DeletedTrip && isAdmin) ) )
+                    .map((group:ITrip[],i) => 
+                    <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripState} 
+                                app={this.props.app} expanded={i <= 1}/>)
+                )
             ]
         }
 }

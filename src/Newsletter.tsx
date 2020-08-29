@@ -106,7 +106,7 @@ export class Newsletter extends Component<{
         return [
             <TriphubNavbar key='triphubnavbar' app={app}/>,
 
-            <Container key='newsletter' fluid={true}>
+            <Container className={this.props.app.containerClassName()} key='newsletter' fluid={true}>
                 <h1 key="title">Manage Newsletter</h1>
                 {isNew && <div><p>No current newsletter, please create a new one..</p></div>}
                 {isLoading && <FullWidthLoading />}

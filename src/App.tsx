@@ -33,6 +33,7 @@ export class App extends Component<{
       holidayMap: { [id: string]: IHoliday }
       config: IConfig
       statusId?: any
+      inIFrame: boolean
     }> {
       public trip: React.RefObject<Trip>
       public triplist: React.RefObject<TripsList>
@@ -57,6 +58,7 @@ export class App extends Component<{
             holidayMap: {},
             status: ['Loading ', Spinner],
             statusShow: true,
+            inIFrame: true // true if to style/behave for use in iFrame; false to style/behave as standalone app
         }
         this.setStatus = this.setStatus.bind(this) 
         this.apiCall = this.apiCall.bind(this)
@@ -205,6 +207,10 @@ export class App extends Component<{
             });
     }
 
+    public containerClassName() {
+        return this.state.inIFrame ? "outer-container " : "" 
+    }
+
     public render(){
 
         console.log(`path=${this.state.path}`);
@@ -214,7 +220,7 @@ export class App extends Component<{
                  [
                     <TriphubNavbar key='triphubNavbar' app={this}/>,
 
-                    <Container key="loadingContainer" className="triphub-loading-container">
+                    <Container key="loadingContainer" className={this.containerClassName() + "triphub-loading-container"}>
                         <Jumbotron key='loadingAlert' variant='primary'>
                             <div key='1'>{this.state.isLoadingConfig ? Spinner : Done} Loading Configuration</div>
                             <div key='2'>{this.state.isLoadingMaps ? Spinner : Done} Loading Maps</div>

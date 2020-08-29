@@ -303,19 +303,19 @@ export class Trip extends Component<{
             </TriphubNavbar>,
 
             (isLoading ? 
-                <Container key="loadingContainer" className="triphub-loading-container">
+                <Container key="loadingContainer" className={this.props.app.containerClassName() + "triphub-loading-container"}>
                     <Jumbotron key='loadingAlert' variant='primary'>
                         <div key='1'>{isLoading ? Spinner : Done} Loading Trip</div>
                     </Jumbotron>
                 </Container> :
             
-                <Container key="triphubtripdetail" fluid={true}>
+                <Container className={this.props.app.containerClassName()} key="triphubtripdetail" fluid={true}>
                     <div key='tripstatus'>
                         {this.state.editList
                             .filter((item:IEdit) => item.id !== this.state.editId)
                             .map((item:IEdit) =>
                             <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
-                                <Badge pill={true}>
+                                <Badge className='noprint' pill={true}>
                                     {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
                                 </Badge>
                             </ToolTipIcon>)}

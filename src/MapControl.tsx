@@ -200,13 +200,12 @@ export class MapControl extends Component<{
          );
     }
 
-    // BJ TODO: remove 3 map limit
     private getMapSheets(): string[] {
         const mapSheets: string[] = [];
-        ["map1", "map2", "map3"].forEach((mapFieldId: string) => {
-            const mapSheet = this.props.onGet(mapFieldId);
-            if (mapSheet && mapSheet !== "") {
-                const parts = mapSheet.split(" ");
+        const maps: string[] = this.props.onGet("maps") || [];
+        maps.forEach(map => {
+            if (map && map !== "") {
+                const parts = map.split(" ");
                 if (parts.length > 0 && this.props.nz50MapsBySheet[parts[0]]) {
                     mapSheets.push(parts[0]);
                 }
@@ -216,16 +215,15 @@ export class MapControl extends Component<{
     }
 
     private getRoutes(): string {
-        return this.props.onGet("mapRoute") as string;
+        return this.props.onGet("routes") as string;
     }
 
-    // BJ TODO: remove 3 map limit
     private saveMapChanges = (mapSheets: string[], routesAsJson: string): Promise<void> => {
         return Promise.all([
-            this.props.onSave('map1', mapSheets.length > 0 ? mapSheets[0] + " " +  this.props.nz50MapsBySheet[mapSheets[0]].name : ""),
-            this.props.onSave('map2', mapSheets.length > 1 ? mapSheets[1] + " " +  this.props.nz50MapsBySheet[mapSheets[1]].name : ""),
-            this.props.onSave('map3', mapSheets.length > 2 ? mapSheets[2] + " " +  this.props.nz50MapsBySheet[mapSheets[2]].name : ""),
-            this.props.onSave('mapRoute', routesAsJson)
+            this.props.onSave('maps', mapSheets
+                .filter(mapSheet => mapSheet > "")
+                .map(mapSheet => mapSheet + " " +  this.props.nz50MapsBySheet[mapSheet].name)),
+            this.props.onSave('routes', routesAsJson)
         ]).then(
             () => Promise.resolve(),
             () => Promise.resolve());

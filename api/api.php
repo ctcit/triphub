@@ -520,9 +520,10 @@ function SqlSetFromInput($con,$input,$table){
 
         if (strpos($sqlcol["Type"],"text") !== false || 
             strpos($sqlcol["Type"],"char") !== false || 
-            strpos($sqlcol["Type"],"date") !== false || 
-            strpos($sqlcol["Type"],"json") !== false) {
+            strpos($sqlcol["Type"],"date") !== false) {
             $set []= "`$col`=".SqlVal($con,$val);
+        } else if (strpos($sqlcol["Type"],"json") !== false) {
+            $set []= "`$col`='".json_encode($val)."'";
         } else {
             $sqlval = floatval($val);
             $set []= "`$col`=$sqlval";

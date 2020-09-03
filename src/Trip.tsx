@@ -171,11 +171,9 @@ export class Trip extends Component<{
                 id: -1,
                 length: 1,
                 logisticInfo: '',
-                map1: '',
-                map2: '',
-                map3: '',
+                maps: [],
                 mapHtml: '',
-                mapRoute: '[]',
+                routes: '[]',
                 isLimited: false,
                 maxParticipants: 0,
                 isDeleted: false,
@@ -239,11 +237,11 @@ export class Trip extends Component<{
     }
 
     public getMaps() : string[] {
-        return [this.state.trip.map1,this.state.trip.map2,this.state.trip.map3].filter(m => m !== '')
+        return this.state.trip.maps
     }
 
     public getRoute() : any[] {
-        return SafeJsonParse(this.state.trip.mapRoute,[])
+        return SafeJsonParse(this.state.trip.routes,[])
     }
 
     public getRouteSummary() : string {

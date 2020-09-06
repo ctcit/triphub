@@ -74,6 +74,7 @@ table.changehistory{
 
 .triphub-navbar {
   color: white; /* hack */
+  font-size: medium;
 }
 
 .triphub-navbar:hover {

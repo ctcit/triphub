@@ -167,7 +167,8 @@ export class MapControl extends Component<{
                             <span className='fa fa-map'/>
                             Edit Routes/Maps
                         </Button>
-                        <Modal isOpen={this.state.editing} toggle={onSave} size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}}>
+                        <Modal isOpen={this.state.editing} toggle={onSave} 
+                            size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}} centered={true}>
                             <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
                             <ModalBody>
                                 <MapEditor 

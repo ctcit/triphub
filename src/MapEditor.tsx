@@ -33,9 +33,9 @@ export class MapEditor extends Component<{
     nz50MapsBySheet: { [mapSheet: string] : IMap },
     archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute },
     mapSheets: string[],
-    routesAsJson: string,
+    routesAsLatLngs: Array<Array<[number, number]>>,
     onMapSheetsChanged: (mapSheets: string[]) => void,
-    onRoutesChanged: (routesAsJson: string) => void,
+    onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) => void,
     getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     updateArchivedRouteSummary: (routeId: string, routeSummary: string) => Promise<void>
 },{
@@ -73,7 +73,7 @@ export class MapEditor extends Component<{
     private currentRouteIndex: number = -1;
     private routes: L.Polyline[] = [];
     private routeMarkers: L.Marker[] = [];
-    private routesUndoStack: Array<{ routesAsJSON: string, currentRouteIndex: number }> = [];
+    private routesUndoStack: Array<{ routesAsLatLngs: Array<Array<[number, number]>>, currentRouteIndex: number }> = [];
     private vertexIsDragging: boolean = false;
     private routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow', 'deeppink', 'darkviolet', 'teal', 'orangered'];
 
@@ -521,8 +521,8 @@ export class MapEditor extends Component<{
 
         this.resizeMap(500, 500);
 
-        this.setRoutesFromJson(this.props.routesAsJson);
-        this.recordLastRouteEdit(this.props.routesAsJson); // prime the undo stack but don't notify as a change
+        this.setRoutesFromLatLngs(this.props.routesAsLatLngs);
+        this.recordLastRouteEdit(this.props.routesAsLatLngs); // prime the undo stack but don't notify as a change
         this.setState({ currentRouteIndex: this.currentRouteIndex, routes: this.routes });
 
         this.showInitiallySelectedMaps();
@@ -962,15 +962,15 @@ export class MapEditor extends Component<{
     }
 
     private saveRouteChange(): void {
-        const routesAsJSON: string = this.getRoutesAsJson();
-        this.props.onRoutesChanged(routesAsJSON);
-        this.recordLastRouteEdit(routesAsJSON);
+        const routesAsLatLngs: Array<Array<[number, number]>> = this.getRoutesAsLatLngs();
+        this.props.onRoutesChanged(routesAsLatLngs);
+        this.recordLastRouteEdit(routesAsLatLngs);
         this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1 });
     }
 
-    private recordLastRouteEdit(routesAsJSON: string): void {
-        this.routesUndoStack.push({ routesAsJSON, currentRouteIndex: this.currentRouteIndex });
-        // console.log(">>>>> " + this.routesUndoStack.length + ", " + routesAsJSON);
+    private recordLastRouteEdit(routesAsLatLngs: Array<Array<[number, number]>>): void {
+        this.routesUndoStack.push({ routesAsLatLngs, currentRouteIndex: this.currentRouteIndex });
+        // console.log(">>>>> " + this.routesUndoStack.length + ", " + routesAsLatLngs);
         this.setState({ canUndoLastRouteEdit: this.routesUndoStack.length > 1 });
     }
 
@@ -982,11 +982,11 @@ export class MapEditor extends Component<{
                     if (this.routesUndoStack.length > 1) { // always leave the orignal on the stack
                         let undoStackItem = this.routesUndoStack.pop(); // discard this
                         undoStackItem = this.routesUndoStack[this.routesUndoStack.length - 1];
-                        const routesAsJSON = undoStackItem.routesAsJSON;
-                        // console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsJSON);
-                        this.setRoutesFromJson(routesAsJSON);
+                        const routesAsLatLngs = undoStackItem.routesAsLatLngs;
+                        // console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsLatLngs);
+                        this.setRoutesFromLatLngs(routesAsLatLngs);
                         this.currentRouteIndex = undoStackItem.currentRouteIndex;
-                        this.props.onRoutesChanged(routesAsJSON);
+                        this.props.onRoutesChanged(routesAsLatLngs);
                         this.setState({ 
                             canUndoLastRouteEdit: this.routesUndoStack.length > 1, 
                             busy: false,
@@ -1001,19 +1001,18 @@ export class MapEditor extends Component<{
         });
     }
 
-    private getRoutesAsJson(): string {
-        return JSON.stringify(this.routes.map((route: L.Polyline) => {
+    private getRoutesAsLatLngs(): Array<Array<[number, number]>> {
+        return this.routes.map((route: L.Polyline) => {
             return (route.getLatLngs() as L.LatLng[]).map((latLng: L.LatLng) => {
-                return [latLng.lat, latLng.lng]
+                return [latLng.lat, latLng.lng] as [number, number]
             });
-        }));
+        });
     }
 
-    private setRoutesFromJson(routesAsJson: string): void {
+    private setRoutesFromLatLngs(routesAsLatLngs: Array<Array<[number, number]>>): void {
         this.clearAllRoutes();
-        if (routesAsJson) {
-            const routesLatLngs: L.LatLng[][] = JSON.parse(routesAsJson);
-            routesLatLngs.forEach(routeLatLngs => {
+        if (routesAsLatLngs) {
+            routesAsLatLngs.forEach(routeLatLngs => {
                 this.routes.push(L.polyline(routeLatLngs, {}).addTo(this.map));
                 this.currentRouteIndex = this.routes.length - 1;
             });
@@ -1164,7 +1163,7 @@ export class MapEditor extends Component<{
     //     Object.keys(this.props.archivedRoutesById).map((archivedRouteId: string) => {
     //         this.props.getArchivedRoute(archivedRouteId)
     //             .then((archivedRoute: IArchivedRoute) => {
-    //                 const gpxLatLngsArray: L.LatLng[][] = [];
+    //                 const gpxLatLngsArray: Array<Array<[number, number]>> = [];
     //                 if (archivedRoute.gpx) {
     //                     const tolerance = this.getTolerance(10);
     //                     const decimalPlaces = 3;

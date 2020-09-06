@@ -25,7 +25,7 @@ export interface ITrip {
     length : number
     logisticInfo : string
     maps : string[]
-    routes : string
+    routes : number[][][]
     mapHtml : string
     isDeleted : boolean
     isApproved : boolean

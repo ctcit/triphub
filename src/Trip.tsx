@@ -173,7 +173,7 @@ export class Trip extends Component<{
                 logisticInfo: '',
                 maps: [],
                 mapHtml: '',
-                routes: '[]',
+                routes: [],
                 isLimited: false,
                 maxParticipants: 0,
                 isDeleted: false,
@@ -240,16 +240,16 @@ export class Trip extends Component<{
         return this.state.trip.maps
     }
 
-    public getRoute() : any[] {
-        return SafeJsonParse(this.state.trip.routes,[])
+    public getRoutes() : number[][][] {
+        return this.state.trip.routes || []
     }
 
-    public getRouteSummary() : string {
-        return (this.getRoute().length === 0 ? 'No route' : this.getRoute().length + ' points in route')
+    public getRoutesSummary() : string {
+        return (this.getRoutes().length === 0 ? 'No route' : this.getRoutes().length + ' points in route')
     }
 
-    public getMapSummary() : string {
-        return this.getRouteSummary() + ', ' +
+    public getMapsSummary() : string {
+        return this.getRoutesSummary() + ', ' +
                (this.getMaps().length === 0 ? 'no maps selected' : 'selected maps: ' + this.getMaps().map(m => m.split(' ')[0]).join(', '))
     }
 

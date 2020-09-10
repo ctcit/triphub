@@ -121,7 +121,7 @@ export class TripDetail extends Component<{
         const commonInverted = {...common, 'onGet': onGetInverted, 'onSave': onSaveInverted }
 
         return [
-            <Form key='detail' className="form">
+            <Container key='detail' fluid={true}>
                 <Row>
                     <Col>
                         <InputControl id='title' label='Title' type='text' {...common}/>
@@ -212,7 +212,7 @@ export class TripDetail extends Component<{
                         />
                     </Col>
                 </Row>
-            </Form>,
+            </Container>
         ]
     }
 

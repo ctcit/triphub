@@ -111,7 +111,7 @@ export class Newsletter extends Component<{
                 {isNew && <div><p>No current newsletter, please create a new one..</p></div>}
                 {isLoading && <FullWidthLoading />}
                 {!isLoading &&
-                    <Form key='form'>
+                    <Container key='form' fluid={true}>
                         <Row>
                             <Col sm={5} md={4}>
                                 <InputControl id='volume' label='Volume' type='number' {...common}/>
@@ -132,7 +132,7 @@ export class Newsletter extends Component<{
                             </Col>
                         </Row>
 
-                    </Form>
+                    </Container>
                 }
                 {isNew &&
                     <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!isLoading}>

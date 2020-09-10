@@ -60,12 +60,12 @@ export class TriphubNavbar extends Component<{
 
         const navItems: JSX.Element[] = [];
 
-        if (this.props.app.state.inIFrame && this.props.app.state.path !== '') {
+        if (this.props.app.state.inIFrame && this.props.app.state.path !== '' && this.props.app.state.path !== '/') {
             navItems.push(
             <NavItem>
                 <NavLink onClick={alltrips} disabled={this.props.app.state.isLoading}>
                     <span className='triphub-navbar'>
-                        <span className='fa fa-bars fa-fw'/>
+                        <span className='fa fa-bars'/>
                         &nbsp; All trips
                     </span>
                 </NavLink>
@@ -77,7 +77,7 @@ export class TriphubNavbar extends Component<{
             <NavItem>
                 <NavLink onClick={calendar} disabled={this.props.app.state.isLoading}>
                     <span className='triphub-navbar'>
-                        <span className='fa fa-calendar fa-fw'/>
+                        <span className='fa fa-calendar'/>
                         &nbsp; Calendar
                     </span>
                 </NavLink>

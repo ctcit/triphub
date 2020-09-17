@@ -1,6 +1,12 @@
-export enum TripState { MyTrip, OpenTrip, ClosedTrip, SuggestedTrip, DeletedTrip }
+export enum TripGroup { MyTrip, OpenTrip, ClosedTrip, SuggestedTrip, DeletedTrip, RejectedTrip }
 
 export enum Role { NonMember, Member, TripLeader, Admin, Webmaster }
+
+export class TripApprovalState {
+    public static readonly Pending = "Pending"
+    public static readonly Approved = "Approved"
+    public static readonly Rejected = "Rejected"
+}
 
 export interface IValidation {
     id : string
@@ -30,11 +36,11 @@ export interface ITrip {
     mapRoute : string
     mapHtml : string
     isDeleted : boolean
-    isApproved : boolean
+    approval : string
     isLimited : boolean
     maxParticipants : number
     leaders? : string
-    tripState : TripState
+    tripGroup : TripGroup
     isOpen : boolean
 }
 
@@ -63,7 +69,7 @@ export interface IMember {
     phone : string
     emergencyContactName : string
     emergencyContactPhone : string
-    role : string
+    role : Role
     isMe : boolean
     isMember : boolean
 }

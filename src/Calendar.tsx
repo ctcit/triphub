@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import { App } from './App';
 import { BaseUrl } from '.';
-import { ITrip, TripState, Role } from './Interfaces';
+import { ITrip, TripGroup, Role } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile } from './Utilities';
 import Button from 'reactstrap/lib/Button';
 import ButtonGroup from 'reactstrap/lib/ButtonGroup';
@@ -259,9 +259,9 @@ export class Calendar extends Component<{
         }
 
         return  (state.openClose || item.field === 'tripDate')
-            && ((state.state === StateFilter.MyTrips && trip.tripState === TripState.MyTrip) ||
+            && ((state.state === StateFilter.MyTrips && trip.tripGroup === TripGroup.MyTrip) ||
                 (state.state === StateFilter.Open && trip.isOpen) ||
-                (state.state === StateFilter.Suggested && trip.tripState <= TripState.SuggestedTrip) ||
+                (state.state === StateFilter.Suggested && trip.tripGroup <= TripGroup.SuggestedTrip) ||
                 (state.state === StateFilter.All)) 
             && ((state.length === LengthFilter.Day && !trip.isSocial && trip.length === 1) ||
                 (state.length === LengthFilter.Weekend && !trip.isSocial && trip.length > 1) ||

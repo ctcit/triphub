@@ -3,20 +3,20 @@ import './index.css';
 import { Component } from 'react';
 import * as React from 'react';
 import { App } from './App';
-import { Button, Container, Form, Collapse, Jumbotron, Card, CardHeader, ButtonGroup } from 'reactstrap';
+import { Container, ButtonGroup } from 'reactstrap';
 import { BaseUrl } from '.';
-import { ITrip, TripState } from './Interfaces';
+import { ITrip, TripGroup, TripApprovalState } from './Interfaces';
 import { GetDate, GetLength } from './Utilities';
 import './index.css';
 import Table from 'reactstrap/lib/Table';
 import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
 import { Spinner } from './Widgets';
-import { SwitchControl } from './Control';
 import { Role } from './Interfaces';
 import { Accordian } from './Accordian';
 import { ButtonWithTooltip } from './MapEditor';
 import { ExpandableTableRow } from './ExpandableTableRow';
+import { TripCoordinatorDashboard } from './TripCoordinatorDashboard';
 
 class TripsLine extends Component<{
     owner: TripsGroup,
@@ -36,37 +36,29 @@ class TripsLine extends Component<{
         const trip = this.props.trip
         const id = trip.id
         const me = this.props.owner.props.app.getMe()
+        
         let validation = app.validateTrip(trip).filter(i => !i.ok)
 
         const extractWarnings = (match:RegExp) => {
             const errors = validation.filter(i => match.test(i.id))
             validation = validation.filter(i => !match.test(i.id))
-            return errors.map((e,i)=> <ToolTipIcon key={i} icon='warning' id={id + 'warning' + e.id + '_' + i} 
+            return errors.map((e,i)=> <ToolTipIcon key={i} icon='exclamation-triangle' id={id + 'warning' + e.id + '_' + i} 
                                         tooltip={e.message} className='warning-icon'/>)
         }
 
-        const onGetApproved = (): any => {
-            return trip.isApproved
-        }
-        const onSaveApproved = (tripId: string, value: any): Promise<void> => {
-            trip.isApproved = value
-            const body = { isApproved: value }
-            return this.props.owner.props.app.apiCall('POST', BaseUrl + '/trips/' + trip.id, body, true);
-        }
-        const onGetValidationMessage = (): any => {
-            return ''
-        }
 
-        const myRole = this.props.owner.props.app.state.role 
 
         const tablerow = [
             <td key={'open' + id}>
-                {extractWarnings(/./)}
                 <ButtonGroup className='trip-list-buttons'>
                     <ButtonWithTooltip id={`open-${id}`} onClick={this.onClick} tooltipText="Go to trip">
                         <span className='fas fa-hiking'/>  
                     </ButtonWithTooltip>
                 </ButtonGroup>
+                {extractWarnings(/./)}
+                { (trip.approval === TripApprovalState.Pending) &&
+                    <ToolTipIcon id={id+'notapproved'} icon='exclamation-circle' className='warning-icon' tooltip="Not approved yet"/>
+                }
             </td>,
             <td key={'date' + id} onClick={this.onClick}>
                 {GetDate(trip.tripDate)}{extractWarnings(/date/)}
@@ -84,14 +76,9 @@ class TripsLine extends Component<{
             <td key={'leaders' + id} onClick={this.onClick} hidden={!me.id} className='desktop-only'>
                 {trip.leaders}{extractWarnings(/leaders/)}
             </td>,
-            <td key={'role' + id} onClick={this.onClick} hidden={trip.tripState !== TripState.MyTrip}>
+            <td key={'role' + id} onClick={this.onClick} hidden={trip.tripGroup !== TripGroup.MyTrip}>
                 {trip.role}{extractWarnings(/role/)}
             </td>,
-            <td key={'approved' + id} hidden={trip.tripState !== TripState.SuggestedTrip} className='centered'>
-                <SwitchControl id='isApproved' label='' isLoading={false} onGetValidationMessage={onGetValidationMessage}
-                    readOnly={myRole < Role.Admin}
-                    onGet={onGetApproved} onSave={onSaveApproved} />
-            </td>
         ]
 
         return (
@@ -116,14 +103,14 @@ export class TripsGroup extends Component<{
     public render(){
 
         const trips = this.props.trips
-        const id = 'tg' + trips[0].tripState
+        const id = 'tg' + trips[0].tripGroup
         const me = this.props.app.getMe()
 
         return  (
             <Container fluid={true}>
                 <Accordian id={id} className='trip-group' headerClassName='trip-group-header' expanded={this.props.expanded}
                     title={<span>
-                            <b>{TripState[trips[0].tripState].replace('Trip',' Trip') + (trips.length > 1 ? 's' : '')}</b>
+                            <b>{TripGroup[trips[0].tripGroup].replace('Trip',' Trip') + (trips.length > 1 ? 's' : '')}</b>
                             <span key='count' className='trip-count'> ({trips.length})</span>
                         </span>
                     }>
@@ -136,8 +123,7 @@ export class TripsGroup extends Component<{
                                 <th>Title</th>
                                 <th className='desktop-only'>Grade</th>
                                 <th hidden={!me.id} className='desktop-only'>Leader</th>
-                                <th hidden={this.props.trips[0].tripState !== TripState.MyTrip}>My Role</th>
-                                <th hidden={this.props.trips[0].tripState !== TripState.SuggestedTrip} className='centered'>Approved</th>
+                                <th hidden={this.props.trips[0].tripGroup !== TripGroup.MyTrip}>My Role</th>
                                 <th className='mobile-only'/>
                             </tr>
                         </thead>
@@ -148,7 +134,7 @@ export class TripsGroup extends Component<{
                     </Table>
                 </Accordian>
             </Container>
-      )
+       )
   }
 }
 
@@ -170,14 +156,15 @@ export class TripsList extends Component<{
 
             const groups : ITrip[][] = []
 
-            groups[TripState.MyTrip] = [];
-            groups[TripState.OpenTrip] = [];
-            groups[TripState.ClosedTrip] = [];
-            groups[TripState.SuggestedTrip] = [];
-            groups[TripState.DeletedTrip] = [];
+            groups[TripGroup.MyTrip] = [];
+            groups[TripGroup.OpenTrip] = [];
+            groups[TripGroup.ClosedTrip] = [];
+            groups[TripGroup.SuggestedTrip] = [];
+            groups[TripGroup.DeletedTrip] = [];
+            groups[TripGroup.RejectedTrip] = [];
 
             for (const item of data) {
-                groups[item.tripState as number].push(item)
+                groups[item.tripGroup as number].push(item)
             }
 
             this.setState({groups})
@@ -196,15 +183,17 @@ export class TripsList extends Component<{
         const isAdmin = role >= Role.Admin
         const isTripLeader = role >= Role.TripLeader
         return [
-            <TriphubNavbar key='triphubNavbar' app={this.props.app}/>,
+            isAdmin && groups.length > 0 && <TripCoordinatorDashboard trips={this.state.groups[TripGroup.SuggestedTrip]} app={this.props.app}/> ,
             groups
                 // Only Tripleaders+ can see suggested trips
-                // Only Admin+ can see deleted trips
-                .filter((group:ITrip[]) => ( (group[0].tripState !== TripState.SuggestedTrip && group[0].tripState !== TripState.DeletedTrip) ||
-                                             (group[0].tripState === TripState.SuggestedTrip && isTripLeader) ||
-                                             (group[0].tripState === TripState.DeletedTrip && isAdmin) ) )
+                // Only Admin+ can see deleted and rejected trips
+                .filter((group:ITrip[]) => ( (group[0].tripGroup !== TripGroup.SuggestedTrip && group[0].tripGroup !== TripGroup.DeletedTrip &&
+                                              group[0].tripGroup !== TripGroup.RejectedTrip) ||
+                                             (group[0].tripGroup === TripGroup.SuggestedTrip && isTripLeader) ||
+                                             (group[0].tripGroup === TripGroup.RejectedTrip && isAdmin) ||
+                                             (group[0].tripGroup === TripGroup.DeletedTrip && isAdmin) ) )
                 .map((group:ITrip[],i) => 
-                <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripState} 
+                <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripGroup} 
                             app={this.props.app} expanded={i <= 1}/>)
             ]
         }

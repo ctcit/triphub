@@ -1,11 +1,10 @@
 import * as React from 'react';
-import { Button, Form, Row, Col, Container, ButtonGroup } from 'reactstrap';
+import { Form, Row, Col, Container, ButtonGroup } from 'reactstrap';
 import { Component } from 'react';
 import { IMember,  IParticipant, IValidation, IParticipantsInfo, Role } from './Interfaces';
 import { Spinner } from './Widgets';
 import { Trip } from './Trip';
 import { App } from './App';
-import { Expandable } from './Expandable';
 import { InputControl, SwitchControl, TextAreaInputControl } from './Control';
 import { ToolTipIcon } from './ToolTipIcon';
 import { TripParticipants } from './TripParticipants';

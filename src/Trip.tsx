@@ -1,15 +1,14 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Badge, Button, NavLink, Jumbotron } from 'reactstrap';
+import { Button, Jumbotron } from 'reactstrap';
 import { BaseUrl } from '.';
 import { App } from './App';
-import { Spinner, Done } from './Widgets';
-import { IEdit,  IParticipant, ITrip, TripState, IParticipantsInfo, Role } from './Interfaces';
+import { Spinner, Done, TripHubAdminHint as TripHubAlert } from './Widgets';
+import { IEdit,  IParticipant, ITrip, TripGroup, IParticipantsInfo, Role, TripApprovalState } from './Interfaces';
 import { GetDateString, AddDays, GetDisplayPriority, SafeJsonParse } from './Utilities';
 import { TripDetail } from './TripDetail';
 import { TripParticipants } from './TripParticipants';
 import { History } from './History';
-import { Expandable } from './Expandable';
 import { Email } from './Email';
 import { TripPrint } from './TripPrint';
 import { TripHubPill } from './Widgets';
@@ -60,18 +59,9 @@ export class Trip extends Component<{
         this.cancelSuggestedTrip = this.cancelSuggestedTrip.bind(this) 
         this.deleteTrip = this.deleteTrip.bind(this)
         this.approveTrip = this.approveTrip.bind(this)
+        this.rejectTrip = this.rejectTrip.bind(this)
         this.editHeartbeat = this.editHeartbeat.bind(this)
         this.getParticipantsInfo = this.getParticipantsInfo.bind(this)
-    }
-
-    public canEditTrip() : boolean {
-        const me = this.props.app.getMe()
-        return this.props.app.state.role >= Role.Admin || 
-                ( !!this.state.participants.find((p:IParticipant) => me.id === p.memberId && p.isLeader))
-    }
-
-    public canApproveTrip() : boolean {
-        return this.props.app.state.role >= Role.Admin 
     }
 
     public componentDidMount(){
@@ -127,13 +117,24 @@ export class Trip extends Component<{
         })
     }
 
+    public canEditTrip() {
+        const me = this.props.app.getMe()
+        return this.props.app.state.role >= Role.Admin ||
+                ( !!this.state.participants.find((p:IParticipant) => me.id === p.memberId && p.isLeader))
+    }
+
     public deleteTrip(){
         this.props.app.apiCall('POST', this.props.href as string, {isDeleted:!this.state.trip.isDeleted}, true)
             .then(() => this.props.app.setPath('/'))
     }
 
     public approveTrip(){
-        this.props.app.apiCall('POST', this.props.href as string, {isApproved:!this.state.trip.isApproved}, true)
+        this.props.app.apiCall('POST', this.props.href as string, {approval:TripApprovalState.Approved}, true)
+            .then(() => this.props.app.setPath('/'))
+    }
+
+    public rejectTrip(){
+        this.props.app.apiCall('POST', this.props.href as string, {approval:TripApprovalState.Rejected}, true)
             .then(() => this.props.app.setPath('/'))
     }
 
@@ -179,10 +180,10 @@ export class Trip extends Component<{
                 isLimited: false,
                 maxParticipants: 0,
                 isDeleted: false,
-                isApproved: this.props.isNewSocial,
+                approval: (this.props.isNewSocial) ? TripApprovalState.Approved : TripApprovalState.Pending,
                 isOpen: this.props.isNewSocial,
                 title: `${me.name}'s ${this.props.isNewSocial ? 'social event' : 'suggested trip'}`,
-                tripState: this.props.isNewSocial ? TripState.OpenTrip : TripState.SuggestedTrip
+                tripGroup: this.props.isNewSocial ? TripGroup.OpenTrip : TripGroup.SuggestedTrip
             },
             participants: [
                 this.signMeUpTramper(true)
@@ -263,9 +264,6 @@ export class Trip extends Component<{
         const history = () => <History key={'History' + trip.id} owner={this} app={this.props.app}/>
         const info = this.getParticipantsInfo();
         const tripWarnings = this.props.app.validateTrip(this.state.trip).filter(i => !i.ok);
-        // const tripWarning = tripWarnings.length && !isLoading
-        //                             ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={tripWarnings[0].message} className='warning-icon'/> 
-        //                             : null
         const participantWarnings = info.moveable.map(p => app.validateParticipant(p).filter(i => !i.ok)).filter(vm => vm.length)
         const participantWarning = participantWarnings.length && !isLoading
                                     ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0][0].message} className='fw warning-icon'/> 
@@ -273,34 +271,14 @@ export class Trip extends Component<{
         const participantCount = <span key='count' className='TripCount'>
                                     {` (${info.leaders.length+info.early.length}${info.late.length ? '+'+info.late.length : ''})`}
                                  </span>                                    
+        const amAdmin = this.props.app.state.role >= Role.Admin 
+        const approval = this.state.trip.approval
+        const tripCanBeApproved = ( approval === TripApprovalState.Pending || approval === TripApprovalState.Rejected ) && !trip.isDeleted
+        // Note - approved trips can't be rejected, but they can be deleted
+        const tripCanBeRejected = ( approval === TripApprovalState.Pending ) && !trip.isDeleted
 
         return [
-            <TriphubNavbar key='triphubnavbar' app={this.props.app}>
-                <NavLink onClick={this.deleteTrip} hidden={isLoading || isNew || trip.isDeleted || !this.canEditTrip()}>
-                    <span className='triphub-navbar'>
-                        <span className='fa fa-trash fa-fw'/> 
-                        &nbsp; Delete this trip
-                    </span>
-                </NavLink>
-                <NavLink onClick={this.deleteTrip} hidden={isLoading || isNew || !trip.isDeleted || !this.canEditTrip()}>
-                    <span className='triphub-navbar'>
-                        <span className='fa fa-undo fa-fw'/> 
-                        &nbsp; Undelete this trip
-                    </span>
-                </NavLink>
-                <NavLink onClick={this.approveTrip} hidden={isLoading || isNew || trip.isApproved  || !this.canApproveTrip()}>
-                    <span className='triphub-navbar'>
-                        <span key='approvetripicon' className='fa fa-thumbs-up fa-fw'/> 
-                        &nbsp; Approve this trip
-                    </span>
-                </NavLink>
-                <NavLink onClick={this.approveTrip} hidden={isLoading || isNew || !trip.isApproved || !this.canApproveTrip()}>
-                    <span className='triphub-navbar'>
-                        <span key='unapprovetripicon' className='fa fa-thumbs-down fa-fw'/> 
-                        &nbsp; Remove Approval
-                    </span>
-                </NavLink>
-            </TriphubNavbar>,
+            <TriphubNavbar key='triphubnavbar' app={this.props.app}/>,
 
             (isLoading ? 
                 <Container key="loadingContainer" className="triphub-loading-container">
@@ -310,35 +288,50 @@ export class Trip extends Component<{
                 </Container> :
             
                 <Container key="triphubtripdetail" fluid={true}>
-                    <div key='tripstatus'>
-                        {this.state.editList
-                            .filter((item:IEdit) => item.id !== this.state.editId)
-                            .map((item:IEdit) =>
-                            <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
-                                <Badge pill={true}>
-                                    {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
-                                </Badge>
-                            </ToolTipIcon>)}
+                    <div key='tripstatus' className="py-1">
                         {trip.id <= 0
-                            ? <TripHubPill>New trip - not saved!</TripHubPill>
-                            : trip.tripState === TripState.DeletedTrip 
-                            ? <TripHubPill>This trip has been deleted</TripHubPill>
-                            : trip.tripState === TripState.SuggestedTrip && !trip.isApproved
-                            ? <TripHubPill>This trip has has only been suggested, and not yet approved</TripHubPill>
-                            : !trip.isOpen
-                            ? <TripHubPill>This trip is closed, please contact the leader</TripHubPill>
-                            : null}
+                         ? <TripHubPill>New trip - not saved!</TripHubPill>
+                         : trip.tripGroup === TripGroup.DeletedTrip 
+                         ? <TripHubPill>This trip has been deleted</TripHubPill>
+                         : trip.tripGroup === TripGroup.SuggestedTrip && trip.approval === TripApprovalState.Pending
+                         ? amAdmin
+                            ? <TripHubAlert>This trip needs to be approved or rejected. Please check that all details are filled
+                                out correctly and that the trip is suitable then use the buttons below to approve or reject.
+                            </TripHubAlert>
+                            : <TripHubPill>This trip has only been suggested, and not yet approved</TripHubPill>
+                         : trip.tripGroup === TripGroup.SuggestedTrip && trip.approval === TripApprovalState.Rejected
+                         ? <TripHubPill>This trip has been been rejected</TripHubPill>
+                         : trip.tripGroup === TripGroup.SuggestedTrip && trip.approval === TripApprovalState.Approved
+                         ? <TripHubPill>This trip is not open yet</TripHubPill>
+                         : !trip.isOpen
+                         ? <TripHubPill>This trip is closed, please contact the leader</TripHubPill>
+                         : null}
+                    </div>
+                    <div hidden={isNew || !amAdmin} key='adminActions' className="py-1">
+                        <Button color='primary' hidden={!tripCanBeApproved} onClick={this.approveTrip} className="px-2 mx-1">
+                        <span key='approvetripicon' className='fa fa-thumbs-up fa-fw'/> Approve
+                        </Button>
+                        <Button color='primary' hidden={!tripCanBeRejected} onClick={this.rejectTrip} className="px-2 mx-1">
+                        <span key='unapprovetripicon' className='fa fa-thumbs-down fa-fw'/>  Reject
+                        </Button>
+                        <Button color='primary' onClick={this.deleteTrip} hidden={isLoading || isNew || trip.isDeleted}>
+                            <span className='fa fa-trash fa-fw'/> Delete this trip
+                        </Button>
+                        <Button onClick={this.deleteTrip} hidden={isLoading || isNew || !trip.isDeleted}>
+                            <span className='fa fa-undo fa-fw'/> Undelete this trip
+                        </Button>
                     </div>
                     <Accordian key='detail' id='detail' className='trip-section' headerClassName='trip-section-header'
                                 title={<span><b><span key='icon' className='fa fa-map-marker fa-fw'/>{this.state.trip.title}</b></span>}
                                 expanded={true}>
-                        <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app} isLoading={isLoading} forceValidation={this.state.showValidationMessage}/>
+                        <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app} 
+                        isLoading={isLoading} forceValidation={this.state.showValidationMessage}/>
                     </Accordian>
                     <div hidden={isLoading || !isNew} key='saveCancel' className="py-2">
-                        <Button color='primary' onClick={this.saveSuggestedTrip} className="px-2">
+                        <Button color='primary' onClick={this.saveSuggestedTrip} className="px-2 mx-1">
                             Save
                         </Button>
-                        <Button color='primary' onClick={this.cancelSuggestedTrip} className="px-2">
+                        <Button color='primary' onClick={this.cancelSuggestedTrip} className="px-2 mx-1">
                             Cancel
                         </Button>
                     </div>
@@ -349,7 +342,8 @@ export class Trip extends Component<{
                         <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
                                     title={<span><b><span key='icon' className='fa fa-user fa-fw'/>{['Participants', participantWarning, participantCount]}</b></span>}
                                     expanded={true}>  
-                            <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this} app={this.props.app} isLoading={isLoading} />
+                            <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this}
+                            app={this.props.app} isLoading={isLoading}  />
                         </Accordian>
                     }
                     {this.props.isNew || !this.canEditTrip() ? null :

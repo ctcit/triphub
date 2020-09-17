@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Badge from 'reactstrap/lib/Badge';
+import { Alert } from 'reactstrap';
 
 export const Spinner = <span className='fa fa-spinner fa-spin' key='spinner'/>
 export const Done = <span className='fa fa-check' key='done'/>
@@ -16,4 +17,10 @@ export const TripHubPill = (props:any) => (
     <Badge pill={true} className="px-3 py-1 my-2 pill">
     {props.children}
     </Badge>
+)
+
+export const TripHubAdminHint = (props:any) => (
+    <Alert color="warning" className="mt-3">
+    {props.children}
+    </Alert>
 )

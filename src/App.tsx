@@ -10,7 +10,6 @@ import { TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
 import { Newsletter } from './Newsletter';
 import { Spinner, Done } from './Widgets';
-import Alert from 'reactstrap/lib/Alert';
 import Container from 'reactstrap/lib/Container';
 import Jumbotron from 'reactstrap/lib/Jumbotron';
 
@@ -33,6 +32,7 @@ export class App extends Component<{
       holidayMap: { [id: string]: IHoliday }
       config: IConfig
       statusId?: any
+      priorityNavItems: JSX.Element[]
     }> {
       public trip: React.RefObject<Trip>
       public triplist: React.RefObject<TripsList>
@@ -57,6 +57,7 @@ export class App extends Component<{
             holidayMap: {},
             status: ['Loading ', Spinner],
             statusShow: true,
+            priorityNavItems: []
         }
         this.setStatus = this.setStatus.bind(this) 
         this.apiCall = this.apiCall.bind(this)
@@ -140,6 +141,12 @@ export class App extends Component<{
         return this.state.archivedRoutes;
     }
 
+    public addPriorirtyNavItem( item : JSX.Element ) {
+        const priorityNavItems = this.state.priorityNavItems
+        priorityNavItems.push(item)
+        this.setState({priorityNavItems})
+    }
+
     public validateTrip(trip : ITrip) : IValidation[] {
 
         return (this.state.role >= Role.Admin) && !this.state.isLoading ? [
@@ -172,10 +179,11 @@ export class App extends Component<{
                 const membersById: {[id: number]: IMember} = {}
                 let myRole = Role.NonMember
                 for (const member of members) {
+                    member.role = Role[member.role as unknown as string]
                     if (member.id) {
                         membersById[member.id] = member
                         if (member.isMe) {
-                            myRole = Role[member.role]
+                            myRole = member.role
                         }
                     }
                 }
@@ -210,9 +218,10 @@ export class App extends Component<{
         console.log(`path=${this.state.path}`);
 
         return (
+            [ <TriphubNavbar key='triphubNavbar' app={this}/>,
+
             this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingArchivedRoutes || this.state.isLoadingMembers || this.state.isLoadingHolidays ?
                  [
-                    <TriphubNavbar key='triphubNavbar' app={this}/>,
 
                     <Container key="loadingContainer" className="triphub-loading-container">
                         <Jumbotron key='loadingAlert' variant='primary'>
@@ -241,12 +250,13 @@ export class App extends Component<{
                 <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> :
 
                 <TripsList key='triplist' app={this}/>
+            ]
         );
     }
 
     private changePath(path: string) : void {
         window.scrollTo(0,0)
-        this.setState({path})
+        this.setState({path, priorityNavItems: []})
     }
 
 }

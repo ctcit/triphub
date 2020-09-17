@@ -9,14 +9,14 @@ import { ITrip, TripGroup, TripApprovalState } from './Interfaces';
 import { GetDate, GetLength } from './Utilities';
 import './index.css';
 import Table from 'reactstrap/lib/Table';
-import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
-import { Spinner } from './Widgets';
+import { Spinner, Done } from './Widgets';
 import { Role } from './Interfaces';
 import { Accordian } from './Accordian';
 import { ButtonWithTooltip } from './MapEditor';
 import { ExpandableTableRow } from './ExpandableTableRow';
 import { TripCoordinatorDashboard } from './TripCoordinatorDashboard';
+import Jumbotron from 'reactstrap/lib/Jumbotron';
 
 class TripsLine extends Component<{
     owner: TripsGroup,
@@ -107,7 +107,7 @@ export class TripsGroup extends Component<{
         const me = this.props.app.getMe()
 
         return  (
-            <Container fluid={true}>
+            <Container className={this.props.app.containerClassName()} fluid={true}>
                 <Accordian id={id} className='trip-group' headerClassName='trip-group-header' expanded={this.props.expanded}
                     title={<span>
                             <b>{TripGroup[trips[0].tripGroup].replace('Trip',' Trip') + (trips.length > 1 ? 's' : '')}</b>
@@ -178,23 +178,31 @@ export class TripsList extends Component<{
     }
 
     public render(){
+        const isLoading = this.props.app.state.isLoading;
         const groups = this.state.groups.filter((group:ITrip[]) => group.length)
         const role : Role = this.props.app.state.role
         const isAdmin = role >= Role.Admin
         const isTripLeader = role >= Role.TripLeader
         return [
             isAdmin && groups.length > 0 && <TripCoordinatorDashboard trips={this.state.groups[TripGroup.SuggestedTrip]} app={this.props.app}/> ,
-            groups
-                // Only Tripleaders+ can see suggested trips
-                // Only Admin+ can see deleted and rejected trips
-                .filter((group:ITrip[]) => ( (group[0].tripGroup !== TripGroup.SuggestedTrip && group[0].tripGroup !== TripGroup.DeletedTrip &&
-                                              group[0].tripGroup !== TripGroup.RejectedTrip) ||
-                                             (group[0].tripGroup === TripGroup.SuggestedTrip && isTripLeader) ||
-                                             (group[0].tripGroup === TripGroup.RejectedTrip && isAdmin) ||
-                                             (group[0].tripGroup === TripGroup.DeletedTrip && isAdmin) ) )
-                .map((group:ITrip[],i) => 
-                <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripGroup} 
-                            app={this.props.app} expanded={i <= 1}/>)
-            ]
-        }
+            (isLoading ? 
+                <Container key="loadingContainer" className={this.props.app.containerClassName() + "triphub-loading-container"}>
+                    <Jumbotron key='loadingAlert' variant='primary'>
+                        <div key='1'>{isLoading ? Spinner : Done} Loading Trips</div>
+                    </Jumbotron>
+                </Container> :
+                groups
+                    // Only Tripleaders+ can see suggested trips
+                    // Only Admin+ can see deleted and rejected trips
+                    .filter((group:ITrip[]) => ( (group[0].tripGroup !== TripGroup.SuggestedTrip && group[0].tripGroup !== TripGroup.DeletedTrip &&
+                                                group[0].tripGroup !== TripGroup.RejectedTrip) ||
+                                                (group[0].tripGroup === TripGroup.SuggestedTrip && isTripLeader) ||
+                                                (group[0].tripGroup === TripGroup.RejectedTrip && isAdmin) ||
+                                                (group[0].tripGroup === TripGroup.DeletedTrip && isAdmin) ) )
+                    .map((group:ITrip[],i) => 
+                    <TripsGroup trips={group} key={'tripsGroup'  + group[0].tripGroup} 
+                                app={this.props.app} expanded={i <= 1}/>)
+            )
+        ]
+    }
 }

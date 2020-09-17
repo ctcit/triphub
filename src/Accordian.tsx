@@ -29,7 +29,7 @@ public render() {
     })
 
     return [(
-            <Card className={'accordian ' + this.props.className}>
+            <Card className={'accordian ' + this.props.className + ' noprint'}>
                 <CardHeader className={this.props.headerClassName + ' accordian-header'} onClick={toggle}>
                     <span className={'accordian-expand ' + (this.state.expanded ? 'fa fa-chevron-up' : 'fa fa-chevron-down')}/>
                     {this.props.title}

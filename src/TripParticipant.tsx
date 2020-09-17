@@ -213,7 +213,7 @@ export class TripParticipant extends Component<{
                           </span>
                     }>
                     <Form key='form' className='indentedparticipants form'>
-                       <Container fluid={true}>
+                       <Container className={this.props.app.containerClassName()} fluid={true}>
     
                             <Row>
                                 <Col sm={4}>

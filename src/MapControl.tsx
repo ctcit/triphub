@@ -52,22 +52,22 @@ export class MapControl extends Component<{
     // routes
     private routes: L.Polyline[] = [];
     private routeMarkers: L.Marker[] = [];
-    private pendingRoutesAsJson: string = '[]';  // changed routes before being saved
+    private pendingRoutesLatLngs: Array<Array<[number, number]>> = [];  // changed routes before being saved
     private routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow'];
 
 
     constructor(props:any) {
         super(props);
 
-        const routesAsJson: string = this.getRoutes();
+        const routesAsLatLngs: Array<Array<[number, number]>> = this.getRoutes();
         this.mapSheets = this.getMapSheets();
 
-        this.pendingRoutesAsJson = routesAsJson || '[]';
+        this.pendingRoutesLatLngs = routesAsLatLngs || [];
         this.pendingMapSheets = this.mapSheets;
 
         this.state = { 
             saving: false,
-            mapVisible: routesAsJson !== undefined && routesAsJson !== '[]',
+            mapVisible: routesAsLatLngs && routesAsLatLngs.length > 0,
             editing: false,
             editsMade: false,
             cancelDropdownOpen: false
@@ -90,13 +90,13 @@ export class MapControl extends Component<{
             this.pendingMapSheets = mapSheets;
             this.setState({ editsMade: true });
         }
-        const onRoutesChanged = (routesAsJson: string) => {
-            this.pendingRoutesAsJson = routesAsJson;
+        const onRoutesChanged = (routesAsLatLngs: Array<Array<[number, number]>>) => {
+            this.pendingRoutesLatLngs = routesAsLatLngs;
             this.setState({ editsMade: true });
         }
 
         const onSave = () => { 
-            const mapVisible: boolean = this.pendingRoutesAsJson !== '[]';
+            const mapVisible: boolean = this.pendingRoutesLatLngs && this.pendingRoutesLatLngs.length > 0;
             this.setState({ 
                 mapVisible
             }, async () => {
@@ -105,14 +105,14 @@ export class MapControl extends Component<{
                 }
                 this.mapSheets = this.pendingMapSheets;
     
-                this.setRoutesFromJson(this.pendingRoutesAsJson);
+                this.setRoutesFromLatLngs(this.pendingRoutesLatLngs);
 
                 this.fitBounds();
     
                 this.setState({ editsMade: false, editing: false });
 
                 this.setState({saving: true});
-                this.saveMapChanges(this.pendingMapSheets, this.pendingRoutesAsJson)
+                this.saveMapChanges(this.pendingMapSheets, this.pendingRoutesLatLngs)
                     .then(() => this.setState({saving: false}));
             }); 
         }
@@ -148,7 +148,7 @@ export class MapControl extends Component<{
                             <ListGroup>
                                 { this.mapSheets.map((mapSheet: string) => 
                                     <ListGroupItem sm={3} key={mapSheet} color="primary">
-                                        <span className='fa fa-map-o'/>
+                                        <span className='fa fa-map'/>
                                         {' ' + this.mapSheetWithName(mapSheet)}
                                     </ListGroupItem>
                                 )}
@@ -167,14 +167,15 @@ export class MapControl extends Component<{
                             <span className='fa fa-map'/>
                             Edit Routes/Maps
                         </Button>
-                        <Modal isOpen={this.state.editing} toggle={onSave} size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}}>
+                        <Modal isOpen={this.state.editing} toggle={onSave} 
+                            size="lg" style={{maxWidth: '1600px', width: '80%', margin: '10px auto'}} centered={true}>
                             <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
                             <ModalBody>
                                 <MapEditor 
                                     nz50MapsBySheet={this.props.nz50MapsBySheet} 
                                     archivedRoutesById={this.props.archivedRoutesById}
                                     mapSheets={this.mapSheets} 
-                                    routesAsJson={this.getRoutesAsJson()}
+                                    routesAsLatLngs={this.getRoutesAsLatLngs()}
                                     onMapSheetsChanged={onMapSheetsChanged} 
                                     onRoutesChanged={onRoutesChanged}
                                     getArchivedRoute={this.props.getArchivedRoute} // TODO replace with service
@@ -200,13 +201,12 @@ export class MapControl extends Component<{
          );
     }
 
-    // BJ TODO: remove 3 map limit
     private getMapSheets(): string[] {
         const mapSheets: string[] = [];
-        ["map1", "map2", "map3"].forEach((mapFieldId: string) => {
-            const mapSheet = this.props.onGet(mapFieldId);
-            if (mapSheet && mapSheet !== "") {
-                const parts = mapSheet.split(" ");
+        const maps: string[] = this.props.onGet("maps") || [];
+        maps.forEach(map => {
+            if (map && map !== "") {
+                const parts = map.split(" ");
                 if (parts.length > 0 && this.props.nz50MapsBySheet[parts[0]]) {
                     mapSheets.push(parts[0]);
                 }
@@ -215,17 +215,16 @@ export class MapControl extends Component<{
         return mapSheets;
     }
 
-    private getRoutes(): string {
-        return this.props.onGet("mapRoute") as string;
+    private getRoutes(): Array<Array<[number, number]>> {
+        return this.props.onGet("routes") as Array<Array<[number, number]>>;
     }
 
-    // BJ TODO: remove 3 map limit
-    private saveMapChanges = (mapSheets: string[], routesAsJson: string): Promise<void> => {
+    private saveMapChanges = (mapSheets: string[], routesAsLatLngs: Array<Array<[number, number]>>): Promise<void> => {
         return Promise.all([
-            this.props.onSave('map1', mapSheets.length > 0 ? mapSheets[0] + " " +  this.props.nz50MapsBySheet[mapSheets[0]].name : ""),
-            this.props.onSave('map2', mapSheets.length > 1 ? mapSheets[1] + " " +  this.props.nz50MapsBySheet[mapSheets[1]].name : ""),
-            this.props.onSave('map3', mapSheets.length > 2 ? mapSheets[2] + " " +  this.props.nz50MapsBySheet[mapSheets[2]].name : ""),
-            this.props.onSave('mapRoute', routesAsJson)
+            this.props.onSave('maps', mapSheets
+                .filter(mapSheet => mapSheet > "")
+                .map(mapSheet => mapSheet + " " +  this.props.nz50MapsBySheet[mapSheet].name)),
+            this.props.onSave('routes', routesAsLatLngs)
         ]).then(
             () => Promise.resolve(),
             () => Promise.resolve());
@@ -312,7 +311,7 @@ export class MapControl extends Component<{
 
         this.resizeMap(mapHeight, mapWidth);
 
-        this.setRoutesFromJson(this.pendingRoutesAsJson);
+        this.setRoutesFromLatLngs(this.pendingRoutesLatLngs);
 
         this.fitBounds();
     }
@@ -343,22 +342,21 @@ export class MapControl extends Component<{
     // Routes
     // -------------------------------------------------------
 
-    private getRoutesAsJson(): string {
-        return JSON.stringify(this.routes.map((route: L.Polyline) => {
+    private getRoutesAsLatLngs(): Array<Array<[number, number]>> {
+        return this.routes.map((route: L.Polyline) => {
             return (route.getLatLngs() as L.LatLng[]).map((latLng: L.LatLng) => {
-                return [latLng.lat, latLng.lng]
+                return [latLng.lat, latLng.lng] as [number, number]
             });
-        }));
+        });
     }
 
-    private setRoutesFromJson(routesAsJson: string): void {
+    private setRoutesFromLatLngs(routesAsLatLngs: Array<Array<[number, number]>>): void {
         this.routes.forEach((route: L.Polyline) => {
             route.remove();
         });
         this.routes = [];
-        if (routesAsJson) {
-            const routesLatLngs: L.LatLng[][] = JSON.parse(routesAsJson);
-            routesLatLngs.forEach(routeLatLngs => {
+        if (routesAsLatLngs) {
+            routesAsLatLngs.forEach(routeLatLngs => {
                 this.routes.push(L.polyline(routeLatLngs, {}).addTo(this.minimap));
             });
         }

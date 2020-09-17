@@ -18,6 +18,7 @@ import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
 import { Accordian } from './Accordian';
 import Container from 'reactstrap/lib/Container';
+import Badge from 'reactstrap/lib/Badge';
 
 
 export class Trip extends Component<{
@@ -172,11 +173,9 @@ export class Trip extends Component<{
                 id: -1,
                 length: 1,
                 logisticInfo: '',
-                map1: '',
-                map2: '',
-                map3: '',
+                maps: [],
                 mapHtml: '',
-                mapRoute: '[]',
+                routes: [],
                 isLimited: false,
                 maxParticipants: 0,
                 isDeleted: false,
@@ -240,19 +239,19 @@ export class Trip extends Component<{
     }
 
     public getMaps() : string[] {
-        return [this.state.trip.map1,this.state.trip.map2,this.state.trip.map3].filter(m => m !== '')
+        return this.state.trip.maps
     }
 
-    public getRoute() : any[] {
-        return SafeJsonParse(this.state.trip.mapRoute,[])
+    public getRoutes() : number[][][] {
+        return this.state.trip.routes || []
     }
 
-    public getRouteSummary() : string {
-        return (this.getRoute().length === 0 ? 'No route' : this.getRoute().length + ' points in route')
+    public getRoutesSummary() : string {
+        return (this.getRoutes().length === 0 ? 'No route' : this.getRoutes().length + ' points in route')
     }
 
-    public getMapSummary() : string {
-        return this.getRouteSummary() + ', ' +
+    public getMapsSummary() : string {
+        return this.getRoutesSummary() + ', ' +
                (this.getMaps().length === 0 ? 'no maps selected' : 'selected maps: ' + this.getMaps().map(m => m.split(' ')[0]).join(', '))
     }
 
@@ -281,14 +280,22 @@ export class Trip extends Component<{
             <TriphubNavbar key='triphubnavbar' app={this.props.app}/>,
 
             (isLoading ? 
-                <Container key="loadingContainer" className="triphub-loading-container">
+                <Container key="loadingContainer" className={this.props.app.containerClassName() + "triphub-loading-container"}>
                     <Jumbotron key='loadingAlert' variant='primary'>
                         <div key='1'>{isLoading ? Spinner : Done} Loading Trip</div>
                     </Jumbotron>
                 </Container> :
             
-                <Container key="triphubtripdetail" fluid={true}>
-                    <div key='tripstatus' className="py-1">
+                <Container className={this.props.app.containerClassName()} key="triphubtripdetail" fluid={true}>
+                    <div key='tripstatus' className='py-1'>
+                        {this.state.editList
+                            .filter((item:IEdit) => item.id !== this.state.editId)
+                            .map((item:IEdit) =>
+                            <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
+                                <Badge className='noprint' pill={true}>
+                                    {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
+                                </Badge>
+                            </ToolTipIcon>)}
                         {trip.id <= 0
                          ? <TripHubPill>New trip - not saved!</TripHubPill>
                          : trip.tripGroup === TripGroup.DeletedTrip 

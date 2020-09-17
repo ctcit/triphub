@@ -96,6 +96,8 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
                         case MYSQLI_TYPE_INT24:
                             $row[$field->name] = intval($row[$field->name]);
                             break;
+                        case MYSQLI_TYPE_JSON:
+                            $row[$field->name] = json_decode($row[$field->name]);
                     }
                 }
             }

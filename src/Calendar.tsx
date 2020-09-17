@@ -329,7 +329,7 @@ export class Calendar extends Component<{
         return [
             <TriphubNavbar key='triphubNavbar' app={this.props.app} priorityNavItems={[filterElement]}/>,
 
-            <Container key='calendar' fluid={true}>
+            <Container className={this.props.app.containerClassName()} key='calendar' fluid={true}>
                 <Table className='calendar' responsive={true}>
                     <tbody>
                         <tr>

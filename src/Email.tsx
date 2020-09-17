@@ -68,7 +68,7 @@ export class Email extends Component<{
         }
 
         return [
-            <Form key='detail'>
+            <Container key='detail' fluid={true}>
                 <Row>
                     <Col>
                         <TextAreaInputControl key='recipients' id='recipients' label='Recipients' readOnly={true} {...common}/>
@@ -97,7 +97,7 @@ export class Email extends Component<{
                         </FormGroup>
                     </Col>
                 </Row>
-            </Form>
+            </Container>
         ]
     }
 }

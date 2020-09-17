@@ -524,6 +524,8 @@ function SqlSetFromInput($con,$input,$table){
             strpos($sqlcol["Type"],"enum") !== false || 
             strpos($sqlcol["Type"],"json") !== false) {
             $set []= "`$col`=".SqlVal($con,$val);
+        } else if (strpos($sqlcol["Type"],"json") !== false) {
+            $set []= "`$col`='".json_encode($val)."'";
         } else {
             $sqlval = floatval($val);
             $set []= "`$col`=$sqlval";

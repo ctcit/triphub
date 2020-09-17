@@ -6,6 +6,7 @@ function GetTrips($con,$userId,$id = null) {
 	$closed 			 = 2;
 	$suggested 			 = 3;
 	$deleted 			 = 4;
+	$rejected 			 = 5;
 	$currencyInDays	     = ConfigServer::currencyInDays;
 	$tripsTable          = ConfigServer::tripsTable;		
 	$participantsTable   = ConfigServer::participantsTable;		
@@ -13,15 +14,19 @@ function GetTrips($con,$userId,$id = null) {
 	$membersTable        = ConfigServer::membersTable;
 	$where = $id === null ? "t.tripDate > DATE_ADD(now(),INTERVAL -$currencyInDays DAY)" : "t.id = $id";
 
+	// Change the trips table to store enum "approval".
+	// Return as a string and cast in the typescript (decouples numbering)
+
 	$trips = SqlResultArray($con, 
 	   "SELECT *,
 	   		(CASE 
 			   WHEN isDeleted = 1			THEN $deleted
-			   WHEN isApproved = 0			THEN $suggested
+			   WHEN approval  = 'Rejected' 	THEN $rejected
+			   WHEN approval  = 'Pending' 	THEN $suggested
 			   WHEN CURDATE() < openDate 	THEN $suggested
 			   WHEN CURDATE() < closeDate	THEN $open
 											ELSE $closed 
-			END) 			as tripState,
+			END) 			as tripGroup,
 			'' 				as leaders,
 			false			as isOpen,
 			0 				as participantCount,
@@ -66,13 +71,13 @@ function GetTrips($con,$userId,$id = null) {
 		}
 
 		$trip["leaders"] = implode(", ",$leaders);
-		$trip["isOpen"] = $trip["tripState"] === $open;
+		$trip["isOpen"] = $trip["tripGroup"] === $open;
 
 		if ($trip["isApproved"] 
-			&& $trip["tripState"] < $suggested
+			&& $trip["tripGroup"] < $suggested
 			&& array_key_exists($trip["id"],$roles) && $roles[$trip["id"]]["role"] != "Removed") {
 			$trip["role"] = $roles[$trip["id"]]["role"];
-			$trip["tripState"] = $mytrips;
+			$trip["tripGroup"] = $mytrips;
 		}
 	}
 

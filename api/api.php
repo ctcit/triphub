@@ -458,8 +458,8 @@ function History($con,$userId,$action,$table,$before,$after,$tripId)
     if ($action == 'update') {
         foreach ($after as $col => $val) {
             $colSql = SqlVal($con,$col);
-            $beforeSql = SqlVal($con,$before === null ? null : $before[$col]);
-            $afterSql = SqlVal($con,$after[$col]);
+            $beforeSql = SqlJSONVal($con,$before === null ? null : $before[$col]);
+            $afterSql = SqlJSONVal($con,$after[$col]);
 
             if ($beforeSql != $afterSql) {
                 SqlExecOrDie($con,
@@ -521,6 +521,7 @@ function SqlSetFromInput($con,$input,$table){
         if (strpos($sqlcol["Type"],"text") !== false || 
             strpos($sqlcol["Type"],"char") !== false || 
             strpos($sqlcol["Type"],"date") !== false || 
+            strpos($sqlcol["Type"],"enum") !== false || 
             strpos($sqlcol["Type"],"json") !== false) {
             $set []= "`$col`=".SqlVal($con,$val);
         } else {

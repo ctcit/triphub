@@ -49,6 +49,18 @@ function SqlVal($con,$value) {
     }
 }
 
+function SqlJSONVal($con,$value) {
+    if ( $value === null ) {
+        return "null";
+    } else if ($value === false) {
+        return "'0'";
+    } else if (is_numeric($value)) {
+        return "'".mysqli_real_escape_string($con,$value)."'";
+    } else {
+        return "'\"".mysqli_real_escape_string($con,$value)."\"'";
+    }
+}
+
 function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
 {
     $cursor = mysqli_query($con, $sql);

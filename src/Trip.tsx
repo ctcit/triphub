@@ -14,7 +14,6 @@ import { TripPrint } from './TripPrint';
 import { TripHubPill } from './Widgets';
 import './index.css';
 import './print.css';
-import { TriphubNavbar } from './TriphubNavBar';
 import { ToolTipIcon } from './ToolTipIcon';
 import { Accordian } from './Accordian';
 import Container from 'reactstrap/lib/Container';
@@ -277,7 +276,6 @@ export class Trip extends Component<{
         const tripCanBeRejected = ( approval === TripApprovalState.Pending ) && !trip.isDeleted
 
         return [
-            <TriphubNavbar key='triphubnavbar' app={this.props.app}/>,
 
             (isLoading ? 
                 <Container key="loadingContainer" className={this.props.app.containerClassName() + "triphub-loading-container"}>

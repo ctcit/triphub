@@ -7,7 +7,6 @@ import { App } from './App';
 import { INewsletter, IValidation } from './Interfaces';
 import './index.css';
 import './print.css';
-import { TriphubNavbar } from './TriphubNavBar';
 import { GetDateString, IsValidDateString, GetClosestWednesday } from './Utilities';
 import { TripReportList } from './TripReportList';
 import { NoticeList } from './NoticeList';
@@ -104,8 +103,6 @@ export class Newsletter extends Component<{
         const app = this.app
 
         return [
-            <TriphubNavbar key='triphubnavbar' app={app}/>,
-
             <Container className={this.props.app.containerClassName()} key='newsletter' fluid={true}>
                 <h1 key="title">Manage Newsletter</h1>
                 {isNew && <div><p>No current newsletter, please create a new one..</p></div>}

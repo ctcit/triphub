@@ -4,10 +4,9 @@ import { App } from './App';
 import { BaseUrl } from '.';
 import { ITrip, TripGroup, Role } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile } from './Utilities';
-import Button from 'reactstrap/lib/Button';
 import ButtonGroup from 'reactstrap/lib/ButtonGroup';
 import Table from 'reactstrap/lib/Table';
-import { TriphubNavbar } from './TriphubNavBar';
+import { PriorityNavItem } from './TriphubNavBar';
 import Badge from 'reactstrap/lib/Badge';
 import { Spinner } from './Widgets';
 import Dropdown from 'reactstrap/lib/Dropdown';
@@ -327,7 +326,9 @@ export class Calendar extends Component<{
             </Dropdown>)
 
         return [
-            <TriphubNavbar key='triphubNavbar' app={this.props.app} priorityNavItems={[filterElement]}/>,
+            <PriorityNavItem key='filter'>
+                {filterElement}
+            </PriorityNavItem>,
 
             <Container className={this.props.app.containerClassName()} key='calendar' fluid={true}>
                 <Table className='calendar' responsive={true}>

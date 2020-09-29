@@ -2,9 +2,6 @@ import { Component } from 'react';
 import * as React from 'react';
 import { App } from './App';
 import Navbar from 'reactstrap/lib/Navbar';
-import Button from 'reactstrap/lib/Button';
-import Fade from 'reactstrap/lib/Fade';
-import Badge from 'reactstrap/lib/Badge';
 import { Role } from './Interfaces';
 import Nav from 'reactstrap/lib/Nav';
 import NavbarBrand from 'reactstrap/lib/NavbarBrand';
@@ -12,15 +9,24 @@ import NavbarToggler from 'reactstrap/lib/NavbarToggler';
 import Collapse from 'reactstrap/lib/Collapse';
 import NavLink from 'reactstrap/lib/NavLink';
 import NavItem from 'reactstrap/lib/NavItem';
-import { UncontrolledDropdown } from 'reactstrap/lib/Uncontrolled';
 import DropdownToggle from 'reactstrap/lib/DropdownToggle';
 import DropdownMenu from 'reactstrap/lib/DropdownMenu';
 import DropdownItem from 'reactstrap/lib/DropdownItem';
 import Dropdown from 'reactstrap/lib/Dropdown';
+import * as ReactDOM from 'react-dom';
+
+interface IPriorityNavItemProps {
+    children: any,
+}
+
+
+export const PriorityNavItem = ({children}: IPriorityNavItemProps) => {  
+    const el: HTMLElement|null = document.getElementById('priority-nav-items') 
+    return (el !== null) ? ReactDOM.createPortal( children, el ) : null
+}
 
 export class TriphubNavbar extends Component<{
-    app: App,
-    priorityNavItems?: JSX.Element[]
+    app: App
     },{
         isOpen: boolean,
         priviledgesDropdownIsOpen: boolean,
@@ -84,9 +90,7 @@ export class TriphubNavbar extends Component<{
             </NavItem>)
         }
 
-        if (this.props.priorityNavItems) {
-            navItems.push(...this.props.priorityNavItems)
-        }
+        navItems.push(<div id='priority-nav-items'/>)
         
         if (this.props.app.state.role >= Role.TripLeader && this.props.app.state.path !== '/newtrip') {
             navItems.push(

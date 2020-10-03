@@ -3,15 +3,15 @@ import { Component } from 'react';
 import { Button, Jumbotron } from 'reactstrap';
 import { BaseUrl } from '.';
 import { App } from './App';
-import { Spinner, Done, TripHubAdminHint as TripHubAlert } from './Widgets';
-import { IEdit,  IParticipant, ITrip, TripGroup, IParticipantsInfo, Role, TripApprovalState } from './Interfaces';
+import { Spinner, Done, AdminHint as TripHubAlert } from './Widgets';
+import { IEdit,  IParticipant, ITrip, TripGroup, IParticipantsInfo, TripApprovalState } from './Interfaces';
 import { GetDateString, AddDays, GetDisplayPriority, SafeJsonParse } from './Utilities';
 import { TripDetail } from './TripDetail';
 import { TripParticipants } from './TripParticipants';
 import { History } from './History';
 import { Email } from './Email';
 import { TripPrint } from './TripPrint';
-import { TripHubPill } from './Widgets';
+import { Pill } from './Widgets';
 import './index.css';
 import './print.css';
 import { ToolTipIcon } from './ToolTipIcon';
@@ -119,7 +119,7 @@ export class Trip extends Component<{
 
     public canEditTrip() {
         const me = this.props.app.getMe()
-        return this.props.app.state.role >= Role.Admin ||
+        return this.props.app.amAdmin() ||
                 ( !!this.state.participants.find((p:IParticipant) => me.id === p.memberId && p.isLeader))
     }
 
@@ -178,7 +178,7 @@ export class Trip extends Component<{
                 isLimited: false,
                 maxParticipants: 0,
                 isDeleted: false,
-                approval: (this.props.isNewSocial) ? TripApprovalState.Approved : TripApprovalState.Pending,
+                approval: (this.props.isNewSocial || this.props.app.amAdmin() ) ? TripApprovalState.Approved : TripApprovalState.Pending,
                 isOpen: this.props.isNewSocial,
                 title: `${me.name}'s ${this.props.isNewSocial ? 'social event' : 'suggested trip'}`,
                 tripGroup: this.props.isNewSocial ? TripGroup.OpenTrip : TripGroup.SuggestedTrip
@@ -205,7 +205,13 @@ export class Trip extends Component<{
                         const newTrip = data[0] as ITrip
                         const url = BaseUrl + '/trips/'+newTrip.id + '/participants'
                         this.props.app.apiCall('POST', url ,participants[0])
-                            .then(() => this.props.app.setPath('/'))
+                            .then(() => {
+                                this.props.app.setPath('/')
+                                const notificationText = (trip.approval === TripApprovalState.Pending) ?
+                                    "Thanks for submitting a trip. It will be checked by the trip-coordinators and you will receive an email when it is approved." :
+                                    "Trip has been added and auto-approved."
+                                this.props.app.addNotification(notificationText, 'success');
+                            })
                     })
             }
         }
@@ -269,7 +275,7 @@ export class Trip extends Component<{
         const participantCount = <span key='count' className='TripCount'>
                                     {` (${info.leaders.length+info.early.length}${info.late.length ? '+'+info.late.length : ''})`}
                                  </span>                                    
-        const amAdmin = this.props.app.state.role >= Role.Admin 
+        const amAdmin = this.props.app.amAdmin()
         const approval = this.state.trip.approval
         const tripCanBeApproved = ( approval === TripApprovalState.Pending || approval === TripApprovalState.Rejected ) && !trip.isDeleted
         // Note - approved trips can't be rejected, but they can be deleted
@@ -295,21 +301,21 @@ export class Trip extends Component<{
                                 </Badge>
                             </ToolTipIcon>)}
                         {trip.id <= 0
-                         ? <TripHubPill>New trip - not saved!</TripHubPill>
+                         ? <Pill>New trip - not saved!</Pill>
                          : trip.tripGroup === TripGroup.DeletedTrip 
-                         ? <TripHubPill>This trip has been deleted</TripHubPill>
+                         ? <Pill>This trip has been deleted</Pill>
                          : trip.tripGroup === TripGroup.SuggestedTrip && trip.approval === TripApprovalState.Pending
                          ? amAdmin
                             ? <TripHubAlert>This trip needs to be approved or rejected. Please check that all details are filled
                                 out correctly and that the trip is suitable then use the buttons below to approve or reject.
                             </TripHubAlert>
-                            : <TripHubPill>This trip has only been suggested, and not yet approved</TripHubPill>
+                            : <Pill>This trip has only been suggested, and not yet approved</Pill>
                          : trip.tripGroup === TripGroup.SuggestedTrip && trip.approval === TripApprovalState.Rejected
-                         ? <TripHubPill>This trip has been been rejected</TripHubPill>
+                         ? <Pill>This trip has been been rejected</Pill>
                          : trip.tripGroup === TripGroup.SuggestedTrip && trip.approval === TripApprovalState.Approved
-                         ? <TripHubPill>This trip is not open yet</TripHubPill>
+                         ? <Pill>This trip is not open yet</Pill>
                          : !trip.isOpen
-                         ? <TripHubPill>This trip is closed, please contact the leader</TripHubPill>
+                         ? <Pill>This trip is closed, please contact the leader</Pill>
                          : null}
                     </div>
                     <div hidden={isNew || !amAdmin} key='adminActions' className="py-1">
@@ -359,7 +365,7 @@ export class Trip extends Component<{
                             <Email  owner={this} app={this.props.app} isLoading={isLoading} />
                         </Accordian>
                     }
-                    {((this.props.app.state.role < Role.Admin) || this.props.isNew) ? null : 
+                    {(!amAdmin || this.props.isNew) ? null : 
                         <Accordian key='history' id='history' className='trip-section' headerClassName='trip-section-header'
                                     title={<span><b><span key='icon' className='fa fa-history fa-fw'/>History</b></span>}
                                     expanded={false} ondemand={history}>

@@ -12,6 +12,7 @@ import { Newsletter } from './Newsletter';
 import { Spinner, Done } from './Widgets';
 import Container from 'reactstrap/lib/Container';
 import Jumbotron from 'reactstrap/lib/Jumbotron';
+import { INotification, NotificationArea } from './NotificationArea';
 
 export class App extends Component<{
     },{
@@ -32,8 +33,8 @@ export class App extends Component<{
       holidayMap: { [id: string]: IHoliday }
       config: IConfig
       statusId?: any
-      priorityNavItems: JSX.Element[]
-      inIFrame: boolean
+      inIFrame: boolean,
+      notifications: INotification[]
     }> {
       public trip: React.RefObject<Trip>
       public triplist: React.RefObject<TripsList>
@@ -58,8 +59,8 @@ export class App extends Component<{
             holidayMap: {},
             status: ['Loading ', Spinner],
             statusShow: true,
-            priorityNavItems: [],
-            inIFrame: true // true if to style/behave for use in iFrame; false to style/behave as standalone app
+            inIFrame: true, // true if to style/behave for use in iFrame; false to style/behave as standalone app
+            notifications: []
         }
         this.setStatus = this.setStatus.bind(this) 
         this.apiCall = this.apiCall.bind(this)
@@ -95,6 +96,11 @@ export class App extends Component<{
         window.top.history.pushState({path}, path, "#"+path);
         this.changePath(path)
     }
+
+
+    public amAdmin() : boolean { return this.state.role >= Role.Admin }
+
+    public amTripLeader() : boolean { return this.state.role >= Role.TripLeader }
 
     public async apiCall(method:string, url:string, data?:any, isTripEdit?: boolean): Promise<any> {
         if (isTripEdit && this.trip.current && this.trip.current.state.editHref && !this.trip.current.state.editIsEdited) {
@@ -141,12 +147,6 @@ export class App extends Component<{
 
     public getArchivedRoutes() : IArchivedRoute[] {
         return this.state.archivedRoutes;
-    }
-
-    public addPriorirtyNavItem( item : JSX.Element ) {
-        const priorityNavItems = this.state.priorityNavItems
-        priorityNavItems.push(item)
-        this.setState({priorityNavItems})
     }
 
     public validateTrip(trip : ITrip) : IValidation[] {
@@ -219,12 +219,20 @@ export class App extends Component<{
         return this.state.inIFrame ? "outer-container " : "" 
     }
 
-    public render(){
+
+    public addNotification(text: string, colour: string) {
+        const notifications : INotification[] = [ ...this.state.notifications, {text, colour} ]
+        this.setState({notifications})
+    }
+
+    public render() {
 
         console.log(`path=${this.state.path}`);
 
         return (
             [ <TriphubNavbar key='triphubNavbar' app={this}/>,
+
+            <NotificationArea notifications={this.state.notifications} key='notification-area' containerClassName={this.containerClassName()}/>,
 
             this.state.isLoadingConfig || this.state.isLoadingMaps || this.state.isLoadingArchivedRoutes || this.state.isLoadingMembers || this.state.isLoadingHolidays ?
                  [
@@ -262,7 +270,7 @@ export class App extends Component<{
 
     private changePath(path: string) : void {
         window.scrollTo(0,0)
-        this.setState({path, priorityNavItems: []})
+        this.setState({path, notifications: []})
     }
 
 }

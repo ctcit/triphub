@@ -15,14 +15,9 @@ import DropdownItem from 'reactstrap/lib/DropdownItem';
 import Dropdown from 'reactstrap/lib/Dropdown';
 import * as ReactDOM from 'react-dom';
 
-interface IPriorityNavItemProps {
-    children: any,
-}
-
-
-export const PriorityNavItem = ({children}: IPriorityNavItemProps) => {  
+export const PriorityNavItem = (props: any) => {  
     const el: HTMLElement|null = document.getElementById('priority-nav-items') 
-    return (el !== null) ? ReactDOM.createPortal( children, el ) : null
+    return (el !== null) ? ReactDOM.createPortal( props.children, el ) : null
 }
 
 export class TriphubNavbar extends Component<{
@@ -98,7 +93,7 @@ export class TriphubNavbar extends Component<{
                 <NavLink onClick={newtrip} disabled={this.props.app.state.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-lightbulb'/> 
-                        &nbsp; Suggest a trip
+                        &nbsp; New trip
                     </span>
                 </NavLink>
             </NavItem>)

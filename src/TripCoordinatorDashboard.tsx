@@ -21,7 +21,7 @@ export class TripCoordinatorDashboard extends Component<{
     public render(){
         const pendingTrips = this.props.trips ? this.props.trips.filter( trip => trip.approval === TripApprovalState.Pending ) : undefined;
         return (
-            <Container fluid={true} className="my-3">
+            <Container key="tripCoordiantorDashboardContainter" className={this.props.app.containerClassName() + " my-3"} fluid={true}>
                 <Alert color='primary'>
                     { ( pendingTrips && pendingTrips.length > 0 ) ?
                         [ <h4 key="approvalTitle">Suggested Trips</h4>,

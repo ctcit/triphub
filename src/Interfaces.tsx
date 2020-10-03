@@ -167,3 +167,22 @@ export interface INotice {
     text: string
     order: number
 }
+
+export interface INewsletterEvent {
+    trip_id: number
+    dateDisplay:string
+    social:boolean
+    trip:boolean
+    title: string
+    grade:string
+    leader:string
+    leaderPlus:string
+    leaderPhone:string
+    leaderEmail:string
+    close1:string
+    map1:string
+    map2:string
+    map3:string
+    cost:string
+    issueDate:string
+}

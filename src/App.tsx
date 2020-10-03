@@ -8,7 +8,7 @@ import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
 import { TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
-import { Newsletter } from './Newsletter';
+import { Newsletter } from './Newsletter/Newsletter';
 import { Spinner, Done } from './Widgets';
 import Container from 'reactstrap/lib/Container';
 import Jumbotron from 'reactstrap/lib/Jumbotron';

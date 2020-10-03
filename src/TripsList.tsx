@@ -11,7 +11,6 @@ import './index.css';
 import Table from 'reactstrap/lib/Table';
 import { ToolTipIcon } from './ToolTipIcon';
 import { Spinner, Done } from './Widgets';
-import { Role } from './Interfaces';
 import { Accordian } from './Accordian';
 import { ButtonWithTooltip } from './MapEditor';
 import { ExpandableTableRow } from './ExpandableTableRow';

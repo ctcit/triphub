@@ -246,6 +246,17 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
             return GetCurrentNewsletter($con, UserIdIfHasRoleOrDie($con,"Admin"));
 
+        case "GET newsletters/events":
+            // DESCRIPTION Gets the list of trips to be included in the current newsletter
+            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            return GetEvents($con, UserIdIfHasRoleOrDie($con,"Admin"));
+
+        case "GET newsletters/unpublishedEvents":
+            // DESCRIPTION Gets the list of unpublished trips that won't be published in the current newsletter
+            // (but are still current)
+            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            return GetEvents($con, UserIdIfHasRoleOrDie($con,"Admin"), true);
+
         case "POST newsletters/{newsletterId}/current":
             // DESCRIPTION Sets the specified newsletter as current (this will unset any existing current newsletter)
             // OUTPUT Confirmation string

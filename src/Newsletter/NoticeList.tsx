@@ -1,15 +1,16 @@
 import * as React from 'react';
 import * as ReactModal from 'react-modal';
 import { Component } from 'react';
-import { App } from './App';
-import { INotice, IValidation } from './Interfaces';
-import './index.css';
-import './print.css';
+import { App } from '../App';
+import { INotice, IValidation } from '../Interfaces';
+import '../index.css';
+import '../print.css';
 import Table from 'reactstrap/lib/Table';
-import { BaseUrl } from '.';
-import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from './Control';
+import { BaseUrl } from '..';
+import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from '../Control';
 import Button from 'reactstrap/lib/Button';
-import { IsValidDateString, GetDateString, GetStartOfNextMonth } from './Utilities';
+import { IsValidDateString, GetDateString, GetStartOfNextMonth } from '../Utilities';
+import { Accordian } from '../Accordian';
 
 class Section {
     public name: string
@@ -41,7 +42,7 @@ class NoticeDetail extends Component<{
     }
 
     public render() {
-        const validations: IValidation[] = this.validate();
+        let validations: IValidation[] = this.validate(this.props.notice);
 
         const onGet = (id: string): any => {
             return this.props.notice[id];
@@ -49,7 +50,8 @@ class NoticeDetail extends Component<{
 
         const onSave = (id: string, value: any): Promise<void> => {
             this.props.notice[id] = value;
-            // Don't actually save
+            validations = this.validate(this.props.notice)
+            // Don't actually save until the save button is pressed
             return Promise.resolve();
         }
 
@@ -86,11 +88,11 @@ class NoticeDetail extends Component<{
         </div>;
     }
 
-    private validate(): IValidation[] {
+    private validate(notice:INotice): IValidation[] {
         return [
-            { id: 'title', ok: this.props.notice.title.length > 0, message: 'Must set a title!' },
-            { id: 'text', ok: this.props.notice.text.length > 0, message: 'Must set some body text!' },
-            { id: 'date', ok: IsValidDateString(this.props.notice.date), message: 'Expiry date is not valid' },
+            { id: 'title', ok: notice.title.length > 0, message: 'Must set a title!' },
+            { id: 'text', ok: notice.text.length > 0, message: 'Must set some body text!' },
+            { id: 'date', ok: IsValidDateString(notice.date), message: 'Expiry date is not valid' },
         ];
     }
 
@@ -130,59 +132,62 @@ export class NoticeList extends Component<{
 
     public render() {
         return [
-            <Button onClick={this.handleNewNotice} key="newNoticeButton" color="primary">New Notice</Button>,
-            Sections.map((section: Section) =>
-            <div key={section.name + "Notices"}>
-                <h3>{section.title}</h3>
-                <Table className='TripGroup table-fixed' size='sm' striped={true}>
-                    <thead>
-                        <tr>
-                            <th className='mobile-only' />
-                            <th style={{ width: "50%" }}>Title</th>
-                            <th style={{ width: "20%" }}>Expiry</th>
-                            <th style={{ width: "15%" }}>Publish</th>
-                            <th style={{ width: "15%" }}/>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.state.notices.filter(n => n.section === section.name).map((notice, index, section_notices) => {
-                            const onGet = (id: string): any => {
-                                return notice.publish
+            <Button onClick={this.handleNewNotice} key="newNoticeButton" color="primary" className='my-2'><span className='fas fa-plus'/> New Notice</Button>,
+            this.state.notices.length === 0 && <p className='newsletter-no-notices'>No notices - use the "New Notice" button or add an expired notice.</p>,
+            Sections.map((section: Section) => {
+                const notices = this.state.notices.filter(n => n.section === section.name)
+                return notices.length === 0 ? null : <div key={section.name + "Notices"}>
+                    <h3>{section.title}</h3>
+                    <Table className='TripGroup table-fixed' size='sm' striped={true}>
+                        <thead>
+                            <tr>
+                                <th className='mobile-only' />
+                                <th style={{ width: "50%" }}>Title</th>
+                                <th style={{ width: "20%" }}>Expiry</th>
+                                <th style={{ width: "15%" }}>Publish</th>
+                                <th style={{ width: "15%" }}/>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {notices.map((notice, index, section_notices) => {
+                                const onGet = (id: string): any => {
+                                    return notice.publish
+                                }
+                                const onSave = (id: string, value: any): any => {
+                                    return this.setPublishNotice(notice, value)
+                                }
+                                const onGetValidationMessage = (id: string): any => {
+                                    return ''
+                                }
+                                const onClick = (): any => {
+                                    return this.handleEditNotice(notice);
+                                }
+                                const onUpClick = (): any => {
+                                    return this.moveNoticeUp(notice);
+                                }
+                                const onDownClick = (): any => {
+                                    return this.moveNoticeDown(notice);
+                                }
+                                return <tr key={"notice"+section.name+index}>
+                                        <td className="mobile-only"  onClick={onClick}/>
+                                        <td onClick={onClick}>{notice.title}</td>
+                                        <td onClick={onClick}>{notice.date}</td>
+                                        <td><SwitchControl id='publish' label='' isLoading={false} onGet={onGet}
+                                            onSave={onSave} onGetValidationMessage={onGetValidationMessage} /></td>
+                                        <td>
+                                        {(index!==0) && <Button onClick={onUpClick}><span className='fa fa-arrow-up' style={{marginRight: '0'}}/></Button> }
+                                        {(index!==section_notices.length-1) && <Button onClick={onDownClick}><span className='fa fa-arrow-down' style={{marginRight: '0'}}/></Button>}
+                                        </td>
+                                    </tr>
+                            })
                             }
-                            const onSave = (id: string, value: any): any => {
-                                return this.setPublishNotice(notice, value)
-                            }
-                            const onGetValidationMessage = (id: string): any => {
-                                return ''
-                            }
-                            const onClick = (): any => {
-                                return this.handleEditNotice(notice);
-                            }
-                            const onUpClick = (): any => {
-                                return this.moveNoticeUp(notice);
-                            }
-                            const onDownClick = (): any => {
-                                return this.moveNoticeDown(notice);
-                            }
-                            return <tr key={"notice"+section.name+index}>
-                                    <td className="mobile-only"  onClick={onClick}/>
-                                    <td onClick={onClick}>{notice.title}</td>
-                                    <td onClick={onClick}>{notice.date}</td>
-                                    <td><SwitchControl id='publish' label='' isLoading={false} onGet={onGet}
-                                        onSave={onSave} onGetValidationMessage={onGetValidationMessage} /></td>
-                                    <td>
-                                       {(index!==0) && <Button onClick={onUpClick}><span className='fa fa-arrow-up' style={{marginRight: '0'}}/></Button> }
-                                       {(index!==section_notices.length-1) && <Button onClick={onDownClick}><span className='fa fa-arrow-down' style={{marginRight: '0'}}/></Button>}
-                                    </td>
-                                  </tr>
-                        })
-                        }
-                    </tbody>
-                </Table>
-            </div>
+                        </tbody>
+                    </Table>
+                </div>
+            }
             ),
-            <div key="ExpiredNotices">
-                <h3>Expired Notices</h3>
+            <Accordian id='tripsSocials' className='trip-group' headerClassName='newsletter-group-sub-header' expanded={false}
+                title='Expired Notices' key='expiredNotices'>
                 <Table className="TripGroup" size='sm' striped={true}>
                     <thead>
                         <tr>
@@ -200,6 +205,7 @@ export class NoticeList extends Component<{
                                     return this.addToCurrentNewsletter(notice);
                                 }
                                 return <tr key={notice.title}>
+                                            <td/>
                                             <td>{notice.title}</td>
                                             <td>{notice.date}</td>
                                             <td>{notice.section}</td>
@@ -210,7 +216,7 @@ export class NoticeList extends Component<{
                     </tbody>
                 </Table>
                 {!this.state.showAllExpired && <Button onClick={this.handleShowAll} color="primary" className="mr-1">Show All</Button>}
-            </div>,
+            </Accordian>,
             <ReactModal
                 key="notice-edit-modal"
                 isOpen={this.state.showDetailFor != null}
@@ -360,7 +366,8 @@ export class NoticeList extends Component<{
     }
 
     private getNextOrder() {
-        return this.state.notices[this.state.notices.length-1].order + 1
+        const notices = this.state.notices
+        return (notices.length === 0) ? 0 : notices[notices.length-1].order + 1
     }
 
 }

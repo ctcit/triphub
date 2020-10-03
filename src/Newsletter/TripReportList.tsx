@@ -1,14 +1,14 @@
 
 import * as React from 'react';
 import { Component } from 'react';
-import { DbApiURL, BaseUrl  } from '.';
-import { App } from './App';
-import { ITripReport, INewsletterTripReport } from './Interfaces';
-import './index.css';
-import './print.css';
-import { CapitaliseFirstLetter } from './Utilities';
+import { DbApiURL, BaseUrl  } from '..';
+import { App } from '../App';
+import { ITripReport, INewsletterTripReport } from '../Interfaces';
+import '../index.css';
+import '../print.css';
+import { CapitaliseFirstLetter } from '../Utilities';
 import Table from 'reactstrap/lib/Table';
-import { SwitchControl } from './Control';
+import { SwitchControl } from '../Control';
 
 
 class TripReportBinding
@@ -64,40 +64,42 @@ export class TripReportList extends Component<{
     }
 
     public render() {
-        return  <Table className='TripGroup' size='sm' striped={true}>
-                    <thead>
-                        <tr>
-                            <th className='mobile-only'/>
-                            <th>Date</th>
-                            <th>Title</th>
-                            <th>Type</th>
-                            <th>Publish</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {this.state.tripreports.map(
-                            (binding:TripReportBinding) =>  {
-                                const onGet = (id: string ) : any => {
-                                    return binding.newsLetterTripReport.publish
-                                }
-                                const onSave = (id: string, value: any ) : any => {
-                                    return this.setPublishReport(binding.newsLetterTripReport, value)
-                                }
-                                const onGetValidationMessage = (id: string ) : any => {
-                                    return ''
-                                }
-                                return <tr key={"tripreport"+binding.tripReport.id}>
-                                    <td className="mobile-only"/>
-                                    <td>{binding.tripReport.date_display}</td>
-                                    <td>{binding.tripReport.title}</td>
-                                    <td>{CapitaliseFirstLetter(binding.tripReport.trip_type)}</td>
-                                    <td><SwitchControl id='publish' label='' isLoading={false} onGet={onGet}
-                                        onSave={onSave} onGetValidationMessage={onGetValidationMessage} /></td>
-                                </tr>
-                            })
-                        }
-                    </tbody>    
-                </Table>
+        return  (this.state.tripreports.length === 0) ?
+            <p className='newsletter-no-trip-reports'>No trip reports this month :-(. Try posting on Facebook to encourage people to submit them!</p> :
+            <Table className='TripGroup' size='sm' striped={true}>
+                <thead>
+                    <tr>
+                        <th className='mobile-only'/>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Publish</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {this.state.tripreports.map(
+                        (binding:TripReportBinding) =>  {
+                            const onGet = (id: string ) : any => {
+                                return binding.newsLetterTripReport.publish
+                            }
+                            const onSave = (id: string, value: any ) : any => {
+                                return this.setPublishReport(binding.newsLetterTripReport, value)
+                            }
+                            const onGetValidationMessage = (id: string ) : any => {
+                                return ''
+                            }
+                            return <tr key={"tripreport"+binding.tripReport.id}>
+                                <td className="mobile-only"/>
+                                <td>{binding.tripReport.date_display}</td>
+                                <td>{binding.tripReport.title}</td>
+                                <td>{CapitaliseFirstLetter(binding.tripReport.trip_type)}</td>
+                                <td><SwitchControl id='publish' label='' isLoading={false} onGet={onGet}
+                                    onSave={onSave} onGetValidationMessage={onGetValidationMessage} /></td>
+                            </tr>
+                        })
+                    }
+                </tbody>    
+            </Table>
     }
 
     private setPublishReport(tripReport: INewsletterTripReport, publish: boolean) : Promise<void> {

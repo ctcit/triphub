@@ -1,16 +1,18 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { Form, Button, Container, Row, Col } from 'reactstrap';
-import { InputControl } from './Control';
-import { BaseUrl, NewsletterGenerateUrl } from '.';
-import { App } from './App';
-import { INewsletter, IValidation } from './Interfaces';
-import './index.css';
-import './print.css';
-import { GetDateString, IsValidDateString, GetClosestWednesday } from './Utilities';
+import { InputControl } from '../Control';
+import { BaseUrl, NewsletterGenerateUrl } from '..';
+import { App } from '../App';
+import { INewsletter, IValidation } from '../Interfaces';
+import '../index.css';
+import '../print.css';
+import { GetDateString, IsValidDateString, GetClosestWednesday } from '../Utilities';
 import { TripReportList } from './TripReportList';
 import { NoticeList } from './NoticeList';
-import { FullWidthLoading, Spinner } from './Widgets';
+import { FullWidthLoading, Spinner } from '../Widgets';
+import { Accordian } from '../Accordian';
+import { NewsletterEventsList } from './NewsletterEvents';
 
 
 export class Newsletter extends Component<{
@@ -108,7 +110,7 @@ export class Newsletter extends Component<{
                 {isNew && <div><p>No current newsletter, please create a new one..</p></div>}
                 {isLoading && <FullWidthLoading />}
                 {!isLoading &&
-                    <Container key='form' fluid={true}>
+                    <Container key='form' fluid={true} className='my-3'>
                         <Row>
                             <Col sm={5} md={4}>
                                 <InputControl id='volume' label='Volume' type='number' {...common}/>
@@ -128,28 +130,45 @@ export class Newsletter extends Component<{
                                 <InputControl id='nextdeadline' label='Next Deadline' type='date' {...common}/>
                             </Col>
                         </Row>
-
+                        {!isNew &&
+                            <Button key="generate" color='primary' onClick={this.generate} visible={!isLoading}>
+                                <span className='fas fa-download'/> Generate
+                            </Button>}
+                        {isNew &&
+                            <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!isLoading}>
+                                Save
+                            </Button>
+                        }
                     </Container>
-                }
-                {isNew &&
-                    <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!isLoading}>
-                        Save
-                    </Button>
                 }
                 {!isNew &&
                     <div key="details">
-                        <Button key="generate" color='primary' onClick={this.generate} visible={!isLoading}>
-                            Generate
-                        </Button>
-                        <h2>Trips and Socials</h2>
-                        <p>All approved trips with a trip start date after the newsletter date, and which are
-                        open by the newsletter date will automatically be included.</p>
+                        <Accordian id='tripsSocials' className='trip-group my-5' headerClassName='newsletter-group-header' expanded={true}
+                            title='Trips and Socials'>
+                            <div className="m-2">
+                                <p>The following trips will be listed in the newsletter:</p>
+                            </div>
+                            <NewsletterEventsList app={this.app}/>
+                            <div className="m-2">
+                                <p>The following trips will <b>not</b> be published - this could be because they are not
+                                open by the newsletter date or are not approved.</p>
+                            </div>
+                            <NewsletterEventsList app={this.app} unpublished={true}/>
+                        </Accordian>
 
-                        <h2>Trip Reports</h2>
-                        <TripReportList app={app} newsletterId={newsletter.id}/>
+                        <Accordian id='tripReports' className='trip-group my-5' headerClassName='newsletter-group-header' expanded={true}
+                            title='Trip Reports'>
+                            <div className="m-2">
+                                <TripReportList app={app} newsletterId={newsletter.id}/>
+                            </div>
+                        </Accordian>
 
-                        <h2>Notices</h2>
-                        <NoticeList app={app}/>
+                        <Accordian id='tripReports' className='trip-group my-5' headerClassName='newsletter-group-header' expanded={true}
+                            title='Notices'>
+                            <div className="m-2">
+                                <NoticeList app={app}/>
+                            </div>
+                        </Accordian>
                     </div>
                 }
             </Container>

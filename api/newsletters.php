@@ -46,6 +46,15 @@ function GetCurrentNewsletter($con, $userid) {
 		ORDER by date DESC LIMIT 1");
 }
 
+function GetEvents($con, $userid, $unpublished=false) {
+	$table = ($unpublished) ? ConfigServer::newsletterUnpublishedEventsTable : ConfigServer::newsletterEventsTable;
+	return SqlResultArray($con,
+		"SELECT * 
+		FROM
+			$table
+		ORDER by dateDisplay ASC");
+}
+
 function GetNewsletterVolumes($con, $userid, $volume) {
 	$newslettersTable = ConfigServer::newslettersTable;
 	$volumeRows = SqlResultArray($con,

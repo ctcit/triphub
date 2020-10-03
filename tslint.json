@@ -1,5 +1,6 @@
 {
   "extends": ["tslint:recommended", "tslint-react", "tslint-config-prettier"],
+  "cache": true,
   "rules": {
     "ordered-imports":  false,
     "max-classes-per-file": [true, 100],

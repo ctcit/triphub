@@ -108,6 +108,8 @@ export class App extends Component<{
         }
 
         const request : RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
+        // Accept header is required when querying the db api, and doesn't hurt when querying the triphub api
+        request.headers = {...request.headers, 'Accept': 'application/json'}
         
         request.method = method
 

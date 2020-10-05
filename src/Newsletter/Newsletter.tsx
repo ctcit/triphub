@@ -67,6 +67,10 @@ export class Newsletter extends Component<{
                this.startNewNewsletter(); 
             }
             else {
+                if (!newsletters[0].isCurrent) {
+                    this.props.app.apiCall('POST', BaseUrl + '/newsletters/'+newsletters[0].id+'/current/')
+                    // don't need to wait for the result here...
+                }
                 this.loadNewsletter(newsletters[0]);
                 this.props.app.setStatus('Loaded', 3000)
             }
@@ -241,7 +245,7 @@ export class Newsletter extends Component<{
                 date: GetDateString(newsletterDate),
                 issueDate: GetDateString(closestClubNight),
                 nextdeadline: GetDateString(nextDeadline),
-                // PENDING - make API force isCurrent=false
+                // PENDING - make API force isCurrent=false - or remove teh whole isCurrent mechanism
                 isCurrent: false,
             }
             this.setState({newsletter: this.newNesletter, isLoading: false})

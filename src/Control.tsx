@@ -7,7 +7,6 @@ import { Spinner } from './Widgets';
 import Textarea from 'react-textarea-autosize';
 import Switch from "react-switch";
 import { InputType } from 'reactstrap/lib/Input';
-import { Console } from 'console';
 
 export class ControlWrapper extends Component<{
         id : string, 
@@ -94,7 +93,6 @@ export class InputControl extends Component<{
             className += " is-invalid"
         }
         
-        console.log("render "+this.props.id)
         return  (
             <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
                onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText}>

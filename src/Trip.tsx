@@ -152,9 +152,13 @@ export class Trip extends Component<{
     }
 
     public startNewEvent(){
+        // First of the next month
         const openDate : Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
-        const closeDate : Date = AddDays(openDate, 12 - openDate.getDay())
-        const tripDate : Date = AddDays(closeDate, 8)
+        // Friday in the week after the open date (or Wednesday for Socials)
+        const offset = (this.props.isNewSocial) ? 9 : 12
+        const closeDate : Date = AddDays(openDate, offset - openDate.getDay())
+        // The day after the close date (a Saturday)
+        const tripDate : Date = AddDays(closeDate, 1)
         const me = this.props.app.getMe()
 
         this.suggestedTrip = {
@@ -180,7 +184,7 @@ export class Trip extends Component<{
                 isDeleted: false,
                 approval: (this.props.isNewSocial || this.props.app.amAdmin() ) ? TripApprovalState.Approved : TripApprovalState.Pending,
                 isOpen: this.props.isNewSocial,
-                title: `${me.name}'s ${this.props.isNewSocial ? 'social event' : 'suggested trip'}`,
+                title: '',
                 tripGroup: this.props.isNewSocial ? TripGroup.OpenTrip : TripGroup.SuggestedTrip
             },
             participants: [

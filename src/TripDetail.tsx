@@ -9,6 +9,7 @@ import { Trip } from './Trip';
 import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces';
 import { MapControl } from './MapControl';
 import { BaseUrl } from 'src';
+import { AddDays, GetDateString } from './Utilities';
 
 export class TripDetail extends Component<{
         owner: Trip,
@@ -25,6 +26,8 @@ export class TripDetail extends Component<{
 
       private nz50MapsBySheet: { [mapSheet: string] : IMap } = {};
       private archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute } = {};
+
+      private closeDateIteration = 0
 
       constructor(props: any){
         super(props)
@@ -70,6 +73,13 @@ export class TripDetail extends Component<{
         }
     }
 
+    public calculateCloseDate(tripDate: string, length: number) {
+        const tripDateAsDate = new Date(tripDate)
+        // Close date is the day before for day trips, Wednesday before for longer trips
+        const daysToAdd = (length < 2) ? -1 : -(((tripDateAsDate).getDay()+3)%7)-1
+        return GetDateString( AddDays(tripDateAsDate, daysToAdd) )
+    }
+
     public render(){
         const trip: ITrip = this.props.owner.state.trip;
         const validations: IValidation[] = this.app.validateTrip(this.props.owner.state.trip);
@@ -80,6 +90,7 @@ export class TripDetail extends Component<{
             return this.app.apiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
         }
+
         const updateArchivedRouteSummary = (archivedRouteId: string, routeSummary: string): Promise<void> =>  {
             return this.app.apiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
         }
@@ -87,12 +98,14 @@ export class TripDetail extends Component<{
         const onGet = (id: string): any => {
             return this.get(id);
         }
+
         const onSave = (id: string, value: any): Promise<void> => {
             this.set(id, value);
             const body = {};
             body[id] = value;
             return this.saveTrip(body);
         }
+
         const onGetValidationMessage = (id: string): any => {
             const found: IValidation | undefined = validations.find(validation => validation.id === id && !validation.ok);
             return found ? found.message : null;
@@ -101,10 +114,52 @@ export class TripDetail extends Component<{
         const onGetInverted = (id: string): any => {
             return !this.get(id);
         }
+
         const onSaveInverted = (id: string, value: any): Promise<void> => {
             this.set(id, !value);
             const body = {};
             body[id] = !value;
+            return this.saveTrip(body);
+        }
+
+        const onSaveTripDate = (id: string, value: any): Promise<void> => {
+            if (id !== 'tripDate') {
+                // Wrong method
+                onSave(id, value)
+            }
+            const tripDate = value;
+            let body :any = {tripDate}
+
+            if (this.props.owner.props.isNew) {
+                const closeDate = this.calculateCloseDate(tripDate, this.props.owner.state.trip.length)
+                body={...body, closeDate}
+                this.set('closeDate', closeDate);
+            }
+
+            this.set('tripDate', tripDate);
+            this.closeDateIteration++
+            
+            return this.saveTrip(body);
+        }
+
+        const onSaveTripLength = (id: string, value: any): Promise<void> => {
+            if (id !== 'length') {
+                // Wrong method
+                onSave(id, value)
+            }
+            const length = value as number
+            let body :any = {length}
+
+            const oldLength = this.props.owner.state.trip.length
+            if (this.props.owner.props.isNew) {
+                const closeDate = this.calculateCloseDate(this.props.owner.state.trip.tripDate, length)
+                body={...body, closeDate}
+                this.set('closeDate', closeDate);
+            }
+
+            this.set('length', length);
+            this.closeDateIteration++
+            
             return this.saveTrip(body);
         }
 
@@ -119,6 +174,14 @@ export class TripDetail extends Component<{
         }
 
         const commonInverted = {...common, 'onGet': onGetInverted, 'onSave': onSaveInverted }
+        const commonTripDate = {...common, 'onSave': onSaveTripDate }
+        const commonLength = {...common, 'onSave': onSaveTripLength }
+
+        const openDateHelp = (trip.isSocial) ? "When the event will be visible on the socials list" :
+                                               "When sign-up opens and the trip is visible on thr trips list"
+
+        const openDateLabel = (trip.isSocial) ? "Visible Date" :
+                                                "Open Date"
 
         return [
             <Container key='detail' fluid={true}>
@@ -130,22 +193,22 @@ export class TripDetail extends Component<{
 
                 <Row>
                     <Col sm={5} md={4}>
-                        <InputControl id='tripDate' label={isSocial ? 'Social Date' : 'Trip Date'} type='date' {...common}/>
+                        <InputControl id='tripDate' label={isSocial ? 'Social Date' : 'Trip Date'} type='date' {...commonTripDate}/>
                     </Col>
                     <Col sm={5} md={4} hidden={isSocial}>
-                        <InputControl id='length' label='Length in days'  type='number' min={0} hidden={trip.isSocial} {...common}/>
+                        <InputControl id='length' label='Length in days'  type='number' min={0} hidden={trip.isSocial} {...commonLength}/>
                     </Col>
                 </Row>
 
                 <Row>
+                    <Col sm={5} md={4}>
+                        <InputControl id='openDate' label={openDateLabel} type='date' helpText={openDateHelp} {...common}/>
+                    </Col>
                     <Col sm={2} md={3} hidden={!trip.isSocial}>
                         <SwitchControl id='isNoSignup' label='Sign up list' {...commonInverted}/>
                     </Col>
                     <Col sm={5} md={4} hidden={isSocial && trip.isNoSignup}>
-                        <InputControl id='openDate' label='Open Date' type='date' helpText='When sign-up opens' {...common}/>
-                    </Col>
-                    <Col sm={5} md={4} hidden={isSocial && trip.isNoSignup}>
-                        <InputControl id='closeDate' label='Close Date' type='date' helpText='When sign-up closes' {...common}/>
+                        <InputControl id='closeDate' label='Close Date' type='date' helpText='When sign-up closes' {...common} key={'closeDate'+this.closeDateIteration}/>
                     </Col>
                 </Row>
 
@@ -153,16 +216,19 @@ export class TripDetail extends Component<{
                     <Col>
                         <ComboBoxControl id='departurePoint' 
                             label={isSocial ? 'Location' : 'Departure Point'} 
-                            options={isSocial ? ['Club Rooms (110 Walthan Road)'] : ['Z Papanui', 'Z (formerly Caltex) Russley']}
+                            options={isSocial ? ['Club Rooms (110 Waltham Road)'] : ['Z Papanui', 'Z (formerly Caltex) Russley']}
                             {...common}/>
                     </Col>
                 </Row>
 
                 <Row>
                     <Col>
-                        <InputControl hidden={isSocial} id='departureDetails' label='Departure Details' type='text'
-                            helpText='Time, any special arrangements' {...common}/>
-                        <InputControl hidden={!isSocial} id='departureDetails' label='Time' type='text' helpText='Time, any special arrangements' {...common}/>
+                        <InputControl hidden={isSocial} id='departureDetails' label='Departure Details'
+                            helpText='Time, any special arrangements' type='text'
+                            {...common}/>
+                        <ComboBoxControl hidden={!isSocial} id='departureDetails' label='Time'
+                            helpText='Time, any special arrangements' {...common}
+                            options={isSocial ? ['7:30 pm (talks start at 8 pm)'] : []} />
                     </Col>
                 </Row>
 

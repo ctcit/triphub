@@ -53,7 +53,7 @@ export const NewsletterEventsList = ({app, unpublished}:INewsletterEventsListPro
                     </tr>
                 </thead>
                 <tbody>
-                    {events.map((event, index) => <NewsletterEvent event={event} app={app} key={'event'+index}/>)}
+                    {(events !== null) && events.map((event, index) => <NewsletterEvent event={event} app={app} key={'event'+index}/>)}
                 </tbody>
             </Table>
 }

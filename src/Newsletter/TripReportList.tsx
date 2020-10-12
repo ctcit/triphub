@@ -36,12 +36,14 @@ export class TripReportList extends Component<{
 
 
     public componentDidMount() {
+        if (this.props.newsletterId === 0) {
+            return
+        }
         this.props.app.apiCall('GET', DbApiURL + "/recenttripreports/99999/90")
         .then((tripReports : ITripReport[]) => {
             this.props.app.apiCall('GET', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports")
             .then((newsletterTripReports : INewsletterTripReport[]) => {
                 const tripReportBindings : TripReportBinding[] = []
-                const newNewsletterTripReports : INewsletterTripReport[] = []
                 tripReports.forEach(tripReport => {
                    let newsLetterTripReport : INewsletterTripReport | undefined = newsletterTripReports.find( r => r.tripreport === tripReport.id) 
                    if ( newsLetterTripReport === undefined )
@@ -52,12 +54,11 @@ export class TripReportList extends Component<{
                            tripreport: tripReport.id,
                            publish: (tripReport.trip_type === "club") ? true : false
                        }
-                       newNewsletterTripReports.push(newsLetterTripReport)
+                       newsletterTripReports.push(newsLetterTripReport)
                    }
                    tripReportBindings.push({tripReport, newsLetterTripReport})
                 });
                 this.setState({ tripreports: tripReportBindings })
-                newsletterTripReports = newsletterTripReports.concat(newNewsletterTripReports)
                 this.props.app.apiCall('POST', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", newsletterTripReports)
             })
         })

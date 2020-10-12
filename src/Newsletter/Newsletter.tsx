@@ -163,7 +163,7 @@ export class Newsletter extends Component<{
                         <Accordian id='tripReports' className='trip-group my-5' headerClassName='newsletter-group-header' expanded={true}
                             title='Trip Reports'>
                             <div className="m-2">
-                                <TripReportList app={app} newsletterId={newsletter.id}/>
+                                <TripReportList app={app} newsletterId={newsletter.id} key={'tripReports'+newsletter.id}/>
                             </div>
                         </Accordian>
 

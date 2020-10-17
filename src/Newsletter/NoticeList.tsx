@@ -225,11 +225,17 @@ export class NoticeList extends Component<{
                     overlay: {
                         backgroundColor: 'rgba(255, 255, 255, 0.2)'
                     },
+                    // This is a bit of a hack, but position: fixed doesn't work properly in
+                    // an iframe
                     content: {
-                        top: '20%',
-                        left: '20%',
-                        right: '20%',
-                        bottom: '20%',
+                        position: 'fixed',
+                        top: 'auto',
+                        left: '50%',
+                        right: 'auto',
+                        bottom: '10%',
+                        transform: 'translate(-50%, 0%)',
+                        width: '600px',
+                        maxWidth: '100%',
                         border: '1px solid #ccc',
                     }
                 }}>

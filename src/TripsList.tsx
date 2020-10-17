@@ -63,7 +63,7 @@ class TripsLine extends Component<{
                 {GetDate(trip.tripDate)}{extractWarnings(/date/)}
             </td>,
             <td key={'length' + id} onClick={this.onClick} className='centered'>
-                {(!trip.isSocial) && GetLength(trip.length)}{extractWarnings(/length/)}
+                {(!trip.isSocial) && GetLength(trip.length, new Date(trip.tripDate))}{extractWarnings(/length/)}
             </td>,
             <td key={'title' + id} onClick={this.onClick}>
                 {trip.title}{extractWarnings(/title/)}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { BaseUrl } from 'src';
 import * as React from 'react';
 import Table from 'reactstrap/lib/Table';
+import { FullWidthLoading } from 'src/Widgets';
 
 export interface INewsletterEventProps {
     app:App,
@@ -33,16 +34,19 @@ export interface INewsletterEventsListProps {
 
 export const NewsletterEventsList = ({app, unpublished}:INewsletterEventsListProps): JSX.Element  => {
     const [events, updateEvents] = useState<INewsletterEvent[]>([])
+    const [isLoading, updateIsLoading] = useState<boolean>(true)
 
     useEffect( () => {
         const apiUrl = unpublished ? BaseUrl + "/newsletters/unpublishedEvents" : BaseUrl + "/newsletters/events"
         app.apiCall('GET', apiUrl)
         .then( (fetchedEvents:INewsletterEvent[]) => {
             updateEvents(fetchedEvents)
+            updateIsLoading(false)
         } )
     }, [])
 
-    return <Table className="TripGroup" size='sm' striped={true}>
+    return (isLoading) ? <FullWidthLoading/> :
+            <Table className="TripGroup" size='sm' striped={true}>
                 <thead>
                     <tr>
                         <th className='mobile-only'/>

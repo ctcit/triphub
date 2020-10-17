@@ -145,7 +145,7 @@ export class Newsletter extends Component<{
                         }
                     </Container>
                 }
-                {!isNew &&
+                {!isLoading && !isNew &&
                     <div key="details">
                         <Accordian id='tripsSocials' className='trip-group my-5' headerClassName='newsletter-group-header' expanded={true}
                             title='Trips and Socials'>

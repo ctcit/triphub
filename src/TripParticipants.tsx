@@ -67,7 +67,7 @@ export class TripParticipants extends Component<{
         this.props.trip.setState({participants: this.props.trip.state.participants.filter((p:any) => p.id !== -1)})
     }
 
-    public setPosition(id : number, target?: IParticipant, showMenu? : boolean ) : Promise<any> {
+    public setPosition(id: number, target?: IParticipant, showMenu?: boolean ): Promise<any> {
         const info = this.props.trip.getParticipantsInfo()
         const source = info.all.find(p => p.id === id) as IParticipant
         const sourceIndex = info.moveable.indexOf(source)
@@ -75,9 +75,14 @@ export class TripParticipants extends Component<{
 
         if (info.moveable.length) {
             if (!target) {
-                target = source.isDeleted 
-                            ? info.moveable[info.moveable.length-1] 
-                            : info.moveable[info.maxParticipants + (sourceIndex < info.maxParticipants ? 0 : -1)]
+                // If the target is not specified assume this is a toggle to/from the waitlist,
+                // or to the end of the list if the participant is deleted
+                const maxParticipantsExcludingLeader = info.maxParticipants-1
+                const endOfListIndex = info.moveable.length-1
+                const firstWaitListIndex = info.maxParticipants-1
+                const notOnWaitlist = sourceIndex < maxParticipantsExcludingLeader
+                const toIndex = source.isDeleted ? endOfListIndex :  firstWaitListIndex + (notOnWaitlist ? 0 : -1)
+                target = info.moveable[toIndex]
             }
 
             const targetIndex = info.moveable.indexOf(target)

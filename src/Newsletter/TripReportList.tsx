@@ -9,6 +9,7 @@ import '../print.css';
 import { CapitaliseFirstLetter } from '../Utilities';
 import Table from 'reactstrap/lib/Table';
 import { SwitchControl } from '../Control';
+import { FullWidthLoading } from 'src/Widgets';
 
 
 class TripReportBinding
@@ -22,6 +23,7 @@ export class TripReportList extends Component<{
     newsletterId: number
     }, {
     tripreports: TripReportBinding[]
+    isLoading: boolean
     }> {
 
     public app : App;
@@ -29,19 +31,22 @@ export class TripReportList extends Component<{
     constructor(props:any){
         super(props)
         this.state = {
-            tripreports: []
+            tripreports: [],
+            isLoading: true
         }
         this.app = this.props.app
     }
 
 
     public componentDidMount() {
+        if (this.props.newsletterId === 0) {
+            return
+        }
         this.props.app.apiCall('GET', DbApiURL + "/recenttripreports/99999/90")
         .then((tripReports : ITripReport[]) => {
             this.props.app.apiCall('GET', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports")
             .then((newsletterTripReports : INewsletterTripReport[]) => {
                 const tripReportBindings : TripReportBinding[] = []
-                const newNewsletterTripReports : INewsletterTripReport[] = []
                 tripReports.forEach(tripReport => {
                    let newsLetterTripReport : INewsletterTripReport | undefined = newsletterTripReports.find( r => r.tripreport === tripReport.id) 
                    if ( newsLetterTripReport === undefined )
@@ -50,21 +55,22 @@ export class TripReportList extends Component<{
                        newsLetterTripReport = {
                            newsletter: this.props.newsletterId,
                            tripreport: tripReport.id,
-                           publish: (tripReport.trip_type === "club") ? true : false
+                           publish: false
                        }
-                       newNewsletterTripReports.push(newsLetterTripReport)
+                       newsletterTripReports.push(newsLetterTripReport)
                    }
                    tripReportBindings.push({tripReport, newsLetterTripReport})
                 });
-                this.setState({ tripreports: tripReportBindings })
-                newsletterTripReports = newsletterTripReports.concat(newNewsletterTripReports)
+                this.setState({ tripreports: tripReportBindings, isLoading: false })
                 this.props.app.apiCall('POST', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", newsletterTripReports)
             })
         })
     }
 
     public render() {
-        return  (this.state.tripreports.length === 0) ?
+        return  (this.state.isLoading) ?
+                <FullWidthLoading /> :
+            (this.state.tripreports.length === 0) ?
             <p className='newsletter-no-trip-reports'>No trip reports this month :-(. Try posting on Facebook to encourage people to submit them!</p> :
             <Table className='TripGroup' size='sm' striped={true}>
                 <thead>

@@ -108,6 +108,8 @@ export class App extends Component<{
         }
 
         const request : RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
+        // Accept header is required when querying the db api, and doesn't hurt when querying the triphub api
+        request.headers = {...request.headers, 'Accept': 'application/json'}
         
         request.method = method
 
@@ -150,16 +152,15 @@ export class App extends Component<{
     }
 
     public validateTrip(trip : ITrip) : IValidation[] {
-
-        return (this.state.role >= Role.Admin) && !this.state.isLoading ? [
+        return !this.state.isLoading ? [
             {id:'title', ok: !trip.isDeleted, message: 'This trip has been deleted'},
             ...this.mandatory(trip,['title','description']),
             ...this.mandatory(trip,trip.isSocial ? [] : ['cost','grade','departure_point']),
-            {id:'length', ok: trip.length >= 1 && trip.length <= 14, message:'Length should be between 1 and 14 days'},
-            {id:'openDate', ok: trip.openDate <= trip.closeDate, message:'Open date must be on or before Close date'},
-            {id:'closeDate', ok: trip.openDate <= trip.closeDate, message:'Open date must be on or before Close date'},
-            {id:'closeDate', ok: trip.closeDate <= trip.tripDate, message:'Close date must be on or before Trip date'},
-            {id:'tripDate', ok: trip.closeDate <= trip.tripDate, message:'Close date must be on or before Trip date'},
+            {id:'length', ok: (trip.length >= 1 && trip.length <= 14) || trip.isNoSignup, message:'Length should be between 1 and 14 days'},
+            {id:'openDate', ok: (trip.openDate <= trip.closeDate), message:'Open date must be on or before Close date'},
+            {id:'closeDate', ok: (trip.openDate <= trip.closeDate) || trip.isNoSignup, message:'Open date must be on or before Close date'},
+            {id:'closeDate', ok: (trip.closeDate <= trip.tripDate) || trip.isNoSignup, message:'Close date must be on or before Trip date'},
+            {id:'tripDate', ok: (trip.closeDate <= trip.tripDate) || trip.isNoSignup, message:'Close date must be on or before Trip date'},
             {id:'maxParticipants', ok: trip.maxParticipants >= 0, message:'Max Participants must not be negative'},
         ] : []
     }

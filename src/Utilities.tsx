@@ -4,37 +4,38 @@ import { DateTime } from 'luxon';
 export const DayOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 export const MonthOfYear = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-export function GetDateString(date: Date):string {
+export function GetDateString(date: Date): string {
     return `${date.getFullYear()}-${(date.getMonth()+101).toString().substr(1,2)}-${(date.getDate()+100).toString().substr(1,2)}`
 }
 
-export function AddDays(date:Date, days:number):Date {
+export function AddDays(date: Date, days: number): Date {
     return new Date(date.getFullYear(),date.getMonth(),date.getDate()+days)
 }
 
-export function GetDate(dateString : string) : string {
+export function GetDate(dateString: string): string {
     const date = new Date(dateString)
     return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()]
 }
 
-export function GetFullDate(dateString : string) : string {
+export function GetFullDate(dateString: string) : string {
     const date = new Date(dateString)
     return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()] + ' ' + date.getFullYear()
 }
 
-export function GetLength(length : number) : string {
-    return length === 1 ? 'Day' : length === 2 ? 'Weekend' : length + ' days'
+export function GetLength(length: number, startDate: Date): string {
+    const startsOnSat = startDate.getDay() === 6
+    return ( length === 1 ) ? 'Day' : ( length === 2 && startsOnSat ) ? 'Weekend' : length + ' days'
 }
 
-export function IsValidDateString(dateString: string ) : boolean {
+export function IsValidDateString(dateString: string ): boolean {
     return DateTime.fromISO(dateString).isValid
 }
 
-export function GetDisplayPriority(participant: IParticipant) : number {
+export function GetDisplayPriority(participant: IParticipant): number {
     return participant.displayPriority || participant.id
 }
 
-export function CountWhile(func: (x: number) => boolean) : number {
+export function CountWhile(func: (x: number) => boolean): number {
     let i = 0;
     while (func(i)) {
         i++
@@ -42,7 +43,7 @@ export function CountWhile(func: (x: number) => boolean) : number {
     return i
 }
 
-export function SafeJsonParse(json : string, defaultValue : any) : any{
+export function SafeJsonParse(json: string, defaultValue: any): any{
     try {
         return JSON.parse(json);
     } catch (err) {
@@ -50,11 +51,11 @@ export function SafeJsonParse(json : string, defaultValue : any) : any{
     }
 }
 
-export function TitleFromId(id:string) : string {
+export function TitleFromId(id: string): string {
     return id.replace('_',' ').replace(/\b\w/,x => x.toUpperCase())
 }
 
-export function GetClosestWednesday(to:Date) : Date {
+export function GetClosestWednesday(to: Date): Date {
     // Date counts days of week from Sunday, zero indexed
     const wednesday:number = 3;
     const closestWednesday:Date = new Date(to)
@@ -62,12 +63,12 @@ export function GetClosestWednesday(to:Date) : Date {
     return closestWednesday
 }
 
-export function GetStartOfNextMonth() : Date {
+export function GetStartOfNextMonth(): Date {
     const now = new Date();
     return new Date( now.getFullYear(), now.getMonth() +1, 1)
 }
 
-export function CapitaliseFirstLetter(input:string) : string {
+export function CapitaliseFirstLetter(input: string): string {
     return input.charAt(0).toUpperCase() + input.slice(1);
 }
 

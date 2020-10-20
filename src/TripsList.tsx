@@ -51,7 +51,7 @@ class TripsLine extends Component<{
             <td key={'open' + id}>
                 <ButtonGroup className='trip-list-buttons'>
                     <ButtonWithTooltip id={`open-${id}`} onClick={this.onClick} tooltipText="Go to trip">
-                        <span className='fas fa-hiking'/>  
+                        { (trip.isSocial) ? <span className='fas fa-users'/>  : <span className='fas fa-hiking'/>  }
                     </ButtonWithTooltip>
                 </ButtonGroup>
                 {extractWarnings(/./)}
@@ -63,7 +63,7 @@ class TripsLine extends Component<{
                 {GetDate(trip.tripDate)}{extractWarnings(/date/)}
             </td>,
             <td key={'length' + id} onClick={this.onClick} className='centered'>
-                {GetLength(trip.length)}{extractWarnings(/length/)}
+                {(!trip.isSocial) && GetLength(trip.length, new Date(trip.tripDate))}{extractWarnings(/length/)}
             </td>,
             <td key={'title' + id} onClick={this.onClick}>
                 {trip.title}{extractWarnings(/title/)}
@@ -95,9 +95,18 @@ export class TripsGroup extends Component<{
     expanded: boolean
   },{
   }> {
-  constructor(props: any){
-      super(props)
-  }
+    private groupTitles = new Map([
+        [TripGroup.ClosedTrip, "Closed Trips"],
+        [TripGroup.DeletedTrip, "Deleted Trips"],
+        [TripGroup.MyTrip, "My Trips"],
+        [TripGroup.OpenTrip, "Open Trips"],
+        [TripGroup.RejectedTrip, "Rejected Trips"],
+        [TripGroup.SuggestedTrip, "Future Trips"],
+    ])
+
+    constructor(props: any){
+        super(props)
+    }
 
     public render(){
 
@@ -109,7 +118,7 @@ export class TripsGroup extends Component<{
             <Container className={this.props.app.containerClassName()} fluid={true}>
                 <Accordian id={id} className='trip-group' headerClassName='trip-group-header' expanded={this.props.expanded}
                     title={<span>
-                            <b>{TripGroup[trips[0].tripGroup].replace('Trip',' Trip') + (trips.length > 1 ? 's' : '')}</b>
+                            <b>{this.groupTitles.get(trips[0].tripGroup)}</b>
                             <span key='count' className='trip-count'> ({trips.length})</span>
                         </span>
                     }>

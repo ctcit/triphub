@@ -258,11 +258,13 @@ export class ComboBoxControl extends Component<{
     onSave: (id: string, value: any) => Promise<void>,
     onGetValidationMessage: (id: string) => string,
     options: object
+    helpText? : string,
 }, {
     dropdownOpen: boolean,
     oldValue: any,
     value: any,
     saving : boolean
+    helpText? : string,
 }> {
 
     constructor(props : any)     {
@@ -278,7 +280,7 @@ export class ComboBoxControl extends Component<{
         }
         const onFocus = (): void => {
             const oldValue = this.props.onGet(this.props.id);
-            this.setState({ oldValue, value: oldValue });
+            this.setState({ oldValue, value: oldValue, helpText: this.props.helpText });
             setTimeout(() => this.setState({ dropdownOpen: true }), 300); // Hack to ensure dropdown stays open
         }
         const onChange = (event: React.ChangeEvent) => {
@@ -287,7 +289,7 @@ export class ComboBoxControl extends Component<{
         }
         const onBlur = () => {
             if (this.state.oldValue !== this.state.value) {
-                this.setState({saving: true});
+                this.setState({saving: true, helpText: undefined});
                 this.props.onSave(this.props.id, this.state.value)
                     .then(() => this.setState({saving: false}));
             }
@@ -302,7 +304,9 @@ export class ComboBoxControl extends Component<{
         }
         
         return  (
-            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+            <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden}
+                isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
+                saving={this.state.saving} helpText={this.state.helpText} >
                 <InputGroup>
                     <Input id={this.props.id} type="text" readOnly={this.props.readOnly} value={this.state.value} 
                         onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='off'/>

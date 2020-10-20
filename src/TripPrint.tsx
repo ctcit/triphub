@@ -40,7 +40,7 @@ export class TripPrint extends Component<{
                             <th>Date:</th>
                             <td>{GetFullDate(trip.tripDate)}</td>
                             <th>Length:</th>
-                            <td>{GetLength(trip.length)}</td>
+                            <td>{GetLength(trip.length, new Date(trip.tripDate))}</td>
                         </tr>
                     </tbody>
                 </table>

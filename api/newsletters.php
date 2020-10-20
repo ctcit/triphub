@@ -42,8 +42,8 @@ function GetCurrentNewsletter($con, $userid) {
 		"SELECT * 
 		FROM
 			$newslettersTable
-		WHERE `date` > NOW() AND `isCurrent` = 1
-		ORDER by date DESC LIMIT 1");
+		WHERE `issueDate` > NOW()
+		ORDER by `date` ASC LIMIT 1");
 }
 
 function GetEvents($con, $userid, $unpublished=false) {

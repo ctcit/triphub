@@ -38,7 +38,7 @@ export const NewsletterEventsList = ({app, unpublished}:INewsletterEventsListPro
 
     useEffect( () => {
         const apiUrl = unpublished ? BaseUrl + "/newsletters/unpublishedEvents" : BaseUrl + "/newsletters/events"
-        app.apiCall('GET', apiUrl)
+        app.triphubApiCall('GET', apiUrl)
         .then( (fetchedEvents:INewsletterEvent[]) => {
             updateEvents(fetchedEvents)
             updateIsLoading(false)

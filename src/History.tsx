@@ -179,7 +179,7 @@ export class History extends Component<{
     }
 
     public componentDidMount(){
-        this.props.app.apiCall('GET', this.props.owner.props.href + '/history')
+        this.props.app.triphubApiCall('GET', this.props.owner.props.href + '/history')
             .then((history : IHistoryItem[]) => {
                 this.setState({history})
             })

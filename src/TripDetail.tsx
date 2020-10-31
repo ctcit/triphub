@@ -66,7 +66,7 @@ export class TripDetail extends Component<{
 
     public saveTrip(body: any): Promise<void> {
         if (this.href !== undefined) {
-            return this.app.apiCall('POST', this.href as string, body, true);
+            return this.app.triphubApiCall('POST', this.href as string, body, true);
         }
         else {
             return Promise.resolve()
@@ -87,12 +87,12 @@ export class TripDetail extends Component<{
 
         // TODO Move to service
         const getArchivedRoute = (archivedRouteId: string): Promise<IArchivedRoute | undefined> =>  {
-            return this.app.apiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
+            return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
         }
 
         const updateArchivedRouteSummary = (archivedRouteId: string, routeSummary: string): Promise<void> =>  {
-            return this.app.apiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
+            return this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
         }
 
         const onGet = (id: string): any => {

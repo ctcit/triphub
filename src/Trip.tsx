@@ -73,7 +73,7 @@ export class Trip extends Component<{
             this.setState({isLoading: true});
             this.props.app.setState({isLoading: true})
             this.props.app.setStatus(['Loading ', Spinner])
-            this.props.app.apiCall('POST',this.props.href + '/edit',{stamp:new Date().toISOString()})
+            this.props.app.triphubApiCall('POST',this.props.href + '/edit',{stamp:new Date().toISOString()})
                 .then((editList:IEdit[]) => {
                     this.setState({
                         editList,
@@ -84,7 +84,7 @@ export class Trip extends Component<{
                     });
                 });
 
-            this.props.app.apiCall('GET',this.props.href as string)
+            this.props.app.triphubApiCall('GET',this.props.href as string)
                 .then((trip:ITrip) => {
                     this.setState({
                         trip:trip[0],
@@ -103,12 +103,12 @@ export class Trip extends Component<{
         }
 
         if (this.state.editHref) {
-            this.props.app.apiCall('DELETE', this.state.editHref,{})
+            this.props.app.triphubApiCall('DELETE', this.state.editHref,{})
         }
     }
 
     public requeryParticipants(){
-        this.props.app.apiCall('GET',this.props.href + '/participants')
+        this.props.app.triphubApiCall('GET',this.props.href + '/participants')
         .then((participants:IParticipant[]) => {
             participants = participants || []
             this.setState({participants, isSaving: false})
@@ -124,17 +124,17 @@ export class Trip extends Component<{
     }
 
     public deleteTrip(){
-        this.props.app.apiCall('POST', this.props.href as string, {isDeleted:!this.state.trip.isDeleted}, true)
+        this.props.app.triphubApiCall('POST', this.props.href as string, {isDeleted:!this.state.trip.isDeleted}, true)
             .then(() => this.props.app.setPath('/'))
     }
 
     public approveTrip(){
-        this.props.app.apiCall('POST', this.props.href as string, {approval:TripApprovalState.Approved}, true)
+        this.props.app.triphubApiCall('POST', this.props.href as string, {approval:TripApprovalState.Approved}, true)
             .then(() => this.props.app.setPath('/'))
     }
 
     public rejectTrip(){
-        this.props.app.apiCall('POST', this.props.href as string, {approval:TripApprovalState.Rejected}, true)
+        this.props.app.triphubApiCall('POST', this.props.href as string, {approval:TripApprovalState.Rejected}, true)
             .then(() => this.props.app.setPath('/'))
     }
 
@@ -204,11 +204,11 @@ export class Trip extends Component<{
         }
         else
         {
-            this.props.app.apiCall('POST',BaseUrl + '/trips',trip)
+            this.props.app.triphubApiCall('POST',BaseUrl + '/trips',trip)
                 .then(data => { 
                         const newTrip = data[0] as ITrip
                         const url = BaseUrl + '/trips/'+newTrip.id + '/participants'
-                        this.props.app.apiCall('POST', url ,participants[0])
+                        this.props.app.triphubApiCall('POST', url ,participants[0])
                             .then(() => {
                                 this.props.app.setPath('/')
                                 const notificationText = (trip.approval === TripApprovalState.Pending) ?
@@ -383,7 +383,7 @@ export class Trip extends Component<{
     }
 
     private editHeartbeat() {
-        this.props.app.apiCall('POST', this.state.editHref, {stamp:new Date().toISOString(),isEdited:this.state.editIsEdited})
+        this.props.app.triphubApiCall('POST', this.state.editHref, {stamp:new Date().toISOString(),isEdited:this.state.editIsEdited})
             .then((editList:IEdit[]) => this.setState({editList}))
     }
 }

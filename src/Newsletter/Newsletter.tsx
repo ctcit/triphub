@@ -61,14 +61,14 @@ export class Newsletter extends Component<{
 
     public componentDidMount() {
         this.props.app.setStatus(['Loading ', Spinner])
-        this.props.app.apiCall('GET', BaseUrl + "/newsletters/current")
+        this.props.app.triphubApiCall('GET', BaseUrl + "/newsletters/current")
         .then((newsletters:INewsletter[]) => {
             if (newsletters === null || newsletters.length === 0) {
                this.startNewNewsletter(); 
             }
             else {
                 if (!newsletters[0].isCurrent) {
-                    this.props.app.apiCall('POST', BaseUrl + '/newsletters/'+newsletters[0].id+'/current/')
+                    this.props.app.triphubApiCall('POST', BaseUrl + '/newsletters/'+newsletters[0].id+'/current/')
                     // don't need to wait for the result here...
                 }
                 this.loadNewsletter(newsletters[0]);
@@ -192,7 +192,7 @@ export class Newsletter extends Component<{
     private startNewNewsletter() {
         this.setState({isNew: true})
         // Get the latest newsletter to figure out the next volume/issue number
-        this.props.app.apiCall('GET', BaseUrl + "/newsletters/latest")
+        this.props.app.triphubApiCall('GET', BaseUrl + "/newsletters/latest")
         .then((newsletters:INewsletter[]) => {
             const now : Date = new Date()
             const newsletterDate : Date = new Date(now.getFullYear(), now.getMonth()+1);
@@ -254,7 +254,7 @@ export class Newsletter extends Component<{
     }
 
     private saveNewsletter(body: any): Promise<any> {
-        return this.app.apiCall('POST', BaseUrl + '/newsletters/' + this.state.newsletter.id, body, false);
+        return this.app.triphubApiCall('POST', BaseUrl + '/newsletters/' + this.state.newsletter.id, body, false);
     }
 
     private saveNewNesletter(){
@@ -262,13 +262,13 @@ export class Newsletter extends Component<{
 
         this.setState({isLoading: true})
 
-        this.app.apiCall('POST', BaseUrl + '/newsletters/', newsletter, false)
+        this.app.triphubApiCall('POST', BaseUrl + '/newsletters/', newsletter, false)
         .then( (newsletters: INewsletter[]) => {
             if (newsletters !== null && newsletters.length > 0)
             {
                 const savedNewsletter:INewsletter = newsletters[0]
                 console.log("Saved newsletter, id="+savedNewsletter.id)
-                this.props.app.apiCall('POST', BaseUrl + '/newsletters/'+savedNewsletter.id+'/current/')
+                this.props.app.triphubApiCall('POST', BaseUrl + '/newsletters/'+savedNewsletter.id+'/current/')
                 .then( () => {
                     console.log("Succesfully set as current")
                     this.setState({isNew: false})

@@ -6,7 +6,7 @@ import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant, IHoliday, IAr
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
-import { TitleFromId } from './Utilities';
+import { apiCall, TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
 import { Newsletter } from './Newsletter/Newsletter';
 import { Spinner, Done } from './Widgets';
@@ -63,7 +63,7 @@ export class App extends Component<{
             notifications: []
         }
         this.setStatus = this.setStatus.bind(this) 
-        this.apiCall = this.apiCall.bind(this)
+        this.triphubApiCall = this.triphubApiCall.bind(this)
         this.getMembers = this.getMembers.bind(this)
         this.getMe = this.getMe.bind(this)
         this.getMaps = this.getMaps.bind(this)
@@ -102,33 +102,11 @@ export class App extends Component<{
 
     public amTripLeader() : boolean { return this.state.role >= Role.TripLeader }
 
-    public async apiCall(method:string, url:string, data?:any, isTripEdit?: boolean): Promise<any> {
+    public async triphubApiCall(method:string, url:string, data?:any, isTripEdit?: boolean): Promise<any> {
         if (isTripEdit && this.trip.current && this.trip.current.state.editHref && !this.trip.current.state.editIsEdited) {
             this.trip.current.setState({editIsEdited: true})
         }
-
-        const request : RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
-        // Accept header is required when querying the db api, and doesn't hurt when querying the triphub api
-        request.headers = {...request.headers, 'Accept': 'application/json'}
-        
-        request.method = method
-
-        if (data) {
-            request.headers = {...request.headers, 'Content-Type': 'application/json'}
-            request.body = JSON.stringify(data)
-        }
-        
-        console.log(`${method} ${url}`)
-        const result = await fetch(url, request);
-        const text = await result.text()
-
-        try {
-            return JSON.parse(text);
-        }
-        catch (ex){
-            console.log(text)
-            return null
-        }
+        return apiCall(method, url, data)
     }
     
     public getMembers() : IMember[] {
@@ -176,7 +154,7 @@ export class App extends Component<{
     }
 
     public requeryMembers() : void {
-        this.apiCall('GET',BaseUrl + '/members')
+        this.triphubApiCall('GET',BaseUrl + '/members')
             .then((members : IMember[]) => {
 
                 const membersById: {[id: number]: IMember} = {}
@@ -198,13 +176,13 @@ export class App extends Component<{
     public componentDidMount() : void {
         this.requeryMembers()
 
-        this.apiCall('GET',BaseUrl + '/config')
+        this.triphubApiCall('GET',BaseUrl + '/config')
             .then(config => this.setState({config:config[0], isLoadingConfig: false}));
-        this.apiCall('GET',BaseUrl + '/maps')
+        this.triphubApiCall('GET',BaseUrl + '/maps')
             .then(maps => this.setState({maps, isLoadingMaps: false}));
-        this.apiCall('GET',BaseUrl + '/routes')
+        this.triphubApiCall('GET',BaseUrl + '/routes')
             .then(archivedRoutes => this.setState({archivedRoutes, isLoadingArchivedRoutes: false}));
-        this.apiCall('GET',BaseUrl + '/public_holidays')
+        this.triphubApiCall('GET',BaseUrl + '/public_holidays')
             .then(holidays => {
                 const holidayMap = {}
 
@@ -227,8 +205,6 @@ export class App extends Component<{
     }
 
     public render() {
-
-        console.log(`path=${this.state.path}`);
 
         return (
             [ <TriphubNavbar key='triphubNavbar' app={this}/>,

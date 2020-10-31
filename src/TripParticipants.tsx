@@ -51,7 +51,7 @@ export class TripParticipants extends Component<{
         }
 
         this.props.trip.setState({isSaving:true})
-        this.props.app.apiCall('POST', this.props.trip.props.href + '/participants', this.props.trip.signMeUpTramper(), true)
+        this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants', this.props.trip.signMeUpTramper(), true)
             .then(this.props.trip.requeryParticipants)
     }
 
@@ -59,7 +59,7 @@ export class TripParticipants extends Component<{
         const participant = this.props.trip.state.participants[0]
 
         this.props.trip.setState({isSaving:true})
-        this.props.app.apiCall('POST', this.props.trip.props.href + '/participants', participant, true)
+        this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants', participant, true)
             .then(this.props.trip.requeryParticipants)
     }
 
@@ -107,7 +107,7 @@ export class TripParticipants extends Component<{
         participants[index] = {...participant, ...props, showMenu}
 
         this.props.trip.setState({participants})
-        return this.props.app.apiCall('POST', `${this.props.trip.props.href}/participants/${id}`, props, true)
+        return this.props.app.triphubApiCall('POST', `${this.props.trip.props.href}/participants/${id}`, props, true)
     }
 
     public onDropOnDeleted(ev:any) 

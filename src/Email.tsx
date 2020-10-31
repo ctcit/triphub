@@ -41,7 +41,7 @@ export class Email extends Component<{
 
     public send() {
         this.setState({sending: true})
-        this.app.apiCall('POST', this.props.owner.props.href + '/email', this.state, true)
+        this.app.triphubApiCall('POST', this.props.owner.props.href + '/email', this.state, true)
             .then(() => this.setState({sending: false}))
     }
 

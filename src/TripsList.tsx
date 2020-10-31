@@ -159,7 +159,7 @@ export class TripsList extends Component<{
 
     public requery() {
         this.props.app.setStatus(['Loading ', Spinner])
-        this.props.app.apiCall('GET',BaseUrl + '/trips')
+        this.props.app.triphubApiCall('GET',BaseUrl + '/trips')
         .then((data:ITrip[]) => {
 
             const groups : ITrip[][] = []

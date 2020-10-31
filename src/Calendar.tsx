@@ -75,7 +75,7 @@ class CalendarWeek extends Component<{
 
                     trips[trips.indexOf(item.trip)] = trip
 
-                    this.props.calendar.props.app.apiCall('POST', `${BaseUrl}/trips/${item.trip.id}`, {[item.field]: item.trip[item.field]})
+                    this.props.calendar.props.app.triphubApiCall('POST', `${BaseUrl}/trips/${item.trip.id}`, {[item.field]: item.trip[item.field]})
                     this.props.calendar.setState({trips})
                 }
 
@@ -237,7 +237,7 @@ export class Calendar extends Component<{
 
     public requery() {
         this.props.app.setStatus(['Loading ', Spinner])
-        this.props.app.apiCall('GET',BaseUrl + '/trips')
+        this.props.app.triphubApiCall('GET',BaseUrl + '/trips')
         .then((trips:ITrip[]) => {
             this.props.app.setStatus('Loaded', 3000)
             this.props.app.setState({isLoading:false})

@@ -42,9 +42,9 @@ export class TripReportList extends Component<{
         if (this.props.newsletterId === 0) {
             return
         }
-        this.props.app.apiCall('GET', DbApiURL + "/recenttripreports/99999/90")
+        this.props.app.triphubApiCall('GET', DbApiURL + "/recenttripreports/99999/90")
         .then((tripReports : ITripReport[]) => {
-            this.props.app.apiCall('GET', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports")
+            this.props.app.triphubApiCall('GET', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports")
             .then((newsletterTripReports : INewsletterTripReport[]) => {
                 const tripReportBindings : TripReportBinding[] = []
                 tripReports.forEach(tripReport => {
@@ -62,7 +62,7 @@ export class TripReportList extends Component<{
                    tripReportBindings.push({tripReport, newsLetterTripReport})
                 });
                 this.setState({ tripreports: tripReportBindings, isLoading: false })
-                this.props.app.apiCall('POST', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", newsletterTripReports)
+                this.props.app.triphubApiCall('POST', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", newsletterTripReports)
             })
         })
     }
@@ -110,7 +110,7 @@ export class TripReportList extends Component<{
 
     private setPublishReport(tripReport: INewsletterTripReport, publish: boolean) : Promise<void> {
         tripReport.publish = publish;
-        return this.props.app.apiCall('PATCH', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", [tripReport,])
+        return this.props.app.triphubApiCall('PATCH', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", [tripReport,])
     }
 
 

@@ -73,7 +73,7 @@ export class TripParticipant extends Component<{
     }
 
     public saveParticipant(body: any): Promise<void> {
-        return this.app.apiCall('POST', this.href as string, body, true);
+        return this.app.triphubApiCall('POST', this.href as string, body, true);
     }
 
     public setDeleted() {
@@ -97,7 +97,7 @@ export class TripParticipant extends Component<{
 
         if (confirm(`Are you sure you want to update the contact details for ${member.name} ?`)) {
             this.setState({isMemberOp:true})
-            this.props.app.apiCall('POST', 
+            this.props.app.triphubApiCall('POST', 
                     `${this.props.trip.props.href}/members/${member.id}`,
                     {emergencyContactName, emergencyContactPhone}, false)
                 .then(() => {

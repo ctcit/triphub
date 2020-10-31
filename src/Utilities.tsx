@@ -1,5 +1,6 @@
 import { IParticipant } from './Interfaces';
 import { DateTime } from 'luxon';
+import { BaseOpt } from 'src';
 
 export const DayOfWeek = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 export const MonthOfYear = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -70,5 +71,30 @@ export function GetStartOfNextMonth(): Date {
 
 export function CapitaliseFirstLetter(input: string): string {
     return input.charAt(0).toUpperCase() + input.slice(1);
+}
+
+export async function apiCall(method:string, url:string, data?:any) : Promise<any> {
+    const request : RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
+    // Accept header is required when querying the db api, and doesn't hurt when querying the triphub api
+    request.headers = {...request.headers, 'Accept': 'application/json'}
+    
+    request.method = method
+
+    if (data) {
+        request.headers = {...request.headers, 'Content-Type': 'application/json'}
+        request.body = JSON.stringify(data)
+    }
+    
+    console.log(`${method} ${url}`)
+    const result = await fetch(url, request);
+    const text = await result.text()
+
+    try {
+        return JSON.parse(text);
+    }
+    catch (ex){
+        console.log(text)
+        return null
+    }
 }
 

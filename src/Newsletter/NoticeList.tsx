@@ -275,10 +275,10 @@ export class NoticeList extends Component<{
     private saveNotice(id: number, body: any): Promise<any> {
         if ( id === -1 ) {
             // New notice
-            return this.app.apiCall('POST', BaseUrl + '/notices/', body, false);
+            return this.app.triphubApiCall('POST', BaseUrl + '/notices/', body, false);
         } else {
             // Updating an existing notice
-            return this.app.apiCall('POST', BaseUrl + '/notices/' + id, body, false);
+            return this.app.triphubApiCall('POST', BaseUrl + '/notices/' + id, body, false);
         }
     }
 
@@ -292,7 +292,7 @@ export class NoticeList extends Component<{
 
     private setPublishNotice(notice: INotice, publish: boolean): Promise<void> {
         notice.publish = publish;
-        return this.props.app.apiCall('PATCH', BaseUrl + "/notices/" + notice.id, notice)
+        return this.props.app.triphubApiCall('PATCH', BaseUrl + "/notices/" + notice.id, notice)
     }
 
     private requery() {
@@ -301,7 +301,7 @@ export class NoticeList extends Component<{
     }
     
     private requeryCurrent() {
-        this.props.app.apiCall('GET', BaseUrl + "/notices/current")
+        this.props.app.triphubApiCall('GET', BaseUrl + "/notices/current")
         .then((notices: INotice[]) => {
             this.setState({ notices: this.filterNotices(notices) })
         })
@@ -312,7 +312,7 @@ export class NoticeList extends Component<{
         if (apply_limit) {
             limit = "?limit="+this.expiredLimit
         }
-        this.props.app.apiCall('GET', BaseUrl + "/notices/expired"+limit)
+        this.props.app.triphubApiCall('GET', BaseUrl + "/notices/expired"+limit)
         .then((expiredNotices: INotice[]) => {
             this.setState({ expiredNotices: this.filterNotices(expiredNotices) })
         })

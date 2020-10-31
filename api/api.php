@@ -52,7 +52,7 @@
 
     mysqli_close($con);
 
-function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,$input,$query){
+function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,$input,$query){
   
 	$table = TableFromEntity($entity);		
     $subTable = TableFromEntity($subEntity);		
@@ -103,6 +103,16 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT <a href='$basehref#trips'>trips</a>
             // INPUTENTITY trips
             return ApiPatch($con,UserIdIfHasRoleOrDie($con,"TripLeader"),$table,$id,$input,$id);
+
+        case "DELETE trips/{tripId}":
+            // DESCRIPTION Deletes the given trip
+            // OUTPUT Confirmation string array
+            UserIdIfHasRoleOrDie($con,"Webmaster");
+            SqlExecOrDie($con,"DELETE FROM ".ConfigServer::participantsTable." WHERE tripid = $id");
+            SqlExecOrDie($con,"DELETE FROM ".ConfigServer::historyTable." WHERE tripid = $id");
+            SqlExecOrDie($con,"DELETE FROM ".ConfigServer::editTable." WHERE tripid = $id");
+            SqlExecOrDie($con,"DELETE FROM ".ConfigServer::tripsTable." WHERE id = $id");
+            return ["trip $id deleted"];
 
         case "GET trips/{tripId}/participants":
             // DESCRIPTION Get participants for a given trip
@@ -192,7 +202,7 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             SqlExecOrDie($con,"DELETE FROM $subTable WHERE id = $subId");
             return Array("Edit $subId deleted");
 
-        case "POST trip/emails":
+        case "POST trips/emails":
             // DESCRIPTION Sends any necessary emails
             // OUTPUT Array of trip indentification details for any trips that had emails send
             UserIdIfHasRoleOrDie($con,"Member");
@@ -218,43 +228,43 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
         
         case "GET newsletters":
             // DESCRIPTION Gets newsletters. Optional ?since=YYYY-MM-DD
-            // OUTPUT Array of <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT Array of <a href='$basehref#newsletters'>newsletters</a>
             return GetNewsletters($con, UserIdIfHasRoleOrDie($con,"Admin"), 0, $query);
 
         case "GET newsletters/{newsletterId}":
             // DESCRIPTION Gets newsletter
-            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT Single <a href='$basehref#newsletters'>newsletters</a>
             return GetNewsletters($con, UserIdIfHasRoleOrDie($con,"Admin"), $id);
         
         case "POST newsletters":
             // DESCRIPTION Creates a new newsletter
-            // INPUT A <a href='$baseHref#newsletters'>newsletter</a>
-            // OUTPUT The new <a href='$baseHref#tripsnewsletters'>newsletter</a>
+            // INPUT A <a href='$basehref#newsletters'>newsletter</a>
+            // OUTPUT The new <a href='$basehref#tripsnewsletters'>newsletter</a>
             // INPUTENTITY newsletters
             return ApiPost($con, UserIdIfHasRoleOrDie($con,"Admin"),$table,$input);
 
         case "POST newsletters/{newsletterId}":
         case "PATCH newsletters/{newsletterId}":
             // DESCRIPTION Updates detail for a given newsletter
-            // INPUT <a href='$baseHref#newsletters'>newsletters</a>
-            // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // INPUT <a href='$basehref#newsletters'>newsletters</a>
+            // OUTPUT <a href='$basehref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
             return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
 
         case "GET newsletters/current":
             // DESCRIPTION Gets current newsletter, if it exists
-            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT Single <a href='$basehref#newsletters'>newsletters</a>
             return GetCurrentNewsletter($con, UserIdIfHasRoleOrDie($con,"Admin"));
 
         case "GET newsletters/events":
             // DESCRIPTION Gets the list of trips to be included in the current newsletter
-            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT Single <a href='$basehref#newsletters'>newsletters</a>
             return GetEvents($con, UserIdIfHasRoleOrDie($con,"Admin"));
 
         case "GET newsletters/unpublishedEvents":
             // DESCRIPTION Gets the list of unpublished trips that won't be published in the current newsletter
             // (but are still current)
-            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT Single <a href='$basehref#newsletters'>newsletters</a>
             return GetEvents($con, UserIdIfHasRoleOrDie($con,"Admin"), true);
 
         case "POST newsletters/{newsletterId}/current":
@@ -264,31 +274,31 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
 
         case "GET newsletters/latest":
             // DESCRIPTION Gets most recent newsletter
-            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT Single <a href='$basehref#newsletters'>newsletters</a>
             return GetLatestNewsletter($con, UserIdIfHasRoleOrDie($con,"Admin"));
 
         case "GET newsletters/volumes":
             // DESCRIPTION Gets available volumes
-            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT Single <a href='$basehref#newsletters'>newsletters</a>
             return GetNewsletterVolumes($con, UserIdIfHasRoleOrDie($con,"Admin"));
 
         case "GET newsletters/volumes/{volumeId}":
             // DESCRIPTION Gets all the newsletters of a specific volume
-            // OUTPUT Single <a href='$baseHref#newsletters'>newsletters</a>
+            // OUTPUT Single <a href='$basehref#newsletters'>newsletters</a>
             return GetNewsletterVolume($con, UserIdIfHasRoleOrDie($con,"Admin"), $subId);
 
         case "GET newsletters/{newsletterId}/tripreports":
             // DESCRIPTION Get the list of trip reports for a given newsletter
-            // INPUT <a href='$baseHref#newsletters/'>newsletters</a>
-            // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // INPUT <a href='$basehref#newsletters/'>newsletters</a>
+            // OUTPUT <a href='$basehref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
             return GetNewsletterTripReports($con,UserIdIfHasRoleOrDie($con,"Admin"),$id);
         
         case "POST newsletters/{newsletterId}/tripreports":
         case "PATCH newsletters/{newsletterId}/tripreports":
             // DESCRIPTION Update the list of trip reports for a given newsletter
-            // INPUT <a href='$baseHref#newsletters/'>newsletters</a>
-            // OUTPUT <a href='$baseHref#newsletters'>newsletters</a>
+            // INPUT <a href='$basehref#newsletters/'>newsletters</a>
+            // OUTPUT <a href='$basehref#newsletters'>newsletters</a>
             // INPUTENTITY newsletters
             return PatchNewsletterTripReports($con,UserIdIfHasRoleOrDie($con,"Admin"),$id,$input);
 
@@ -299,12 +309,10 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUTENTITY json
             return json_decode($input['json']);
 
-            /*
         case "GET logondetails":
             // DESCRIPTION Get logon details
             // OUTPUT id, name and role of logged on user
-            return GetLogonDetails($con,'r.role in ('.ConfigServer::editorRoles.')',False);
-            */
+            return GetLogonDetails($con,False);
 
         case "GET routes":
             return GetRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
@@ -317,37 +325,37 @@ function ApiProcess($con,$baseHref,$method,$route,$entity,$id,$subEntity,$subId,
         
         case "GET notices":
             // DESCRIPTION Get newsletter notices. May specify a limit and offset as query paramenters
-            // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
+            // OUTPUT Array of <a href='$basehref#notices'>notices</a>
             return GetNotices($con, UserIdIfHasRoleOrDie($con,"Admin"), 0, $query);
         
         case "GET notices/current":
             // DESCRIPTION Get newsletter notices where the expiry date is after the current
             //             newsletter date (if there is no current newsletter won't return anything).
-            // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
+            // OUTPUT Array of <a href='$basehref#notices'>notices</a>
             return GetCurrentNotices($con, UserIdIfHasRoleOrDie($con,"Admin"), 0, $query);
         
         case "GET notices/expired":
             // DESCRIPTION Get expired newsletter notices. May specify a limit and offset as query paramenters
-            // OUTPUT Array of <a href='$baseHref#notices'>notices</a>
+            // OUTPUT Array of <a href='$basehref#notices'>notices</a>
             return GetExpiredNotices($con, UserIdIfHasRoleOrDie($con,"Admin"), 0, $query);
 
         case "GET notices/{noticeId}":
             // DESCRIPTION Gets notice
-            // OUTPUT Single <a href='$baseHref#notices'>notice</a>
+            // OUTPUT Single <a href='$basehref#notices'>notice</a>
             return GetNewsletters($con, UserIdIfHasRoleOrDie($con,"Admin"), $id);
         
         case "POST notices":
             // DESCRIPTION Creates a new notice
-            // INPUT A <a href='$baseHref#notices'>notice</a>
-            // OUTPUT The new <a href='$baseHref#notices'>notice</a>
+            // INPUT A <a href='$basehref#notices'>notice</a>
+            // OUTPUT The new <a href='$basehref#notices'>notice</a>
             // INPUTENTITY notices
             return ApiPost($con, UserIdIfHasRoleOrDie($con,"Admin"),$table,$input);
 
         case "POST notices/{noticeId}":
         case "PATCH notices/{noticeId}":
             // DESCRIPTION Updates detail for a given notice
-            // INPUT <a href='$baseHref#notices'>notice</a>
-            // OUTPUT <a href='$baseHref#notices'>notice</a>
+            // INPUT <a href='$basehref#notices'>notice</a>
+            // OUTPUT <a href='$basehref#notices'>notice</a>
             // INPUTENTITY notices
             return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
 
@@ -461,41 +469,50 @@ function History($con,$userId,$action,$table,$before,$after,$tripId)
             $participantId = "null";
             break;
         default:
-            return;
+            return "not actioned table $table";
     }
     
     $historyTable = ConfigServer::historyTable;
 
-    if ($action == 'update') {
-        foreach ($after as $col => $val) {
-            $colSql = SqlVal($con,$col);
-            $beforeSql = SqlJSONVal($con,$before === null ? null : $before[$col]);
-            $afterSql = SqlJSONVal($con,$after[$col]);
+    switch ($action)
+    {
+        case 'create':
+            $afterSql = SqlVal($con,json_encode($after));
+            $newid = SqlExecOrDie($con,
+                "INSERT $historyTable 
+                SET `action` = '$action'
+                ,   `table` = '$table'
+                ,   `timestamp` = UTC_TIMESTAMP()
+                ,   `userId` = $userId
+                ,   `tripId` = $tripId
+                ,   `participantId` = $participantId
+                ,   `after` = $afterSql", true);
+            return "$action $newid $tripId $table $afterSql";
+ 
+        case 'update':
+            foreach ($after as $col => $val) {
+                $colSql = SqlVal($con,$col);
+                $beforeSql = SqlVal($con,json_encode($before[$col]));
+                $afterSql = SqlVal($con,json_encode($after[$col]));
 
-            if ($beforeSql != $afterSql) {
-                SqlExecOrDie($con,
-                    "INSERT $historyTable 
-                    SET `action` = '$action'
-                    ,   `table` = '$table'
-                    ,   `timestamp` = UTC_TIMESTAMP()
-                    ,   `userId` = $userId
-                    ,   `tripId` = $tripId
-                    ,   `participantId` = $participantId
-                    ,   `column` = $colSql
-                    ,   `before` = $beforeSql
-                    ,   `after` = $afterSql");
+                if ($beforeSql != $afterSql) {
+                    $newid = SqlExecOrDie($con,
+                        "INSERT $historyTable 
+                        SET `action` = '$action'
+                        ,   `table` = '$table'
+                        ,   `timestamp` = UTC_TIMESTAMP()
+                        ,   `userId` = $userId
+                        ,   `tripId` = $tripId
+                        ,   `participantId` = $participantId
+                        ,   `column` = $colSql
+                        ,   `before` = $beforeSql
+                        ,   `after` = $afterSql",true);
+                }
             }
-        }
-    } else {
-        SqlExecOrDie($con,
-            "INSERT $historyTable 
-            SET `action` = '$action'
-            ,   `table` = '$table'
-            ,   `timestamp` = UTC_TIMESTAMP()
-            ,   `userId` = $userId
-            ,   `tripId` = $tripId
-            ,   `participantId` = $participantId");
+            return "$action $newid $tripId $table $afterSql";
     }
+
+    return "nothing done";
 }
 
 function ApiPatch($con,$userId,$table,$id,$input,$tripId){
@@ -513,7 +530,7 @@ function ApiPost($con,$userId,$table,$input,$tripId){
     $sql = "INSERT $table SET $set";
     $id = SqlExecOrDie($con,$sql,true);
     $after = SqlResultArray($con,"SELECT * FROM $table WHERE id = $id");
-    History($con,$userId,"create",$table,null,$after[0],$tripId || $id);
+    History($con,$userId,"create",$table,null,$after[0],Coalesce($tripId,$id));
     return $after;
 }
 
@@ -567,7 +584,7 @@ function ApiHelp($con,$basehref) {
     $filehandle = fopen("api.php", "r") or die("Unable to open file!");
     $item = Array('security'=>'NonPrivileged');
 
-    // Pares this file to extract enpoint information
+    // Parses this file to extract endpoint information
     while (!feof($filehandle)) {
         $line = str_replace('$basehref',$basehref,trim(fgets($filehandle)));
         if (preg_match('/case "(GET|POST|PATCH|DELETE)( (.*))?":/',$line,$matches))

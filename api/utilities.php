@@ -140,6 +140,10 @@ function SqlExecOrDie($con,$sql,$returnid=false,$log=true) {
     return $result;
 }
 
+function Coalesce($a, $b, $c=null) {
+    return ($a != null ? $a : ($b != null ? $b : $c));
+}
+
 function PrettyPrintJson($json) {
     $text = json_encode($json, JSON_PRETTY_PRINT);
     $html = "";

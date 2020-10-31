@@ -94,7 +94,7 @@ function DeleteTripEdits($con) {
 function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
 	$historyTable = ConfigServer::historyTable;
 	$tripsTable = ConfigServer::tripsTable;		
-	$recipients = array();
+	$recipients = [];
 	$email = GetTripHtml($con,$tripId,$subject,$message);
 	$headers = "MIME-Version: 1.0\r\n".
 			   "Content-type: text/html;charset=UTF-8\r\n".
@@ -106,16 +106,16 @@ function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
 		}
 	}
 
-	$emailJson = mysqli_real_escape_string($con,json_encode($email));
+	$emailJson = SqlVal($con,json_encode($email));
 	$id = SqlExecOrDie($con, "INSERT $historyTable 
 								SET	`tripId` = $tripId, 
-								`userId` = $userId, 
-								`action` = 'email', 
-								`timestamp` = UTC_TIMESTAMP(),
-								`after` = '$emailJson'", true);
+									`userId` = $userId, 
+									`action` = 'email', 
+									`timestamp` = UTC_TIMESTAMP(),
+									`after` = $emailJson", true);
 	SqlExecOrDie($con, "UPDATE $tripsTable
-							SET historyId = $id
-							WHERE id = $tripId");
+						SET historyId = $id
+						WHERE id = $tripId");
 
 	return $email;
 }
@@ -135,20 +135,16 @@ function PostEmails($con) {
 				AND coalesce((SELECT max(h.id) FROM $historyTable h WHERE h.tripId = t.id),9999999) > t.historyId
 				ORDER BY t.id");
 
-	foreach ($trips as &$trip) {
-		$email = SendEmail($con,$trip['id'],0);
-		$trip['subject'] = $email['subject'];
-		$trip['recipients'] = $email['recipients'];
-		$trip['filteredRecipients'] = $email['filteredRecipients'];
-	}
+	foreach ($trips as &$trip)
+		$trip['email'] = SendEmail($con,$trip['id'],0);
 
 	return $trips;
 }
 
-function GetTripHtmlValue($col,$row) { 
+function GetTripHtmlValue($col,$row,$true="Yes",$false="") { 
 	switch ($col["Type"]) {
 		case "bit(1)":
-			return $row[$col['Field']] ? "Yes" : ""; 
+			return $row[$col['Field']] ? $true : $false; 
 		case "date":
 			return date('D j M Y', strtotime($row[$col['Field']]));
 		default:
@@ -156,22 +152,51 @@ function GetTripHtmlValue($col,$row) {
 	}
 }
 
+function CmpParticipant($a,$b) {
+	$dele = intval($a['isDeleted']) - intval($b['isDeleted']);
+	$lead = intval($a['isLeader']) - intval($b['isLeader']);
+	$disp = Coalesce($a['displayPriority'],$a['id']) - Coalesce($b['displayPriority'],$b['id']);
+	return ($dele != 0 ? $dele : ($lead != 0 ? -$lead : $disp));
+}
+
+function SortParticipants(&$participants) {
+	$participants = array_values($participants);
+	usort($participants, "CmpParticipant");
+}
+
+function ClassifyParticipants(&$participants, $trip) {
+	$classifications = [];
+
+	foreach ($participants as $index => &$participant) {
+		$participant['index'] = $index;
+		$participant['classification'] =
+			($participant['isCreated'] ? 'not-listed' :
+			($participant['isDeleted'] ? 'removed' :
+			($participant['isLeader'] ? 'leader' :
+			($trip['isLimited'] && $index >= $trip['maxParticipants'] ? 'waitlisted' : 'listed'))));
+		$classifications[$participant['id']] = $participant;
+	}
+
+	return $classifications;
+}
+
 function GetTripHtml($con,$id,$subject=null,$message=null) {
-	$tripsTable = ConfigServer::tripsTable;
-	$participantsTable = ConfigServer::participantsTable;
-	$historyTable = ConfigServer::historyTable;
+	$tripsTable 		= ConfigServer::tripsTable;
+	$participantsTable	= ConfigServer::participantsTable;
+	$historyTable 		= ConfigServer::historyTable;
+	$membersTable      	= ConfigServer::membersTable;
 	$trip				= GetTrips($con,'null',$id)[0];
-	$participants		= SqlResultArray($con,"SELECT * 
+	$participants		= SqlResultArray($con,"SELECT *
 											   FROM $participantsTable
-											   WHERE tripId = $id
-											   ORDER BY isDeleted, isLeader DESC, coalesce(displayPriority,id)");
-	$changes    		= SqlResultArray($con,"SELECT concat(coalesce(participantId,0),',',coalesce(`column`,'new')) as `key`
-											   FROM $historyTable 
-											   WHERE id IN (
-												   SELECT MIN(id) 
-												   FROM $historyTable 
-												   WHERE tripId = $id and id > $trip[historyId]
-												   GROUP BY coalesce(participantId,0))", "key");
+											   WHERE tripId = $id","id");
+	$oldTrip 			= $trip;
+	$oldParticipants	= $participants;
+	$changes    		= SqlResultArray($con,"SELECT h.*, 
+													coalesce(concat(trim(m.firstname),' ',trim(m.lastname)),'?') as changedby
+											   FROM $historyTable h
+											   LEFT JOIN $membersTable m ON m.id = h.userId
+											   WHERE h.tripId = $id AND h.id > $trip[historyId]
+											   ORDER BY id DESC");
 	$tripsInfo			= SqlResultArray($con,"SHOW FULL COLUMNS FROM $tripsTable", "Field");
 	$participantsInfo	= SqlResultArray($con,"SHOW FULL COLUMNS FROM $participantsTable", "Field");
 	$css				= ParseCss(file_get_contents("trips.css"));
@@ -179,75 +204,136 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$inserted			= "background-color:".$css[".inserted"]["background-color"].";";
 	$deleted			= "color:".$css[".deleted"]["color"].";";
 	$border				= "border: solid 1px black; border-collapse: collapse;";
-	$ignore				= array('id','isDeleted','isApproved','mapHtml','lastEmailChangeId','tripId','memberId','displayPriority');
-	$subject 			= $subject == null ? "RE: ".$trip["title"]." on ".$trip["tripDate"] : $subject;
+	$ignore				= ['id','isDeleted','isLimited','isApproved','mapRoute','lastEmailChangeId','tripId','memberId','displayPriority'];
 	$message			= $message == null ? "" : "<p>".htmlentities($message)."</p>";
-	$email				= array("subject"=>$subject, "recipients"=>array(), "filteredRecipients"=>array());
+	$email				= ["recipients"=>[], "filteredRecipients"=>[]];
 	$tripChanges        = false;
+	$columnChange 		= [];
 
-	$header	= "";
-	foreach ($tripsInfo as $field => $col) {
-		$val = GetTripHtmlValue($col,$trip);
-		if (!in_array( $field, $ignore) && !preg_match('/.*Id$/',$field) && $val != '') {
-			$style = $border.(array_key_exists("0,$field",$changes) ? $updated : "");
-			$header .= 
-				"<tr>
-					<th style='$style'>".htmlentities($col['Comment'])."</th>
-					<td style='$style'>$val</td>
-				</tr>";
-			$tripChanges = $tripChanges || array_key_exists("0,$field",$changes);
+	if (!$trip['isLimited'])
+		$ignore []= 'maxParticipants';
+
+	// re-create old version of trip into $oldTrip and $oldParticipants
+	foreach ($changes as $change) {
+		$before = $change['before'];
+		$column = $change['column'];
+		switch("$change[action] $change[table]") {
+			case "create $participantsTable":
+				$oldParticipants[$change['participantId']]['isCreated'] = true;
+				break;
+			case "update $tripsTable":
+				$oldTrip[$column] = $before;
+				if (!array_key_exists($column, $columnChange))
+					$columnChange[$column] = $change;
+				break;
+			case "update $participantsTable":
+				$oldParticipants[$change['participantId']][$column] = $before;
+				break;
 		}
 	}
 
+	SortParticipants($participants);
+	SortParticipants($oldParticipants);
+	ClassifyParticipants($participants, $trip);
+	$oldParticipants = ClassifyParticipants($oldParticipants, $oldTrip);
+
+	// Trip details
+	$header	= "";
+	foreach ($tripsInfo as $field => $col) {
+		$val = GetTripHtmlValue($col,$trip,"Yes","No");
+
+		if (in_array( $field, $ignore) || preg_match('/.*Id$/',$field) || $val === '') 
+			continue;
+		
+		$style = $border.($trip[$field] === $oldTrip[$field] ? "" : $updated);
+		$header .= "<tr><th style='$style'>".htmlentities($col['Comment'])."</th>
+					    <td style='$style'>$val</td></tr>";
+		$tripChanges = $tripChanges || $oldTrip[$field] != $trip[$field];
+	}
+
+	// Column headers for participants
 	$detail = "<tr><th>&nbsp;</th>";
 	foreach ($participantsInfo as $field => $col) {
 		if (!in_array( $field, $ignore))
 			$detail .= "<th style='$border'>".htmlentities($col['Comment'])."</th>";
 	}
-	$detail .= "</tr>";
+	$detail .= "</tr>\n";
+	$notes = [];
 
-	foreach ($participants as $index => $participant) {
+	
+	$oldApproval = $oldTrip['approval'];
+	$approval = $trip['approval'];
+	if ($oldApproval != $approval) {
+		$changedby = $columnChange['approval']['changedby'];
+		if ($oldApproval == "Pending" && in_array($approval,["Approved","Rejected"])) {
+			$subject = Coalesce($subject, "RE: $trip[title] on $trip[tripDate] has just been $approval");
+			$notes []= "<li>This trip has just been <b>$approval</b> by <b>$changedby</b></li>";
+		} else {
+			$subject = Coalesce($subject, "RE: $trip[title] on $trip[tripDate] has changed from $oldApproval to $approval");
+			$notes []= "<li>This trip has just been changed from <b>$oldApproval</b> to <b>$approval</b> by <b>$changedby</b></li>";
+		}
+	}
+
+	// Rows for participants
+	foreach ($participants as $index => &$participant) {
 		$id = $participant['id'];
-		$isNew = array_key_exists("$id,new",$changes); 
+		$classification = $participant['classification'];
+		$oldClassification = $oldParticipants[$id]['classification'];
+		$isCreated = $oldParticipants[$id]['isCreated'];
 		$isDeleted = $participant['isDeleted'];
-		if (!$isDeleted && $index && $index == $trip['maxParticipants'])
-			$detail .= "<tr><td colspan='100' style='$border $deleted'>Waitlist</td></tr>";
-		else if ($isDeleted && $index && !$participants[$index-1]['isDeleted'])
-			$detail .= "<tr><td colspan='100' style='$border $deleted'>Deleted</td></tr>";
+		if ($classification == 'waitlisted' && $index == $trip['maxParticipants'])
+			$detail .= "<tr><td colspan='100' style='$border $deleted'>Waitlist</td></tr>\n";
+		else if ($classification == 'removed' && !$participants[$index-1]['isDeleted'])
+			$detail .= "<tr><td colspan='100' style='$border $deleted'>Deleted</td></tr>\n";
 
 		$participantChanges = false;
-		$isUpdated = array_key_exists("$id,displayPriority",$changes); 
-		$style = ($isDeleted ? $deleted : "").($isNew ? $inserted : ($isUpdated ? $updated :""));
+		$isUpdated = $isNew || $participant['index'] !== $oldParticipants[$id]['index'];
+		$style = ($isDeleted ? $deleted : "").($isCreated ? $inserted : ($isUpdated ? $updated :""));
 		$detail .= "<tr><td style='$border $style'>".($index+1)."</td>";
 		foreach ($participantsInfo as $field => $col) {
-			if (!in_array( $field, $ignore )) {
-				$isUpdated = array_key_exists("$id,$field",$changes); 
-				$style = ($isDeleted ? $deleted : "").($isNew ? $inserted : ($isUpdated ? $updated :""));
-				$participantChanges = $participantChanges || $isNew || $isUpdated;
-				$detail .= "<td style='$border $style'>".GetTripHtmlValue($col,$participant)."</td>";
-			}
+			if (in_array( $field, $ignore ))
+				continue;
+
+			$isUpdated = $isNew || $participant[$field] !== $oldParticipants[$id][$field];
+			$style = ($isDeleted ? $deleted : "").($isCreated ? $inserted : ($isUpdated ? $updated :""));
+			$participantChanges = $participantChanges || $isUpdated;
+			$detail .= "<td style='$border $style'>".GetTripHtmlValue($col,$participant)."</td>\n";
 		}
-		$detail .= "</tr>";
+		$detail .= "</tr>\n";
+
+		if ($classification != $oldClassification) {
+			$participantChanges = true;
+			$notes []= "<li><b>".htmlentities($participant['name'])."</b> has ".
+						($isCreated ? "signed up and is" : "changed from <b>$oldClassification</b> to").
+						" <b>$classification</b></li>";
+		}
 
 		if ($message != '' || $tripChanges || $participantChanges || ($participant['isLeader'] && count($changes))) {
 			if (preg_match(ConfigServer::emailFilter, $participant["email"]))
-				$email['recipients'] []= array('name'=>$participant['name'],'email'=>$participant['email']);
+				$email['recipients'] []= ['name'=>$participant['name'],'email'=>$participant['email']];
 			else
-				$email['filteredRecipients'] []= array('name'=>$participant['name'],'email'=>$participant['email']);
+				$email['filteredRecipients'] []= ['name'=>$participant['name'],'email'=>$participant['email']];
 		}
 	}
 
 	$legend = "<tr><th>Legend: </th><td style='$border $updated'> Updates </td><td style='$border $inserted'> Additions </td></tr>";
-	$email['html'] = 	"$message".
-						"<h3>Current trip details:</h3>".
-						"<table style='$border'>$header</table>".
-						"<table style='$border'>$detail</table>".
-						"<table style='$border'>$legend</table>";
+	$email['html'] = 	
+		$message.
+		(count($notes) == 0 ? "" : "<h3>Please note:</h3>\n<ul>".implode("\n",$notes)."</ul>\n").
+		"<h3>Current trip details:</h3>\n".
+		"<table style='$border'>$header</table>\n".
+		"<h3>Current people:</h3>\n".
+		"<table style='$border'>$detail</table>\n".
+		"<table style='$border'>$legend</table>\n";
 	$email['messageId'] = MakeGuid();
 	$email['originalMessageId'] = MakeGuid();
-
-	if (ConfigServer::emailHasDebugInfo)
-	 	$email['html'] .= PrettyPrintJson($changes);
+	$email['trip'] = $trip;
+	$email['oldTrip'] = $oldTrip;
+	$email['participants'] = $participants;
+	$email['oldParticipants'] = $oldParticipants;
+	$email['changes'] = $changes;
+	$email['notes'] = $notes;
+	$email['subject'] = Coalesce($subject,"RE: $trip[title] on $trip[tripDate]");
 
 	return $email;
 }

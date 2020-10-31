@@ -178,7 +178,7 @@ export class TripDetail extends Component<{
         const commonLength = {...common, 'onSave': onSaveTripLength }
 
         const openDateHelp = (trip.isSocial) ? "When the event will be visible on the socials list" :
-                                               "When sign-up opens and the trip is visible on thr trips list"
+                                               "When sign-up opens and the trip is visible on the trips list"
 
         const openDateLabel = (trip.isSocial) ? "Visible Date" :
                                                 "Open Date"

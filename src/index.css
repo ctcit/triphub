@@ -550,4 +550,24 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   padding: 0 30px;
 }
 
+/* ---------------------------- */
+/* Public Calendar Styles       */
+/* ---------------------------- */
+
+.public-calendar-definition dt {
+    float: left;
+    font-weight: bold;
+    margin-right: 0.3em;
+  }
+  
+.public-calendar-definition dd {
+  margin-bottom: 0;
+  }
+
+.public-calendar-definition dd::after {
+    content: " ";
+    display: block;
+    clear: left;
+  }  
+
 

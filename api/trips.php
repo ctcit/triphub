@@ -92,7 +92,6 @@ function DeleteTripEdits($con) {
 }
 
 function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
-
 	$historyTable = ConfigServer::historyTable;
 	$tripsTable = ConfigServer::tripsTable;		
 	$recipients = array();
@@ -102,9 +101,9 @@ function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
 			   "From: <noreply@ctc.org.nz>\r\n";
 	   
    foreach ($email['recipients'] as $recipient) {
-
-		if (!mail($recipient['email'], $email['subject'], $email['html'], $headers))
+		if (!mail($recipient['email'], $email['subject'], $email['html'], $headers)) {
 			die(Log($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]"));
+		}
 	}
 
 	$emailJson = mysqli_real_escape_string($con,json_encode($email));

@@ -238,10 +238,10 @@ export class TripParticipant extends Component<{
                                     <SwitchControl id='isLeader' label='Leader' {...{...common, readOnly:!canEditLeader}}/>
                                 </Col>
                                 <Col sm={3}>
-                                    <SwitchControl id='isPlbProvider' label='Has PLB' {...common}/>
+                                    <SwitchControl id='isPlbProvider' label='Bringing PLB' {...common}/>
                                 </Col>
                                 <Col sm={3}>
-                                    <SwitchControl id='isVehicleProvider' label='Has Car' {...common}/>
+                                    <SwitchControl id='isVehicleProvider' label='Bringing Car' {...common}/>
                                 </Col>
                                 <Col sm={3}>
                                     <InputControl id='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} {...common}/>

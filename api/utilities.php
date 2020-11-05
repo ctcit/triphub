@@ -18,6 +18,21 @@ if (!$con) {
 }
 $con->set_charset('utf8mb4');
 
+function LogMessage($con,$level,$message,$log=true){
+    if (preg_match(ConfigServer::logLevelFilter, $level) && $log) {
+
+        if ($level == 'ERROR')
+            error_log($message);
+
+        $logTable = ConfigServer::logTable;
+        $levelSql = SqlVal($con,$level);
+        $messageSql = SqlVal($con,$message);
+        SqlExecOrDie($con, "INSERT $logTable(level,message) VALUES($levelSql,$messageSql)", false, false);
+    }
+
+    return $message;
+}
+
 function GetLogonDetails($con, $dieonfail=TRUE)
 {
 	$memberRolesTable = ConfigServer::memberRolesTable;

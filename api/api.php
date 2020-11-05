@@ -433,21 +433,6 @@ function UserIdIfHasRoleOrDie($con, $requiredRole="NonPrivileged") {
     return $member['id'];
 }
 
-function LogMessage($con,$level,$message,$log=true){
-    if (preg_match(ConfigServer::logLevelFilter, $level) && $log) {
-
-        if ($level == 'ERROR')
-            error_log($message);
-
-        $logTable = ConfigServer::logTable;
-        $levelSql = SqlVal($con,$level);
-        $messageSql = SqlVal($con,$message);
-        SqlExecOrDie($con, "INSERT $logTable(level,message) VALUES($levelSql,$messageSql)", false, false);
-    }
-
-    return $message;
-}
-
 function History($con,$userId,$action,$table,$before,$after,$tripId)
 {
     switch ($table)

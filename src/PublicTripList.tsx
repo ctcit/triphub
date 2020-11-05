@@ -15,17 +15,21 @@ export interface IPublicCalendarProps {
 export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
     const [trips, setTrips] = useState([] as ITrip[])
     const [isLoading, setIsLoading] = useState(true)
-    apiCall('GET',BaseUrl + '/trips').then( (retrievedTrips:ITrip[]) => {
-        retrievedTrips = retrievedTrips.filter(trip => trip.tripGroup === TripGroup.OpenTrip)
-        if (props.path.startsWith('/trips')) {
-            retrievedTrips = retrievedTrips.filter( trip => !trip.isSocial)
-        }
-        else if (props.path.startsWith('/socials')) {
-            retrievedTrips = retrievedTrips.filter( trip => trip.isSocial)
-        }
-        setTrips(retrievedTrips)
-        setIsLoading(false)
-    } )
+    const [dummy, setDummy] = useState(0)
+
+    React.useEffect( () => {
+        apiCall('GET',BaseUrl + '/trips').then( (retrievedTrips:ITrip[]) => {
+            retrievedTrips = retrievedTrips.filter(trip => trip.tripGroup === TripGroup.OpenTrip)
+            if (props.path.startsWith('/trips')) {
+                retrievedTrips = retrievedTrips.filter( trip => !trip.isSocial)
+            }
+            else if (props.path.startsWith('/socials')) {
+                retrievedTrips = retrievedTrips.filter( trip => trip.isSocial)
+            }
+            setTrips(retrievedTrips)
+            setIsLoading(false)
+        } )
+    }, [dummy] )
 
     return <div className='triphub-public-calendar'>
             { isLoading && <FullWidthLoading/> }

@@ -185,9 +185,9 @@ export class Calendar extends Component<{
 
         if (items.length)
         {
-            const min = new Date(Math.min(...items.map( i => i.date.getTime())))
+            const min = new Date();
             const max = new Date(Math.max(...items.map( i => AddDays(i.date, i.length-1).getTime())))
-            const start = AddDays(min,-this.dayIndex(min)-14)
+            const start = AddDays(new Date(),-this.dayIndex(min)-7)
             const stop = AddDays(max,-this.dayIndex(max)+14+6)
             const datemap : {[key:string]:ICalendarItem[][]} = {}
 

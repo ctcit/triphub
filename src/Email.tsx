@@ -24,7 +24,7 @@ export class Email extends Component<{
         super(props)
 
         this.state = {
-            recipients: this.props.owner.state.participants.filter(p => p.isDeleted).map(p => p.email).join('; '),
+            recipients: this.props.owner.state.participants.filter(p => !p.isDeleted).map(p => p.email).join('; '),
             subject: `Re: ${this.props.owner.state.trip.title} on ${GetFullDate(this.props.owner.state.trip.tripDate)}`,
             body: '', 
         }

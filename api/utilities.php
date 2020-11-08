@@ -208,9 +208,15 @@ function ParseCss($text)
 
     foreach (explode("}",$text) as $style) {
         $stylesplit = explode("{",$style);
+        if (count($stylesplit) < 2) {
+            continue;
+        } 
         foreach (explode(",",$stylesplit[0]) as $selector) {
             foreach (explode(";",trim($stylesplit[1],"; \t\r\n")) as $val) {
                 $valsplit = explode(":",$val);
+                if (count($valsplit) < 2) {
+                    continue;
+                } 
                 $css[trim($selector)][trim($valsplit[0])] = preg_replace("/^([0-9]+)px$/","$1",trim($valsplit[1]));
             }
         }

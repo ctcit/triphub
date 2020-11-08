@@ -73,7 +73,7 @@ function GetTrips($con,$userId,$id = null) {
 		$trip["leaders"] = implode(", ",$leaders);
 		$trip["isOpen"] = $trip["tripGroup"] === $open;
 
-		if ($trip["isApproved"] 
+		if ($trip["approval"] == "Approved"
 			&& $trip["tripGroup"] < $suggested
 			&& array_key_exists($trip["id"],$roles) && $roles[$trip["id"]]["role"] != "Removed") {
 			$trip["role"] = $roles[$trip["id"]]["role"];
@@ -135,20 +135,31 @@ function PostEmails($con) {
 				AND coalesce((SELECT max(h.id) FROM $historyTable h WHERE h.tripId = t.id),9999999) > t.historyId
 				ORDER BY t.id");
 
-	foreach ($trips as &$trip)
+	foreach ($trips as &$trip) {
 		$trip['email'] = SendEmail($con,$trip['id'],0);
+	}
 
 	return $trips;
 }
 
 function GetTripHtmlValue($col,$row,$true="Yes",$false="") { 
+	$val = $row[$col['Field']];
 	switch ($col["Type"]) {
 		case "bit(1)":
-			return $row[$col['Field']] ? $true : $false; 
+			return $val ? $true : $false; 
 		case "date":
-			return date('D j M Y', strtotime($row[$col['Field']]));
+			return date('D j M Y', strtotime($val));
 		default:
-			return htmlentities($row[$col['Field']]);
+			if (is_array($val)) {
+				$return = "";
+				echo ( $col['Field']." is array");
+				foreach ($val as $key => $item) {
+					$return += htmlentities($item);
+				}
+				return $return;
+			} else {
+				return htmlentities($val);
+			}
 	}
 }
 
@@ -242,8 +253,9 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	foreach ($tripsInfo as $field => $col) {
 		$val = GetTripHtmlValue($col,$trip,"Yes","No");
 
-		if (in_array( $field, $ignore) || preg_match('/.*Id$/',$field) || $val === '') 
+		if (in_array( $field, $ignore) || preg_match('/.*Id$/',$field) || $val === '')  {
 			continue;
+		}
 		
 		$style = $border.($trip[$field] === $oldTrip[$field] ? "" : $updated);
 		$header .= "<tr><th style='$style'>".htmlentities($col['Comment'])."</th>
@@ -254,8 +266,9 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	// Column headers for participants
 	$detail = "<tr><th>&nbsp;</th>";
 	foreach ($participantsInfo as $field => $col) {
-		if (!in_array( $field, $ignore))
+		if (!in_array( $field, $ignore)) {
 			$detail .= "<th style='$border'>".htmlentities($col['Comment'])."</th>";
+		}
 	}
 	$detail .= "</tr>\n";
 	$notes = [];
@@ -277,6 +290,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	// Rows for participants
 	foreach ($participants as $index => &$participant) {
 		$id = $participant['id'];
+		$isNew = array_key_exists("$id,new",$changes); 
 		$classification = $participant['classification'];
 		$oldClassification = $oldParticipants[$id]['classification'];
 		$isCreated = $oldParticipants[$id]['isCreated'];
@@ -291,9 +305,9 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		$style = ($isDeleted ? $deleted : "").($isCreated ? $inserted : ($isUpdated ? $updated :""));
 		$detail .= "<tr><td style='$border $style'>".($index+1)."</td>";
 		foreach ($participantsInfo as $field => $col) {
-			if (in_array( $field, $ignore ))
+			if (in_array( $field, $ignore )) {
 				continue;
-
+			}
 			$isUpdated = $isNew || $participant[$field] !== $oldParticipants[$id][$field];
 			$style = ($isDeleted ? $deleted : "").($isCreated ? $inserted : ($isUpdated ? $updated :""));
 			$participantChanges = $participantChanges || $isUpdated;

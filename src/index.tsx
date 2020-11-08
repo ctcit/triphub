@@ -1,3 +1,5 @@
+import 'react-app-polyfill/ie11';
+import 'react-app-polyfill/stable';
 import { App } from './App';
 import { PublicTripList } from './PublicTripList';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -10,8 +12,8 @@ import './index.css';
 // use this chrome plugin to get this working if running locally using "npm start"
 // https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en
 
-export const BaseUrl = 'https://ctc.org.nz/triphub.dev/api/api.php'
-export const DbApiURL = 'http://ctc.org.nz/db/index.php/rest'
+export const BaseUrl = 'https://ctc.org.nz/triphub/api/api.php'
+export const DbApiURL = 'https://ctc.org.nz/db/index.php/rest'
 export const BaseOpt = { 'Accept': 'application/json'}
 export const NewsletterGenerateUrl = '/newsletter/generate.php?expand=newsletter.odt'
 

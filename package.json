@@ -2,7 +2,7 @@
   "name": "triphub",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://localhost/triphub",
+  "homepage": "https://ctc.org.nz/triphub/web",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@types/luxon": "^1.21.0",
@@ -16,6 +16,7 @@
     "leaflet-gpx": "^1.4.0",
     "luxon": "^1.22.0",
     "react": "^16.13.1",
+    "react-app-polyfill": "^2.0.0",
     "react-dnd": "^5.0.0",
     "react-dnd-html5-backend": "^3.0.2",
     "react-dom": "^16.12.0",

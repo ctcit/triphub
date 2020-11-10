@@ -100,9 +100,16 @@ function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
 			   "Content-type: text/html;charset=UTF-8\r\n".
 			   "From: <noreply@ctc.org.nz>\r\n";
 	   
-   foreach ($email['recipients'] as $recipient) {
-		if (!mail($recipient['email'], $email['subject'], $email['html'], $headers)) {
-			die(Log($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]"));
+    foreach ($email['recipients'] as $recipient) {
+		if (filter_var($recipient['email'], FILTER_VALIDATE_EMAIL)) {
+			echo("Email "+$recipient['email']+" subject: "+$email['subject']);
+			if (!mail($recipient['email'], $email['subject'], $email['html'], $headers)) {
+				die(Log($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]"));
+			}
+		}
+		else
+		{
+			echo("Didn't email $recipient[email] as it is invalid");
 		}
 	}
 
@@ -152,7 +159,6 @@ function GetTripHtmlValue($col,$row,$true="Yes",$false="") {
 		default:
 			if (is_array($val)) {
 				$return = "";
-				echo ( $col['Field']." is array");
 				foreach ($val as $key => $item) {
 					$return += htmlentities($item);
 				}
@@ -215,14 +221,15 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$inserted			= "background-color:".$css[".inserted"]["background-color"].";";
 	$deleted			= "color:".$css[".deleted"]["color"].";";
 	$border				= "border: solid 1px black; border-collapse: collapse;";
-	$ignore				= ['id','isDeleted','isLimited','isApproved','mapRoute','lastEmailChangeId','tripId','memberId','displayPriority'];
+	$ignore				= ['id','approval','isDeleted','isSocial','isNoSignup','mapRoute','isLimited','lastEmailChangeId','tripId','memberId','displayPriority','historyId','legacyTripId','legacyEventId'];
 	$message			= $message == null ? "" : "<p>".htmlentities($message)."</p>";
 	$email				= ["recipients"=>[], "filteredRecipients"=>[]];
 	$tripChanges        = false;
 	$columnChange 		= [];
 
-	if (!$trip['isLimited'])
+	if (!$trip['isLimited']) {
 		$ignore []= 'maxParticipants';
+	}
 
 	// re-create old version of trip into $oldTrip and $oldParticipants
 	foreach ($changes as $change) {
@@ -234,8 +241,9 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 				break;
 			case "update $tripsTable":
 				$oldTrip[$column] = $before;
-				if (!array_key_exists($column, $columnChange))
+				if (!array_key_exists($column, $columnChange)) {
 					$columnChange[$column] = $change;
+				}
 				break;
 			case "update $participantsTable":
 				$oldParticipants[$change['participantId']][$column] = $before;
@@ -295,10 +303,11 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		$oldClassification = $oldParticipants[$id]['classification'];
 		$isCreated = $oldParticipants[$id]['isCreated'];
 		$isDeleted = $participant['isDeleted'];
-		if ($classification == 'waitlisted' && $index == $trip['maxParticipants'])
+		if ($classification == 'waitlisted' && $index == $trip['maxParticipants']) {
 			$detail .= "<tr><td colspan='100' style='$border $deleted'>Waitlist</td></tr>\n";
-		else if ($classification == 'removed' && !$participants[$index-1]['isDeleted'])
+		} else if ($classification == 'removed' && !$participants[$index-1]['isDeleted']) {
 			$detail .= "<tr><td colspan='100' style='$border $deleted'>Deleted</td></tr>\n";
+		}
 
 		$participantChanges = false;
 		$isUpdated = $isNew || $participant['index'] !== $oldParticipants[$id]['index'];
@@ -336,7 +345,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		(count($notes) == 0 ? "" : "<h3>Please note:</h3>\n<ul>".implode("\n",$notes)."</ul>\n").
 		"<h3>Current trip details:</h3>\n".
 		"<table style='$border'>$header</table>\n".
-		"<h3>Current people:</h3>\n".
+		"<h3>Current participants:</h3>\n".
 		"<table style='$border'>$detail</table>\n".
 		"<table style='$border'>$legend</table>\n";
 	$email['messageId'] = MakeGuid();
@@ -349,6 +358,8 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$email['notes'] = $notes;
 	$email['subject'] = Coalesce($subject,"RE: $trip[title] on $trip[tripDate]");
 
+	echo("Will send email:");
+	echo($email['html']);
 	return $email;
 }
 

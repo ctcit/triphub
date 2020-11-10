@@ -17,13 +17,16 @@ export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
     const [isLoading, setIsLoading] = useState(true)
     const [dummy, setDummy] = useState(0)
 
+    const isSocialOnly = props.path.startsWith('/socials')
+    const isTripsOnly = props.path.startsWith('/trips')
+
     React.useEffect( () => {
         apiCall('GET',BaseUrl + '/trips').then( (retrievedTrips:ITrip[]) => {
-            retrievedTrips = retrievedTrips.filter(trip => trip.tripGroup === TripGroup.OpenTrip)
-            if (props.path.startsWith('/trips')) {
+            retrievedTrips = retrievedTrips.filter(trip => trip.isOpen)
+            if (isTripsOnly) {
                 retrievedTrips = retrievedTrips.filter( trip => !trip.isSocial)
             }
-            else if (props.path.startsWith('/socials')) {
+            else if (isSocialOnly) {
                 retrievedTrips = retrievedTrips.filter( trip => trip.isSocial)
             }
             setTrips(retrievedTrips)
@@ -32,6 +35,11 @@ export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
     }, [dummy] )
 
     return <div className='triphub-public-calendar'>
+            { !isSocialOnly && <p>Non-members are always welcome on our trips - please
+                                <a href="https://ctc.org.nz/index.php/contact-us/27-new-members" target="_top"> contact the New Members Rep </a>
+                                to get put in touch with the trip leader</p> }
+            { !isTripsOnly && <p>Unless otherwise stated, socials are at 110 Waltham Road, Christchurch. Doors open at 7:30 pm
+                                 with the meeting starting around 7:50 pm and the talk staring at 8:00 pm</p>}
             { isLoading && <FullWidthLoading/> }
             { trips.map( (trip) =>
             <Accordian id={'trip'+trip.id} title={GetDate(trip.tripDate)+': '+trip.title} key={trip.id} className='my-0'>

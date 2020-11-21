@@ -157,7 +157,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Confirmation string
             // INPUTENTITY subjectbody
             UserIdIfHasRoleOrDie($con,"Member");
-            SendEmail($con,$id,UserIdIfHasRoleOrDie($con,"Secured"),$input['subject'],$input['body']);
+            SendEmail($con,$id,UserIdIfHasRoleOrDie($con,"Member"),$input['subject'],$input['body']);
             $input['result'] = "Email sent for trip $id";
             return $input;
     

@@ -102,14 +102,13 @@ function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
 	   
     foreach ($email['recipients'] as $recipient) {
 		if (filter_var($recipient['email'], FILTER_VALIDATE_EMAIL)) {
-			echo("Email "+$recipient['email']+" subject: "+$email['subject']);
 			if (!mail($recipient['email'], $email['subject'], $email['html'], $headers)) {
-				die(Log($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]"));
+				Log($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]");
 			}
 		}
 		else
 		{
-			echo("Didn't email $recipient[email] as it is invalid");
+			Log($con,"WARNING", "Didn't email $recipient[email] as it is invalid");
 		}
 	}
 
@@ -222,7 +221,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$deleted			= "color:".$css[".deleted"]["color"].";";
 	$border				= "border: solid 1px black; border-collapse: collapse;";
 	$ignore				= ['id','approval','isDeleted','isSocial','isNoSignup','mapRoute','isLimited','lastEmailChangeId','tripId','memberId','displayPriority','historyId','legacyTripId','legacyEventId'];
-	$message			= $message == null ? "" : "<p>".htmlentities($message)."</p>";
+	$message			= $message == null ? "" : "<h3>Message from the trip leader:</h3><p>".htmlentities($message)."</p>";
 	$email				= ["recipients"=>[], "filteredRecipients"=>[]];
 	$tripChanges        = false;
 	$columnChange 		= [];
@@ -358,8 +357,6 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$email['notes'] = $notes;
 	$email['subject'] = Coalesce($subject,"RE: $trip[title] on $trip[tripDate]");
 
-	echo("Will send email:");
-	echo($email['html']);
 	return $email;
 }
 

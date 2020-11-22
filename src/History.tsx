@@ -4,6 +4,7 @@ import { App } from './App';
 import { Trip } from './Trip';
 import { Expandable } from './Expandable';
 import { IParticipant } from './Interfaces';
+import { Console } from 'console';
 
 interface IHistoryItem {
     id : number
@@ -14,8 +15,8 @@ interface IHistoryItem {
     tripId : number
     participantId? : number
     column? : string
-    before? : string
-    after? : string
+    before? : string | object
+    after? : string | object
 }
 
 function Pad(x : number) : string {
@@ -65,24 +66,30 @@ class HistoryItem extends Component<{
         if (action === 'Email') {
             title = [<span key='1' className='fa fa-paper-plane'/>,' ',action]
             const rows = []
-            const values = JSON.parse(item.after || "{}");
-
-            for (const key of Object.keys(values)) {
-                let value = values[key];
-                switch (key) {
-                    case 'recipients':
-                    case 'filteredRecipients':
-                        value = <td>{value.map((x:any) => `${x.name}<${x.email}>`).join(', ')}</td>
-                        break
-                    case 'html':
-                        value = <td dangerouslySetInnerHTML={{__html: value}}/>
-                        break;
-                    default:
-                        value = <td>{`${value}`}</td>
-                        break
+            if ( item.after instanceof Object) {
+                for (const key of Object.keys(item.after)) {
+                    let value = item.after[key]
+                    let skip = false
+                    switch (key) {
+                        case 'filteredRecipients':
+                            value = <td>{value.map((x:any) => `${x.name}<${x.email}>`).join(', ')}</td>
+                            break
+                        case 'html':
+                            value = <td dangerouslySetInnerHTML={{__html: value}}/>
+                            break;
+                        case 'subject':
+                            value = <td>{`${value}`}</td>
+                            break
+                        default:
+                            skip = true
+                            break
+                    }
+                    if (!skip) {
+                        rows.push(<tr key={key}><th>{GetColumn(key)}</th>{value}</tr>)
+                    }
                 }
-                rows.push(<tr key={key}><th>{GetColumn(key)}</th>{value}</tr>)
-                
+            } else {
+                console.log("History 'after' Not in expected format: "+item.after)
             }
 
             detail = <table>{rows}</table>

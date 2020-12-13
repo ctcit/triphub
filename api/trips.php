@@ -47,15 +47,15 @@ function GetTrips($con,$userId,$id = null) {
 	$roles = SqlResultArray($con,
 	   "SELECT c.tripId, 
 	   			'Editor'  as role 
-	    FROM $historyTable c
-			JOIN $tripsTable          t on t.id = c.tripId 
-			WHERE $where AND c.userId != 0 AND c.userId = $userId 
-			UNION
-			SELECT p.tripId, 
-					(case when p.isDeleted then 'Removed' when p.isLeader then 'Leader' else 'Tramper' end) as role 
+			FROM $historyTable c
+				JOIN $tripsTable          t on t.id = c.tripId 
+				WHERE $where AND c.userId != 0 AND c.userId = $userId 
+		UNION
+		SELECT p.tripId, 
+				(case when p.isDeleted then 'Removed' when p.isLeader then 'Leader' else 'Tramper' end) as role 
 			FROM $participantsTable p 
-			JOIN $tripsTable        t on t.id = p.tripId 
-			WHERE $where AND p.memberId = $userId",
+				JOIN $tripsTable        t on t.id = p.tripId 
+				WHERE $where AND p.memberId = $userId",
 			"tripId");
 	
 	foreach ($trips as &$trip) {
@@ -77,7 +77,10 @@ function GetTrips($con,$userId,$id = null) {
 			&& $trip["tripGroup"] < $suggested
 			&& array_key_exists($trip["id"],$roles) && $roles[$trip["id"]]["role"] != "Removed") {
 			$trip["role"] = $roles[$trip["id"]]["role"];
-			$trip["tripGroup"] = $mytrips;
+			if ( $roles[$trip["id"]]["role"] != "Editor" )
+			{
+				$trip["tripGroup"] = $mytrips;
+			}
 		}
 	}
 

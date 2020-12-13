@@ -24,7 +24,7 @@ function GetTrips($con,$userId,$id = null) {
 			   WHEN approval  = 'Rejected' 	THEN $rejected
 			   WHEN approval  = 'Pending' 	THEN $suggested
 			   WHEN CURDATE() < openDate 	THEN $suggested
-			   WHEN CURDATE() < closeDate	THEN $open
+			   WHEN CURDATE() <= closeDate	THEN $open
 											ELSE $closed 
 			END) 			as tripGroup,
 			'' 				as leaders,

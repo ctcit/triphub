@@ -94,11 +94,12 @@ function DeleteTripEdits($con) {
 	SqlExecOrDie($con, "DELETE FROM $table WHERE stamp < TIMESTAMPADD(second,-$expiryAge,UTC_TIMESTAMP())");
 }
 
-function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
+// Send email function
+// $email should be an array with keys 'recipients', 'html', 'subject' 
+// $historyAction is the action to record in the history table
+function SendEmail($con, $tripId, $email, $userId=null, $historyAction='email') {
 	$historyTable = ConfigServer::historyTable;
 	$tripsTable = ConfigServer::tripsTable;		
-	$recipients = [];
-	$email = GetTripHtml($con,$tripId,$subject,$message);
 	$headers = "MIME-Version: 1.0\r\n".
 			   "Content-type: text/html;charset=UTF-8\r\n".
 			   "From: <noreply@ctc.org.nz>\r\n";
@@ -116,10 +117,11 @@ function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
 	}
 
 	$emailJson = SqlVal($con,json_encode($email));
+	$userId = ($userId==null) ? "NULL" : $userId;
 	$id = SqlExecOrDie($con, "INSERT $historyTable 
 								SET	`tripId` = $tripId, 
 									`userId` = $userId, 
-									`action` = 'email', 
+									`action` = '$historyAction', 
 									`timestamp` = UTC_TIMESTAMP(),
 									`after` = $emailJson", true);
 	SqlExecOrDie($con, "UPDATE $tripsTable
@@ -129,8 +131,48 @@ function SendEmail($con,$tripId,$userId=null,$subject=null,$message=null) {
 	return $email;
 }
 
+function SendTripEmail($con, $tripId, $userId=null, $subject=null, $message=null) {
+	$email = GetTripHtml($con, $tripId, $subject, $message);
+	SendEmail($con, $tripId, $email, $userId);
+	return $email;
+}
+
+function SendApprovalEmail($con, $tripId) {
+	$trip = GetTrips($con, 'null', $tripId)[0];
+
+	$participantsTable = ConfigServer::participantsTable;
+	$leader = SqlResultScalar($con,"SELECT name
+						            FROM $participantsTable
+									WHERE tripId = $tripId AND isLeader = 1 LIMIT 1","id");
+
+	$committeeTable = ConfigServer::committeeTable;
+    $recipients = SqlResultArray($con, "SELECT fullName, email
+	                                    FROM $committeeTable
+										WHERE role IN ('IT Convenor', 'Day Trip Organiser', 'Overnight Trip Organiser')");
+    $tripLink = ConfigServer::triphubUrl."/#/trips/$trip[id]";
+
+	$email = ["recipients"=>[]];
+
+	foreach ($recipients as $index => &$participant) {
+		$email['recipients'] []= ['name'=>$participant['fullName'],'email'=>$participant['email']];
+	}
+
+	$email['html'] = "<p>A new trip \"$trip[title]\" has been added".
+					 ( ($leader!=null) ? "by $leader" : "").
+					 ".</p>".
+                     "<p>Please go to <a href=\"$tripLink\">$tripLink</a> to check and approve this trip.</p>";
+	$email['messageId'] = MakeGuid();
+	$email['originalMessageId'] = MakeGuid();
+	$email['trip'] = $trip;
+	$email['subject'] = Coalesce($subject, "New CTC trip for approval - $trip[title]");
+
+	SendEmail($con, $tripId, $email, $userId, 'approvalEmail');
+	return $email;
+}
+
 function PostEmails($con) {
 
+	// Step 1 - Send emails arising from edits
 	DeleteTripEdits($con);
 
 	$tripsTable = ConfigServer::tripsTable;
@@ -147,6 +189,20 @@ function PostEmails($con) {
 	foreach ($trips as &$trip) {
 		$trip['email'] = SendEmail($con,$trip['id'],0);
 	}
+
+	// Step 2 - Send emails for trips that require approval
+	$newTrips = SqlResultArray($con,
+					"SELECT t.id, t.title, t.tripDate
+					FROM $tripsTable t WHERE approval = 'PENDING'
+					AND (SELECT COUNT(*) FROM $historyTable WHERE tripId = t.id 
+						 AND action = 'approvalemail') = 0
+				    ORDER BY t.id");
+
+	foreach ($newTrips as &$trip) {
+		$trip['email'] = SendApprovalEmail($con, $trip['id']);
+	}
+
+	$trips = array_merge($trips, $newTrips);
 
 	return $trips;
 }

@@ -10,7 +10,7 @@ class ConfigClient
 
 class ConfigServer
 {
-	const baseUrl             = "https://ctc.org.nz/triphub.dev/";
+	const triphubUrl          = "https://ctc.org.nz/index.php/trip-signup/";
 	const currencyInDays      = 7;
 	const emailHasLink        = true;
 	const emailHasDetails     = true;
@@ -20,6 +20,7 @@ class ConfigServer
 	const newMembersRepView   = "triphub.view_new_members_rep";
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";
+	const committeeTable      = "ctc.view_committee";
 	const newslettersTable    = "newsletter.newsletters";
 	const noticesTable        = "newsletter.notices";
 	const newsletterEventsTable = "triphub.vnl_events";

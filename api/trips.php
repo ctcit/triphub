@@ -187,13 +187,14 @@ function PostEmails($con) {
 				ORDER BY t.id");
 
 	foreach ($trips as &$trip) {
-		$trip['email'] = SendEmail($con,$trip['id'],0);
+		$trip['email'] = SendTripEmail($con,$trip['id'],0);
 	}
 
 	// Step 2 - Send emails for trips that require approval
 	$newTrips = SqlResultArray($con,
 					"SELECT t.id, t.title, t.tripDate
 					FROM $tripsTable t WHERE approval = 'PENDING'
+					AND tripDate > NOW()
 					AND (SELECT COUNT(*) FROM $historyTable WHERE tripId = t.id 
 						 AND action = 'approvalemail') = 0
 				    ORDER BY t.id");

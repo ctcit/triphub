@@ -158,7 +158,7 @@ function SendApprovalEmail($con, $tripId) {
 	}
 
 	$email['html'] = "<p>A new trip \"$trip[title]\" has been added".
-					 ( ($leader!=null) ? "by $leader" : "").
+					 ( ($leader!=null) ? " by $leader" : "").
 					 ".</p>".
                      "<p>Please go to <a href=\"$tripLink\">$tripLink</a> to check and approve this trip.</p>";
 	$email['messageId'] = MakeGuid();

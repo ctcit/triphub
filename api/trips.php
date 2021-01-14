@@ -164,9 +164,9 @@ function SendApprovalEmail($con, $tripId) {
 	$email['messageId'] = MakeGuid();
 	$email['originalMessageId'] = MakeGuid();
 	$email['trip'] = $trip;
-	$email['subject'] = Coalesce($subject, "New CTC trip for approval - $trip[title]");
+	$email['subject'] = "New CTC trip for approval - $trip[title]";
 
-	SendEmail($con, $tripId, $email, $userId, 'approvalEmail');
+	SendEmail($con, $tripId, $email, null, 'approvalEmail');
 	return $email;
 }
 
@@ -246,7 +246,7 @@ function ClassifyParticipants(&$participants, $trip) {
 	foreach ($participants as $index => &$participant) {
 		$participant['index'] = $index;
 		$participant['classification'] =
-			($participant['isCreated'] ? 'not-listed' :
+			((array_key_exists('isCreated', $participant) && $participant['isCreated']) ? 'not-listed' :
 			($participant['isDeleted'] ? 'removed' :
 			($participant['isLeader'] ? 'leader' :
 			($trip['isLimited'] && $index >= $trip['maxParticipants'] ? 'waitlisted' : 'listed'))));

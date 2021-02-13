@@ -4,7 +4,6 @@ import { Form, Col, Row, Container } from 'reactstrap';
 import { App } from './App';
 import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl } from './Control';
 import './index.css';
-import './print.css';
 import { Trip } from './Trip';
 import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces';
 import { MapControl } from './MapControl';

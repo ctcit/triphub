@@ -1,0 +1,62 @@
+@media screen {
+    .print-only {
+        display: none;
+    }
+}
+
+@media print {
+    button,
+    .mobileonly,
+    .noprint,
+    .btn,
+    div#sidebar,
+    header,
+    footer,
+    nav {
+        display: none;
+    }
+    input,
+    textarea,
+    iframe,
+    body.site {
+        border: none !important;
+    }
+}
+
+.printabletriplist {
+    font-family: Arial, sans-serif
+}
+
+.printabletriplist td,
+th {
+    background-color: white;
+}
+
+.printabletriplist h1 {
+    font-size: 24pt;
+}
+
+.printabletriplist h2 {
+    font-size: 18pt;
+}
+
+table.triplistparams {
+    border: none;
+}
+
+table.footertable td,
+table.footertable th,
+table.participants td,
+table.participants th {
+    border: solid lightgrey 1px;
+}
+
+table.footertable th {
+    font-weight: bold;
+}
+
+@media print {
+    iframe {
+        height: 297mm !important
+    }
+}

@@ -13,7 +13,6 @@ import { Email } from './Email';
 import { TripPrint } from './TripPrint';
 import { Pill } from './Widgets';
 import './index.css';
-import './print.css';
 import { ToolTipIcon } from './ToolTipIcon';
 import { Accordian } from './Accordian';
 import Container from 'reactstrap/lib/Container';
@@ -70,7 +69,7 @@ export class Trip extends Component<{
             this.props.app.setState({isLoading: false})    
             this.startNewEvent()
         } else {
-            this.setState({isLoading: true});
+            this.setState({isLoading: true})
             this.props.app.setState({isLoading: true})
             this.props.app.setStatus(['Loading ', Spinner])
             this.props.app.triphubApiCall('POST',this.props.href + '/edit',{stamp:new Date().toISOString()})
@@ -90,10 +89,10 @@ export class Trip extends Component<{
                         trip:trip[0],
                         isLoading: false
                     });
-                    this.props.app.setState({isLoading: false});
+                    this.props.app.setState({isLoading: false})
                 })
             
-            this.requeryParticipants();
+            this.requeryParticipants()
         }
     }
 
@@ -139,16 +138,20 @@ export class Trip extends Component<{
     }
 
     public blankTramper() : IParticipant {
-        return {id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false, 
+        return {
+            id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false,
                 logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '',
-                emergencyContactName: '', emergencyContactPhone: ''}
+            emergencyContactName: '', emergencyContactPhone: ''
+    }
     }
 
     public signMeUpTramper(isLeader: boolean = false) : IParticipant {
         const me = this.props.app.getMe()
-        return {...this.blankTramper(), 
+        return {
+            ...this.blankTramper(),
                 memberId: me.id, name: me.name, email: me.email, phone: me.phone, isLeader,
-                emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone}
+            emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone
+    }
     }
 
     public startNewEvent(){
@@ -202,8 +205,7 @@ export class Trip extends Component<{
         if (tripWarnings.length > 0) {
             this.setState({showValidationMessage: true})
         }
-        else
-        {
+        else {
             this.props.app.triphubApiCall('POST',BaseUrl + '/trips',trip)
                 .then(data => { 
                         const newTrip = data[0] as ITrip
@@ -296,7 +298,7 @@ export class Trip extends Component<{
             
                 <Container className={this.props.app.containerClassName()} key="triphubtripdetail" fluid={true}>
                     <div key='tripstatus' className='py-1'>
-                        {this.state.editList
+                        {(this.state.editList || [])
                             .filter((item:IEdit) => item.id !== this.state.editId)
                             .map((item:IEdit) =>
                             <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>

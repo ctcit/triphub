@@ -6,7 +6,6 @@ import { BaseUrl, NewsletterGenerateUrl } from '..';
 import { App } from '../App';
 import { INewsletter, IValidation } from '../Interfaces';
 import '../index.css';
-import '../print.css';
 import { GetDateString, IsValidDateString, GetClosestWednesday } from '../Utilities';
 import { TripReportList } from './TripReportList';
 import { NoticeList } from './NoticeList';

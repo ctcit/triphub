@@ -15,8 +15,8 @@ class ConfigServer
 	const emailHasLink        = true;
 	const emailHasDetails     = true;
 	const emailHasDebugInfo   = false;
-	const emailFilter         = "/^alastairgbrown@yahoo\.com\.au$/";
-	const adminUpdateEmail	  = "alastairgbrown@yahoo.com.au";
+	const emailFilter         = "/^.*$/";
+	const adminUpdateEmail	  = "webmaster@ctc.org.nz";
 	const newMembersRepView   = "triphub.view_new_members_rep";
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";

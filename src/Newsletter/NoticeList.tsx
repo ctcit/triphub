@@ -4,7 +4,6 @@ import { Component } from 'react';
 import { App } from '../App';
 import { INotice, IValidation } from '../Interfaces';
 import '../index.css';
-import '../print.css';
 import Table from 'reactstrap/lib/Table';
 import { BaseUrl } from '..';
 import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from '../Control';

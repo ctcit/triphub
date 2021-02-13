@@ -39,14 +39,14 @@ constructor(props: any){
         const HLevel = `h${this.props.level || 1}`
 
         return [
-            <HLevel key={'exp' + this.props.id} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} className='noprint'>
+            <h1 key={'exp' + this.props.id} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} className='noprint'>
                 {button}
                 <span key='title' onClick={toggle}>{this.props.title}</span>
                 <span key='togglemenu' onClick={toggleMenu} hidden={(this.props.buttons||[]).length === 0}>
                     <ToolTipIcon icon='ellipsis-h' tooltip='Toggle menu' id={this.props.id}/>
                 </span>
                 <span key='buttons' hidden={!this.state.expanded && !this.state.showMenu}>{this.props.buttons}</span>
-            </HLevel>,
+            </h1>,
             collapse
         ]
     }

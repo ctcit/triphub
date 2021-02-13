@@ -316,13 +316,25 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
 
         case "GET routes":
             return GetRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
-
         case "GET routes/{routeId}":
             return GetRoute($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $id);
+        case "POST routes":
+            return ApiPost($con, UserIdIfHasRoleOrDie($con,"Admin"),$table,$input);
+        case "PUT routes/{routeId}":
+            return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
+        case "GET routesroutearchive":
+            return GetCtcRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
+        case "GET routesroutearchive/{routesroutearchiveId}":
+            return GetCtcRoute($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $id);
+        case "GET routestripreports":
+            return GetTripReportsRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
+        case "GET routestripreports/{routestripreportId}":
+            return GetTripReportsRoute($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $id);
+        case "GET routestriphub":
+            return GetTripHubRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
+        case "GET routestriphub/{routestriphubId}":
+            return GetTripHubRoute($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $id);
 
-        // case "PATCH routes/{routeId}":
-        //     return UpdateRouteSummary($con, $userid, $id, $input);
-        
         case "GET notices":
             // DESCRIPTION Get newsletter notices. May specify a limit and offset as query paramenters
             // OUTPUT Array of <a href='$basehref#notices'>notices</a>
@@ -389,10 +401,11 @@ function TableFromEntity($entity) {
 // * Admin
 // * Webmaster
 function UserIdIfHasRoleOrDie($con, $requiredRole="NonPrivileged") {
-    if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
-        // Not using an API key - get user logon details
-        $member = GetLogonDetails($con, false);
-    } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {
+    // if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
+    //     // Not using an API key - get user logon details
+    //     $member = GetLogonDetails($con, false);
+    // } else 
+    if (date("Ymd") < ConfigServer::apiKeyExpiry) {
         // Using an API key and it hasn't expired
         $members = GetMembers($con, ConfigServer::apiKeyUserId, ConfigServer::apiKeyUserId);
         if (count($members) == 1)
@@ -555,7 +568,8 @@ function IsReadOnly($table, $col) {
              $table === ConfigServer::historyTable || 
              $table === ConfigServer::newslettersTable || 
              $table === ConfigServer::noticesTable || 
-             $table === ConfigServer::editTable)
+             $table === ConfigServer::editTable ||
+             $table === ConfigServer::routesTable)
         return $col === 'id';
     else
         return true;

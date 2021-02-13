@@ -571,3 +571,21 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   }  
 
 
+/* ---------------------------- */
+/* ManageRoutes  */
+/* ---------------------------- */
+
+.manage-routes {
+}
+
+.manage-routes-header {
+  background-color: #d6e5f8d8; 
+}
+
+.ManageRoutes {
+  /* margin-left: 40px */
+}
+
+.ManageRoutes td {
+  cursor: pointer
+}

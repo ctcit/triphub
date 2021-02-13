@@ -13,6 +13,7 @@ import { Spinner, Done } from './Widgets';
 import Container from 'reactstrap/lib/Container';
 import Jumbotron from 'reactstrap/lib/Jumbotron';
 import { INotification, NotificationArea } from './NotificationArea';
+import { ManageRoutes } from './ManageRoutes/ManageRoutes';
 
 export class App extends Component<{
     },{
@@ -236,6 +237,9 @@ export class App extends Component<{
 
             this.state.path === "/newsletter" ?
                 <Newsletter app={this}/> :
+
+            this.state.path === "/routes" ?
+                <ManageRoutes app={this}/> :
 
             this.state.path.startsWith("/trips/") ?
                 <Trip key='trip' app={this} isNew={false} isNewSocial={true} href={BaseUrl + this.state.path}/> :

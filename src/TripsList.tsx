@@ -12,7 +12,7 @@ import Table from 'reactstrap/lib/Table';
 import { ToolTipIcon } from './ToolTipIcon';
 import { Spinner, Done } from './Widgets';
 import { Accordian } from './Accordian';
-import { ButtonWithTooltip } from './MapEditor';
+import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { ExpandableTableRow } from './ExpandableTableRow';
 import { TripCoordinatorDashboard } from './TripCoordinatorDashboard';
 import Jumbotron from 'reactstrap/lib/Jumbotron';

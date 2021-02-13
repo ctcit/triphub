@@ -41,7 +41,7 @@ export class ControlWrapper extends Component<{
 }
 
 export class InputControl extends Component<{
-    id : string, 
+    id : string,
     label : string,
     hidden? : boolean,
     readOnly? : boolean,
@@ -109,6 +109,7 @@ export class TextAreaInputControl extends Component<{
     label : string,
     hidden? : boolean,
     readOnly? : boolean,
+    rows? : number,
     isLoading: boolean,
     validationMessage?: string,
     helpText?: string,
@@ -156,7 +157,7 @@ export class TextAreaInputControl extends Component<{
             <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText} >
                 <Textarea id={this.props.id} className={className} readOnly={this.props.readOnly}  
-                    value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} rows={6} />
+                    value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} rows={this.props.rows ?? 6} />
             </ControlWrapper>
       )
     }

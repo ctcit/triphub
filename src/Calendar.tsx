@@ -14,7 +14,7 @@ import DropdownToggle from 'reactstrap/lib/DropdownToggle';
 import DropdownMenu from 'reactstrap/lib/DropdownMenu';
 import DropdownItem from 'reactstrap/lib/DropdownItem';
 import Container from 'reactstrap/lib/Container';
-import { ButtonWithTooltip } from './MapEditor';
+import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 interface ICalendarItem {
     id: number

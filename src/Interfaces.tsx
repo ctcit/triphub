@@ -86,20 +86,24 @@ export interface IMap {
 
 export interface IArchivedRoute {
     id: string;
-    caption: string;
-    gpxfilename: string;
+    memberId: string;
+    tripHubId: string;
+    ctcRoutesId: string;
+    tripReportsId: string;
+    source: string;
+    title: string;
+    description: string;
+    date: string;
+    creationDate: string;
+    gpxFilename: string;
     gpx: string;
-    routesummary: string;
-    routenotes: string;
-    originatorid: string;
-    left: string;
-    top: string;
-    right: string;
-    bottom: string;
-    trackdate: string; // "2015-01-10"
+    bounds: Array<[number, number]>;
+    routes: Array<Array<[number, number]>>;
+    summarizedRoutes: Array<Array<[number, number]>>;
     firstName: string;
     lastName: string;
 }
+
 
 export interface IHoliday {
     date : string

@@ -7,7 +7,7 @@ import './index.css';
 import './print.css';
 import { Trip } from './Trip';
 import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces';
-import { MapControl } from './MapControl';
+import { TripMap } from './TripMap';
 import { BaseUrl } from 'src';
 import { AddDays, GetDateString } from './Utilities';
 
@@ -267,10 +267,11 @@ export class TripDetail extends Component<{
     
                 <Row>
                     <Col sm={10}>
-                        <MapControl 
+                        <TripMap 
                             routesId='routes' routesLabel='Routes'
                             mapsId='maps' mapsLabel='Maps'
                             nz50MapsBySheet={this.nz50MapsBySheet} 
+                            leafletMapId='tripmap'
                             archivedRoutesById={this.archivedRoutesById}
                             getArchivedRoute={getArchivedRoute}
                             updateArchivedRouteSummary={updateArchivedRouteSummary}

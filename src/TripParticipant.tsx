@@ -9,7 +9,7 @@ import { InputControl, SwitchControl, TextAreaInputControl } from './Control';
 import { ToolTipIcon } from './ToolTipIcon';
 import { TripParticipants } from './TripParticipants';
 import { Accordian } from './Accordian';
-import { ButtonWithTooltip } from './MapEditor';
+import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 export class TripParticipant extends Component<{
         participant: IParticipant

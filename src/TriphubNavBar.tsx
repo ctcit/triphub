@@ -51,6 +51,7 @@ export class TriphubNavbar extends Component<{
         const newtrip = () => this.props.app.setPath('/newtrip')
         const newsletter = () => this.props.app.setPath('/newsletter')
         const newsocial = () => this.props.app.setPath('/newsocial')
+        const routes = () => this.props.app.setPath('/routes')
         const toggle = () => this.setState({isOpen: !this.state.isOpen});
         const togglePriviledgesDropdown = () => this.setState({priviledgesDropdownIsOpen: !this.state.priviledgesDropdownIsOpen});
         const setAdminPrivileges = () => this.props.app.setState({role:Role.Admin})
@@ -122,6 +123,18 @@ export class TriphubNavbar extends Component<{
                 </NavLink>
             </NavItem>)
         }
+
+        // if (this.props.app.state.role >= Role.Admin && this.props.app.state.path !== '/routes') {
+            navItems.push(
+            <NavItem>
+                <NavLink onClick={routes}>
+                    <span className='triphub-navbar'>
+                        <span className='fa fa-map'/> 
+                        &nbsp; Manage Routes
+                    </span>
+                </NavLink>
+            </NavItem>)
+        // }
 
         if (this.props.app.state.role >= Role.Webmaster) {
             navItems.push(

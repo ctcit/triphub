@@ -35,6 +35,7 @@ export class Trip extends Component<{
     isLoading: boolean,
     isSaving: boolean,
     showValidationMessage: boolean,
+    showLegend: boolean,
 }> {
 
       public suggestedTrip: {trip: ITrip, participants: IParticipant[]};
@@ -51,6 +52,7 @@ export class Trip extends Component<{
             isLoading: false,
             isSaving: true,
             showValidationMessage: false,
+            showLegend: false,
         }
         this.requeryParticipants = this.requeryParticipants.bind(this)
         this.startNewEvent = this.startNewEvent.bind(this) 

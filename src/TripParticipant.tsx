@@ -159,7 +159,7 @@ export class TripParticipant extends Component<{
             participant.isLeader ? <ToolTipIcon key='leader' icon='star' tooltip={`${participant.name} is the leader`} id={iconid}/> : '',' ',
             participant.isPlbProvider ? <ToolTipIcon key='plb' icon='podcast' tooltip={`${participant.name} is bringing a PLB`} id={iconid}/> : '',' ',
             participant.isVehicleProvider ? <ToolTipIcon key='car' icon='car' tooltip={`${participant.name} is bringing a Car`} id={iconid}/> : '',' ',
-            logisticInfo !== '' ? <ToolTipIcon key='logisticInfo' icon='commenting' tooltip={logisticInfo} id={iconid}/> : '',' ',
+            logisticInfo !== '' ? <ToolTipIcon key='logisticInfo' icon='comment' tooltip={logisticInfo} id={iconid}/> : '',' ',
             participant.memberId === 0 && participant.id !== -1 ? <ToolTipIcon key='nonmember' icon='id-badge' tooltip={`${participant.name} is not a member of the CTC`} id={iconid}/> : '',' ',
         ]
         const buttons = [

@@ -155,7 +155,9 @@ table.changehistory{
   margin-right: 20px;
 }
 
-.participant-buttons .btn {
+.participant-buttons .btn,
+.participant-buttons-legend .btn
+ {
   margin: -2px 2px;
   padding: 0px 5px;
   height: 25px;

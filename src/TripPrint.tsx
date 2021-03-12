@@ -6,13 +6,13 @@ import { GetFullDate, GetLength } from './Utilities';
 import './index.css';
 
 export class TripPrint extends Component<{
-        trip: Trip
-        app: App
-        canWaitList?: boolean
-        canUnwaitList?: boolean
-    },{
-      id?: string
-    }> {
+    trip: Trip
+    app: App
+    canWaitList?: boolean
+    canUnwaitList?: boolean
+}, {
+    id?: string
+}> {
 
     public render() {
         const trip = this.props.trip.state.trip
@@ -23,7 +23,7 @@ export class TripPrint extends Component<{
         const vehicles = info.current.filter(p => p.isVehicleProvider)
         const footer = Math.max(logistics.length, vehicles.length)
         const printLines = this.props.app.state.config.printLines
-        
+
         for (let i = info.current.length; i < Math.min(info.maxParticipants, printLines - footer); i++) {
             blanks.push('blank' + i);
         }
@@ -37,7 +37,7 @@ export class TripPrint extends Component<{
                         <tr>
                             <th>Leader:</th>
                             <td>
-                                {info.leaders.map(l=><div key={l.id}>{l.name}</div>)}
+                                {info.leaders.map(l => <div key={l.id}>{l.name}</div>)}
                             </td>
                             <th>Date:</th>
                             <td>{GetFullDate(trip.tripDate)}</td>
@@ -50,11 +50,11 @@ export class TripPrint extends Component<{
                 <table className='participants'>
                     <thead>
                         <tr>
-                            {header('Name',40)}
-                            {header('Email',60)}
-                            {header('Phone',20)}
-                            {header('Car?',5)}
-                            {header('PLB?',5)}
+                            {header('Name', 40)}
+                            {header('Email', 60)}
+                            {header('Phone', 20)}
+                            {header('Car?', 5)}
+                            {header('PLB?', 5)}
                         </tr>
                     </thead>
                     <tbody>
@@ -63,8 +63,8 @@ export class TripPrint extends Component<{
                                 <td>{p.name}</td>
                                 <td>{p.email}</td>
                                 <td>{p.phone}</td>
-                                <td><span hidden={!p.isVehicleProvider} className='fa fa-check'/></td>
-                                <td><span hidden={!p.isPlbProvider} className='fa fa-check'/></td>
+                                <td><span hidden={!p.isVehicleProvider} className='fa fa-check' /></td>
+                                <td><span hidden={!p.isPlbProvider} className='fa fa-check' /></td>
                             </tr>
                         )}
                         {blanks.map(b =>
@@ -82,14 +82,14 @@ export class TripPrint extends Component<{
                 <table className='footertable'>
                     <thead>
                         <tr>
-                            {header('Notes',90)}
-                            {header('Number plates',40)}
+                            {header('Notes', 90)}
+                            {header('Number plates', 40)}
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>
-                                {logistics.map(p =><div key={p.id}>{p.name}: {p.logisticInfo}</div>)}
+                                {logistics.map(p => <div key={p.id}>{p.name}: {p.logisticInfo}</div>)}
                             </td>
                             <td>
                                 {vehicles.map(p => <div key={p.id}>{p.name}: {p.vehicleRego}</div>)}
@@ -97,7 +97,7 @@ export class TripPrint extends Component<{
                         </tr>
                     </tbody>
                 </table>
-            </div>            
+            </div>
         )
     }
 }

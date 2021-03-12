@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Form, Col, Row, Container } from 'reactstrap';
 import { App } from './App';
-import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl } from './Control';
+import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl, SwitchesControl } from './Control';
 import './index.css';
 import { Trip } from './Trip';
 import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces';
@@ -172,6 +172,7 @@ export class TripDetail extends Component<{
             'onGetValidationMessage': onGetValidationMessage
         }
 
+        const config = this.props.app.state.config
         const commonInverted = {...common, 'onGet': onGetInverted, 'onSave': onSaveInverted }
         const commonTripDate = {...common, 'onSave': onSaveTripDate }
         const commonLength = {...common, 'onSave': onSaveTripLength }
@@ -246,8 +247,22 @@ export class TripDetail extends Component<{
                         <SwitchControl id='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common}/>
                     </Col>
                     <Col sm={5} md={4}>
-                        <InputControl id='maxParticipants' label={isSocial ? 'Maximum Atendees' : 'Maximum trampers'}
+                        <InputControl id='maxParticipants' label={isSocial ? 'Maximum Attendees' : 'Maximum trampers'}
                         type='number' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
+                    </Col>
+                    <Col sm={3} md={2}>
+                        <SwitchesControl id='prerequisites' label='Prerequisite Equipment' 
+                        hidden={trip.isSocial && trip.isNoSignup} 
+                        options={config.prerequisiteEquipment}
+                        allOptions={`${config.prerequisiteEquipment},${config.prerequisiteSkills}`}
+                        {...common}/>
+                    </Col>
+                    <Col sm={3} md={2}>
+                        <SwitchesControl id='prerequisites' label='Prerequisite Skills' 
+                        hidden={trip.isSocial && trip.isNoSignup} 
+                        options={config.prerequisiteSkills}
+                        allOptions={`${config.prerequisiteEquipment},${config.prerequisiteSkills}`}
+                        {...common}/>
                     </Col>
                 </Row>
 

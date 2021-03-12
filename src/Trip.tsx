@@ -76,14 +76,16 @@ export class Trip extends Component<{
             this.props.app.setStatus(['Loading ', Spinner])
             this.props.app.triphubApiCall('POST',this.props.href + '/edit',{stamp:new Date().toISOString()})
                 .then((editList:IEdit[]) => {
-                    this.setState({
-                        editList,
-                        editId: editList[0].id,
-                        editHref: `${this.props.href}/edit/${editList[0].id}`,
-                        editIsEdited: false,
-                        editHeartbeatId: setInterval(this.editHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
-                    });
-                });
+                    if (editList) {
+                        this.setState({
+                            editList,
+                            editId: editList[0].id,
+                            editHref: `${this.props.href}/edit/${editList[0].id}`,
+                            editIsEdited: false,
+                            editHeartbeatId: setInterval(this.editHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
+                        })
+                    }
+                })
 
             this.props.app.triphubApiCall('GET',this.props.href as string)
                 .then((trip:ITrip) => {
@@ -388,6 +390,11 @@ export class Trip extends Component<{
 
     private editHeartbeat() {
         this.props.app.triphubApiCall('POST', this.state.editHref, {stamp:new Date().toISOString(),isEdited:this.state.editIsEdited})
-            .then((editList:IEdit[]) => this.setState({editList}))
+            .then((editList:IEdit[]) => 
+            {
+                if (editList) {
+                    this.setState({editList})
+                }
+            })
     }
 }

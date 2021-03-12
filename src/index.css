@@ -256,14 +256,15 @@ table.changehistory{
   height: 30px;
   border-left: 1px solid darkgray;
   border-right: 1px solid darkgray;
-  border-top:  1px solid darkgray;
-  border-bottom:  1px solid darkgray;
   vertical-align: top;
   padding: 5px !important;
 }
 
 .calendar td.top {
   border-top: 1px solid darkgray;
+}
+.calendar td.bottom {
+  border-bottom: 1px solid darkgray;
 }
 
 .calendar .selected {
@@ -279,12 +280,12 @@ table.changehistory{
   background-color: rgb(226, 247, 253)
 }
 
-.calendar td.janweekend,
-.calendar td.marweekend,
-.calendar td.mayweekend,
-.calendar td.julweekend,
-.calendar td.sepweekend,
-.calendar td.novweekend {
+.calendar td.jan.weekend,
+.calendar td.mar.weekend,
+.calendar td.may.weekend,
+.calendar td.jul.weekend,
+.calendar td.sep.weekend,
+.calendar td.nov.weekend {
   background-color: rgb(195, 218, 226)
 }
 
@@ -297,12 +298,12 @@ table.changehistory{
   background-color: white
 }
 
-.calendar td.febweekend,
-.calendar td.aprweekend,
-.calendar td.junweekend,
-.calendar td.augweekend,
-.calendar td.octweekend,
-.calendar td.decweekend {
+.calendar td.feb.weekend,
+.calendar td.apr.weekend,
+.calendar td.jun.weekend,
+.calendar td.aug.weekend,
+.calendar td.oct.weekend,
+.calendar td.dec.weekend {
   background-color: rgb(226, 226, 226)
 }
 

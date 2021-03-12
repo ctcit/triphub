@@ -37,6 +37,7 @@ export interface ITrip {
     approval : string
     isLimited : boolean
     maxParticipants : number
+    prerequisites? : string
     leaders? : string
     tripGroup : TripGroup
     isOpen : boolean
@@ -76,6 +77,8 @@ export interface IConfig {
     editRefreshInSec : number
     printLines : number
     calendarStartOfWeek : number
+    prerequisiteEquipment : string
+    prerequisiteSkills : string
 }
 
 export interface IMap {

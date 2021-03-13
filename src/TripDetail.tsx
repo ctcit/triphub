@@ -274,7 +274,7 @@ export class TripDetail extends Component<{
 
                 <Row>
                     <Col>
-                        <TextAreaInputControl id='logisticnfo' label='Logistic Information'
+                        <TextAreaInputControl id='logisticInfo' label='Logistic Information'
                             helpText='Any additional information related to travel, accomodation etc' {...common}/>
                     </Col>
                 </Row>

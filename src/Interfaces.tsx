@@ -25,7 +25,6 @@ export interface ITrip {
     departurePoint : string
     departureDetails : string
     description : string
-    logisticinfo: string
     grade : string
     isSocial : boolean
     isNoSignup : boolean

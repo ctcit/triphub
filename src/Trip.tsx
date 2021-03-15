@@ -177,7 +177,6 @@ export class Trip extends Component<{
                 departurePoint: '',
                 departureDetails: '',
                 description: '',
-                logisticinfo: '',
                 grade: this.props.isNewSocial ? 'Social' : '',
                 isSocial: this.props.isNewSocial,
                 isNoSignup: this.props.isNewSocial,

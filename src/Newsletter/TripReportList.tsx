@@ -98,7 +98,7 @@ export class TripReportList extends Component<{
                                 <td>{binding.tripReport.date_display}</td>
                                 <td>{binding.tripReport.title}</td>
                                 <td>{CapitaliseFirstLetter(binding.tripReport.trip_type)}</td>
-                                <td><SwitchControl id='publish' label='' isLoading={false} onGet={onGet}
+                                <td><SwitchControl id='publish' field='publish' label='' isLoading={false} onGet={onGet}
                                     onSave={onSave} onGetValidationMessage={onGetValidationMessage} /></td>
                             </tr>
                         })

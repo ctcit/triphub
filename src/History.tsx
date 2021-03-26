@@ -1,10 +1,9 @@
-import { Component } from 'react';
-import * as React from 'react';
-import { App } from './App';
-import { Trip } from './Trip';
-import { Expandable } from './Expandable';
-import { IParticipant } from './Interfaces';
-import { Console } from 'console';
+import { Component } from 'react'
+import * as React from 'react'
+import { App } from './App'
+import { Trip } from './Trip'
+import { Expandable } from './Expandable'
+import { IParticipant } from './Interfaces'
 
 interface IHistoryItem {
     id : number
@@ -36,13 +35,13 @@ function GetTime(item : IHistoryItem) : string {
 }
 
 function GetColumn(column : string) : string {
-    let out = column[0].toUpperCase();
+    let out = column[0].toUpperCase()
 
     for (let i = 1; i < column.length; i++) {
         out += (column[i] >= 'A' && column[i] <= 'Z' ? ' ' : '') + column[i]
     }
 
-    return out;
+    return out
 }
 
 class HistoryItem extends Component<{
@@ -76,7 +75,7 @@ class HistoryItem extends Component<{
                             break
                         case 'html':
                             value = <td dangerouslySetInnerHTML={{__html: value}}/>
-                            break;
+                            break
                         case 'subject':
                             value = <td>{`${value}`}</td>
                             break
@@ -140,7 +139,7 @@ class HistoryDay extends Component<{
 
         for (const item of this.props.items) {
             if (item.userId) {
-                members[this.props.app.getMemberById(item.userId).name] = true;
+                members[this.props.app.getMemberById(item.userId).name] = true
             }
         }
 
@@ -197,7 +196,7 @@ export class History extends Component<{
 
         for (const item of this.state.history) {
             if (days.length === 0 || GetDate(item) !== GetDate(days[days.length-1][0])) {
-                days.push([]);
+                days.push([])
             } 
 
             days[days.length-1].push(item)

@@ -1,6 +1,6 @@
-import { Component } from 'react';
-import * as React from 'react';
-import Tooltip from 'reactstrap/lib/Tooltip';
+import { Component } from 'react'
+import * as React from 'react'
+import Tooltip from 'reactstrap/lib/Tooltip'
 
 export class ToolTipIcon extends Component<{
     tooltip: any 

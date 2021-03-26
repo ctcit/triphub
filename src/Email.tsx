@@ -51,18 +51,22 @@ export class Email extends Component<{
         const onGet = (id: string): any => {
             return this.get(id);
         }
-        const onSave = (id: string, value: any): Promise<void> => {
+        const onSet = (id: string, value: any): void => {
             this.set(id, value);
+        }
+        const onSave = (id: string, value: any): Promise<void> => {
             return Promise.resolve();
         }
         const onGetValidationMessage = (id: string): any => {
-            const found: IValidation | undefined = validations.find(v => v.id === id && !v.ok);
+            const found: IValidation | undefined = validations.find(v => v.field === id && !v.ok);
             return found ? found.message : null;
         }
 
         const common = {
+            id: 'email',
             isLoading: this.props.isLoading,
             'onGet': onGet,
+            'onSet': onSet,
             'onSave': onSave,
             'onGetValidationMessage': onGetValidationMessage
         }
@@ -71,17 +75,17 @@ export class Email extends Component<{
             <Container key='detail' fluid={true}>
                 <Row>
                     <Col>
-                        <TextAreaInputControl key='recipients' id='recipients' label='Recipients' readOnly={true} {...common}/>
+                        <TextAreaInputControl key='recipients' field='recipients' label='Recipients' readOnly={true} {...common}/>
                     </Col>
                 </Row>
                 <Row>
                     <Col>
-                        <InputControl key='subject' id='subject' label='Subject' type='text' {...common} />
+                        <InputControl key='subject' field='subject' label='Subject' type='text' {...common} />
                     </Col>
                 </Row>
                 <Row>
                     <Col>
-                        <TextAreaInputControl key='body' id='body' label='Body' {...common} />
+                        <TextAreaInputControl key='body' field='body' label='Body' {...common} />
                     </Col>
                 </Row>
                 <Row>

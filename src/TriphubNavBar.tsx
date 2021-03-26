@@ -1,19 +1,19 @@
-import { Component } from 'react';
-import * as React from 'react';
-import { App } from './App';
-import Navbar from 'reactstrap/lib/Navbar';
-import { Role } from './Interfaces';
-import Nav from 'reactstrap/lib/Nav';
-import NavbarBrand from 'reactstrap/lib/NavbarBrand';
-import NavbarToggler from 'reactstrap/lib/NavbarToggler';
-import Collapse from 'reactstrap/lib/Collapse';
-import NavLink from 'reactstrap/lib/NavLink';
-import NavItem from 'reactstrap/lib/NavItem';
-import DropdownToggle from 'reactstrap/lib/DropdownToggle';
-import DropdownMenu from 'reactstrap/lib/DropdownMenu';
-import DropdownItem from 'reactstrap/lib/DropdownItem';
-import Dropdown from 'reactstrap/lib/Dropdown';
-import * as ReactDOM from 'react-dom';
+import { Component } from 'react'
+import * as React from 'react'
+import { App } from './App'
+import Navbar from 'reactstrap/lib/Navbar'
+import { Role } from './Interfaces'
+import Nav from 'reactstrap/lib/Nav'
+import NavbarBrand from 'reactstrap/lib/NavbarBrand'
+import NavbarToggler from 'reactstrap/lib/NavbarToggler'
+import Collapse from 'reactstrap/lib/Collapse'
+import NavLink from 'reactstrap/lib/NavLink'
+import NavItem from 'reactstrap/lib/NavItem'
+import DropdownToggle from 'reactstrap/lib/DropdownToggle'
+import DropdownMenu from 'reactstrap/lib/DropdownMenu'
+import DropdownItem from 'reactstrap/lib/DropdownItem'
+import Dropdown from 'reactstrap/lib/Dropdown'
+import * as ReactDOM from 'react-dom'
 
 export const PriorityNavItem = (props: any) => {  
     const el: HTMLElement|null = document.getElementById('priority-nav-items') 
@@ -37,11 +37,11 @@ export class TriphubNavbar extends Component<{
     }
 
     public componentDidMount() {
-        window.addEventListener("resize", this.setWidth);
+        window.addEventListener("resize", this.setWidth)
     }
 
     public componentWillUnmount() {
-        window.removeEventListener("resize", () => this.setWidth);
+        window.removeEventListener("resize", () => this.setWidth)
     }
 
     public render() {
@@ -51,15 +51,14 @@ export class TriphubNavbar extends Component<{
         const newtrip = () => this.props.app.setPath('/newtrip')
         const newsletter = () => this.props.app.setPath('/newsletter')
         const newsocial = () => this.props.app.setPath('/newsocial')
-        const toggle = () => this.setState({isOpen: !this.state.isOpen});
-        const togglePriviledgesDropdown = () => this.setState({priviledgesDropdownIsOpen: !this.state.priviledgesDropdownIsOpen});
+        const toggle = () => this.setState({isOpen: !this.state.isOpen})
+        const togglePriviledgesDropdown = () => this.setState({priviledgesDropdownIsOpen: !this.state.priviledgesDropdownIsOpen})
         const setAdminPrivileges = () => this.props.app.setState({role:Role.Admin})
         const setTripLeaderPrivileges = () => this.props.app.setState({role:Role.TripLeader})
         const setMemberPrivileges = () => this.props.app.setState({role:Role.Member})
         const setNonMemberPrivileges = () => this.props.app.setState({role:Role.NonMember})
-        const me = this.props.app.getMe()
 
-        const navItems: JSX.Element[] = [];
+        const navItems: JSX.Element[] = []
 
         if (this.props.app.state.inIFrame && this.props.app.state.path !== '' && this.props.app.state.path !== '/') {
             navItems.push(
@@ -144,11 +143,11 @@ export class TriphubNavbar extends Component<{
         }
 
         // rough calculation of nav items that fit onto the navbar
-        const bannerAndToggleApproxWidth = 230;
-        const navItemAprroxWidth = 170; // 120 - 200px
-        const nonCollapsedCount = Math.min(navItems.length, Math.floor(Math.max(0, this.state.windowWidth - bannerAndToggleApproxWidth) / navItemAprroxWidth));
-        const nonCollapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? navItems : navItems.slice(0, nonCollapsedCount);
-        const collapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? [] : navItems.slice(nonCollapsedCount);
+        const bannerAndToggleApproxWidth = 230
+        const navItemAprroxWidth = 170 // 120 - 200px
+        const nonCollapsedCount = Math.min(navItems.length, Math.floor(Math.max(0, this.state.windowWidth - bannerAndToggleApproxWidth) / navItemAprroxWidth))
+        const nonCollapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? navItems : navItems.slice(0, nonCollapsedCount)
+        const collapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? [] : navItems.slice(nonCollapsedCount)
     
         return (
             <Navbar color='primary' inverse={true} toggleable={true} expand={false}>
@@ -169,5 +168,5 @@ export class TriphubNavbar extends Component<{
         )
     }
 
-    private setWidth = () => this.setState({windowWidth: window.innerWidth});
+    private setWidth = () => this.setState({windowWidth: window.innerWidth})
 }

@@ -1,20 +1,18 @@
 import * as React from 'react';
 import { Button, Navbar, ButtonGroup, ListGroup, ListGroupItem } from 'reactstrap';
 import { Component } from 'react';
-import { IMember, IParticipant } from './Interfaces';
+import { IParticipant } from './Interfaces';
 import { Spinner } from './Widgets';
 import { Trip } from './Trip';
 import { App } from './App';
 import { GetDisplayPriority } from './Utilities';
 import { TripParticipant } from './TripParticipant';
-import { ButtonWithTooltip } from './MapEditor';
 
 export class TripParticipants extends Component<{
     trip: Trip,
     app: App,
     isLoading: boolean
 }, {
-    namePrefix?: string
 }> {
 
     public participant: React.RefObject<any>
@@ -36,12 +34,12 @@ export class TripParticipants extends Component<{
     public signUpTramper() {
         const participants = this.props.trip.state.participants
 
-        this.props.trip.setState({ participants: [this.props.trip.blankTramper(), ...participants] })
+        this.props.trip.setState({ participants: [...participants, this.props.trip.blankTramper] })
     }
 
     public signMeUp() {
 
-        if (!this.props.app.getMe().id) {
+        if (!this.props.app.me.id) {
             const newMembersRep = this.props.app.state.members[0]
             alert(`Non members are most welcome to join club trips.\n` +
                 `Please either:\n` +
@@ -53,7 +51,8 @@ export class TripParticipants extends Component<{
         }
 
         this.props.trip.setState({ isSaving: true })
-        this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants', this.props.trip.signMeUpTramper(), true)
+        this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants',
+            this.props.trip.signMeUpTramper, true)
             .then(this.props.trip.requeryParticipants)
     }
 
@@ -66,7 +65,7 @@ export class TripParticipants extends Component<{
     }
 
     public signUpTramperCancel() {
-        this.props.trip.setState({ participants: this.props.trip.state.participants.filter((p: any) => p.id !== -1) })
+        this.props.trip.setState({ participants: this.props.trip.state.participants.filter(p => p.id !== -1) })
     }
 
     public toggleLegend() {
@@ -74,7 +73,7 @@ export class TripParticipants extends Component<{
     }
 
     public setPosition(id: number, target?: IParticipant, showMenu?: boolean): Promise<any> {
-        const info = this.props.trip.getParticipantsInfo()
+        const info = this.props.trip.participantsInfo
         const source = info.all.find(p => p.id === id) as IParticipant
         const sourceIndex = info.moveable.indexOf(source)
         let displayPriority = source.id
@@ -122,10 +121,10 @@ export class TripParticipants extends Component<{
 
     public render() {
 
-        const me = this.props.app.getMe()
+        const me = this.props.app.me
         const anon = !me.id
-        const info = this.props.trip.getParticipantsInfo()
-        const isPrivileged = this.props.trip.canEditTrip()
+        const info = this.props.trip.participantsInfo
+        const isPrivileged = this.props.trip.canEditTrip
         const isOpen = this.props.trip.state.trip.isOpen || isPrivileged
         const isNewTrip = this.props.trip.props.isNew
         const hasNewTramper = !!info.all.find((p: IParticipant) => p.id === -1)
@@ -134,23 +133,26 @@ export class TripParticipants extends Component<{
         const onDropOnWaitlist = (ev: any) => this.setPosition(parseInt(ev.dataTransfer.getData('id'), 10), undefined)
         const showLegend = this.props.trip.state.showLegend
         const legendIcon = (className: string, description: string) =>
-            <div><span className={className}/>{description}</div>
+            <div><span className={className} />{description}</div>
         const legendButton = (className: string, description: string) =>
-            <div><Button disabled={true}><span className={className}/></Button>{description}</div>
+            <div><Button disabled={true}><span className={className} /></Button>{description}</div>
 
         return [
             <Navbar key='navbar' color='light' light={true} expand='md'>
                 {[
-                    <Button key={'signmeup' + info.all.length} onClick={this.signMeUp} hidden={this.props.isLoading || isNewTrip || imOnList || !isOpen}>
+                    <Button key={'signmeup' + info.all.length} onClick={this.signMeUp}
+                        hidden={this.props.isLoading || isNewTrip || imOnList || !isOpen}>
                         <span className='fa fa-pen wiggle' />
                         {this.props.trip.state.isSaving ? ['Signing up ', Spinner] : 'Sign me up!'}
                         {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
-                    <Button key={'signup' + info.all.length} onClick={this.signUpTramper} hidden={this.props.isLoading || isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
+                    <Button key={'signup' + info.all.length} onClick={this.signUpTramper}
+                        hidden={this.props.isLoading || isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
                         <span className='fa fa-user-plus' /> Sign up a tramper
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
-                    <ButtonGroup key={'signupcomplete' + info.all.length} hidden={this.props.isLoading || isNewTrip || !hasNewTramper || !isOpen}>
+                    <ButtonGroup key={'signupcomplete' + info.all.length}
+                        hidden={this.props.isLoading || isNewTrip || !hasNewTramper || !isOpen}>
                         <Button onClick={this.signUpTramper} disabled={true}>
                             <span className='fa fa-user-plus' /> Sign up a tramper:
                     </Button>
@@ -170,51 +172,49 @@ export class TripParticipants extends Component<{
                 ]}
             </Navbar>,
             (showLegend ? <div className='participant-buttons-legend'>
-                {legendIcon('fas fa-star','This person is the leader')}
-                {legendIcon('fas fa-podcast','This person is taking a Personal Location Beacon')}
-                {legendIcon('fas fa-car','This person is taking a Car')}
-                {legendIcon('fas fa-comment','There is special logistical information here')}
-                {legendIcon('fas fa-id-badge','This person is not a member of the CTC')}
-                {legendButton('fa fa-angle-up','Moves the person up the list')}
-                {legendButton('fa fa-angle-down','Moves the person down the list')}
-                {legendButton('fa fa-trash','Takes the person off the list')}
-                {legendButton('fa fa-sm fa-pen','Puts the person back on the list')}
-                {legendButton('fa fa-sm fa-user-plus','Puts the person on the wait-list')}
-                {legendButton('fa fa-sm fa-user-times','Takes the person off the wait-list')}
-                {legendButton('fa fa-sm fa-phone','Updates emergency contact details')}
+                {legendIcon('fas fa-star', 'This person is the leader')}
+                {legendIcon('fas fa-podcast', 'This person is taking a Personal Location Beacon')}
+                {legendIcon('fas fa-car', 'This person is taking a Car')}
+                {legendIcon('fas fa-comment', 'There is special logistical information here')}
+                {legendIcon('fas fa-id-badge', 'This person is not a member of the CTC')}
+                {legendButton('fa fa-angle-up', 'Moves the person up the list')}
+                {legendButton('fa fa-angle-down', 'Moves the person down the list')}
+                {legendButton('fa fa-trash', 'Takes the person off the list')}
+                {legendButton('fa fa-sm fa-pen', 'Puts the person back on the list')}
+                {legendButton('fa fa-sm fa-user-plus', 'Puts the person on the wait-list')}
+                {legendButton('fa fa-sm fa-user-times', 'Takes the person off the wait-list')}
+                {legendButton('fa fa-sm fa-phone', 'Updates emergency contact details')}
             </div> : null),
             <ListGroup key='participants'>
                 <ListGroupItem>
                     {
                         info.current.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip}
-                                owner={this} app={this.props.app} loading={this.props.isLoading} canWaitList={info.late.length !== 0} ref={this.participant}
-                                info={info} />)
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
+                                data={JSON.stringify(p)} trip={this.props.trip}
+                                owner={this} app={this.props.app} loading={this.props.isLoading}
+                                canWaitList={info.late.length !== 0} ref={this.participant} info={info} />)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={info.late.length === 0}>
                     <div onDragOver={onDragOver} onDrop={onDropOnWaitlist}><b>Waitlist</b></div>
                     {
                         info.late.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip}
-                                owner={this} app={this.props.app} loading={this.props.isLoading} canUnwaitList={true} info={info} />)
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
+                                data={JSON.stringify(p)} trip={this.props.trip}
+                                owner={this} app={this.props.app} loading={this.props.isLoading}
+                                canUnwaitList={true} info={info} />)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={isNewTrip || info.deleted.length === 0}>
                     <div onDragOver={onDragOver} onDrop={this.onDropOnDeleted}><b>Deleted</b></div>
                     {
                         info.deleted.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip}
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
+                                data={JSON.stringify(p)} trip={this.props.trip}
                                 owner={this} app={this.props.app} loading={this.props.isLoading} info={info} />)
                     }
                 </ListGroupItem>
             </ListGroup>,
-            <datalist key='memberlist' id='memberlist'>
-                {this.props.app.getMembers()
-                    .filter((m: IMember) => this.state.namePrefix && m.name.toUpperCase().startsWith(this.state.namePrefix.toUpperCase()))
-                    .filter((m: IMember, i: number) => i < 10)
-                    .map((m: any) => <option key={'datalistoption' + m.id} value={m.name} />)}
-            </datalist>
         ]
     }
 }

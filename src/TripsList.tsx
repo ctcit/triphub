@@ -1,21 +1,21 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './index.css';
-import { Component } from 'react';
-import * as React from 'react';
-import { App } from './App';
-import { Container, ButtonGroup } from 'reactstrap';
-import { BaseUrl } from '.';
-import { ITrip, TripGroup, TripApprovalState } from './Interfaces';
-import { GetDate, GetLength } from './Utilities';
-import './index.css';
-import Table from 'reactstrap/lib/Table';
-import { ToolTipIcon } from './ToolTipIcon';
-import { Spinner, Done } from './Widgets';
-import { Accordian } from './Accordian';
-import { ButtonWithTooltip } from './MapEditor';
-import { ExpandableTableRow } from './ExpandableTableRow';
-import { TripCoordinatorDashboard } from './TripCoordinatorDashboard';
-import Jumbotron from 'reactstrap/lib/Jumbotron';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import './index.css'
+import { Component } from 'react'
+import * as React from 'react'
+import { App } from './App'
+import { Container, ButtonGroup } from 'reactstrap'
+import { BaseUrl } from '.'
+import { ITrip, TripGroup, TripApprovalState } from './Interfaces'
+import { GetDate, GetLength } from './Utilities'
+import './index.css'
+import Table from 'reactstrap/lib/Table'
+import { ToolTipIcon } from './ToolTipIcon'
+import { Spinner, Done } from './Widgets'
+import { Accordian } from './Accordian'
+import { ButtonWithTooltip } from './MapEditor'
+import { ExpandableTableRow } from './ExpandableTableRow'
+import { TripCoordinatorDashboard } from './TripCoordinatorDashboard'
+import Jumbotron from 'reactstrap/lib/Jumbotron'
 
 class TripsLine extends Component<{
     owner: TripsGroup,
@@ -34,14 +34,14 @@ class TripsLine extends Component<{
         const app = this.props.owner.props.app
         const trip = this.props.trip
         const id = trip.id
-        const me = this.props.owner.props.app.getMe()
+        const me = this.props.owner.props.app.me
         
         let validation = app.validateTrip(trip).filter(i => !i.ok)
 
         const extractWarnings = (match:RegExp) => {
-            const errors = validation.filter(i => match.test(i.id))
-            validation = validation.filter(i => !match.test(i.id))
-            return errors.map((e,i)=> <ToolTipIcon key={i} icon='exclamation-triangle' id={id + 'warning' + e.id + '_' + i} 
+            const errors = validation.filter(i => match.test(i.field))
+            validation = validation.filter(i => !match.test(i.field))
+            return errors.map((e,i)=> <ToolTipIcon key={i} icon='exclamation-triangle' id={id + 'warning' + e.field + '_' + i} 
                                         tooltip={e.message} className='warning-icon'/>)
         }
 
@@ -111,12 +111,11 @@ export class TripsGroup extends Component<{
     public render(){
 
         const trips = this.props.trips
-        const id = 'tg' + trips[0].tripGroup
-        const me = this.props.app.getMe()
+        const me = this.props.app.me
 
         return  (
             <Container className={this.props.app.containerClassName()} fluid={true}>
-                <Accordian id={id} className='trip-group' headerClassName='trip-group-header' expanded={this.props.expanded}
+                <Accordian id={`tg${trips[0].tripGroup}`} className='trip-group' headerClassName='trip-group-header' expanded={this.props.expanded}
                     title={<span>
                             <b>{this.groupTitles.get(trips[0].tripGroup)}</b>
                             <span key='count' className='trip-count'> ({trips.length})</span>
@@ -164,12 +163,12 @@ export class TripsList extends Component<{
 
             const groups : ITrip[][] = []
 
-            groups[TripGroup.MyTrip] = [];
-            groups[TripGroup.OpenTrip] = [];
-            groups[TripGroup.ClosedTrip] = [];
-            groups[TripGroup.SuggestedTrip] = [];
-            groups[TripGroup.DeletedTrip] = [];
-            groups[TripGroup.RejectedTrip] = [];
+            groups[TripGroup.MyTrip] = []
+            groups[TripGroup.OpenTrip] = []
+            groups[TripGroup.ClosedTrip] = []
+            groups[TripGroup.SuggestedTrip] = []
+            groups[TripGroup.DeletedTrip] = []
+            groups[TripGroup.RejectedTrip] = []
 
             for (const item of data) {
                 groups[item.tripGroup as number].push(item)
@@ -177,7 +176,7 @@ export class TripsList extends Component<{
 
             this.setState({groups})
             this.props.app.setStatus('Loaded', 3000)
-            this.props.app.setState({isLoading:false});
+            this.props.app.setState({isLoading:false})
         })
     }
 
@@ -186,10 +185,10 @@ export class TripsList extends Component<{
     }
 
     public render(){
-        const isLoading = this.props.app.state.isLoading;
+        const isLoading = this.props.app.state.isLoading
         const groups = this.state.groups.filter((group:ITrip[]) => group.length)
-        const isAdmin = this.props.app.amAdmin()
-        const isTripLeader = this.props.app.amTripLeader()
+        const isAdmin = this.props.app.amAdmin
+        const isTripLeader = this.props.app.amTripLeader
         return isLoading ? 
             <Container key="loadingContainer" className={this.props.app.containerClassName() + "triphub-loading-container"}>
                 <Jumbotron key='loadingAlert' variant='primary'>

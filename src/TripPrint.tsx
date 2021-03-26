@@ -1,9 +1,9 @@
-import * as React from 'react';
-import { Component } from 'react';
-import { App } from './App';
-import { Trip } from './Trip';
-import { GetFullDate, GetLength } from './Utilities';
-import './index.css';
+import * as React from 'react'
+import { Component } from 'react'
+import { App } from './App'
+import { Trip } from './Trip'
+import { GetFullDate, GetLength } from './Utilities'
+import './index.css'
 
 export class TripPrint extends Component<{
     trip: Trip
@@ -16,7 +16,7 @@ export class TripPrint extends Component<{
 
     public render() {
         const trip = this.props.trip.state.trip
-        const info = this.props.trip.getParticipantsInfo()
+        const info = this.props.trip.participantsInfo
         const blanks = []
         const header = (text: string, len: number) => <th>{text + '\u00A0'.repeat(len - text.length)}</th>
         const logistics = info.current.filter(p => (p.logisticInfo || '') !== '')
@@ -25,7 +25,7 @@ export class TripPrint extends Component<{
         const printLines = this.props.app.state.config.printLines
 
         for (let i = info.current.length; i < Math.min(info.maxParticipants, printLines - footer); i++) {
-            blanks.push('blank' + i);
+            blanks.push('blank' + i)
         }
 
         return (

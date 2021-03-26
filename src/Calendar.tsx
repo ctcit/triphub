@@ -66,9 +66,9 @@ class CalendarWeek extends Component<{
                     const oldTrip = item.trip as ITrip
                     const newTrip = { ...oldTrip, [field]: GetDateString(date) } as ITrip
                     const before = this.props.calendar.props.app.validateTrip(oldTrip)
-                                            .find(i => i.id === field && !i.ok)
+                                            .find(i => i.field === field && !i.ok)
                     const after = this.props.calendar.props.app.validateTrip(newTrip)
-                                            .find(i => i.id === field && !i.ok)
+                                            .find(i => i.field === field && !i.ok)
 
                     if (!before && after &&
                         !window.confirm('Trip validation resulted in this message:\n\n' + after.message + '\n\nproceed anyway?')) {
@@ -169,8 +169,6 @@ export class Calendar extends Component<{
             state: StateFilter.Open,
             selected: 0, trips: [],
         }
-        this.processTrips = this.processTrips.bind(this)
-        this.requery = this.requery.bind(this)
         this.showItem = this.showItem.bind(this)
     }
 

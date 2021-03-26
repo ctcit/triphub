@@ -24,74 +24,70 @@ const Sections: Section[] = [
 ]
 
 class NoticeDetail extends Component<{
-    app: App,
+    app: App
     notice: INotice
 }, {
     isLoading: boolean
-}> {
+}> { 
 
     public app: App;
 
     constructor(props: any) {
         super(props)
-        this.state = {
-            isLoading: false
-        }
+        this.state = { isLoading: false }
         this.app = this.props.app
     }
 
     public render() {
         let validations: IValidation[] = this.validate(this.props.notice);
 
-        const onGet = (id: string): any => {
-            return this.props.notice[id];
+        const onGet = (field: string): any => {
+            return this.props.notice[field];
+        }
+
+        const onSet = (field: string, value: any): void => {
+            this.props.notice[field] = value;
         }
 
         const onSave = (id: string, value: any): Promise<void> => {
-            this.props.notice[id] = value;
             validations = this.validate(this.props.notice)
             // Don't actually save until the save button is pressed
             return Promise.resolve();
         }
 
-        const onGetValidationMessage = (id: string): any => {
-            const found: IValidation | undefined = validations.find(validation => validation.id === id && !validation.ok);
+        const onGetValidationMessage = (field: string): any => {
+            const found: IValidation | undefined = 
+                validations.find(validation => validation.field === field && !validation.ok);
             return found ? found.message : null;
         }
 
         const common = {
+            id: 'notice',
             readOnly: false,
             isLoading: this.state.isLoading,
             owner: this,
+            data: JSON.stringify(this.props.notice),
             'onGet': onGet,
+            'onSet': onSet,
             'onSave': onSave,
             'onGetValidationMessage': onGetValidationMessage
         }
 
-        const section_options = {}
-        for( const section of Sections )
-        {
-            section_options[section.name] = section.name
-        }
         return <div>
             <h2>Edit Notice</h2>
-            <InputControl id='title' label='Title' type='text' {...common} />
-            <InputControl id='date' label='Expiry Date' type='date' {...common} />
-            <SelectControl id='section' label='Section' options={section_options} {...common} />
-            <TextAreaInputControl id='text' label='Text' {...common} />
-            <SwitchControl id='publish' label='Publish' {...common} />
-            <datalist key='section_list' id='section_list'>
-                {Sections.map(section => <option value={section.name} key={section.name}>{section.name}</option>)
-                }
-            </datalist>
+            <InputControl field='title' label='Title' type='text' {...common} />
+            <InputControl field='date' label='Expiry Date' type='date' {...common} />
+            <SelectControl field='section' label='Section' options={Sections.map(s => s.name)} {...common} />
+            <TextAreaInputControl field='text' label='Text' {...common} />
+            <SwitchControl field='publish' label='Publish' {...common} />
         </div>;
     }
 
     private validate(notice:INotice): IValidation[] {
         return [
-            { id: 'title', ok: notice.title.length > 0, message: 'Must set a title!' },
-            { id: 'text', ok: notice.text.length > 0, message: 'Must set some body text!' },
-            { id: 'date', ok: IsValidDateString(notice.date), message: 'Expiry date is not valid' },
+            { field: 'title', ok: notice.title.length > 0, message: 'Must set a title!' },
+            { field: 'text', ok: notice.text.length > 0, message: 'Must set some body text!' },
+            { field: 'date', ok: IsValidDateString(notice.date), message: 'Expiry date is not valid' },
         ];
     }
 
@@ -171,7 +167,7 @@ export class NoticeList extends Component<{
                                         <td className="mobile-only"  onClick={onClick}/>
                                         <td onClick={onClick}>{notice.title}</td>
                                         <td onClick={onClick}>{notice.date}</td>
-                                        <td><SwitchControl id='publish' label='' isLoading={false} onGet={onGet}
+                                        <td><SwitchControl id='publish' field='publish' label='' isLoading={false} onGet={onGet}
                                             onSave={onSave} onGetValidationMessage={onGetValidationMessage} /></td>
                                         <td>
                                         {(index!==0) && <Button onClick={onUpClick}><span className='fa fa-arrow-up' style={{marginRight: '0'}}/></Button> }

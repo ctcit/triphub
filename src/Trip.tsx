@@ -162,10 +162,11 @@ export class Trip extends Component<{
         // First of the next month
         const openDate : Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
         // Friday in the week after the open date (or Wednesday for Socials)
-        const offset = (this.props.isNewSocial) ? 9 : 12
+        const offset = (this.props.isNewSocial) ? 10 : 12
         const closeDate : Date = AddDays(openDate, offset - openDate.getDay())
-        // The day after the close date (a Saturday)
-        const tripDate : Date = AddDays(closeDate, 1)
+        // For trips, The day after the close date (a Saturday)
+        // For socials, the trip date is the same as the close date
+        const tripDate : Date = (this.props.isNewSocial) ? closeDate : AddDays(closeDate, 1)
         const me = this.props.app.getMe()
 
         this.suggestedTrip = {

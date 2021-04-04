@@ -13,7 +13,7 @@ export class MapComponent extends MapCommon<{
     maxMapWidth: number
 },{
 }>{
-
+    private mapIsSetUp: boolean = false
     constructor(props:any) {
         super(props);
     }
@@ -22,7 +22,16 @@ export class MapComponent extends MapCommon<{
         this.setUpMap();
     }
 
-    public render(){
+    public componentDidUpdate() {
+        if (this.map && this.props.showMap && !this.mapIsSetUp) {
+            this.resizeMap(500, this.props.maxMapWidth);
+            this.fitBounds();
+            this.fitBounds(); // HACK - not sure why but first fitbounds() is not enough!
+            this.mapIsSetUp = true;
+        }
+    }
+
+    public render() {
 
         const onResizeMap = (e: React.SyntheticEvent, data: ResizeCallbackData) => {
             this.resizeMap(data.size.height, data.size.width);
@@ -49,8 +58,6 @@ export class MapComponent extends MapCommon<{
         super.setUpMap();
 
         this.props.setMapComponent(this);
-
-        this.resizeMap(500, 500);
     }
 
 }

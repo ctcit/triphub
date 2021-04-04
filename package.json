@@ -21,6 +21,7 @@
     "leaflet-gpx": "^1.4.0",
     "luxon": "^1.22.0",
     "match-sorter": "^6.0.2",
+    "memoize-one": "^5.1.1",
     "react": "^16.13.1",
     "react-app-polyfill": "^2.0.0",
     "react-dnd": "^5.0.0",

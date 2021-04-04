@@ -246,10 +246,13 @@ export class MapCommon<P extends {
         let bounds: L.LatLngBounds | undefined;
         if (this.routes.length > 0) {
             this.routes.forEach((route: L.Polyline) => {
-                if (!bounds) {
-                    bounds = route.getBounds();
-                } else {
-                    bounds.extend(route.getBounds());
+                const thisBounds: L.LatLngBounds = route.getBounds();
+                if (thisBounds.isValid()) {
+                    if (!bounds) {
+                        bounds = thisBounds;
+                    } else {
+                        bounds.extend(thisBounds);
+                    }
                 }
             })
         } else {

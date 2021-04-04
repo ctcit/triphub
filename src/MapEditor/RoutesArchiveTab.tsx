@@ -29,8 +29,8 @@ export class RoutesArchiveTab extends Component<{
     currentRouteIndex: number,
     canUndoLastRouteEdit: boolean,
     saveRouteChange: (routesAsLatLngs?: Array<Array<[number, number]>>, currentRouteIndex?: number) => Promise<void>,
-    undoLastRouteEdit: () => Promise<void>,
-    getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined> // TODO - replace with service
+    undoLastRouteEdit: () => Promise<[Array<Array<[number, number]>>, number, boolean]>, 
+    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     activated: boolean,
     archivedRouteSuggestions: Tag[],
@@ -38,7 +38,7 @@ export class RoutesArchiveTab extends Component<{
 }>{
     protected archivedRoutesLayerGroup: L.LayerGroup<ArchivedRoutePolygon[]>;
     private mapIsSetup: boolean = false;
-    private infoControl: L.Control;;
+    private infoControl: L.Control;
 
 
     constructor(props:any) {
@@ -55,7 +55,7 @@ export class RoutesArchiveTab extends Component<{
         };
     }
 
-    public render(){
+    public render() {
         if (this.props.mapComponent && !this.mapIsSetup) {
             this.setUpMap();
             this.mapIsSetup = true;
@@ -75,13 +75,13 @@ export class RoutesArchiveTab extends Component<{
         }
         const undoLastRouteEdit2 = async () => {
             const mapComponent = (this.props.mapComponent as MapComponent);
-            await this.props.undoLastRouteEdit();
+            await this.undoLastRouteEdit();
             this.infoControl.addTo(mapComponent.map);
             this.setDefaultInfoControlMessage();
         }
         const handleArchivedRouteDelete = () => null;
         const handleArchivedRouteAddition = (tag: Tag) => {
-            this.selectArchivedRoute(tag.id);
+            this.selectArchivedRoute(parseInt(tag.id, 10));
         }
 
         return (
@@ -114,10 +114,10 @@ export class RoutesArchiveTab extends Component<{
                         <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>
                     </Col>
                 </Row>
-        </TabPane>
-        )
+            </TabPane>
+        );
     }
-
+    
     public setUpMap(): void {
         const mapComponent = (this.props.mapComponent as MapComponent);
         mapComponent.setRoutesFromLatLngs(this.props.routesAsLatLngs);
@@ -133,9 +133,8 @@ export class RoutesArchiveTab extends Component<{
         infoControl.update = (html: string) => {
             infoControl._div.innerHTML = html;
         };
-
-        this.showArchivedRoutes();
     }
+
 
     // -------------------------------------------------------
     // Routes Archive
@@ -200,13 +199,20 @@ export class RoutesArchiveTab extends Component<{
         }
     }
     
-    private selectArchivedRoute(archivedRouteId: string) {
+    private selectArchivedRoute(archivedRouteId: number) {
+        this.setState({ busy: true });
         const mapComponent = (this.props.mapComponent as MapComponent);
         this.props.getArchivedRoute(archivedRouteId)
-            .then((archivedRoute: IArchivedRoute) => {
-                mapComponent.importGpx(archivedRoute.gpx);
+            .then(async (archivedRoute: IArchivedRoute) => {
+                let routesAsLatLngs: Array<Array<[number, number]>> = mapComponent.getRoutesAsLatLngs();
+                routesAsLatLngs = routesAsLatLngs.concat(archivedRoute.routes);
+                mapComponent.setRoutesFromLatLngs(routesAsLatLngs);
+                mapComponent.fitBounds();
+                await this.saveRouteChange(true, true);
+            })
+            .finally(() => {
+                this.setState({ busy: false });
             });
-
     }
 
     private setDefaultInfoControlMessage(): void {
@@ -215,50 +221,21 @@ export class RoutesArchiveTab extends Component<{
         infoControl.update(defaultInfoControlMessage);
     }
 
-    // private updateArchivedRouteSummary() {
-    //     this.setState({ busy: true });
-
-    //     Object.keys(this.props.archivedRoutesById).map((archivedRouteId: string) => {
-    //         this.props.getArchivedRoute(archivedRouteId)
-    //             .then((archivedRoute: IArchivedRoute) => {
-    //                 const gpxLatLngsArray: Array<Array<[number, number]>> = [];
-    //                 if (archivedRoute.gpx) {
-    //                     const tolerance = this.getTolerance(10);
-    //                     const decimalPlaces = 3;
-    //                     new L.GPX(archivedRoute.gpx, {
-    //                         async: true, 
-    //                         polyline_options: {},
-    //                         gpx_options:{
-    //                             parseElements: ['track', 'route'] as any // yuk!
-    //                         },
-    //                         marker_options: {}
-    //                     }).on('addline', (event: any) => {
-    //                         const gpxLatLngs = (event.line as L.Polyline).getLatLngs() as L.LatLng[];
-    //                         const generalizedLatLngs = this.generalize(gpxLatLngs, tolerance);
-    //                         if (generalizedLatLngs.length > 0) {
-    //                             gpxLatLngsArray.push(generalizedLatLngs);
-    //                         }
-    //                     }).on('loaded', (event: Event) => {
-    //                         const routesSummary: string = JSON.stringify(gpxLatLngsArray.map((gpxLatLngs: L.LatLng[]) => {
-    //                             return gpxLatLngs.map((latLng: L.LatLng) => {
-    //                                 return [parseFloat(latLng.lat.toFixed(decimalPlaces)), parseFloat(latLng.lng.toFixed(decimalPlaces))]
-    //                             })
-    //                         }));
-    //                         console.log(routesSummary);
-    //                         this.props.updateArchivedRouteSummary(archivedRouteId, routesSummary)
-    //                             .then(() => {
-    //                                 this.setState({invalidGpxFile: false, busy: false });
-    //                             });
-
-    //                     }).on('error', (event: any) => {
-    //                         this.setState({invalidGpxFile: true, busy: false })
-    //                         alert('Error loading file: ' + event.err);
-    //                     });                    
-    //                 }
-    //             });
-    //     });
-    // }
-
+    private async saveRouteChange(routesChanged: boolean = false, currentRouteIndexChanged: boolean = false): Promise<void> {
+        const mapComponent = (this.props.mapComponent as MapComponent);
+        if (routesChanged || currentRouteIndexChanged) {
+            mapComponent.adjustRoutePositionIndicators(true);
+        }
+        const routesAsLatLngs: Array<Array<[number, number]>> = mapComponent.getRoutesAsLatLngs();
+        this.props.saveRouteChange(routesAsLatLngs, mapComponent.currentRouteIndex);
+    }
+    
+    private async undoLastRouteEdit(): Promise<void> {
+        const [routesAsLatLngs, currentRouteIndex, canUndoLastRouteEdit] = await this.props.undoLastRouteEdit();
+        const mapComponent = (this.props.mapComponent as MapComponent);
+        mapComponent.setRoutesFromLatLngs(routesAsLatLngs);
+        mapComponent.currentRouteIndex = currentRouteIndex;
+    }
 
 }
 

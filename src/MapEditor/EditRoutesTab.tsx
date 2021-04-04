@@ -13,6 +13,7 @@ import { ButtonWithTooltip } from '../ButtonWithTooltip';
 import { IMap } from 'src/Interfaces';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
+import memoize from 'memoize-one';
 
 export class EditRoutesTab extends Component<{
     isActiveTab: boolean,
@@ -22,7 +23,7 @@ export class EditRoutesTab extends Component<{
     currentRouteIndex: number,
     canUndoLastRouteEdit: boolean,
     saveRouteChange: (routesAsLatLngs: Array<Array<[number, number]>>, currentRouteIndex?: number) => Promise<void>,
-    undoLastRouteEdit: () => Promise<void> 
+    undoLastRouteEdit: () => Promise<[Array<Array<[number, number]>>, number, boolean]> 
 },{
     activated: boolean,
     splitMode: boolean,
@@ -30,6 +31,16 @@ export class EditRoutesTab extends Component<{
     invalidGpxFile: boolean,
     busy: boolean
 }>{
+
+    // public setRoutesFromLatLngs = memoize(
+    //     (mapIsSetup, routesAsLatLngs, currentRouteIndex) => {
+    //         if (mapIsSetup) {
+    //             (this.props.mapComponent as MapComponent).setRoutesFromLatLngs(routesAsLatLngs);
+    //             (this.props.mapComponent as MapComponent).currentRouteIndex = currentRouteIndex;
+    //         }
+    //     }
+    // );
+    
     private mapIsSetup: boolean = false;
     private infoControl: L.Control;
 
@@ -65,6 +76,7 @@ export class EditRoutesTab extends Component<{
                 this.setState({activated: false});
             }
         }
+        // this.setRoutesFromLatLngs(this.mapIsSetup, this.props.routesAsLatLngs, this.props.currentRouteIndex);
 
         const addRoute = async () => {
             await this.endRoute();
@@ -119,7 +131,7 @@ export class EditRoutesTab extends Component<{
         }
         const undoLastRouteEdit = async () => {
             await this.endRoute();
-            await this.props.undoLastRouteEdit();
+            await this.undoLastRouteEdit();
             await this.continueRoute();
         }
         const importGpx = async (e: any) => {
@@ -263,6 +275,8 @@ export class EditRoutesTab extends Component<{
             ((currentRoute as any).editor as L.PolylineEditor).continueForward();
         } else {
             await this.addRoute();
+            const currentRoute = mapComponent.routes[this.props.currentRouteIndex];
+            this.setRouteEventsOn(currentRoute);
         }
         mapComponent.adjustRoutePositionIndicators(true);
         this.setState({ splitMode: false });
@@ -436,6 +450,13 @@ export class EditRoutesTab extends Component<{
         }
         const routesAsLatLngs: Array<Array<[number, number]>> = mapComponent.getRoutesAsLatLngs();
         this.props.saveRouteChange(routesAsLatLngs, mapComponent.currentRouteIndex);
+    }
+
+    private async undoLastRouteEdit(): Promise<void> {
+        const [routesAsLatLngs, currentRouteIndex, canUndoLastRouteEdit] = await this.props.undoLastRouteEdit();
+        const mapComponent = (this.props.mapComponent as MapComponent);
+        mapComponent.setRoutesFromLatLngs(routesAsLatLngs);
+        mapComponent.currentRouteIndex = currentRouteIndex;
     }
 
     private setRouteEventsOn(route: L.Polyline) {

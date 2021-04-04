@@ -320,6 +320,10 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             return GetRoute($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $id);
         case "POST routes":
             return ApiPost($con, UserIdIfHasRoleOrDie($con,"Admin"),$table,$input);
+        case "DELETE routes/{routeId}":
+            UserIdIfHasRoleOrDie($con,"Admin");
+            SqlExecOrDie($con,"DELETE FROM $table WHERE id = $id");
+            return Array("Route $id deleted");    
         case "PUT routes/{routeId}":
             return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
         case "GET routesroutearchive":

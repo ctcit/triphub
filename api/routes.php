@@ -23,7 +23,7 @@ function GetRoutes($con, $userid)
             r.creationDate,
             r.gpxFileName,
             r.bounds,
-            r.SummarizedRoutes
+            r.summarizedRoutes
          FROM $routesTable r 
          ORDER BY r.id");
 }
@@ -47,7 +47,6 @@ function GetRoute($con, $userid, $id)
             r.date,
             r.creationDate,
             r.gpxFileName,
-            r.gpx,
             r.bounds,
             r.routes,
             r.summarizedRoutes,

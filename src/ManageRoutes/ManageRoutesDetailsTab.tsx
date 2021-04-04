@@ -60,7 +60,7 @@ export class ManageRoutesDetailsTab extends Component<{
 
                 <Row>
                     <Col>
-                        <TextAreaInputControl id='description' label='Description' rows={20} {...common}/>
+                        <TextAreaInputControl id='description' label='Description' style={{minHeight: '350px'}} rows={1} {...common}/>
                     </Col>
                 </Row>
 

@@ -1,17 +1,21 @@
 import * as React from 'react';
-import { Column, Row, useExpanded, useFilters, useGroupBy, usePagination, useSortBy, useRowSelect, useTable } from "react-table";
+import { Column, useExpanded, useFilters, useGroupBy, usePagination, useSortBy, useRowSelect, useTable } from "react-table";
 import { IArchivedRoute } from 'src/Interfaces';
 import { Table } from 'reactstrap';
 import { useEffect } from 'react';
+import { MdAddCircle, MdEdit, MdLanguage } from 'react-icons/md';
+import * as L from 'leaflet';
+
 export interface IManageRoutesTableProps {
-    routes: IArchivedRoute[] 
-    enableSorting?: boolean
+    routes: IArchivedRoute[]; 
+    bounds: L.LatLngBounds | undefined;
+    enableSorting?: boolean;
     hideHeaders?: boolean;
-    onRoutesSelected: (routes: IArchivedRoute[]) => any
+    onRoutesSelected: (routes: IArchivedRoute[]) => any;
 }
 
 export function ManageRoutesTable(props: IManageRoutesTableProps) {
-    const data = React.useMemo<IArchivedRoute[]>(() => props.routes, []);
+    const data = props.routes;
     const columns = React.useMemo<Array<Column<IArchivedRoute>>>(() => [{
             Header: 'Date',
             accessor: 'date',
@@ -25,6 +29,27 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
             {
             Header: 'Source',
             accessor: 'source',
+            Filter: SelectColumnFilter,
+            filter: 'equals'
+            },
+            {
+            Header: 'B',
+            accessor: (route: IArchivedRoute) => {
+              if (!props.bounds || !route.bounds) {
+                return '-';
+              } else {
+                const routeBounds = route.bounds as [[number, number], [number, number]];
+                return (props.bounds as L.LatLngBounds).overlaps(routeBounds) ? 'Y' : ' ';
+              }
+            },
+            Filter: SelectColumnFilter,
+            filter: 'equals'
+            },
+            {
+            Header: 'R',
+            accessor: (route: IArchivedRoute) => {
+              return route.id === 0 && route.ctcRoutesId > 0 ? 'Yes' : 'No';
+            },
             Filter: SelectColumnFilter,
             filter: 'equals'
             }], []);
@@ -76,7 +101,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         setPageSize,
         canPreviousPage,
         canNextPage,
-        selectedFlatRows    
+        toggleAllRowsSelected
     } = useTable<IArchivedRoute>({ 
       columns, 
       data,
@@ -84,6 +109,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         pageIndex: 0, 
         pageSize: 10
       },
+      autoResetSelectedRows: true,
       defaultColumn, // Be sure to pass the defaultColumn option
       filterTypes
     }, 
@@ -95,23 +121,25 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
       useRowSelect,
       hooks => {
         hooks.visibleColumns.push(visibleColumns => [
-          // Let's make a column for selection
+          // column for selection
           {
             id: 'selection',
             // The header can use the table's getToggleAllRowsSelectedProps method
             // to render a checkbox
-            Header: ({ getToggleAllRowsSelectedProps }) => (
+            Header: ({ getToggleAllPageRowsSelectedProps }) => (
               <div>
-                <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+                <IndeterminateCheckbox {...getToggleAllPageRowsSelectedProps()} />
               </div>
             ),
             // The cell can use the individual row's getToggleRowSelectedProps method
             // to the render a checkbox
-            Cell: ({ row }: any) => (
-              <div>
-                <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
-              </div>
-            ),
+            Cell: ({ row }: any) => {
+              return (
+                  <div>
+                    <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
+                  </div>
+                )
+              },
           },
           ...visibleColumns,
         ])
@@ -133,6 +161,16 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
     };
     const onSetPageSizeChange = (e: any) => {
       setPageSize(Number(e.target.value))
+    };
+
+
+    const onRowClick = (e: any) => {
+      // if CTRL key pressed, then multi-select rows; else single-select
+      const rowId = e.currentTarget.dataset.item;
+      // const row = data[rowId];
+      if (!e.ctrlKey && !Object.keys(selectedRowIds).find(selectedRowId => selectedRowId === rowId)) {
+        toggleAllRowsSelected(false);
+      }
     };
 
     return (
@@ -216,7 +254,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
               page.map((row: any) => {
                 prepareRow(row);
                 return (
-                  <tr key={row.id} {...row.getRowProps()} data-item={row.id}>
+                  <tr key={row.id} {...row.getRowProps()} data-item={row.id} onClick={onRowClick}>
                     {
                       row.cells.map((cell: any) => {
                         return (

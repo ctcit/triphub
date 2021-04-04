@@ -20,12 +20,14 @@ export class ManageRoutes extends Component<{
         routes: IArchivedRoute[]
         isLoadingRoute: boolean,
         selectedRoutes: IArchivedRoute[]
-        mergedRoutes: IArchivedRoute,
+        mergedRoutes: IArchivedRoute
     }> {
 
     public app : App;
     private nz50MapsBySheet: { [mapSheet: string] : IMap } = {};
     private archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute } = {};
+    private bounds: L.LatLngBounds | undefined = undefined;
+
 
     constructor(props:any){
         super(props)
@@ -80,34 +82,56 @@ export class ManageRoutes extends Component<{
 
         const {isLoading} = this.state
 
-        const onRoutesSelected = (routes: IArchivedRoute[]) => {
-            this.setSelectedRoutes(routes);
+        const onRoutesSelected = async (routes: IArchivedRoute[]) => {
+            await this.setSelectedRoutes(routes);
         };
 
         // TODO Move to service
-        const getArchivedRoute = (archivedRouteId: string): Promise<IArchivedRoute | undefined> =>  {
+        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
             return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
         }
 
-        // const updateArchivedRouteSummary = (archivedRouteId: string, routeSummary: string): Promise<void> =>  {
+        // const updateArchivedRouteSummary = (archivedRouteId: number, routeSummary: string): Promise<void> =>  {
         //     return this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
         // }
 
-        const onSave = (route: IArchivedRoute): Promise<any> => {
-            if (route.id) {
-                return this.app.triphubApiCall('PUT', BaseUrl + '/routes/' + route.id, route )
-                    .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
+        const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
+            let response: IArchivedRoute[];
+            if (newRoute.id > 0) {
+                response = await this.app.triphubApiCall('PUT', BaseUrl + '/routes/' + newRoute.id, newRoute );
             } else {
-                return this.app.triphubApiCall('POST', BaseUrl + '/routes', route )
-                    .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
+                response = await this.app.triphubApiCall('POST', BaseUrl + '/routes', newRoute );
+            }
+            if (response && response.length > 0) {
+                response.forEach((route: IArchivedRoute) => {
+                    route.source = "Routes";
+                })
+                this.setState({
+                    routes: response.concat(this.state.routes)
+                });
+                await this.setSelectedRoutes(response);
+            }
+            return Promise.resolve()
+        }
 
+        const onDelete = async (routeToDelete: IArchivedRoute): Promise<void> => {
+            if (routeToDelete.id > 0) {
+                await this.app.triphubApiCall('DELETE', BaseUrl + '/routes/' + routeToDelete.id );
+                this.setState({
+                    routes: this.state.routes.filter(route => route.id !== routeToDelete.id)
+                });
+                await this.setSelectedRoutes([]);
             }
             return Promise.resolve()
         }
 
         const onGetValidationMessage = (): any => {
             return null;
+        }
+
+        const onBoundsChanged = (bounds: L.LatLngBounds) => {
+            this.bounds = bounds;
         }
 
         return [
@@ -122,6 +146,7 @@ export class ManageRoutes extends Component<{
                                     routes={this.state.routes} 
                                     enableSorting={true}
                                     onRoutesSelected={onRoutesSelected}
+                                    bounds={this.bounds}
                                 />  
                             </Col>
                             <Col sm={6} md={6}>
@@ -140,11 +165,13 @@ export class ManageRoutes extends Component<{
                                     <ManageRoutesMap 
                                         route={this.state.mergedRoutes}
                                         onSave={onSave}
+                                        onDelete={onDelete}
                                         leafletMapId='manageroutesmap'
                                         nz50MapsBySheet={this.nz50MapsBySheet} 
                                         archivedRoutesById={this.archivedRoutesById}
                                         getArchivedRoute={getArchivedRoute}
                                         readOnly={this.state.isLoadingRoute}
+                                        onBoundsChanged={onBoundsChanged}
                                     />
                                 </Row>
                                 <Row>
@@ -158,10 +185,10 @@ export class ManageRoutes extends Component<{
         ]
     }
 
-    private setSelectedRoutes(routes: IArchivedRoute[]): void {
+    private async setSelectedRoutes(routes: IArchivedRoute[]): Promise<void> {
         this.setState({isLoadingRoute: true});
         const promises: Array<Promise<void>> = routes.map((route: IArchivedRoute) => this.fillRouteDetails(route));
-        Promise.all(promises)
+        await Promise.all(promises)
         .then(() => {
             const mergedRoutes = this.mergeRoutes(routes);
             this.setState({selectedRoutes: routes, mergedRoutes});
@@ -206,7 +233,7 @@ export class ManageRoutes extends Component<{
         }
         if (detailedRoute.routes) {
             if (!detailedRoute.bounds || detailedRoute.bounds.length === 0) {
-                detailedRoute.bounds = this.bounds(detailedRoute.routes);
+                detailedRoute.bounds = this.calculateBounds(detailedRoute.routes);
             }
             if (!detailedRoute.summarizedRoutes || detailedRoute.summarizedRoutes.length === 0) {
                 detailedRoute.summarizedRoutes = this.summarizedRoutes(detailedRoute.routes);
@@ -215,7 +242,7 @@ export class ManageRoutes extends Component<{
         return detailedRoute;
 }
 
-    private bounds(routes: Array<Array<[number, number]>>): Array<[number, number]> {
+    private calculateBounds(routes: Array<Array<[number, number]>>): Array<[number, number]> {
         if (routes.length === 0 || routes[0].length === 0) {
             return [];
         }
@@ -277,26 +304,35 @@ export class ManageRoutes extends Component<{
 
     private mergeRoutes(routes: IArchivedRoute[]): IArchivedRoute {
         return {
-            id: "",
-            memberId: this.singleValue(routes.map(route => route.memberId)), 
-            tripHubId: this.singleValue(routes.map(route => route.tripHubId)),
-            ctcRoutesId: this.singleValue(routes.map(route => route.ctcRoutesId)),
-            tripReportsId: this.singleValue(routes.map(route => route.tripReportsId)),
+            id: this.singleIdValue(routes.map(route => route.id)), 
+            memberId: this.singleIdValue(routes.map(route => route.memberId)), 
+            tripHubId: this.singleIdValue(routes.map(route => route.tripHubId)),
+            ctcRoutesId: this.singleIdValue(routes.map(route => route.ctcRoutesId)),
+            tripReportsId: this.singleIdValue(routes.map(route => route.tripReportsId)),
             source: "Routes",
             title: this.concatValues(routes.map(route => route.title), "; "),
             description: this.concatValues(routes.map(route => route.description), "\r\r"),
             date: this.singleValue(routes.map(route => route.date)),
-            creationDate: "",
+            creationDate: (new Date()).toISOString().substr(0, 10),
             gpxFilename: this.singleValue(routes.map(route => route.gpxFilename)),
             gpx: this.singleValue(routes.map(route => route.gpx)),
             bounds: this.mergeBounds(routes.map(route => route.bounds)),
             routes: this.concatArrays(routes.map(route => route.routes ?? [])), 
             summarizedRoutes: this.concatArrays(routes.map(route => route.summarizedRoutes ?? [])), 
             firstName: this.singleValue(routes.map(route => route.firstName)),
-            lastName: this.singleValue(routes.map(route => route.lastName)),
-            };
+            lastName: this.singleValue(routes.map(route => route.lastName))
+        };
     }
 
+    private singleIdValue( s: number[]): number {
+        return s.reduce((p: number, c: number) => (
+                (p === 0 ? c :
+                 c === 0 ? p :
+                 p === c ? p : 0
+                ) ?? 0
+            ), 0
+        );
+    }
     private singleValue( s: string[]): string {
         return s.reduce((p: string, c: string) => (
                 (p === "" ? c :
@@ -326,6 +362,6 @@ export class ManageRoutes extends Component<{
     }
 
     private mergeBounds(routesBounds: Array<Array<[number, number]>>): Array<[number, number]> {
-        return this.bounds(routesBounds);
+        return this.calculateBounds(routesBounds);
     }
 }

@@ -85,18 +85,18 @@ export interface IMap {
 }
 
 export interface IArchivedRoute {
-    id: string;
-    memberId: string;
-    tripHubId: string;
-    ctcRoutesId: string;
-    tripReportsId: string;
+    id: number;
+    memberId: number;
+    tripHubId: number;
+    ctcRoutesId: number;
+    tripReportsId: number;
     source: string;
     title: string;
     description: string;
     date: string;
     creationDate: string;
     gpxFilename: string;
-    gpx: string;
+    gpx: string; // not stored in routes table
     bounds: Array<[number, number]>;
     routes: Array<Array<[number, number]>>;
     summarizedRoutes: Array<Array<[number, number]>>;

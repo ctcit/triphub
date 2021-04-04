@@ -14,10 +14,10 @@ import { MapComponent } from './MapComponent';
 
 export class MapEditor extends Component<{
     nz50MapsBySheet: { [mapSheet: string] : IMap },
-    archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute },
+    archivedRoutesById: { [archivedRouteId: number] : IArchivedRoute },
     mapSheets: string[],
     routesAsLatLngs: Array<Array<[number, number]>>,
-    getArchivedRoute: (routeId: string) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
+    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onMapSheetsChanged: (mapSheets: string[]) => void,
     onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) => void,
     // updateArchivedRouteSummary: (routeId: string, routeSummary: string) => Promise<void>
@@ -48,6 +48,10 @@ export class MapEditor extends Component<{
             currentRouteIndex: this.props.routesAsLatLngs.length - 1,
             canUndoLastRouteEdit: false
         };
+    }
+
+    public async componentDidMount() {
+        await this.saveRouteChange(this.props.routesAsLatLngs, this.props.routesAsLatLngs.length - 1);
     }
 
     public render(){
@@ -88,7 +92,7 @@ export class MapEditor extends Component<{
             await this.saveRouteChange(routesAsLatLngs, currentRouteIndex);
         }
         const undoLastRouteEdit = async () => {
-            await this.undoLastRouteEdit();
+            return await this.undoLastRouteEdit();
         }
         
         return (
@@ -188,23 +192,24 @@ export class MapEditor extends Component<{
         await this.setStateAsync({ canUndoLastRouteEdit: this.routesUndoStack.length > 1 });
     }
 
-    private async undoLastRouteEdit(): Promise<void> {
+    private async undoLastRouteEdit(): Promise<[Array<Array<[number, number]>>, number, boolean]> {
+        let routesAsLatLngs: Array<Array<[number, number]>> = [];
+        let currentRouteIndex: number = -1;
+        let canUndoLastRouteEdit: boolean = false;
         if (this.routesUndoStack.length > 1) { // always leave the orignal on the stack
             await this.setStateAsync({ busy: true });
             if (this.routesUndoStack.length > 1) { // always leave the orignal on the stack
                 let undoStackItem = this.routesUndoStack.pop(); // discard this
                 undoStackItem = this.routesUndoStack[this.routesUndoStack.length - 1]; // restore to this
-                const routesAsLatLngs = undoStackItem.routesAsLatLngs;
+                routesAsLatLngs = undoStackItem.routesAsLatLngs;
+                currentRouteIndex = undoStackItem?.currentRouteIndex ?? -1;
+                canUndoLastRouteEdit = this.routesUndoStack.length > 1;
                 // console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsLatLngs);
-
-                await this.setStateAsync({ 
-                    routesAsLatLngs: this.state.routesAsLatLngs,
-                    currentRouteIndex: undoStackItem?.currentRouteIndex ?? -1, 
-                    canUndoLastRouteEdit: this.routesUndoStack.length > 1, 
-                });
+                await this.setStateAsync({routesAsLatLngs, currentRouteIndex, canUndoLastRouteEdit });
                 this.props.onRoutesChanged(routesAsLatLngs);
             }
         }
+        return [routesAsLatLngs, currentRouteIndex, canUndoLastRouteEdit];
     }
 
     private async setStateAsync(newState: any): Promise<void> {

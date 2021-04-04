@@ -86,12 +86,12 @@ export class TripDetail extends Component<{
         const isSocial = trip.isSocial
 
         // TODO Move to service
-        const getArchivedRoute = (archivedRouteId: string): Promise<IArchivedRoute | undefined> =>  {
+        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
             return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
         }
 
-        const updateArchivedRouteSummary = (archivedRouteId: string, routeSummary: string): Promise<void> =>  {
+        const updateArchivedRouteSummary = (archivedRouteId: number, routeSummary: string): Promise<void> =>  {
             return this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
         }
 

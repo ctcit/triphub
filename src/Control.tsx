@@ -110,6 +110,7 @@ export class TextAreaInputControl extends Component<{
     hidden? : boolean,
     readOnly? : boolean,
     rows? : number,
+    style? : any,
     isLoading: boolean,
     validationMessage?: string,
     helpText?: string,
@@ -157,7 +158,7 @@ export class TextAreaInputControl extends Component<{
             <ControlWrapper id={this.props.id} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText} >
                 <Textarea id={this.props.id} className={className} readOnly={this.props.readOnly}  
-                    value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} rows={this.props.rows ?? 6} />
+                    value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} style={this.props.style} rows={this.props.rows ?? 6} />
             </ControlWrapper>
       )
     }
@@ -168,7 +169,6 @@ export class SwitchControl extends Component<{
     label : string,
     hidden? : boolean,
     isLoading: boolean,
-    validationMessage?: string,
     readOnly? : boolean,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,

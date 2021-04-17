@@ -4,25 +4,27 @@ import { App } from './App';
 import { Trip } from './Trip';
 import { GetFullDate, GetLength } from './Utilities';
 import './index.css';
-import './print.css';
 
 export class TripPrint extends Component<{
-        trip: Trip
-        app: App
-        canWaitList?: boolean
-        canUnwaitList?: boolean
-    },{
-      id?: string
-    }> {
+    trip: Trip
+    app: App
+    canWaitList?: boolean
+    canUnwaitList?: boolean
+}, {
+    id?: string
+}> {
 
     public render() {
         const trip = this.props.trip.state.trip
         const info = this.props.trip.getParticipantsInfo()
-        const participants = info.early
-        const leaders = participants.filter(p => p.isLeader)
         const blanks = []
+        const header = (text: string, len: number) => <th>{text + '\u00A0'.repeat(len - text.length)}</th>
+        const logistics = info.current.filter(p => (p.logisticInfo || '') !== '')
+        const vehicles = info.current.filter(p => p.isVehicleProvider)
+        const footer = Math.max(logistics.length, vehicles.length)
+        const printLines = this.props.app.state.config.printLines
 
-        for (let i = participants.length; i < Math.min(info.maxParticipants, this.props.app.state.config.printLines); i++) {
+        for (let i = info.current.length; i < Math.min(info.maxParticipants, printLines - footer); i++) {
             blanks.push('blank' + i);
         }
 
@@ -35,7 +37,7 @@ export class TripPrint extends Component<{
                         <tr>
                             <th>Leader:</th>
                             <td>
-                                {leaders.map(l=><div key={l.id}>{l.name}</div>)}
+                                {info.leaders.map(l => <div key={l.id}>{l.name}</div>)}
                             </td>
                             <th>Date:</th>
                             <td>{GetFullDate(trip.tripDate)}</td>
@@ -48,21 +50,21 @@ export class TripPrint extends Component<{
                 <table className='participants'>
                     <thead>
                         <tr>
-                            <th className='namecol'>Name</th>
-                            <th className='emailcol'>Email</th>
-                            <th className='phonecol'>Phone</th>
-                            <th className='carcol'>Car?</th>
-                            <th className='plbcol'>PLB?</th>
+                            {header('Name', 40)}
+                            {header('Email', 60)}
+                            {header('Phone', 20)}
+                            {header('Car?', 5)}
+                            {header('PLB?', 5)}
                         </tr>
                     </thead>
                     <tbody>
-                        {participants.map(p =>
+                        {(info.current).map(p =>
                             <tr key={p.id}>
                                 <td>{p.name}</td>
                                 <td>{p.email}</td>
                                 <td>{p.phone}</td>
-                                <td><span hidden={!p.isVehicleProvider} className='fa fa-check'/></td>
-                                <td><span hidden={!p.isPlbProvider} className='fa fa-check'/></td>
+                                <td><span hidden={!p.isVehicleProvider} className='fa fa-check' /></td>
+                                <td><span hidden={!p.isPlbProvider} className='fa fa-check' /></td>
                             </tr>
                         )}
                         {blanks.map(b =>
@@ -80,26 +82,22 @@ export class TripPrint extends Component<{
                 <table className='footertable'>
                     <thead>
                         <tr>
-                            <th className='notecolheader'>Notes</th>
-                            <th className='numberplateheader'>Number plates</th>
+                            {header('Notes', 90)}
+                            {header('Number plates', 40)}
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>
-                                {participants.filter(p => (p.logisticInfo || '') !== '').map(p =>
-                                    <div key={p.id}>{p.name}: {p.logisticInfo}</div>
-                                )}
+                                {logistics.map(p => <div key={p.id}>{p.name}: {p.logisticInfo}</div>)}
                             </td>
                             <td>
-                                {participants.filter(p => p.isVehicleProvider).map(p =>
-                                    <div key={p.id}>{p.name}: {p.vehicleRego}</div>
-                                )}
+                                {vehicles.map(p => <div key={p.id}>{p.name}: {p.vehicleRego}</div>)}
                             </td>
                         </tr>
                     </tbody>
                 </table>
-            </div>            
+            </div>
         )
     }
 }

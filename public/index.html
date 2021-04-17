@@ -32,6 +32,26 @@
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
+    <script>
+        function AddStyleLink(doc) {
+            var head = doc.getElementsByTagName("head")[0]
+            var links = head.getElementsByTagName("link")
+            for (var link of links) {
+                if (link.hasAttribute('href') && link.getAttribute('href') == "%PUBLIC_URL%/print.css")
+                    return
+            }
+            var link = doc.createElement("link")
+            link.setAttribute("rel", "stylesheet")
+            link.setAttribute("href", "%PUBLIC_URL%/print.css")
+            link.setAttribute("type", "text/css")
+            head.appendChild(link)
+        }
+        // inject this into the top level html so that the styles in print.css 
+        // can ensure that unwanted elements don't display when printing
+        AddStyleLink(window.document)
+        if (window.parent != null)
+            AddStyleLink(window.parent.document)
+    </script>
     <div id="root"></div>
     <!--
       This HTML file is a template.

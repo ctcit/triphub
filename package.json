@@ -17,6 +17,7 @@
     "bootstrap": "^4.4.1",
     "classnames": "^2.2.6",
     "hoist-non-react-statics": "^3.3.2",
+    "fontawesome": "^5.6.3",
     "leaflet": "^1.6.0",
     "leaflet-gpx": "^1.4.0",
     "luxon": "^1.22.0",

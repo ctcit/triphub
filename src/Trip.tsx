@@ -13,7 +13,6 @@ import { Email } from './Email';
 import { TripPrint } from './TripPrint';
 import { Pill } from './Widgets';
 import './index.css';
-import './print.css';
 import { ToolTipIcon } from './ToolTipIcon';
 import { Accordian } from './Accordian';
 import Container from 'reactstrap/lib/Container';
@@ -36,6 +35,7 @@ export class Trip extends Component<{
     isLoading: boolean,
     isSaving: boolean,
     showValidationMessage: boolean,
+    showLegend: boolean,
 }> {
 
       public suggestedTrip: {trip: ITrip, participants: IParticipant[]};
@@ -52,6 +52,7 @@ export class Trip extends Component<{
             isLoading: false,
             isSaving: true,
             showValidationMessage: false,
+            showLegend: false,
         }
         this.requeryParticipants = this.requeryParticipants.bind(this)
         this.startNewEvent = this.startNewEvent.bind(this) 
@@ -70,19 +71,21 @@ export class Trip extends Component<{
             this.props.app.setState({isLoading: false})    
             this.startNewEvent()
         } else {
-            this.setState({isLoading: true});
+            this.setState({isLoading: true})
             this.props.app.setState({isLoading: true})
             this.props.app.setStatus(['Loading ', Spinner])
             this.props.app.triphubApiCall('POST',this.props.href + '/edit',{stamp:new Date().toISOString()})
                 .then((editList:IEdit[]) => {
-                    this.setState({
-                        editList,
-                        editId: editList[0].id,
-                        editHref: `${this.props.href}/edit/${editList[0].id}`,
-                        editIsEdited: false,
-                        editHeartbeatId: setInterval(this.editHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
-                    });
-                });
+                    if (editList) {
+                        this.setState({
+                            editList,
+                            editId: editList[0].id,
+                            editHref: `${this.props.href}/edit/${editList[0].id}`,
+                            editIsEdited: false,
+                            editHeartbeatId: setInterval(this.editHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
+                        })
+                    }
+                })
 
             this.props.app.triphubApiCall('GET',this.props.href as string)
                 .then((trip:ITrip) => {
@@ -90,10 +93,10 @@ export class Trip extends Component<{
                         trip:trip[0],
                         isLoading: false
                     });
-                    this.props.app.setState({isLoading: false});
+                    this.props.app.setState({isLoading: false})
                 })
             
-            this.requeryParticipants();
+            this.requeryParticipants()
         }
     }
 
@@ -139,26 +142,31 @@ export class Trip extends Component<{
     }
 
     public blankTramper() : IParticipant {
-        return {id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false, 
+        return {
+            id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false,
                 logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '',
-                emergencyContactName: '', emergencyContactPhone: ''}
+            emergencyContactName: '', emergencyContactPhone: ''
+    }
     }
 
     public signMeUpTramper(isLeader: boolean = false) : IParticipant {
         const me = this.props.app.getMe()
-        return {...this.blankTramper(), 
+        return {
+            ...this.blankTramper(),
                 memberId: me.id, name: me.name, email: me.email, phone: me.phone, isLeader,
-                emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone}
+            emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone
+    }
     }
 
     public startNewEvent(){
         // First of the next month
         const openDate : Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
         // Friday in the week after the open date (or Wednesday for Socials)
-        const offset = (this.props.isNewSocial) ? 9 : 12
+        const offset = (this.props.isNewSocial) ? 10 : 12
         const closeDate : Date = AddDays(openDate, offset - openDate.getDay())
-        // The day after the close date (a Saturday)
-        const tripDate : Date = AddDays(closeDate, 1)
+        // For trips, The day after the close date (a Saturday)
+        // For socials, the trip date is the same as the close date
+        const tripDate : Date = (this.props.isNewSocial) ? closeDate : AddDays(closeDate, 1)
         const me = this.props.app.getMe()
 
         this.suggestedTrip = {
@@ -202,8 +210,7 @@ export class Trip extends Component<{
         if (tripWarnings.length > 0) {
             this.setState({showValidationMessage: true})
         }
-        else
-        {
+        else {
             this.props.app.triphubApiCall('POST',BaseUrl + '/trips',trip)
                 .then(data => { 
                         const newTrip = data[0] as ITrip
@@ -296,7 +303,7 @@ export class Trip extends Component<{
             
                 <Container className={this.props.app.containerClassName()} key="triphubtripdetail" fluid={true}>
                     <div key='tripstatus' className='py-1'>
-                        {this.state.editList
+                        {(this.state.editList || [])
                             .filter((item:IEdit) => item.id !== this.state.editId)
                             .map((item:IEdit) =>
                             <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
@@ -384,6 +391,11 @@ export class Trip extends Component<{
 
     private editHeartbeat() {
         this.props.app.triphubApiCall('POST', this.state.editHref, {stamp:new Date().toISOString(),isEdited:this.state.editIsEdited})
-            .then((editList:IEdit[]) => this.setState({editList}))
+            .then((editList:IEdit[]) => 
+            {
+                if (editList) {
+                    this.setState({editList})
+                }
+            })
     }
 }

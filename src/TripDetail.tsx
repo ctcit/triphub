@@ -2,9 +2,8 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Form, Col, Row, Container } from 'reactstrap';
 import { App } from './App';
-import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl } from './Control';
+import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl, SwitchesControl } from './Control';
 import './index.css';
-import './print.css';
 import { Trip } from './Trip';
 import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces';
 import { TripMap } from './TripMap';
@@ -130,8 +129,17 @@ export class TripDetail extends Component<{
             const tripDate = value;
             let body :any = {tripDate}
 
-            if (this.props.owner.props.isNew) {
-                const closeDate = this.calculateCloseDate(tripDate, this.props.owner.state.trip.length)
+            if (trip.isSocial) {
+                // For socials, the close date is ALWAYS the trip date
+                const closeDate = tripDate
+                body={...body, closeDate}
+                this.set('closeDate', closeDate)
+            }
+            else if (this.props.owner.props.isNew) {
+                // For NEW events we auto-set the close date to an appropriate date when the
+                // trip date is changed. Once a trip has been saved, we don't automatically
+                // change the close date if the trip date changes as this can be confusing
+                const closeDate = this.calculateCloseDate(tripDate, trip.length)
                 body={...body, closeDate}
                 this.set('closeDate', closeDate);
             }
@@ -150,9 +158,8 @@ export class TripDetail extends Component<{
             const length = value as number
             let body :any = {length}
 
-            const oldLength = this.props.owner.state.trip.length
             if (this.props.owner.props.isNew) {
-                const closeDate = this.calculateCloseDate(this.props.owner.state.trip.tripDate, length)
+                const closeDate = this.calculateCloseDate(trip.tripDate, length)
                 body={...body, closeDate}
                 this.set('closeDate', closeDate);
             }
@@ -173,6 +180,7 @@ export class TripDetail extends Component<{
             'onGetValidationMessage': onGetValidationMessage
         }
 
+        const config = this.props.app.state.config
         const commonInverted = {...common, 'onGet': onGetInverted, 'onSave': onSaveInverted }
         const commonTripDate = {...common, 'onSave': onSaveTripDate }
         const commonLength = {...common, 'onSave': onSaveTripLength }
@@ -247,8 +255,22 @@ export class TripDetail extends Component<{
                         <SwitchControl id='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common}/>
                     </Col>
                     <Col sm={5} md={4}>
-                        <InputControl id='maxParticipants' label={isSocial ? 'Maximum Atendees' : 'Maximum trampers'}
+                        <InputControl id='maxParticipants' label={isSocial ? 'Maximum Attendees' : 'Maximum trampers'}
                         type='number' min={0} hidden={!trip.isLimited || (trip.isSocial && trip.isNoSignup)} {...common}/>
+                    </Col>
+                    <Col sm={3} md={2}>
+                        <SwitchesControl id='prerequisites' label='Prerequisite Equipment' 
+                        hidden={trip.isSocial && trip.isNoSignup} 
+                        options={config.prerequisiteEquipment}
+                        allOptions={`${config.prerequisiteEquipment},${config.prerequisiteSkills}`}
+                        {...common}/>
+                    </Col>
+                    <Col sm={3} md={2}>
+                        <SwitchesControl id='prerequisites' label='Prerequisite Skills' 
+                        hidden={trip.isSocial && trip.isNoSignup} 
+                        options={config.prerequisiteSkills}
+                        allOptions={`${config.prerequisiteEquipment},${config.prerequisiteSkills}`}
+                        {...common}/>
                     </Col>
                 </Row>
 
@@ -260,7 +282,7 @@ export class TripDetail extends Component<{
 
                 <Row>
                     <Col>
-                        <TextAreaInputControl id='logisticnfo' label='Logistic Information'
+                        <TextAreaInputControl id='logisticInfo' label='Logistic Information'
                             helpText='Any additional information related to travel, accomodation etc' {...common}/>
                     </Col>
                 </Row>

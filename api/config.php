@@ -2,24 +2,27 @@
 
 class ConfigClient
 {
-	const showDebugUpdate     = false;
-	const printLines 		  = 25;
-	const editRefreshInSec    = 10;
-	const calendarStartOfWeek = 1; //0=Sun,6=Sat
+	const showDebugUpdate       = false;
+	const printLines 		    = 25;
+	const editRefreshInSec      = 10;
+	const calendarStartOfWeek   = 1; //0=Sun,6=Sat
+	const prerequisiteEquipment = 'Ice Axe,Crampons,Helmet,Rope'; 
+	const prerequisiteSkills    = 'Snow Skills,River Crossing'; 
 }
 
 class ConfigServer
 {
-	const baseUrl             = "https://ctc.org.nz/triphub-bruce/";
+	const triphubUrl          = "https://ctc.org.nz/index.php/trip-signup/";
 	const currencyInDays      = 7;
 	const emailHasLink        = true;
 	const emailHasDetails     = true;
 	const emailHasDebugInfo   = false;
-	const emailFilter         = "/^alastairgbrown@yahoo\.com\.au$/";
-	const adminUpdateEmail	  = "alastairgbrown@yahoo.com.au";
+	const emailFilter         = "/^.*$/";
+	const adminUpdateEmail	  = "webmaster@ctc.org.nz";
 	const newMembersRepView   = "triphub.view_new_members_rep";
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";
+	const committeeTable      = "ctc.view_committee";
 	const newslettersTable    = "newsletter.newsletters";
 	const noticesTable        = "newsletter.notices";
 	const newsletterEventsTable = "triphub.vnl_events";
@@ -39,8 +42,8 @@ class ConfigServer
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
 	const apiKey              = "6bc3ed05-66a4-4012-96bd-c7192df95997";
-	const apiKeyExpiry        = "20210228";
-	const apiKeyUserId	      = 520;
+	const apiKeyExpiry        = "00000000";//Should be 00000000 in production 
+	const apiKeyUserId	      = 2218;
 }
 
 ?>

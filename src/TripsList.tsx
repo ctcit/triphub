@@ -51,7 +51,7 @@ class TripsLine extends Component<{
             <td key={'open' + id}>
                 <ButtonGroup className='trip-list-buttons'>
                     <ButtonWithTooltip id={`open-${id}`} onClick={this.onClick} tooltipText="Go to trip">
-                        { (trip.isSocial) ? <span className='fas fa-users'/>  : <span className='fas fa-hiking'/>  }
+                        <span className={trip.isSocial ? 'fas fa-users' : 'fas fa-hiking'} />
                     </ButtonWithTooltip>
                 </ButtonGroup>
                 {extractWarnings(/./)}

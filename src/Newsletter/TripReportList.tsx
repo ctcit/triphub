@@ -5,7 +5,6 @@ import { DbApiURL, BaseUrl  } from '..';
 import { App } from '../App';
 import { ITripReport, INewsletterTripReport } from '../Interfaces';
 import '../index.css';
-import '../print.css';
 import { CapitaliseFirstLetter } from '../Utilities';
 import Table from 'reactstrap/lib/Table';
 import { SwitchControl } from '../Control';

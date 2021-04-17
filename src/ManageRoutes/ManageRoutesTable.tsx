@@ -16,6 +16,11 @@ export interface IManageRoutesTableProps {
 
 export function ManageRoutesTable(props: IManageRoutesTableProps) {
     const data = props.routes;
+
+    const ctcRoutesIds = props.routes.filter(route => route.id > 0 && route.ctcRoutesId > 0).map(route => route.ctcRoutesId);
+    const tripHubIds = props.routes.filter(route => route.id > 0 && route.tripHubId > 0).map(route => route.tripHubId);
+    const tripReportsIds = props.routes.filter(route => route.id > 0 && route.tripReportsId > 0).map(route => route.tripReportsId);
+
     const columns = React.useMemo<Array<Column<IArchivedRoute>>>(() => [{
             Header: 'Date',
             accessor: 'date',
@@ -48,7 +53,12 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
             {
             Header: 'R',
             accessor: (route: IArchivedRoute) => {
-              return route.id === 0 && route.ctcRoutesId > 0 ? 'Yes' : 'No';
+              return route.id > 0 ? '-' :
+                (
+                  route.ctcRoutesId > 0 && ctcRoutesIds.find(id => id === route.ctcRoutesId) ||
+                  route.tripHubId > 0 && tripHubIds.find(id => id === route.tripHubId) ||
+                  route.tripReportsId > 0 && tripReportsIds.find(id => id === route.tripReportsId) 
+                ) ? 'Yes' : 'No';
             },
             Filter: SelectColumnFilter,
             filter: 'equals'

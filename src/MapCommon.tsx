@@ -30,7 +30,7 @@ export class MapCommon<P extends {
 
 
     protected initialHeight: number = 400;
-    protected  initialWidth: number = 420;
+    protected  initialWidth: number = 680;
 
     // route markers
     protected routeMarkers: L.Marker[] = [];

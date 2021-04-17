@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Container, Row, Col } from 'reactstrap';
+import { Container, Row, Col, ButtonGroup, Jumbotron, CardHeader, FormText } from 'reactstrap';
 import { BaseUrl } from '..';
 import { App } from '../App';
 import { IArchivedRoute, IMap } from '../Interfaces';
@@ -11,6 +11,10 @@ import { ManageRoutesMap } from './ManageRoutesMap';
 import { ManageRoutesTable } from './ManageRoutesTable';
 import 'leaflet-gpx';
 import * as L from 'leaflet';
+import { ButtonWithTooltip } from 'src/ButtonWithTooltip';
+import { MdAddBox, MdCallSplit, MdDelete, MdDeleteSweep, MdEdit, MdLibraryAdd } from 'react-icons/md';
+import { ButtonWithConfirm } from 'src/ButtonWithConfirm';
+import { Accordian } from 'src/Accordian';
 
 export class ManageRoutes extends Component<{
     app: App,
@@ -20,7 +24,8 @@ export class ManageRoutes extends Component<{
         routes: IArchivedRoute[]
         isLoadingRoute: boolean,
         selectedRoutes: IArchivedRoute[]
-        mergedRoutes: IArchivedRoute
+        mergedRoutes: IArchivedRoute,
+        isEditing: boolean
     }> {
 
     public app : App;
@@ -37,7 +42,8 @@ export class ManageRoutes extends Component<{
             routes: [],
             isLoadingRoute: false,
             selectedRoutes: [],
-            mergedRoutes: this.mergeRoutes([])
+            mergedRoutes: this.mergeRoutes([]),
+            isEditing: false
         }
         this.app = this.props.app
         
@@ -78,52 +84,64 @@ export class ManageRoutes extends Component<{
             
     }
 
-    public render(){
+    public render() {
 
         const {isLoading} = this.state
+
+        const archivedRoutesSelectedCount = this.state.selectedRoutes.filter(r => r.id > 0).length;
+        const routesSelectedCount = this.state.selectedRoutes.length;
 
         const onRoutesSelected = async (routes: IArchivedRoute[]) => {
             await this.setSelectedRoutes(routes);
         };
 
+        const onNew = () => { 
+            this.setState({ isEditing: true }); 
+        }
+
+        const onMultipleNew = async () => { 
+            this.setState({ isEditing: false, isSaving: true }); 
+            await this.CopyAndSaveSelectedRoutes();
+            this.setState({ isSaving: false }); 
+        }
+
+        const onEdit = () => { 
+            this.setState({ isEditing: true }); 
+        }
+
+        const onSplit = async () => { 
+            this.setState({ isEditing: false, isSaving: true }); 
+            await this.SplitRoute();
+            this.setState({ isSaving: false }); 
+        }
+
+        // const onDelete = async () => { 
+        //     this.setState({ isEditing: false, isSaving: true }); 
+        //     await this.DeleteRoute(this.state.mergedRoutes);
+        //     this.setState({ isSaving: false }); 
+        // }
+
+        const onMultipleDelete = async () => { 
+            this.setState({ isEditing: false, isSaving: true }); 
+            await this.DeleteSelectedRoutes();
+            this.setState({ isSaving: false }); 
+        }
+
+        const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
+            this.setState({ isEditing: false, isSaving: true }); 
+            await this.SaveRoute(newRoute);
+            this.setState({isSaving: false});
+        }
+
+        const onCancel = (): Promise<void> => {
+            this.setState({ isEditing: false }); 
+            return Promise.resolve()
+        }
+
         // TODO Move to service
         const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
             return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
-        }
-
-        // const updateArchivedRouteSummary = (archivedRouteId: number, routeSummary: string): Promise<void> =>  {
-        //     return this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
-        // }
-
-        const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
-            let response: IArchivedRoute[];
-            if (newRoute.id > 0) {
-                response = await this.app.triphubApiCall('PUT', BaseUrl + '/routes/' + newRoute.id, newRoute );
-            } else {
-                response = await this.app.triphubApiCall('POST', BaseUrl + '/routes', newRoute );
-            }
-            if (response && response.length > 0) {
-                response.forEach((route: IArchivedRoute) => {
-                    route.source = "Routes";
-                })
-                this.setState({
-                    routes: response.concat(this.state.routes)
-                });
-                await this.setSelectedRoutes(response);
-            }
-            return Promise.resolve()
-        }
-
-        const onDelete = async (routeToDelete: IArchivedRoute): Promise<void> => {
-            if (routeToDelete.id > 0) {
-                await this.app.triphubApiCall('DELETE', BaseUrl + '/routes/' + routeToDelete.id );
-                this.setState({
-                    routes: this.state.routes.filter(route => route.id !== routeToDelete.id)
-                });
-                await this.setSelectedRoutes([]);
-            }
-            return Promise.resolve()
         }
 
         const onGetValidationMessage = (): any => {
@@ -139,7 +157,7 @@ export class ManageRoutes extends Component<{
                 <h1 key="title">Manage Routes</h1>
                 {isLoading && <FullWidthLoading />}
                 {!isLoading &&
-                    <Container key='form' fluid={true} className='my-3'>
+                    <Container key='form' fluid={true}>
                         <Row>
                             <Col sm={6} md={6}>
                                 <ManageRoutesTable 
@@ -148,24 +166,66 @@ export class ManageRoutes extends Component<{
                                     onRoutesSelected={onRoutesSelected}
                                     bounds={this.bounds}
                                 />  
+                               <FormText color="muted">CTRL/CMD-click to select multiple routes</FormText>
                             </Col>
                             <Col sm={6} md={6}>
-                                {this.state.isLoadingRoute && <FullWidthLoading />}
-                                {!this.state.isLoadingRoute && 
-                                    <Row>
-                                        <Col md={9}>
-                                            <b>{this.state.mergedRoutes.title}</b>
-                                        </Col>
-                                        <Col md={3}>
-                                            <b>{this.state.mergedRoutes.source}</b>
-                                        </Col>
-                                    </Row>
-                                }
+                                <Row>
+                                    <ButtonGroup>
+                                        <ButtonWithTooltip id="NewRouteButton" color='secondary' 
+                                            onClick={onNew} disabled={false} 
+                                            placement="top" tooltipText="Create a new merged route from selected routes (create empty, if none selected)">
+                                            <MdAddBox/>
+                                        </ButtonWithTooltip>
+                                        <ButtonWithConfirm id="MultipleNewRouteButton" color='secondary' 
+                                            onClick={onMultipleNew} disabled={routesSelectedCount < 2}  
+                                            placement="top" tooltipText="Create a new route for each of the selected routes"
+                                            confirmText="Confirm create multiple routes">
+                                            <MdLibraryAdd/>
+                                        </ButtonWithConfirm>
+                                        <ButtonWithTooltip id="EditRouteButton" color='secondary' 
+                                            onClick={onEdit} disabled={archivedRoutesSelectedCount !== 1}  
+                                            placement="top" tooltipText="Edit the selected route">
+                                            <MdEdit/>
+                                        </ButtonWithTooltip>
+                                        <ButtonWithConfirm id="SplitRouteButton" color='secondary' 
+                                            onClick={onSplit} disabled={routesSelectedCount === 0}  
+                                            placement="top" tooltipText="Split the selected route(s) into separate routes"
+                                            confirmText="Confirm split selected route(s)">
+                                            <MdCallSplit/>
+                                        </ButtonWithConfirm>
+                                        {/* <ButtonWithConfirm id="DeleteRouteButton" color='secondary' 
+                                            onClick={onDelete} disabled={!singleArchivedRouteSelected}  
+                                            placement="top" tooltipText="Delete the selected route(s)"
+                                            confirmText="Confirm delete">
+                                            <MdDelete/>
+                                        </ButtonWithConfirm> */}
+                                        <ButtonWithConfirm id="MultipleDeleteRouteButton" color='secondary' 
+                                            onClick={onMultipleDelete} disabled={archivedRoutesSelectedCount === 0}  
+                                            placement="top" tooltipText="Delete all the selected routes"
+                                            confirmText="Confirm delete selected">
+                                            <MdDeleteSweep/>
+                                        </ButtonWithConfirm>
+                                    </ButtonGroup>
+                                </Row>
+                                <Row>
+                                    <Accordian key='routes' id='routes' className='trip-section' headerClassName='trip-section-header'
+                                        title={
+                                            <span>
+                                                {routesSelectedCount === 0 && !this.state.isLoadingRoute && <FormText color="muted">No routes selected</FormText>}
+                                                {this.state.isLoadingRoute && <span className='fa fa-spinner fa-spin' key='spinner'/>}
+                                                <b>{this.state.mergedRoutes.title}</b>
+                                            </span>
+                                        }
+                                        expanded={true}>
+                                        {this.state.mergedRoutes.description}
+                                    </Accordian>
+                                </Row>
                                 <Row>
                                     <ManageRoutesMap 
                                         route={this.state.mergedRoutes}
+                                        isEditing={this.state.isEditing}
                                         onSave={onSave}
-                                        onDelete={onDelete}
+                                        onCancel={onCancel}
                                         leafletMapId='manageroutesmap'
                                         nz50MapsBySheet={this.nz50MapsBySheet} 
                                         archivedRoutesById={this.archivedRoutesById}
@@ -173,9 +233,6 @@ export class ManageRoutes extends Component<{
                                         readOnly={this.state.isLoadingRoute}
                                         onBoundsChanged={onBoundsChanged}
                                     />
-                                </Row>
-                                <Row>
-                                    {this.state.mergedRoutes.description}
                                 </Row>
                             </Col>
                         </Row>
@@ -302,6 +359,10 @@ export class ManageRoutes extends Component<{
         return generalizedLatLngs;
     }
 
+    private copyRoute(route: IArchivedRoute): IArchivedRoute {
+        return this.mergeRoutes([route]);
+    }
+
     private mergeRoutes(routes: IArchivedRoute[]): IArchivedRoute {
         return {
             id: this.singleIdValue(routes.map(route => route.id)), 
@@ -364,4 +425,60 @@ export class ManageRoutes extends Component<{
     private mergeBounds(routesBounds: Array<Array<[number, number]>>): Array<[number, number]> {
         return this.calculateBounds(routesBounds);
     }
+
+    private async CopyAndSaveSelectedRoutes(): Promise<any> {
+        this.state.selectedRoutes.forEach(async (route: IArchivedRoute) => {
+            await this.SaveRoute(this.copyRoute(route));
+        });
+        return Promise.resolve();
+    }
+
+    private async SplitRoute(): Promise<any> {
+        this.state.mergedRoutes.routes.forEach(async (route: Array<[number, number]>, index: number) => {
+            const newRoute = this.copyRoute(this.state.mergedRoutes);
+            newRoute.routes = [route];
+            newRoute.summarizedRoutes = [newRoute.summarizedRoutes[index]];
+            newRoute.bounds = this.calculateBounds(newRoute.routes);
+            await this.SaveRoute(newRoute);
+        });
+        return Promise.resolve();
+    }
+
+    private async SaveRoute(newRoute: IArchivedRoute): Promise<any> {
+        let response: IArchivedRoute[];
+        if (newRoute.id > 0) {
+            response = await this.app.triphubApiCall('PUT', BaseUrl + '/routes/' + newRoute.id, newRoute );
+        } else {
+            response = await this.app.triphubApiCall('POST', BaseUrl + '/routes', newRoute );
+        }
+        if (response && response.length > 0) {
+            response.forEach((route: IArchivedRoute) => {
+                route.source = "Routes";
+            })
+            this.setState({
+                routes: response.concat(this.state.routes)
+            });
+            await this.setSelectedRoutes(response);
+        }
+        return Promise.resolve()
+    }
+
+    private async DeleteSelectedRoutes(): Promise<any> {
+        this.state.selectedRoutes.forEach(async (route: IArchivedRoute) => {
+            await this.DeleteRoute(route);
+        });
+        return Promise.resolve();
+    }
+
+    private async DeleteRoute(routeToDelete: IArchivedRoute): Promise<void> {
+        if (routeToDelete.id > 0) {
+            await this.app.triphubApiCall('DELETE', BaseUrl + '/routes/' + routeToDelete.id );
+            this.setState({
+                routes: this.state.routes.filter(route => route.id !== routeToDelete.id)
+            });
+            await this.setSelectedRoutes([]);
+        }
+        return Promise.resolve()
+    }
+
 }

@@ -1,12 +1,10 @@
 import * as React from 'react';
-import { Modal, ModalHeader, ModalBody, ModalFooter, Col, Row, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, ButtonGroup } from 'reactstrap';
+import { Modal, ModalHeader, ModalBody, ModalFooter, Col, Row, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu } from 'reactstrap';
 import Button from 'reactstrap/lib/Button';
 import { IMap, IArchivedRoute } from '../Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { MapCommon } from '../MapCommon';
 import { ManageRoutesMapEditor } from './ManageRoutesMapEditor';
-import { ButtonWithTooltip } from 'src/ButtonWithTooltip';
-import { MdAddCircle, MdClear, MdEdit } from 'react-icons/md';
 
 export class RouteDetails {
     public title: string;
@@ -16,16 +14,16 @@ export class RouteDetails {
 export class ManageRoutesMap extends MapCommon<{
     readOnly? : boolean,
     route: IArchivedRoute,
-    onSave: (route: IArchivedRoute) => Promise<void>,
-    onDelete: (route: IArchivedRoute) => Promise<void>,
+    onSave: (route?: IArchivedRoute) => Promise<void>,
+    onCancel: () => Promise<void>,
+    isEditing: boolean,
     leafletMapId: string,
     nz50MapsBySheet: { [mapSheet: string] : IMap },
     archivedRoutesById: { [archivedRouteId: number] : IArchivedRoute },
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onBoundsChanged: (bounds: L.LatLngBounds) => void;
 },{
-    saving : boolean,
-    editing: boolean,
+    isSaving : boolean,
     editsMade: boolean,
     cancelDropdownOpen: boolean
 }>{
@@ -41,8 +39,7 @@ export class ManageRoutesMap extends MapCommon<{
         this.pendingRoutesLatLngs = [];
 
         this.state = { 
-            saving: false,
-            editing: false,
+            isSaving: false,
             editsMade: false,
             cancelDropdownOpen: false
         };
@@ -53,22 +50,6 @@ export class ManageRoutesMap extends MapCommon<{
     }
 
    public render() {
-       const singleArchivedRouteSelected = this.props.route?.id > 0;
-
-        const onNew = () => { 
-            this.setState({ editsMade: false, editing: true }); 
-        }
-
-        const onEdit = () => { 
-            this.setState({ editsMade: false, editing: true }); 
-        }
-
-        const onDelete = async () => { 
-            // BJ TODO Delete check
-            await this.props.onDelete(this.props.route);
-            this.setState({ editsMade: false, editing: false }); 
-        }
-
         const onDetailsChanged = async (routeDetails: RouteDetails) => {
             const pendingRoute = this.pendingRouteDetails;
             pendingRoute.title = routeDetails.title;
@@ -90,15 +71,16 @@ export class ManageRoutesMap extends MapCommon<{
 
                 this.fitBounds();
     
-                this.setState({ editsMade: false, editing: false });
+                this.setState({ editsMade: false});
 
-                this.setState({saving: true});
+                this.setState({isSaving: true});
                 this.saveRouteChanges(this.pendingRouteDetails, this.pendingRoutesLatLngs)
-                    .then(() => this.setState({saving: false}));
+                    .then(() => this.setState({isSaving: false}));
             }); 
         }
         const onCancel = () => { 
-            this.setState({ editsMade: false, editing: false }); 
+            this.setState({ editsMade: false}); 
+            this.cancelRouteChanges();
         }
         const onCancelDropdownToggle = () => {
             this.setState({ cancelDropdownOpen: !this.state.cancelDropdownOpen }); 
@@ -116,29 +98,7 @@ export class ManageRoutesMap extends MapCommon<{
         return (
             <div>
                 <Row>
-                    <Col sm={8}>
-                        <ButtonGroup>
-                            <ButtonWithTooltip id="NewRouteButton" color='secondary' 
-                                onClick={onNew} disabled={false} 
-                                placement="top" tooltipText="Create a new route from selected routes (create empty, if none selected)">
-                                <MdAddCircle/>
-                                New
-                            </ButtonWithTooltip>
-                            <ButtonWithTooltip id="EditRouteButton" color='secondary' 
-                                onClick={onEdit} disabled={!singleArchivedRouteSelected}  
-                                placement="top" tooltipText="Edit the selected route">
-                                <MdEdit/>
-                                Edit
-                            </ButtonWithTooltip>
-                            <ButtonWithTooltip id="DeleteRouteButton" color='secondary' 
-                                onClick={onDelete} disabled={!singleArchivedRouteSelected}  
-                                placement="top" tooltipText="Delete the selected route">
-                                <MdClear/>
-                                Delete
-                            </ButtonWithTooltip>
-                        </ButtonGroup>
-                    </Col>
-                    <Modal isOpen={this.state.editing} toggle={onSave}
+                    <Modal isOpen={this.props.isEditing} toggle={onSave}
                         size="xl" style={{maxWidth: '1600px', width: '95%', margin: '10px auto'}} centered={true}>
                         <ModalHeader toggle={onSave}>New Route</ModalHeader>
                         <ModalBody>
@@ -210,6 +170,10 @@ export class ManageRoutesMap extends MapCommon<{
         Object.assign(routeDetails, route); // copy routeDetails to route
         route.routes = routesAsLatLngs;
         return this.props.onSave(route);
+    }
+
+    private cancelRouteChanges = (): Promise<void> => {
+        return this.props.onCancel();
     }
 
 }

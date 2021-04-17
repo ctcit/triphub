@@ -7,7 +7,7 @@ import { Trip } from './Trip';
 import { App } from './App';
 import { GetDisplayPriority } from './Utilities';
 import { TripParticipant } from './TripParticipant';
-import { ButtonWithTooltip } from './MapEditor';
+import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 export class TripParticipants extends Component<{
     trip: Trip,

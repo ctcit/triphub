@@ -405,11 +405,10 @@ function TableFromEntity($entity) {
 // * Admin
 // * Webmaster
 function UserIdIfHasRoleOrDie($con, $requiredRole="NonPrivileged") {
-    // if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
-    //     // Not using an API key - get user logon details
-    //     $member = GetLogonDetails($con, false);
-    // } else 
-    if (date("Ymd") < ConfigServer::apiKeyExpiry) {
+    if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
+        // Not using an API key - get user logon details
+        $member = GetLogonDetails($con, false);
+    } else if (date("Ymd") < ConfigServer::apiKeyExpiry) {
         // Using an API key and it hasn't expired
         $members = GetMembers($con, ConfigServer::apiKeyUserId, ConfigServer::apiKeyUserId);
         if (count($members) == 1)

@@ -243,6 +243,9 @@ export class App extends Component<{
                 case 'newsletter':
                     content = <Newsletter app={this} />
                     break
+                case 'routes':
+                    content = <ManageRoutes app={this}/>
+                    break
                 case 'trips':
                     content = <Trip app={this} isNew={false} isNewSocial={true} href={BaseUrl + state.path} />
                     break

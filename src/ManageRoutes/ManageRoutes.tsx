@@ -317,6 +317,12 @@ export class ManageRoutes extends Component<{
     }
 
     private importGpx(gpx: string): Promise<Array<Array<[number, number]>> | undefined> {
+
+        // HACK - UTF-16 BOM - remove, otherwise gpzx.parse won't work
+        if (gpx.charCodeAt(0) === 65279) {
+            gpx = gpx.substr(1);
+        }
+
         return new Promise<Array<Array<[number, number]>> | undefined>((resolve, reject) => {
             const routes: Array<Array<[number, number]>> = [];
             new L.GPX(gpx, {

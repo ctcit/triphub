@@ -149,7 +149,7 @@ function GetTripReportsRoute($con, $userid, $id)
             STR_TO_DATE(CONCAT(r.year, '-', r.month, '-', r.day), '%Y-%m-%d') as date,
             r.upload_date AS creationDate,
             g.name AS gpxFileName,
-            g.gpx,
+            CONVERT(g.gpx USING utf8) AS gpx,
             m.firstName, m.lastName
          FROM $tripReportsTripReportTable r 
          JOIN $tripReportsTripReportGpxTable rg ON r.id = rg.tripreport_id

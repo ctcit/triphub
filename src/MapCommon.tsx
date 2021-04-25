@@ -169,6 +169,12 @@ export class MapCommon<P extends {
     }
 
     public importGpx(gpx: string): Promise<void> {
+
+        // HACK - UTF-16 BOM - remove, otherwise gpzx.parse won't work
+        if (gpx.charCodeAt(0) === 65279) {
+            gpx = gpx.substr(1);
+        }
+        
         return new Promise<void>((resolve, reject) => {
             const zoom = this.map.getZoom();
             const tolerance = this.getTolerance(Math.max(12, zoom));  // don't generalize too harshly when zoomed out

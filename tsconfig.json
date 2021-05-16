@@ -18,7 +18,7 @@
     "strictNullChecks": true,
     "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": false,
-    "types": ["node","../../src/leaflet-editable","../../src/types"]
+    "types": ["node","../../src/leaflet-editable"]
   },
   "exclude": [
     "node_modules",

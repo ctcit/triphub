@@ -12,8 +12,10 @@ import 'leaflet-gpx';
 import * as L from 'leaflet';
 import { ButtonWithTooltip } from 'src/ButtonWithTooltip';
 import { MdAddBox, MdCallSplit, MdDeleteSweep, MdEdit, MdLibraryAdd } from 'react-icons/md';
+import { FaRegHandPointUp } from "react-icons/fa";
 import { ButtonWithConfirm } from 'src/ButtonWithConfirm';
 import { Accordian } from 'src/Accordian';
+import { htmlToText } from 'html-to-text';
 
 export class ManageRoutes extends Component<{
     app: App,
@@ -24,7 +26,8 @@ export class ManageRoutes extends Component<{
         isLoadingRoute: boolean,
         selectedRoutes: IArchivedRoute[]
         mergedRoutes: IArchivedRoute,
-        isEditing: boolean
+        isEditing: boolean,
+        makerLatLng: L.LatLng | undefined
     }> {
 
     public app : App;
@@ -42,7 +45,8 @@ export class ManageRoutes extends Component<{
             isLoadingRoute: false,
             selectedRoutes: [],
             mergedRoutes: this.mergeRoutes([]),
-            isEditing: false
+            isEditing: false,
+            makerLatLng: undefined
         }
         this.app = this.props.app
         
@@ -151,6 +155,10 @@ export class ManageRoutes extends Component<{
             this.bounds = bounds;
         }
 
+        const onMarkerMoved = (latLng: L.LatLng) => {
+            this.setState({ makerLatLng: latLng }); 
+        }
+
         return [
             <Container className={this.props.app.containerClassName()} key='manageroutes' fluid={true}>
                 <h1 key="title">Manage Routes</h1>
@@ -163,9 +171,9 @@ export class ManageRoutes extends Component<{
                                     routes={this.state.routes} 
                                     enableSorting={true}
                                     onRoutesSelected={onRoutesSelected}
-                                    bounds={this.bounds}
+                                    markerLatLng={this.state.makerLatLng}
                                 />  
-                               <FormText color="muted">CTRL/CMD-click to select multiple routes</FormText>
+                               <FormText color="muted"><FaRegHandPointUp/> CTRL/CMD-click to select multiple routes</FormText>
                             </Col>
                             <Col sm={6} md={6}>
                                 <Row>
@@ -231,6 +239,7 @@ export class ManageRoutes extends Component<{
                                         getArchivedRoute={getArchivedRoute}
                                         readOnly={this.state.isLoadingRoute}
                                         onBoundsChanged={onBoundsChanged}
+                                        onMarkerMoved={onMarkerMoved}
                                     />
                                 </Row>
                             </Col>
@@ -295,6 +304,11 @@ export class ManageRoutes extends Component<{
                 detailedRoute.summarizedRoutes = this.summarizedRoutes(detailedRoute.routes);
             }
         }
+
+        if (detailedRoute.description) {
+            detailedRoute.description = htmlToText(detailedRoute.description, {});
+        }
+        
         return detailedRoute;
 }
 

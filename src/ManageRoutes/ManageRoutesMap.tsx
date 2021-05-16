@@ -5,6 +5,9 @@ import { IMap, IArchivedRoute } from '../Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { MapCommon } from '../MapCommon';
 import { ManageRoutesMapEditor } from './ManageRoutesMapEditor';
+import * as L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 export class RouteDetails {
     public title: string;
@@ -22,6 +25,7 @@ export class ManageRoutesMap extends MapCommon<{
     archivedRoutesById: { [archivedRouteId: number] : IArchivedRoute },
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onBoundsChanged: (bounds: L.LatLngBounds) => void;
+    onMarkerMoved: (latLng: L.LatLng) => void;
 },{
     isSaving : boolean,
     editsMade: boolean,
@@ -152,6 +156,19 @@ export class ManageRoutesMap extends MapCommon<{
          });
 
         this.resizeMap(mapHeight, mapWidth);
+
+        const zServiceStationLatLng = new L.LatLng(-43.5191470506675, 172.62654304504397);
+        L.marker(zServiceStationLatLng, {
+            icon: L.icon({
+                iconUrl: icon,
+                shadowUrl: iconShadow
+            }),
+            draggable: true,
+            autoPan: true
+        }).addTo(this.map)
+        .on('move', (e) => {
+            this.props.onMarkerMoved((e as any).latlng as L.LatLng)
+        });
     }
     
     private getRouteDetails(): RouteDetails {

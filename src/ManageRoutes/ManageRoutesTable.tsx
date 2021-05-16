@@ -2,17 +2,20 @@ import * as React from 'react';
 import { Column, useExpanded, useFilters, useGroupBy, usePagination, useSortBy, useRowSelect, useTable } from "react-table";
 import { IArchivedRoute } from 'src/Interfaces';
 import { Table } from 'reactstrap';
-import { useEffect } from 'react';
-import { MdAddCircle, MdEdit, MdLanguage } from 'react-icons/md';
+import { useCallback, useEffect } from 'react';
 import * as L from 'leaflet';
+import ReactSlider from 'react-slider';
+import styled from 'styled-components';
 
 export interface IManageRoutesTableProps {
     routes: IArchivedRoute[]; 
-    bounds: L.LatLngBounds | undefined;
+    markerLatLng: L.LatLng | undefined;
     enableSorting?: boolean;
     hideHeaders?: boolean;
     onRoutesSelected: (routes: IArchivedRoute[]) => any;
 }
+
+const maxFilterDistanceKm = 500;
 
 export function ManageRoutesTable(props: IManageRoutesTableProps) {
     const data = props.routes;
@@ -20,6 +23,18 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
     const ctcRoutesIds = props.routes.filter(route => route.id > 0 && route.ctcRoutesId > 0).map(route => route.ctcRoutesId);
     const tripHubIds = props.routes.filter(route => route.id > 0 && route.tripHubId > 0).map(route => route.tripHubId);
     const tripReportsIds = props.routes.filter(route => route.id > 0 && route.tripReportsId > 0).map(route => route.tripReportsId);
+
+    const sortByDistance = (rowA: any, rowB: any, columnId: any) => {
+      const a = rowA.original[columnId].toLowerCase()
+      const b = rowB.original[columnId].toLowerCase()
+      if (a > b) {
+        return 1
+      }
+      if (b > a) {
+        return -1
+      }
+      return 0
+      };
 
     const columns = React.useMemo<Array<Column<IArchivedRoute>>>(() => [{
             Header: 'Date',
@@ -38,20 +53,23 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
             filter: 'equals'
             },
             {
-            Header: 'B',
+            Header: 'Distance',
             accessor: (route: IArchivedRoute) => {
-              if (!props.bounds || !route.bounds) {
-                return '-';
+              if (!props.markerLatLng || !route.bounds) {
+                return '_';
               } else {
-                const routeBounds = route.bounds as [[number, number], [number, number]];
-                return (props.bounds as L.LatLngBounds).overlaps(routeBounds) ? 'Y' : ' ';
+                const routeBounds = new L.LatLngBounds(route.bounds); // as [[number, number], [number, number]];
+                const distance = Math.round((props.markerLatLng as L.LatLng).distanceTo(routeBounds.getCenter()) / 1000);
+                return distance;
               }
             },
-            Filter: SelectColumnFilter,
-            filter: 'equals'
+            Cell: ({ value }: any) => String(value) + (typeof value === 'number' ? ' km' : ''),
+            Filter: SliderColumnFilter,
+            filter: 'lessThanOrEqualToNumber',
+            // sortType: React.useMemo(() => sortByDistance, [])
             },
             {
-            Header: 'R',
+            Header: 'Imported',
             accessor: (route: IArchivedRoute) => {
               return route.id > 0 ? '-' :
                 (
@@ -62,7 +80,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
             },
             Filter: SelectColumnFilter,
             filter: 'equals'
-            }], []);
+            }], [data, props.markerLatLng]);
 
       const filterTypes = React.useMemo(() => ({
           // startsWithText: (rowsToFilter: any[], id: any, filterValue: any) => {
@@ -85,6 +103,16 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
                 : true
             })
           },
+          lessThanOrEqualToNumber: (rowsToFilter: any[], id: any, filterValue: any) => {
+            return rowsToFilter.filter(row => {
+              const rowValue = row.values[id]
+              return filterValue !== undefined && Number(filterValue) < maxFilterDistanceKm ?
+                rowValue !== undefined ?
+                  Number(rowValue) <= Number(filterValue)
+                  : false
+                : true
+            })
+          }
         }),
         []
       );
@@ -173,15 +201,18 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
       setPageSize(Number(e.target.value))
     };
 
-
-    const onRowClick = (e: any) => {
+    const onRowClick = useCallback((e: any) => {
       // if CTRL key pressed, then multi-select rows; else single-select
       const rowId = e.currentTarget.dataset.item;
       // const row = data[rowId];
       if (!e.ctrlKey && !Object.keys(selectedRowIds).find(selectedRowId => selectedRowId === rowId)) {
-        toggleAllRowsSelected(false);
+        // Workaround to deselect non filtered rows -> toggleAllRowsSelected only works with current filtered rows
+        Object.keys(selectedRowIds).forEach((key, index) => {
+          selectedRowIds[key] = false;
+        });
+        toggleAllRowsSelected(false) // needed to trigger an update
       }
-    };
+    }, [selectedRowIds, toggleAllRowsSelected]);
 
     return (
         <div className="ManageRoutesTable">
@@ -249,7 +280,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
                           {
                             column.render("Header")
                           }
-                          <div>{column.canFilter ? column.render('Filter') : null}</div>
+                          <div>{React.useMemo(() => column.canFilter ? column.render('Filter') : null, [data])}</div>
                         </th>
                       ))
                     }
@@ -336,6 +367,49 @@ function SelectColumnFilter({column} : {column: any}) {
       ))}
     </select>
   )
+}
+
+// This is a custom filter UI for selecting a number
+function SliderColumnFilter({column} : {column: any}): any {
+  const onChange = (value: number) => {
+      column.setFilter(value);
+    };
+
+  const StyledSlider = styled(ReactSlider)`
+      width: 100px;
+      height: 25px;
+  `;
+  const StyledThumb = styled.div`
+      height: 25px;
+      line-height: 25px;
+      width: 25px;
+      text-align: center;
+      background-color: #426AFE;
+      color: #fff;
+      border-radius: 50%;
+      cursor: grab;
+  `;
+  const Thumb = (props: any, state: any) => <StyledThumb {...props}>
+        {(state.valueNow < maxFilterDistanceKm ? state.valueNow : '-')}
+      </StyledThumb>;
+  const StyledTrack = styled.div`
+      top: 0;
+      bottom: 0;
+      background: ${(props: any) => props.index === 2 ? '#300' : props.index === 1 ? '#ddd' : '#d6e5f8d8'};
+      border-radius: 999px;
+  `;
+  const Track = (props: any, state: any) => <StyledTrack {...props} index={state.index} />;
+
+    return (
+      <StyledSlider
+          defaultValue={maxFilterDistanceKm}
+          disabled={false}
+          renderTrack={Track}
+          renderThumb={Thumb}
+          max={maxFilterDistanceKm}
+          onChange={onChange}
+      />);
+  
 }
 
 const IndeterminateCheckbox = React.forwardRef(

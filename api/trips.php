@@ -215,7 +215,13 @@ function GetTripHtmlValue($col,$row,$true="Yes",$false="") {
 			if (is_array($val)) {
 				$return = "";
 				foreach ($val as $key => $item) {
-					$return += htmlentities($item);
+					if (is_string($item)) {
+						$return += htmlentities($item);
+					}
+					else {
+						$valStr = print_r($val, true);
+						trigger_error("Unexpected type (".gettype($item).") for item with key=$key val=$valStr");
+					}
 				}
 				return $return;
 			} else {
@@ -276,7 +282,9 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$inserted			= "background-color:".$css[".inserted"]["background-color"].";";
 	$deleted			= "color:".$css[".deleted"]["color"].";";
 	$border				= "border: solid 1px black; border-collapse: collapse;";
-	$ignore				= ['id','approval','isDeleted','isSocial','isNoSignup','mapRoute','isLimited','lastEmailChangeId','tripId','memberId','displayPriority','historyId','legacyTripId','legacyEventId'];
+	$ignore				= ['id','approval','isDeleted','isSocial','isNoSignup','routes','mapRoute',
+						   'isLimited','lastEmailChangeId','tripId','memberId','displayPriority',
+						   'historyId','legacyTripId','legacyEventId'];
 	$message			= $message == null ? "" : "<h3>Message from the trip leader:</h3><p>".htmlentities($message)."</p>";
 	$email				= ["recipients"=>[], "filteredRecipients"=>[]];
 	$tripChanges        = false;
@@ -314,9 +322,12 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	// Trip details
 	$header	= "";
 	foreach ($tripsInfo as $field => $col) {
+		if (in_array($field, $ignore)) {
+			continue;
+		}
 		$val = GetTripHtmlValue($col,$trip,"Yes","No");
 
-		if (in_array( $field, $ignore) || preg_match('/.*Id$/',$field) || $val === '')  {
+		if (preg_match('/.*Id$/',$field) || $val === '')  {
 			continue;
 		}
 		
@@ -329,7 +340,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	// Column headers for participants
 	$detail = "<tr><th>&nbsp;</th>";
 	foreach ($participantsInfo as $field => $col) {
-		if (!in_array( $field, $ignore)) {
+		if (!in_array($field, $ignore)) {
 			$detail .= "<th style='$border'>".htmlentities($col['Comment'])."</th>";
 		}
 	}
@@ -356,7 +367,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		$isNew = array_key_exists("$id,new",$changes); 
 		$classification = $participant['classification'];
 		$oldClassification = $oldParticipants[$id]['classification'];
-		$isCreated = $oldParticipants[$id]['isCreated'];
+		$isCreated = array_key_exists('isCreated', $oldParticipants[$id]) && $oldParticipants[$id]['isCreated'];
 		$isDeleted = $participant['isDeleted'];
 		if ($classification == 'waitlisted' && $index == $trip['maxParticipants']) {
 			$detail .= "<tr><td colspan='100' style='$border $deleted'>Waitlist</td></tr>\n";
@@ -369,7 +380,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		$style = ($isDeleted ? $deleted : "").($isCreated ? $inserted : ($isUpdated ? $updated :""));
 		$detail .= "<tr><td style='$border $style'>".($index+1)."</td>";
 		foreach ($participantsInfo as $field => $col) {
-			if (in_array( $field, $ignore )) {
+			if (in_array($field, $ignore)) {
 				continue;
 			}
 			$isUpdated = $isNew || $participant[$field] !== $oldParticipants[$id][$field];

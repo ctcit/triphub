@@ -108,10 +108,19 @@ export class TripDetail extends Component<{
             const tripDate = value
             let body: any = { tripDate }
 
-            if (this.props.owner.props.isNew) {
-                const closeDate = this.calculateCloseDate(tripDate, this.props.owner.state.trip.length)
+            if (trip.isSocial) {
+                // For socials, the close date is ALWAYS the trip date
+                const closeDate = tripDate
                 body = { ...body, closeDate }
                 this.set('closeDate', closeDate)
+            }
+            else if (this.props.owner.props.isNew) {
+                // For NEW events we auto-set the close date to an appropriate date when the
+                // trip date is changed. Once a trip has been saved, we don't automatically
+                // change the close date if the trip date changes as this can be confusing
+                const closeDate = this.calculateCloseDate(tripDate, trip.length)
+                body={...body, closeDate}
+                this.set('closeDate', closeDate);
             }
 
             this.set('tripDate', tripDate)
@@ -125,7 +134,7 @@ export class TripDetail extends Component<{
             let body: any = { length }
 
             if (this.props.owner.props.isNew) {
-                const closeDate = this.calculateCloseDate(this.props.owner.state.trip.tripDate, length)
+                const closeDate = this.calculateCloseDate(trip.tripDate, length)
                 body = { ...body, closeDate }
                 this.set('closeDate', closeDate)
             }

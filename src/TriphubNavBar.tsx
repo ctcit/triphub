@@ -63,7 +63,7 @@ export class TriphubNavbar extends Component<{
         if (this.props.app.state.inIFrame && this.props.app.state.path !== '' && this.props.app.state.path !== '/') {
             navItems.push(
             <NavItem>
-                <NavLink onClick={alltrips} disabled={this.props.app.state.isLoading}>
+                <NavLink onClick={alltrips} disabled={this.props.app.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-bars'/>
                         &nbsp; All trips
@@ -75,7 +75,7 @@ export class TriphubNavbar extends Component<{
         if (this.props.app.state.path !== '/calendar') {
             navItems.push(
             <NavItem>
-                <NavLink onClick={calendar} disabled={this.props.app.state.isLoading}>
+                <NavLink onClick={calendar} disabled={this.props.app.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-calendar'/>
                         &nbsp; Calendar
@@ -89,7 +89,7 @@ export class TriphubNavbar extends Component<{
         if (this.props.app.state.role >= Role.TripLeader && this.props.app.state.path !== '/newtrip') {
             navItems.push(
             <NavItem>
-                <NavLink onClick={newtrip} disabled={this.props.app.state.isLoading}>
+                <NavLink onClick={newtrip} disabled={this.props.app.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-lightbulb'/> 
                         &nbsp; New trip
@@ -113,7 +113,7 @@ export class TriphubNavbar extends Component<{
         if (this.props.app.state.role >= Role.Admin && this.props.app.state.path !== '/newSocial') {
             navItems.push(
             <NavItem>
-                <NavLink onClick={newsocial} disabled={this.props.app.state.isLoading}>
+                <NavLink onClick={newsocial} disabled={this.props.app.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-users'/> 
                         &nbsp; Add a social event

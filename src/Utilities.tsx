@@ -33,7 +33,7 @@ export function IsValidDateString(dateString: string): boolean {
 }
 
 export function GetDisplayPriority(participant: IParticipant): number {
-    return participant.displayPriority || (participant.id === -1 ? 100000 : participant.id)
+    return participant.id === -1 ? 100000000000 : (participant.displayPriority || participant.id)
 }
 
 export function CountWhile(func: (x: number) => boolean): number {
@@ -52,8 +52,8 @@ export function SafeJsonParse(json: string, defaultValue: any): any {
     }
 }
 
-export function TitleFromId(id: string): string {
-    return id.replace('_', ' ').replace(/\b\w/g, x => x.toUpperCase()).replace(/([a-z])([A-Z])/g, "$1 $2")
+export function TitleFromId(id: string | null): string {
+    return (id || '').replace('_', ' ').replace(/\b\w/g, x => x.toUpperCase()).replace(/([a-z])([A-Z])/g, "$1 $2")
 }
 
 export function GetClosestWednesday(to: Date): Date {
@@ -98,3 +98,8 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
     }
 }
 
+export function BindMethods(obj: any) {
+    for (const method of Object.keys(Object.getPrototypeOf(obj)).filter(m => /^on[A-Z]/.test(m))) {
+        obj[method] = obj[method].bind(obj)
+    }
+}

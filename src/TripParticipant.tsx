@@ -10,13 +10,13 @@ import { ToolTipIcon } from './ToolTipIcon'
 import { TripParticipants } from './TripParticipants'
 import { Accordian } from './Accordian'
 import { ButtonWithTooltip } from './MapEditor'
+import { BindMethods } from './Utilities'
 
 export class TripParticipant extends Component<{
     participantId: number
     trip: Trip
     owner: TripParticipants
     app: App
-    loading: boolean
     canWaitList?: boolean
     canUnwaitList?: boolean
     info: IParticipantsInfo
@@ -38,10 +38,8 @@ export class TripParticipant extends Component<{
 
         this.href = `${this.props.trip.props.href}/participants/${this.props.participantId}`
         this.app = this.props.app
-        this.setDeleted = this.setDeleted.bind(this)
-        this.toggleWaitlist = this.toggleWaitlist.bind(this)
-        this.setMember = this.setMember.bind(this)
         this.state = { showMenu: false, newTramper: '' }
+        BindMethods(this)
     }
 
     get participant() {
@@ -64,19 +62,19 @@ export class TripParticipant extends Component<{
         return this.app.triphubApiCall('POST', this.href as string, body, true)
     }
 
-    public setDeleted() {
+    public onDeleted() {
         this.setState({ isSaveOp: true })
-        this.props.owner.setParticipant(this.props.participantId, { isDeleted: !this.participant.isDeleted })
+        this.props.owner.onSetParticipant(this.props.participantId, { isDeleted: !this.participant.isDeleted })
             .then(() => this.setState({ isSaveOp: false }))
     }
 
-    public toggleWaitlist() {
+    public onToggleWaitlist() {
         this.setState({ isMemberOp: true })
-        this.props.owner.setPosition(this.props.participantId)
+        this.props.owner.onSetPosition(this.props.participantId)
             .then(() => this.setState({ isMemberOp: false }))
     }
 
-    public setMember() {
+    public onSetMember() {
         const participant = this.participant
         const member = this.props.app.getMemberById(participant.memberId)
         const emergencyContactName = participant.emergencyContactName
@@ -96,25 +94,37 @@ export class TripParticipant extends Component<{
 
     public render() {
         const participant = this.participant
-        const validations: IValidation[] = this.app.validateParticipant(participant)
+        const participants = this.props.trip.state.participants
+        const participantActual = { ...participant, name: participant.name || this.state.newTramper }
+        const validations: IValidation[] = this.app.validateParticipant(participantActual, participants)
         const canEdit = this.props.trip.canEditTrip || this.props.app.me.id === participant.memberId
-        const canEditLeader = this.props.app.state.role >= Role.Admin
+        const canEditAsLeader = this.props.app.state.role >= Role.Admin
         const member = this.props.app.getMemberById(participant.memberId)
         const isMemberDiff = participant.memberId === this.props.app.me.id && participant.memberId && (
             participant.emergencyContactName !== member.emergencyContactName ||
             participant.emergencyContactPhone !== member.emergencyContactPhone)
+        const existing = new Set(participants.filter(p => p.id !== participant.id).map(p => p.name))
+        const members = this.props.app.members.filter(m => !existing.has(m.name) || m.name === participant.name)
+        const nameOptions = {
+            'New Tramper': ['New Tramper'],
+            'Members': members.filter(m => m.isMember).map(m => m.name),
+            'Non-Members': members.filter(m => !m.isMember).map(m => m.name)
+        }
 
         const onGet = (field: string): any => participant[field]
         const onGetName = (_: string): any =>
-            this.props.app.getMemberByName(participant.name) ? participant.name : 'New Tramper:'
+            this.props.app.getMemberByName(participant.name) ? participant.name : 'New Tramper'
         const onGetNewTramper = (_: string): any => this.state.newTramper
         const onSet = (field: string, value: any) => this.set({ [field]: value })
         const onSetNewTramper = (_: string, value: any) => this.setState({ newTramper: value })
-        const onSave = (field: string, value: any): Promise<void> => this.save({ [field]: value })
+        const onSave = (field: string, value: any): Promise<void> => {
+            this.set({ [field]: value })
+            return this.save({ [field]: value })
+        }
         const onSaveName = (_: string, value: any): Promise<void> => {
             const lookup: any = this.props.app.getMemberByName(value) || {}
             const body = {
-                name: value === 'New Tramper:' ? '' : value,
+                name: value === 'New Tramper' ? '' : value,
                 memberId: lookup.id || 0,
                 email: lookup.email || '',
                 phone: lookup.phone || '',
@@ -126,17 +136,15 @@ export class TripParticipant extends Component<{
             return this.save(body)
         }
         const onSaveNewTramper = (_: string, value: any): Promise<void> => {
-            return (this.props.app.getMemberByName(this.state.newTramper) ? onSaveName : onSave)('name', value)
+            return (this.props.app.getMemberByName(value) ? onSaveName : onSave)('name', value)
         }
         const onGetValidationMessage = (field: string): any => {
-            const found = validations.find(v => v.field === field && !v.ok)
-            return found ? found.message : null
+            return (validations.find(v => v.field === field && !v.ok) || {} as any).message
         }
 
         const common = {
             id: `${participant.id}`,
             readOnly: !canEdit,
-            isLoading: this.props.loading,
             data: JSON.stringify(participant),
             noSaveBadge: participant.id === -1,
             onGet,
@@ -147,68 +155,66 @@ export class TripParticipant extends Component<{
 
         const iconid = `${participant.id || 'new'}`
         const logisticInfo = (participant.logisticInfo || '').trim()
-        const validation = this.app.validateParticipant(participant).filter(v => !v.ok).map(v => v.message)
         const moveableIndex = this.props.info.moveable.map(m => m.id).indexOf(participant.id)
         const canMoveUp = moveableIndex > 0
         const canMoveDown = moveableIndex >= 0 && moveableIndex + 1 < this.props.info.moveable.length
         const onDragStart = (ev: any) => ev.dataTransfer.setData('id', participant.id)
         const onDragOver = (ev: any) => ev.preventDefault()
-        const onDrop = (ev: any) => this.props.owner.setPosition(parseInt(ev.dataTransfer.getData('id'), 10), participant)
-        const onMoveUp = () => this.props.owner.setPosition(participant.id, this.props.info.moveable[moveableIndex - 1], true)
-        const onMoveDown = () => this.props.owner.setPosition(participant.id, this.props.info.moveable[moveableIndex + 1], true)
-        const participants = this.props.trip.state.participants
-        const participantNames = new Set(participants.filter(p => p.id !== participant.id).map(p => p.name))
-        const members = this.props.app.members.filter(m => !participantNames.has(m.name))
-        const nameOptions = {
-            'New Tramper': ['New Tramper:'],
-            'Members': members.filter(m => m.isMember).map(m => m.name),
-            'Non-Members': members.filter(m => !m.isMember).map(m => m.name)
-        }
+        const onDrop = (ev: any) => this.props.owner.onSetPosition(parseInt(ev.dataTransfer.getData('id'), 10), participant)
+        const onMoveUp = () => this.props.owner.onSetPosition(participant.id, this.props.info.moveable[moveableIndex - 1], true)
+        const onMoveDown = () => this.props.owner.onSetPosition(participant.id, this.props.info.moveable[moveableIndex + 1], true)
 
         const title = [
-            [participant.name, this.state.newTramper, 'New Tramper'].find(n => n !== ''), ' ',
-            validation.length > 0 ? <ToolTipIcon key='warning' icon='warning' tooltip={validation.join(', ')} className='warning-icon' id={iconid} /> : '', ' ',
-            participant.isLeader ? <ToolTipIcon key='leader' icon='star' tooltip={`${participant.name} is the leader`} id={iconid} /> : '', ' ',
-            participant.isPlbProvider ? <ToolTipIcon key='plb' icon='podcast' tooltip={`${participant.name} is bringing a PLB`} id={iconid} /> : '', ' ',
-            participant.isVehicleProvider ? <ToolTipIcon key='car' icon='car' tooltip={`${participant.name} is bringing a Car`} id={iconid} /> : '', ' ',
-            logisticInfo !== '' ? <ToolTipIcon key='logisticInfo' icon='comment' tooltip={logisticInfo} id={iconid} /> : '', ' ',
-            participant.memberId === 0 ? <ToolTipIcon key='nonmember' icon='id-badge' tooltip={`${participant.name} is not a member of the CTC`} id={iconid} /> : '', ' ',
-        ]
+            <span key='title'>{[participant.name, this.state.newTramper, 'New Tramper'].find(n => n !== '')} </span>,
+            validations.length &&
+            <ToolTipIcon key='warning' icon='warning' tooltip={validations.map(v => v.message).join(', ')} className='warning-icon' id={iconid} />,
+            participant.isLeader &&
+            <ToolTipIcon key='leader' icon='star' tooltip={`${participant.name} is the leader`} id={iconid} />,
+            participant.isPlbProvider &&
+            <ToolTipIcon key='plb' icon='podcast' tooltip={`${participant.name} is bringing a PLB`} id={iconid} />,
+            participant.isVehicleProvider &&
+            <ToolTipIcon key='car' icon='car' tooltip={`${participant.name} is bringing a Car`} id={iconid} />,
+            logisticInfo &&
+            <ToolTipIcon key='logisticInfo' icon='comment' tooltip={logisticInfo} id={iconid} />,
+            !participant.memberId &&
+            <ToolTipIcon key='nonmember' icon='id-badge' tooltip={`${participant.name} is not a member of the CTC`} id={iconid} />,
+        ].filter(e => e)
         const buttons = [
-            canMoveUp && canEdit ?
-                <ButtonWithTooltip key='moveup' id={'moveup' + participant.id} onClick={onMoveUp} tooltipText="Move up">
-                    <span className='fa fa-sm fa-angle-up' />
-                </ButtonWithTooltip> : null,
-            canMoveDown && canEdit ?
-                <ButtonWithTooltip key='movedown' id={'movedown' + participant.id} onClick={onMoveDown} tooltipText="Move down">
-                    <span className='fa fa-angle-down' />
-                </ButtonWithTooltip> : null,
-            !participant.isDeleted && participant.id > 0 && canEdit ?
-                <ButtonWithTooltip key='delete' id={'delete' + participant.id} onClick={this.setDeleted} tooltipText="Delete">
-                    <span className='fa fa-trash' />
-                    {this.state.isSaveOp ? ['Deleting ', Spinner] : ''}
-                </ButtonWithTooltip> : null,
-            participant.isDeleted && participant.id > 0 && canEdit ?
-                <ButtonWithTooltip key='undelete' id={'undelete' + participant.id} onClick={this.setDeleted} tooltipText="Sign back up">
-                    <span className='fa fa-sm fa-pen' />
-                    {this.state.isSaveOp ? ['Signing up ', Spinner] : ''}
-                </ButtonWithTooltip> : null,
-            this.props.canWaitList && this.props.trip.canEditTrip ?
-                <ButtonWithTooltip key='waitlist' id={'waitlist' + participant.id} onClick={this.toggleWaitlist} tooltipText="Add to wait list">
-                    <span className='fa fa-sm fa-user-plus' />
-                    {this.state.isWaitlistOp ? ['Adding ', Spinner] : ''}
-                </ButtonWithTooltip> : null,
-            this.props.canUnwaitList && this.props.trip.canEditTrip ?
-                <ButtonWithTooltip key='unwaitlist' id={'unwaitlist' + participant.id} onClick={this.toggleWaitlist} tooltipText="Remove from wait list">
-                    <span className='fa fa-sm fa-user-times' />
-                    {this.state.isWaitlistOp ? ['Removing ', Spinner] : ''}
-                </ButtonWithTooltip> : null,
-            isMemberDiff ?
-                <ButtonWithTooltip key='ecdupdate' id={'ecdupdate' + participant.id} onClick={this.setMember} tooltipText="Update emergency contact details">
-                    <span className='fa fa-sm fa-phone' />
-                    {this.state.isMemberOp ? ['Updating ', Spinner] : ''}
-                </ButtonWithTooltip> : null,
-        ]
+            canMoveUp && canEdit &&
+            <ButtonWithTooltip key='moveup' id={'moveup' + participant.id} onClick={onMoveUp} tooltipText="Move up">
+                <span className='fa fa-sm fa-angle-up' />
+            </ButtonWithTooltip>,
+            canMoveDown && canEdit &&
+            <ButtonWithTooltip key='movedown' id={'movedown' + participant.id} onClick={onMoveDown} tooltipText="Move down">
+                <span className='fa fa-angle-down' />
+            </ButtonWithTooltip>,
+            !participant.isDeleted && participant.id > 0 && canEdit &&
+            <ButtonWithTooltip key='delete' id={'delete' + participant.id} onClick={this.onDeleted} tooltipText="Delete">
+                <span className='fa fa-trash' />
+                {this.state.isSaveOp ? ['Deleting ', Spinner] : ''}
+            </ButtonWithTooltip>,
+            participant.isDeleted && participant.id > 0 && canEdit &&
+            <ButtonWithTooltip key='undelete' id={'undelete' + participant.id} onClick={this.onDeleted} tooltipText="Sign back up">
+                <span className='fa fa-sm fa-pen' />
+                {this.state.isSaveOp ? ['Signing up ', Spinner] : ''}
+            </ButtonWithTooltip>,
+            this.props.canWaitList && this.props.trip.canEditTrip &&
+            <ButtonWithTooltip key='waitlist' id={'waitlist' + participant.id} onClick={this.onToggleWaitlist} tooltipText="Add to wait list">
+                <span className='fa fa-sm fa-user-plus' />
+                {this.state.isWaitlistOp ? ['Adding ', Spinner] : ''}
+            </ButtonWithTooltip>,
+            this.props.canUnwaitList && this.props.trip.canEditTrip &&
+            <ButtonWithTooltip key='unwaitlist' id={'unwaitlist' + participant.id} onClick={this.onToggleWaitlist} tooltipText="Remove from wait list">
+                <span className='fa fa-sm fa-user-times' />
+                {this.state.isWaitlistOp ? ['Removing ', Spinner] : ''}
+            </ButtonWithTooltip>,
+            isMemberDiff &&
+            <ButtonWithTooltip key='ecdupdate' id={'ecdupdate' + participant.id} onClick={this.onSetMember} tooltipText="Update emergency contact details">
+                <span className='fa fa-sm fa-phone' />
+                {this.state.isMemberOp ? ['Updating ', Spinner] : ''}
+            </ButtonWithTooltip>,
+        ].filter(e => e)
+        const buttonGroup = <ButtonGroup className='participant-buttons'>{buttons}</ButtonGroup>
 
         return (
             <div onDrop={participant.isDeleted ? this.props.owner.onDropOnDeleted : onDrop}
@@ -216,9 +222,9 @@ export class TripParticipant extends Component<{
 
                 <Accordian id={`${participant.id}`} className='participant'
                     headerClassName='participant-header' expanded={participant.id === -1}
-                    title={<span>{title}<ButtonGroup className='participant-buttons'>{buttons}</ButtonGroup></span>}>
+                    title={<span>{title}{buttonGroup}</span>}>
                     <Form key='form' className='indentedparticipants form'>
-                        <Container key='container' className={this.props.app.containerClassName()} fluid={true}>
+                        <Container key='container' className={this.props.app.containerClassName} fluid={true}>
                             <Row key='1'>
                                 <Col sm={4}>
                                     <SelectControl field='name' label='Name' options={nameOptions}
@@ -236,7 +242,7 @@ export class TripParticipant extends Component<{
                                 this.props.app.getMemberByName(participant.name) ? null :
                                     <Row key='2'>
                                         <Col sm={4}>
-                                            <InputControl field='New Tramper' label='' type='text'
+                                            <InputControl autoFocus={true} field='New Tramper' label="New Tramper's Name" type='text'
                                                 {...common}
                                                 onGet={onGetNewTramper} onSet={onSetNewTramper} onSave={onSaveNewTramper} />
                                         </Col>
@@ -254,7 +260,7 @@ export class TripParticipant extends Component<{
 
                             <Row key='4'>
                                 <Col sm={3}>
-                                    <SwitchControl field='isLeader' label='Leader' {...{ ...common, readOnly: !canEditLeader }} />
+                                    <SwitchControl field='isLeader' label='Leader' {...{ ...common, readOnly: !canEditAsLeader }} />
                                 </Col>
                                 <Col sm={3}>
                                     <SwitchControl field='isPlbProvider' label='Bringing PLB' {...common} />
@@ -274,7 +280,6 @@ export class TripParticipant extends Component<{
                             </Row>
 
                         </Container>
-
                     </Form>
                 </Accordian>
             </div>

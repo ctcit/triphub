@@ -15,7 +15,7 @@ export class ControlWrapper extends Component<{
     label: string,
     hidden?: boolean,
     disabled?: boolean,
-    isLoading: boolean,
+    isLoading?: boolean,
     onGetValidationMessage?: (id: string) => string,
     saving: boolean,
     helpText?: string,
@@ -48,7 +48,7 @@ export class InputControl extends Component<{
     label: string
     hidden?: boolean
     readOnly?: boolean
-    isLoading: boolean
+    isLoading?: boolean
     validationMessage?: string
     type: InputType
     list?: any
@@ -56,6 +56,7 @@ export class InputControl extends Component<{
     max?: number
     helpText?: string
     forceValidation?: boolean
+    autoFocus?: boolean
     onGet: (id: string) => any
     onSet: (id: string, value: any) => void
     onSave: (id: string, value: any) => Promise<void>
@@ -93,7 +94,7 @@ export class InputControl extends Component<{
         }
         const onGetValidationMessage = (this.state.showValidation || this.props.forceValidation) ? this.props.onGetValidationMessage : undefined;
         let className = "triphub-input"
-        if ((onGetValidationMessage !== undefined) && onGetValidationMessage(this.props.field) !== null) {
+        if (onGetValidationMessage && onGetValidationMessage(this.props.field)) {
             className += " is-invalid"
         }
 
@@ -103,8 +104,8 @@ export class InputControl extends Component<{
             <ControlWrapper id={this.props.id + '_' + this.props.field + '_' + val} field={this.props.field} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText}>
                 <Input id={this.props.id + '_' + this.props.field} type={this.props.type} readOnly={this.props.readOnly} list={this.props.list} min={this.props.min} max={this.props.max}
-                    value={this.value || ""} onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='nope'
-                    className={className} />
+                    value={this.value || ""} onFocus={onFocus} onChange={onChange} onBlur={onBlur}
+                    autoComplete='nope' autoFocus={this.props.autoFocus} className={className} />
             </ControlWrapper>
         )
     }
@@ -116,7 +117,7 @@ export class TextAreaInputControl extends Component<{
     label: string,
     hidden?: boolean,
     readOnly?: boolean,
-    isLoading: boolean,
+    isLoading?: boolean,
     validationMessage?: string,
     helpText?: string,
     forceValidation?: boolean,
@@ -156,11 +157,12 @@ export class TextAreaInputControl extends Component<{
         }
         const onGetValidationMessage = (this.state.showValidation || this.props.forceValidation) ? this.props.onGetValidationMessage : undefined;
         let className = "form-control textarea triphub-input"
-        if ((onGetValidationMessage !== undefined) && onGetValidationMessage(this.props.field) !== null) {
+        if (onGetValidationMessage && onGetValidationMessage(this.props.field)) {
             className += " is-invalid"
         }
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
+            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label}
+                hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText} >
                 <Textarea id={this.props.id + '_' + this.props.field} className={className} readOnly={this.props.readOnly}
                     value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} rows={6} />
@@ -174,7 +176,7 @@ export class SwitchControl extends Component<{
     field: string
     label: string,
     hidden?: boolean,
-    isLoading: boolean,
+    isLoading?: boolean,
     validationMessage?: string,
     readOnly?: boolean,
     onGet: (id: string) => any,
@@ -197,8 +199,11 @@ export class SwitchControl extends Component<{
                 .then(() => this.setState({ saving: false }));
         }
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
-                <Switch id={this.props.id + '_' + this.props.field} checked={value || false} onChange={onChange} className="react-switch" disabled={this.props.readOnly} />
+            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label}
+                hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
+                saving={this.state.saving} >
+                <Switch id={this.props.id + '_' + this.props.field} checked={value || false} onChange={onChange}
+                    className="react-switch" disabled={this.props.readOnly} />
             </ControlWrapper>
         )
     }
@@ -209,7 +214,7 @@ export class SwitchesControl extends Component<{
     field: string
     label: string,
     hidden?: boolean,
-    isLoading: boolean,
+    isLoading?: boolean,
     validationMessage?: string,
     readOnly?: boolean,
     onGet: (id: string) => any,
@@ -262,7 +267,9 @@ export class SwitchesControl extends Component<{
         })
 
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label} 
+                hidden={this.props.hidden} isLoading={this.props.isLoading} 
+                onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
                 {switches}
             </ControlWrapper>
         )
@@ -282,11 +289,11 @@ export class SelectControl extends Component<{
     label: string
     hidden?: boolean
     readOnly?: boolean
-    isLoading: boolean
+    isLoading?: boolean
     onGet: (field: string) => any
     onSave: (field: string, value: any) => Promise<void>
     onGetValidationMessage: (id: string) => string
-    options: string[] | {[id: string]: string[]}
+    options: string[] | { [id: string]: string[] }
     data: string
     noSaveBadge?: boolean
 }, {
@@ -310,11 +317,11 @@ export class SelectControl extends Component<{
         if (Array.isArray(this.props.options)) {
             options = this.props.options.map((option, i) => <option value={option} key={i}>{option}</option>)
         } else {
-            const groups = this.props.options as {[id:string]: string[]}
+            const groups = this.props.options as { [id: string]: string[] }
 
             options = Object.keys(groups).map((group, groupIndex) =>
                 <optgroup label={group} key={groupIndex}>
-                    {groups[group].map((option, optionIndex) => 
+                    {groups[group].map((option, optionIndex) =>
                         <option value={option} key={optionIndex}>{option}</option>)}
                 </optgroup>
             )
@@ -342,7 +349,7 @@ export class ComboBoxControl extends Component<{
     label: string,
     hidden?: boolean,
     readOnly?: boolean,
-    isLoading: boolean,
+    isLoading?: boolean,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,
     onGetValidationMessage: (id: string) => string,

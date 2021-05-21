@@ -2,12 +2,12 @@
 
 class ConfigClient
 {
-	const showDebugUpdate       = false;
-	const printLines 		    = 25;
-	const editRefreshInSec      = 10;
-	const calendarStartOfWeek   = 1; //0=Sun,6=Sat
-	const prerequisiteEquipment = 'Ice Axe,Crampons,Helmet,Rope'; 
-	const prerequisiteSkills    = 'Snow Skills,River Crossing'; 
+	const showDebugUpdate       	= false;
+	const printLines 		    	= 25;
+	const editRefreshInSec      	= 10;
+	const calendarStartOfWeek   	= 1; //0=Sun,6=Sat
+	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Rope'; 
+	const prerequisiteSkills    	= 'Snow Skills,River Crossing'; 
 }
 
 class ConfigServer
@@ -37,9 +37,9 @@ class ConfigServer
 	const mapsTable           = "triphub.maps";
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
-	const apiKey              = "6bc3ed05-66a4-4012-96bd-c7192df95997";
-	const apiKeyExpiry        = "00000000";//Should be 00000000 in production 
-	const apiKeyUserId	      = 2218;
+	const apiKey              = "7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC";
+	const apiKeyExpiry        = "00000000";//YYYYMMDD Should be 00000000 in production 
+	const apiKeyUserId	      = 125;
 }
 
 ?>

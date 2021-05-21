@@ -1,11 +1,18 @@
-export enum TripGroup { MyTrip, OpenTrip, ClosedTrip, SuggestedTrip, DeletedTrip, RejectedTrip }
-
 export enum Role { NonMember, Member, TripLeader, Admin, Webmaster }
 
-export class TripApprovalState {
-    public static readonly Pending = "Pending"
-    public static readonly Approved = "Approved"
-    public static readonly Rejected = "Rejected"
+
+export interface IState {
+    id: string
+    status: string
+    groupTitle?: string
+    button?: string
+    icon?: string
+    prompt?: string
+    label?: string
+    nextStates: string[]
+    roleToChange: Role
+    roleToView: Role
+    isRequiringApproval?: boolean
 }
 
 export interface IValidation {
@@ -35,12 +42,12 @@ export interface ITrip {
     mapHtml: string
     isDeleted: boolean
     approval: string
+    approvalText: string
     isLimited: boolean
     maxParticipants: number
     prerequisites?: string
     leaders?: string
-    tripGroup: TripGroup
-    isOpen: boolean
+    state: string
 }
 
 export interface IParticipant {

@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Form, Button, Container, Row, Col } from 'reactstrap';
+import { Button, Container, Row, Col } from 'reactstrap';
 import { InputControl } from '../Control';
 import { BaseUrl, NewsletterGenerateUrl } from '..';
 import { App } from '../App';
 import { INewsletter, IValidation } from '../Interfaces';
 import '../index.css';
-import { GetDateString, IsValidDateString, GetClosestWednesday } from '../Utilities';
+import { GetDateString, IsValidDateString, GetClosestWednesday, BindMethods } from '../Utilities';
 import { TripReportList } from './TripReportList';
 import { NoticeList } from './NoticeList';
 import { FullWidthLoading, Spinner } from '../Widgets';
@@ -18,24 +18,24 @@ export class Newsletter extends Component<{
     app: App
 }, {
     newsletter: INewsletter
+    isLoadingNewsletter: boolean,
     isSaving: boolean
     isNew: boolean
-    isLoading: boolean
 }> {
 
-    public newNesletter: INewsletter
+    public newNewsletter: INewsletter
     public app: App
 
     constructor(props: any) {
         super(props)
         this.state = {
             newsletter: { id: 0 } as INewsletter,
+            isLoadingNewsletter: true,
             isSaving: false,
-            isNew: false,
-            isLoading: true
+            isNew: false
         }
         this.app = this.props.app
-        this.saveNewNesletter = this.saveNewNesletter.bind(this)
+        BindMethods(this)
     }
 
 
@@ -50,7 +50,7 @@ export class Newsletter extends Component<{
     public validate(): IValidation[] {
         return [
             { field: 'volume', ok: this.state.newsletter.volume > 0, message: 'Volume must be greater than zero' },
-            { field: 'number', ok: this.state.newsletter.number > 0, message: 'Number mest be greater than zero' },
+            { field: 'number', ok: this.state.newsletter.number > 0, message: 'Number must be greater than zero' },
             { field: 'date', ok: IsValidDateString(this.state.newsletter.date), message: 'Newsletter date is not valid' },
             { field: 'issueDate', ok: IsValidDateString(this.state.newsletter.issueDate), message: 'Issue date is not valid' },
             { field: 'nextdeadline', ok: IsValidDateString(this.state.newsletter.nextdeadline), message: 'Next deadline is not a valid date' },
@@ -58,7 +58,6 @@ export class Newsletter extends Component<{
     }
 
     public componentDidMount() {
-        this.props.app.setStatus(['Loading ', Spinner])
         this.props.app.triphubApiCall('GET', BaseUrl + "/newsletters/current")
             .then((newsletters: INewsletter[]) => {
                 if (newsletters === null || newsletters.length === 0) {
@@ -70,7 +69,6 @@ export class Newsletter extends Component<{
                         // don't need to wait for the result here...
                     }
                     this.loadNewsletter(newsletters[0]);
-                    this.props.app.setStatus('Loaded', 3000)
                 }
             })
 
@@ -78,6 +76,10 @@ export class Newsletter extends Component<{
 
 
     public render() {
+        if (this.state.isLoadingNewsletter) {
+            return this.props.app.loadingStatus({ ...this.props.app.state, ...this.state })
+        }
+
         const validations: IValidation[] = this.validate();
 
         const onGet = (field: string): any => this.get(field)
@@ -92,55 +94,49 @@ export class Newsletter extends Component<{
         const common = {
             id: 'newsletter',
             readOnly: false,
-            isLoading: this.state.isLoading,
             owner: this,
-            'onGet': onGet,
-            'onSet': onSet,
-            'onSave': onSave,
-            'onGetValidationMessage': onGetValidationMessage
+            onGet, onSet, onSave, onGetValidationMessage
         }
 
-        const { newsletter, isLoading, isNew } = this.state
+        const { newsletter, isNew } = this.state
         const app = this.app
 
         return [
-            <Container className={this.props.app.containerClassName()} key='newsletter' fluid={true}>
+            <Container className={this.props.app.containerClassName} key='newsletter' fluid={true}>
                 <h1 key="title">Manage Newsletter</h1>
                 {isNew && <div><p>No current newsletter, please create a new one..</p></div>}
-                {isLoading && <FullWidthLoading />}
-                {!isLoading &&
-                    <Container key='form' fluid={true} className='my-3'>
-                        <Row>
-                            <Col sm={5} md={4}>
-                                <InputControl field='volume' label='Volume' type='number' {...common} />
-                            </Col>
-                            <Col sm={5} md={4}>
-                                <InputControl field='number' label='Number' type='number' {...common} />
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col sm={5} md={4}>
-                                <InputControl field='date' label='Date' type='date' {...common} />
-                            </Col>
-                            <Col sm={5} md={4}>
-                                <InputControl field='issueDate' label='Issue Date' type='date' {...common} />
-                            </Col>
-                            <Col sm={5} md={4}>
-                                <InputControl field='nextdeadline' label='Next Deadline' type='date' {...common} />
-                            </Col>
-                        </Row>
-                        {!isNew &&
-                            <Button key="generate" color='primary' onClick={this.generate} visible={!isLoading}>
-                                <span className='fas fa-download' /> Generate
+                {<Container key='form' fluid={true} className='my-3'>
+                    <Row>
+                        <Col sm={5} md={4}>
+                            <InputControl field='volume' label='Volume' type='number' {...common} />
+                        </Col>
+                        <Col sm={5} md={4}>
+                            <InputControl field='number' label='Number' type='number' {...common} />
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col sm={5} md={4}>
+                            <InputControl field='date' label='Date' type='date' {...common} />
+                        </Col>
+                        <Col sm={5} md={4}>
+                            <InputControl field='issueDate' label='Issue Date' type='date' {...common} />
+                        </Col>
+                        <Col sm={5} md={4}>
+                            <InputControl field='nextdeadline' label='Next Deadline' type='date' {...common} />
+                        </Col>
+                    </Row>
+                    {!isNew &&
+                        <Button key="generate" color='primary' onClick={this.generate}>
+                            <span className='fas fa-download' /> Generate
                             </Button>}
-                        {isNew &&
-                            <Button key="saveNew" color='primary' onClick={this.saveNewNesletter} visible={!isLoading}>
-                                Save
+                    {isNew &&
+                        <Button key="saveNew" color='primary' onClick={this.onSaveNewNesletter}>
+                            Save
                             </Button>
-                        }
-                    </Container>
+                    }
+                </Container>
                 }
-                {!isLoading && !isNew &&
+                {!isNew &&
                     <div key="details">
                         <Accordian id='tripsSocials' className='trip-group my-5' headerClassName='newsletter-group-header' expanded={true}
                             title='Trips and Socials'>
@@ -174,13 +170,8 @@ export class Newsletter extends Component<{
         ]
     }
 
-    private loadNewsletter(loaded_newsletter: INewsletter) {
-        this.setState({
-            newsletter: loaded_newsletter,
-            isNew: false,
-            isLoading: false
-        });
-        this.props.app.setState({ isLoading: false });
+    private loadNewsletter(newsletter: INewsletter) {
+        this.setState({ newsletter, isNew: false, isLoadingNewsletter: false });
         // Load trip reports & trips
     }
 
@@ -230,7 +221,7 @@ export class Newsletter extends Component<{
                     nextNumber = 1
                 }
 
-                this.newNesletter = {
+                this.newNewsletter = {
                     id: -1,
                     volume: nextVolume,
                     number: nextNumber,
@@ -240,8 +231,7 @@ export class Newsletter extends Component<{
                     // PENDING - make API force isCurrent=false - or remove teh whole isCurrent mechanism
                     isCurrent: false,
                 }
-                this.setState({ newsletter: this.newNesletter, isLoading: false })
-                this.props.app.setStatus('Loaded', 3000)
+                this.setState({ newsletter: this.newNewsletter, isLoadingNewsletter: false })
             })
     }
 
@@ -249,10 +239,10 @@ export class Newsletter extends Component<{
         return this.app.triphubApiCall('POST', BaseUrl + '/newsletters/' + this.state.newsletter.id, body, false);
     }
 
-    private saveNewNesletter() {
+    private onSaveNewNesletter() {
         const newsletter = this.state.newsletter
 
-        this.setState({ isLoading: true })
+        this.setState({ isLoadingNewsletter: true })
 
         this.app.triphubApiCall('POST', BaseUrl + '/newsletters/', newsletter, false)
             .then((newsletters: INewsletter[]) => {

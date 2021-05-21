@@ -16,10 +16,7 @@ import { INotification, NotificationArea } from './NotificationArea';
 
 export class App extends Component<{
 }, {
-    status?: any
-    statusShow?: boolean
     path: string
-    isLoading: boolean
     isLoadingConfig: boolean
     isLoadingMaps: boolean
     isLoadingArchivedRoutes: boolean
@@ -28,11 +25,11 @@ export class App extends Component<{
     role: Role
     me: IMember
     members: IMember[]
-    membersById: { [id: number]: IMember }
-    membersByName: { [name: string]: IMember }
+    membersById: Map<number, IMember>
+    membersByName: Map<string, IMember>
     maps: IMap[],
     archivedRoutes: IArchivedRoute[],
-    holidayMap: { [id: string]: IHoliday }
+    holidayMap: Map<string, IHoliday>
     config: IConfig
     statusId?: any
     inIFrame: boolean,
@@ -53,7 +50,6 @@ export class App extends Component<{
                 prerequisiteSkills: 'Snow Skills,River Crossing',
             },
             path: window.top.location.hash.replace('#', ''),
-            isLoading: false,
             isLoadingConfig: true,
             isLoadingMaps: true,
             isLoadingArchivedRoutes: true,
@@ -62,39 +58,23 @@ export class App extends Component<{
             role: Role.NonMember,
             members: [],
             me: {} as IMember,
-            membersById: {},
-            membersByName: {},
+            membersById: new Map(),
+            membersByName: new Map(),
             maps: [],
             archivedRoutes: [],
-            holidayMap: {},
-            status: ['Loading ', Spinner],
-            statusShow: true,
+            holidayMap: new Map(),
             inIFrame: true, // true if to style/behave for use in iFrame; false to style/behave as standalone app
             notifications: []
         }
         this.trip = React.createRef()
         this.triplist = React.createRef()
         this.calendar = React.createRef()
-        window.top.onpopstate = this.handlePopState.bind(this)
+
+        window.top.onpopstate = this.onPopState.bind(this)
     }
 
-    public handlePopState(event: PopStateEvent) {
-        if (event.state !== null) {
-            this.changePath(event.state.path)
-        }
-        else {
-            this.changePath("/")
-        }
-    }
-
-    public setStatus(status: any, keepFor?: number): void {
-        if (this.state.statusId !== undefined) {
-            clearTimeout(this.state.statusId)
-        }
-        this.setState({
-            status, statusShow: true,
-            statusId: keepFor && setTimeout(() => this.setState({ statusShow: false }), keepFor)
-        })
+    public onPopState(event: PopStateEvent) {
+        this.changePath(event.state === null ? '/' : event.state.path)
     }
 
     public setPath(path: string): void {
@@ -123,11 +103,11 @@ export class App extends Component<{
     }
 
     public getMemberById(id: number): IMember {
-        return this.state.membersById[id] || { id, name: 'Anonymous' } as IMember
+        return this.state.membersById.get(id) || { id, name: 'Anonymous' } as IMember
     }
 
-    public getMemberByName(name: string): IMember | null {
-        return this.state.membersByName[name]
+    public getMemberByName(name: string): IMember | undefined {
+        return this.state.membersByName.get(name)
     }
 
     public get maps(): IMap[] {
@@ -139,7 +119,7 @@ export class App extends Component<{
     }
 
     public validateTrip(trip: ITrip): IValidation[] {
-        return !this.state.isLoading ? [
+        return [
             { field: 'title', ok: !trip.isDeleted, message: 'This trip has been deleted' },
             ...this.mandatory(trip, ['title', 'description']),
             ...this.mandatory(trip, trip.isSocial ? [] : ['cost', 'grade', 'departure_point']),
@@ -149,15 +129,14 @@ export class App extends Component<{
             { field: 'closeDate', ok: (trip.closeDate <= trip.tripDate) || trip.isNoSignup, message: 'Close date must be on or before Trip date' },
             { field: 'tripDate', ok: (trip.closeDate <= trip.tripDate) || trip.isNoSignup, message: 'Close date must be on or before Trip date' },
             { field: 'maxParticipants', ok: trip.maxParticipants >= 0, message: 'Max Participants must not be negative' },
-        ] : []
+        ]
     }
 
-    public validateParticipant(participant: IParticipant): IValidation[] {
+    public validateParticipant(participant: IParticipant, participants: IParticipant[]): IValidation[] {
+        const duplicate = participants.find(p => p.id !== participant.id && p.name === participant.name)
         return [
-            {
-                field: 'vehicleRego', ok: !participant.isVehicleProvider || participant.vehicleRego !== '',
-                message: 'Rego must be specified'
-            }
+            ...this.mandatory(participant, participant.isVehicleProvider ? ['name', 'rego'] : ['name']),
+            { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` }
         ]
     }
 
@@ -171,16 +150,16 @@ export class App extends Component<{
         this.triphubApiCall('GET', BaseUrl + '/members')
             .then((members: IMember[]) => {
 
-                const membersById: { [id: number]: IMember } = {}
-                const membersByName: { [name: string]: IMember } = {}
+                const membersById = new Map<number, IMember>()
+                const membersByName = new Map<string, IMember>()
                 const me = members.find((m: IMember) => m.isMe) || {} as unknown as IMember
 
                 members = members.filter(m => m.name !== '')
-                members.forEach(m => m.role = Role[m.role as unknown as string])
-                members.filter(m => m.isMember).forEach(m => membersById[m.id] = m)
-                members.filter(m => m.isMember).forEach(m => membersByName[m.name] = m)
+                members.filter(m => m.isMember).forEach(m => membersById.set(m.id, m))
+                members.filter(m => m.isMember).forEach(m => membersByName.set(m.name, m))
                 members = members.filter(m => m.isMember || !membersByName[m.name])
-                members.filter(m => !m.isMember).forEach(m => membersByName[m.name] = m)
+                members.filter(m => !m.isMember).forEach(m => membersByName.set(m.name, m))
+                members.forEach(m => m.role = Role[m.role as unknown as string])
 
                 this.setState({ role: me.role, me, members, membersById, membersByName, isLoadingMembers: false })
             })
@@ -197,19 +176,16 @@ export class App extends Component<{
             .then(archivedRoutes => this.setState({ archivedRoutes, isLoadingArchivedRoutes: false }));
         this.triphubApiCall('GET', BaseUrl + '/public_holidays')
             .then((holidays: IHoliday[]) => {
-                const holidayMap = {}
-
-                for (const holiday of holidays) {
-                    if (holiday.type === 'National holiday' || holiday.name === 'Canterbury Show Day') {
-                        holidayMap[holiday.date] = holiday
-                    }
-                }
+                const holidayMap = new Map<string, IHoliday>(
+                    holidays.filter(h => h.type === 'National holiday' || h.name === 'Canterbury Show Day')
+                        .map(h => [h.date, h] as [string, IHoliday])
+                )
 
                 this.setState({ holidayMap, isLoadingHolidays: false })
             });
     }
 
-    public containerClassName() {
+    public get containerClassName() {
         return this.state.inIFrame ? "outer-container " : ""
     }
 
@@ -218,30 +194,38 @@ export class App extends Component<{
         this.setState({ notifications })
     }
 
+    public get isLoading(): boolean {
+        return this.loadingFields(this.state).some(f => this.state[f])
+    }
+    public loadingFields(state: any): string[] {
+        return Object.keys(state).filter(f => /^isLoading[A-Z]/.test(f))
+    }
+    public loadingStatus(state: any): JSX.Element {
+        return <Container className={this.containerClassName + "triphub-loading-container"}>
+            <Jumbotron key='loadingAlert' variant='primary'>
+                {this.loadingFields(state).map(f =>
+                    <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substr(2))}</div>)}
+            </Jumbotron>
+        </Container>
+    }
+
     public render() {
-        const state = this.state
-        const loading = Object.keys(state).filter(k => /isLoading./.test(k))
-        const rendering = loading.some(name => state[name]) ? 'loading' : `${state.path}/`.split('/')[1]
+        const path = this.state.path
+        const rendering = this.isLoading ? 'loading' : `${path}/`.split('/')[1]
         const renderings = {
-            loading: () =>
-                <Container className={this.containerClassName() + "triphub-loading-container"}>
-                    <Jumbotron key='loadingAlert' variant='primary'>
-                        {loading.map(name =>
-                            <div key={name}>{state[name] ? Spinner : Done} {TitleFromId(name.substr(2))}</div>)}
-                    </Jumbotron>
-                </Container>,
+            loading: () => this.loadingStatus(this.state),
             calendar: () => <Calendar app={this} />,
             newtrip: () => <Trip app={this} isNew={true} isNewSocial={false} />,
             newsocial: () => <Trip app={this} isNew={true} isNewSocial={true} />,
             newsletter: () => <Newsletter app={this} />,
-            trips: () => <Trip app={this} isNew={false} isNewSocial={true} href={BaseUrl + state.path} />,
+            trips: () => <Trip app={this} isNew={false} isNewSocial={true} href={BaseUrl + path} />,
             default: () => <TripsList app={this} />,
         }
 
         return [
             <TriphubNavbar key='triphubNavbar' app={this} />,
-            <NotificationArea notifications={state.notifications} key='notificationArea'
-                containerClassName={this.containerClassName()} />,
+            <NotificationArea notifications={this.state.notifications} key='notificationArea'
+                containerClassName={this.containerClassName} />,
             (renderings[rendering] || renderings.default)()
         ]
     }

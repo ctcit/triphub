@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Component } from 'react'
-import { Form, Col, Row, Container } from 'reactstrap'
+import { Container } from 'reactstrap'
 import { App } from './App'
 import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl, SwitchesControl } from './Control'
 import './index.css'
@@ -8,16 +8,18 @@ import { Trip } from './Trip'
 import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces'
 import { MapControl } from './MapControl'
 import { BaseUrl } from 'src'
-import { AddDays, GetDateString } from './Utilities'
+import { AddDays, GetDateString, TitleFromId } from './Utilities'
+import Row from 'reactstrap/lib/Row'
+import Col from 'reactstrap/lib/Col'
+import { TripState } from './TripStates'
 
 export class TripDetail extends Component<{
-    owner: Trip,
-    app: App,
-    isLoading: boolean,
-    forceValidation?: boolean,
+    owner: Trip
+    app: App
+    forceValidation?: boolean
 }, {
-    editMap: boolean,
-    editMaps: boolean,
+    editMap: boolean
+    editMaps: boolean
 }> {
 
     public href?: string
@@ -52,7 +54,7 @@ export class TripDetail extends Component<{
         // Use an update function rather than setting the value directly,
         // as setState is not guaranteed to execute immediately, so passing
         // the current value of state here leads to data loss if two sets get bunched
-        this.props.owner.setState(state => ({ trip: { ...state.trip, [field]: value }}))
+        this.props.owner.setState(state => ({ trip: { ...state.trip, [field]: value } }))
     }
 
     public saveTrip(body: any): Promise<void> {
@@ -73,6 +75,7 @@ export class TripDetail extends Component<{
     public render() {
         const trip: ITrip = this.props.owner.state.trip
         const validations: IValidation[] = this.app.validateTrip(this.props.owner.state.trip)
+        const approval = TripState[trip.approval || ''] || TripState.Pending
         const isSocial = trip.isSocial
 
         // TODO Move to service
@@ -86,7 +89,10 @@ export class TripDetail extends Component<{
         const onGet = (field: string): any => this.props.owner.state.trip[field]
         const onGetInverted = (field: string): any => !this.props.owner.state.trip[field]
         const onSet = (field: string, value: any): void => this.set(field, value)
-        const onSave = (field: string, value: any): Promise<void> => this.saveTrip({[field]: value})
+        const onSave = (field: string, value: any): Promise<void> => {
+            this.set(field, value)
+            return this.saveTrip({ [field]: value })
+        }
 
         const onGetValidationMessage = (field: string): any => {
             const found: IValidation | undefined = validations.find(validation => validation.field === field && !validation.ok)
@@ -95,7 +101,7 @@ export class TripDetail extends Component<{
 
         const onSetInverted = (field: string, value: any): Promise<void> => {
             this.set(field, !value)
-            return this.saveTrip({[field]: !value})
+            return this.saveTrip({ [field]: !value })
         }
 
         const onSetTripDate = (_: string, value: any): Promise<void> => {
@@ -133,13 +139,9 @@ export class TripDetail extends Component<{
         const common = {
             id: 'trip',
             readOnly: trip.id !== -1 && !this.props.owner.canEditTrip,
-            isLoading: this.props.isLoading,
             owner: this,
             forceValidation: this.props.forceValidation,
-            onGet,
-            onSet,
-            onSave,
-            onGetValidationMessage
+            onGet, onSet, onSave, onGetValidationMessage
         }
 
         const commonInverted = { ...common, 'onGet': onGetInverted, 'onSave': onSetInverted }
@@ -147,7 +149,7 @@ export class TripDetail extends Component<{
         const commonLength = { ...common, 'onSet': onSetTripLength }
         const config = this.props.app.state.config
 
-        const openDateHelp = trip.isSocial ? 
+        const openDateHelp = trip.isSocial ?
             'When the event will be visible on the socials list' :
             'When sign-up opens and the trip is visible on the trips list'
 
@@ -252,6 +254,14 @@ export class TripDetail extends Component<{
                     </Col>
                 </Row>
 
+
+                <Row hidden={!this.props.owner.canEditTrip}>
+                    <Col>
+                        <TextAreaInputControl field='approvalText' label={approval.label || ''}
+                            helpText={`Text that was entered when '${approval.button}' was selected`}
+                            {...common} readOnly={!this.props.app.amAdmin} />
+                    </Col>
+                </Row>
                 <Row>
                     <Col sm={10}>
                         <MapControl

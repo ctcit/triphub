@@ -8,7 +8,7 @@ import Table from 'reactstrap/lib/Table';
 import { BaseUrl } from '..';
 import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from '../Control';
 import Button from 'reactstrap/lib/Button';
-import { IsValidDateString, GetDateString, GetStartOfNextMonth } from '../Utilities';
+import { IsValidDateString, GetDateString, GetStartOfNextMonth, BindMethods } from '../Utilities';
 import { Accordian } from '../Accordian';
 
 class Section {
@@ -114,11 +114,7 @@ export class NoticeList extends Component<{
             showAllExpired: false,
         }
         this.app = this.props.app
-        this.handleSaveDetail = this.handleSaveDetail.bind(this)
-        this.handleCancelDetail = this.handleCancelDetail.bind(this)
-        this.handleEditNotice = this.handleEditNotice.bind(this)
-        this.handleNewNotice = this.handleNewNotice.bind(this)
-        this.handleShowAll = this.handleShowAll.bind(this)
+        BindMethods(this)
     }
 
     public componentDidMount() {
@@ -127,7 +123,7 @@ export class NoticeList extends Component<{
 
     public render() {
         return [
-            <Button onClick={this.handleNewNotice} key="newNoticeButton" color="primary" className='my-2'><span className='fas fa-plus'/> New Notice</Button>,
+            <Button onClick={this.onNewNotice} key="newNoticeButton" color="primary" className='my-2'><span className='fas fa-plus'/> New Notice</Button>,
             this.state.notices.length === 0 && <p className='newsletter-no-notices'>No notices - use the "New Notice" button or add an expired notice.</p>,
             Sections.map((section: Section) => {
                 const notices = this.state.notices.filter(n => n.section === section.name)
@@ -155,7 +151,7 @@ export class NoticeList extends Component<{
                                     return ''
                                 }
                                 const onClick = (): any => {
-                                    return this.handleEditNotice(notice);
+                                    return this.onEditNotice(notice);
                                 }
                                 const onUpClick = (): any => {
                                     return this.moveNoticeUp(notice);
@@ -210,7 +206,7 @@ export class NoticeList extends Component<{
                         }
                     </tbody>
                 </Table>
-                {!this.state.showAllExpired && <Button onClick={this.handleShowAll} color="primary" className="mr-1">Show All</Button>}
+                {!this.state.showAllExpired && <Button onClick={this.onShowAll} color="primary" className="mr-1">Show All</Button>}
             </Accordian>,
             <ReactModal
                 key="notice-edit-modal"
@@ -238,13 +234,13 @@ export class NoticeList extends Component<{
 
                     <NoticeDetail notice={this.state.showDetailFor} app={this.app} />
                 }
-                <Button onClick={this.handleSaveDetail} color="primary" className="mr-1">Save</Button>
-                <Button onClick={this.handleCancelDetail} className="mr-1">Cancel</Button>
+                <Button onClick={this.onSaveDetail} color="primary" className="mr-1">Save</Button>
+                <Button onClick={this.onCancelDetail} className="mr-1">Cancel</Button>
             </ReactModal>
         ];
     }
 
-    public handleSaveDetail() {
+    public onSaveDetail() {
         if (this.state.showDetailFor != null ) {
             this.saveNotice(this.state.showDetailFor.id, this.state.showDetailFor)
             .then( ( notice : INotice[] ) => {
@@ -254,15 +250,15 @@ export class NoticeList extends Component<{
         }
     }
 
-    public handleCancelDetail() {
+    public onCancelDetail() {
         this.setState({ showDetailFor: null })
     }
 
-    public handleEditNotice(notice: INotice) {
+    public onEditNotice(notice: INotice) {
         this.setState({ showDetailFor: {...notice} })
     }
 
-    public handleNewNotice() {
+    public onNewNotice() {
         const newNotice = { id: -1, title: "", text: "", date: GetDateString( GetStartOfNextMonth() ), publish: true, section: "Notice", order: this.getNextOrder() }
         this.setState({ showDetailFor: {...newNotice} })
     }
@@ -318,7 +314,7 @@ export class NoticeList extends Component<{
         return notices.filter( (notice) => valid_section_names.includes(notice.section) )
     }
 
-    private handleShowAll() {
+    private onShowAll() {
         this.setState({showAllExpired: true})
         this.requeryExpired(false)
     }

@@ -19,7 +19,7 @@ export class MapControl extends Component<{
     mapsLabel : string,
     hidden? : boolean,
     readOnly? : boolean,
-    isLoading: boolean,
+    isLoading?: boolean,
     list? : any,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,

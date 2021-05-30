@@ -254,6 +254,9 @@ export class SelectMapSheetsTab extends Component<{
     }
 
     private getTags(): Tag[] {
+        if (!this.props.mapComponent) {
+            return [];
+        }
         return this.props.mapSheets.map((mapSheet: string) => 
             ({ id: mapSheet, text: (this.props.mapComponent as MapComponent).mapSheetWithName(mapSheet) }));
     }

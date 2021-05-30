@@ -6,6 +6,7 @@ import { useCallback, useEffect } from 'react';
 import * as L from 'leaflet';
 import ReactSlider from 'react-slider';
 import styled from 'styled-components';
+import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDown, FaAngleLeft, FaAngleRight, FaAngleUp, FaCaretLeft } from 'react-icons/fa';
 
 export interface IManageRoutesTableProps {
     routes: IArchivedRoute[]; 
@@ -15,7 +16,8 @@ export interface IManageRoutesTableProps {
     onRoutesSelected: (routes: IArchivedRoute[]) => any;
 }
 
-const maxFilterDistanceKm = 500;
+const maxFilterDistanceKm = 150;
+const maxDistanceKm = 100000;
 
 export function ManageRoutesTable(props: IManageRoutesTableProps) {
     const data = props.routes;
@@ -24,51 +26,30 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
     const tripHubIds = props.routes.filter(route => route.id > 0 && route.tripHubId > 0).map(route => route.tripHubId);
     const tripReportsIds = props.routes.filter(route => route.id > 0 && route.tripReportsId > 0).map(route => route.tripReportsId);
 
-    const sortByDistance = (rowA: any, rowB: any, columnId: any) => {
-      const a = rowA.original[columnId].toLowerCase()
-      const b = rowB.original[columnId].toLowerCase()
-      if (a > b) {
-        return 1
-      }
-      if (b > a) {
-        return -1
-      }
-      return 0
-      };
-
     const columns = React.useMemo<Array<Column<IArchivedRoute>>>(() => [{
+            id: 'date',
             Header: 'Date',
             accessor: 'date',
             filter: 'includesText',
+            width: 100
             },
             {
+            id: 'title',
             Header: 'Title',
             accessor: 'title',
             filter: 'includesText',
+            width: 200
             },
             {
+            id: 'source',
             Header: 'Source',
             accessor: 'source',
             Filter: SelectColumnFilter,
-            filter: 'equals'
+            filter: 'equals',
+            width: 80
             },
             {
-            Header: 'Distance',
-            accessor: (route: IArchivedRoute) => {
-              if (!props.markerLatLng || !route.bounds) {
-                return '_';
-              } else {
-                const routeBounds = new L.LatLngBounds(route.bounds); // as [[number, number], [number, number]];
-                const distance = Math.round((props.markerLatLng as L.LatLng).distanceTo(routeBounds.getCenter()) / 1000);
-                return distance;
-              }
-            },
-            Cell: ({ value }: any) => String(value) + (typeof value === 'number' ? ' km' : ''),
-            Filter: SliderColumnFilter,
-            filter: 'lessThanOrEqualToNumber',
-            // sortType: React.useMemo(() => sortByDistance, [])
-            },
-            {
+            id: 'imported',
             Header: 'Imported',
             accessor: (route: IArchivedRoute) => {
               return route.id > 0 ? '-' :
@@ -79,7 +60,33 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
                 ) ? 'Yes' : 'No';
             },
             Filter: SelectColumnFilter,
-            filter: 'equals'
+            filter: 'equals',
+            width: 60
+
+            },
+            {
+            id: 'distance',
+            Header: 'Distance',
+            accessor: (route: IArchivedRoute) => {
+              if (!props.markerLatLng || !route.bounds) {
+                return maxDistanceKm;
+              } else {
+                const routeBounds = new L.LatLngBounds(route.bounds); // as [[number, number], [number, number]];
+                const distance = Math.min(maxDistanceKm, Math.round((props.markerLatLng as L.LatLng).distanceTo(routeBounds.getCenter()) / 1000));
+                return distance;
+              }
+            },
+            Cell: ({ value }: any) => <div style={{ textAlign: "right" }}>{value === maxDistanceKm ? '-' : String(value) + ' km'}</div>,
+            Filter: SliderColumnFilter,
+            filter: 'lessThanOrEqualToNumber',
+            // useMemo gives an error on sortYpe - don't know why
+            sortType: (rowA: any, rowB: any, columnId: string, desc: boolean): number => {
+              const a = rowA.values[columnId]
+              const b = rowB.values[columnId]
+              return a > b ? 1 : b > a ? -1 : 0;
+            },
+            width: 80
+
             }], [data, props.markerLatLng]);
 
       const filterTypes = React.useMemo(() => ({
@@ -206,11 +213,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
       const rowId = e.currentTarget.dataset.item;
       // const row = data[rowId];
       if (!e.ctrlKey && !Object.keys(selectedRowIds).find(selectedRowId => selectedRowId === rowId)) {
-        // Workaround to deselect non filtered rows -> toggleAllRowsSelected only works with current filtered rows
-        Object.keys(selectedRowIds).forEach((key, index) => {
-          selectedRowIds[key] = false;
-        });
-        toggleAllRowsSelected(false) // needed to trigger an update
+        toggleAllRowsSelected(false);
       }
     }, [selectedRowIds, toggleAllRowsSelected]);
 
@@ -219,32 +222,33 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
 
           <div className="pagination">
             <button onClick={onFirstPageClick} disabled={!canPreviousPage}>
-              {'<<'}
-            </button>{' '}
+              <FaAngleDoubleLeft/>
+            </button>&nbsp;
             <button onClick={onPreviousPageClick} disabled={!canPreviousPage}>
-              {'<'}
-            </button>{' '}
+              <FaAngleLeft/>
+            </button>&nbsp;
             <button onClick={onNextPageClick} disabled={!canNextPage}>
-              {'>'}
-            </button>{' '}
+              <FaAngleRight/>
+            </button>&nbsp;
             <button onClick={onLastPageClick} disabled={!canNextPage}>
-              {'>>'}
-            </button>{' '}
+              <FaAngleDoubleRight/>
+            </button>&nbsp;
             <span>
+              &nbsp;&nbsp;
               Page{' '}
               <strong>
                 {pageIndex + 1} of {pageOptions.length}
-              </strong>{' '}
-            </span>
-            <span>
-              | Go to page:{' '}
+              </strong>
+              &nbsp;&nbsp;
+              |&nbsp;&nbsp;
+              Go to page:&nbsp;
               <input
                 type="number"
                 defaultValue={pageIndex + 1}
                 onChange={onGotoPageChange}
-                style={{ width: '100px' }}
+                style={{ width: '50px' }}
               />
-            </span>{' '}
+            </span>&nbsp;
             <select
               value={pageSize}
               onChange={onSetPageSizeChange}
@@ -257,62 +261,72 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
             </select>
           </div>
 
-          <Table striped={true} bordered={true} hover={true} size="sm" {...getTableProps()}>
-            {!props.hideHeaders && (
-            <thead>
-              {
-                headerGroups.map((headerGroup: any) => (
-                  <tr {...headerGroup.getHeaderGroupProps()}>
-                    {
-                      headerGroup.headers.map((column: any) => (
-                        <th
-                          {...column.getHeaderProps(column.getSortByToggleProps())}
-                        >
-                          <span>
-                              {props.enableSorting ? (
-                                column.isSorted ? 
-                                  column.isSortedDesc ? 
-                                    ' 🔽' : 
-                                    ' 🔼' : 
-                                  ''
-                              ) : ''}             
-                          </span>
-                          {
-                            column.render("Header")
-                          }
-                          <div>{React.useMemo(() => column.canFilter ? column.render('Filter') : null, [data])}</div>
-                        </th>
-                      ))
-                    }
-                  </tr>
-                ))
-              }
-            </thead>
-          )}
+          {/* <Styles> */}
+            {/* <div className="tableWrap"> */}
+              <Table striped={true} bordered={true} hover={true} size="sm" {...getTableProps()}>
+                {!props.hideHeaders && (
+                <thead>
+                  {
+                    headerGroups.map((headerGroup: any) => (
+                      <tr {...headerGroup.getHeaderGroupProps()}>
+                        {
+                          headerGroup.headers.map((column: any) => (
+                            <th
+                              {...column.getHeaderProps(column.getSortByToggleProps())}
+                            >
+                              <span>
+                                  {props.enableSorting ? (
+                                    column.isSorted ? 
+                                      column.isSortedDesc ? 
+                                        <FaAngleDown/> : 
+                                        <FaAngleUp/> : 
+                                      ''
+                                  ) : ''}             
+                              </span>
+                              {
+                                column.render("Header")
+                              }
+                              <div>{column.canFilter ? column.render('Filter') : null}</div>
+                            </th>
+                          ))
+                        }
+                      </tr>
+                    ))
+                  }
+                </thead>
+              )}
 
-          <tbody {...getTableBodyProps()}>
-            {
-              page.map((row: any) => {
-                prepareRow(row);
-                return (
-                  <tr key={row.id} {...row.getRowProps()} data-item={row.id} onClick={onRowClick}>
-                    {
-                      row.cells.map((cell: any) => {
-                        return (
-                          <td key={cell.id} {...cell.getCellProps()}>
-                            {
-                              cell.render("Cell")
-                            }
-                          </td>
-                        );
-                      })
-                    }
-                  </tr>
-                );
-              })
-            }
-          </tbody>
-        </Table>
+              <tbody {...getTableBodyProps()}>
+                {
+                  page.map((row: any) => {
+                    prepareRow(row);
+
+                    const style = row.original.source === "Routes" ?
+                      { color: "black" } :
+                      { fontStyle: "italic", color: "grey" };
+
+                    return (
+                      <tr key={row.id} {...row.getRowProps()} data-item={row.id} onClick={onRowClick} 
+                        style={style}>
+                        {
+                          row.cells.map((cell: any) => {
+                            return (
+                              <td key={cell.id} {...cell.getCellProps()}>
+                                {
+                                  cell.render("Cell")
+                                }
+                              </td>
+                            );
+                          })
+                        }
+                      </tr>
+                    );
+                  })
+                }
+              </tbody>
+            </Table>
+          {/* </div> */}
+        {/* </Styles> */}
 
       </div>
     )
@@ -321,18 +335,21 @@ export default ManageRoutesTable;
 
 // Define a default UI for filtering
 function DefaultColumnFilter({column} : {column: any}) {
-  const count = column.preFilteredRows.length
+  // const count = column.preFilteredRows.length
 
   const onDefaultColumnFilterChange = (e: any) => {
     column.setFilter(e.target.value || undefined) // Set undefined to remove the filter entirely
   };
 
+  const style = { width: (column.width || 200) + "px" };
   return (
-    <input
-      value={column.filterValue || ''}
-      onChange={onDefaultColumnFilterChange}
-      placeholder={`Search ${count} records...`}
-    />
+    <div style={style}>
+      <input id={column.id + "search"} style={{ width: "100%"}}
+        value={column.filterValue || ''}
+        onChange={onDefaultColumnFilterChange}
+        placeholder={`Search...`}
+      />
+    </div>
   )
 }
 
@@ -385,7 +402,7 @@ function SliderColumnFilter({column} : {column: any}): any {
       width: 25px;
       text-align: center;
       background-color: #426AFE;
-      color: #fff;
+      color: #ffffff;
       border-radius: 50%;
       cursor: grab;
   `;
@@ -395,11 +412,12 @@ function SliderColumnFilter({column} : {column: any}): any {
   const StyledTrack = styled.div`
       top: 0;
       bottom: 0;
-      background: ${(props: any) => props.index === 2 ? '#300' : props.index === 1 ? '#ddd' : '#d6e5f8d8'};
+      background: ${(props: any) => props.index === 2 ? '#030000' : props.index === 1 ? '#dddddd' : '#d6e5f8d8'};
       border-radius: 999px;
   `;
   const Track = (props: any, state: any) => <StyledTrack {...props} index={state.index} />;
 
+  const slider = React.useMemo(() => {
     return (
       <StyledSlider
           defaultValue={maxFilterDistanceKm}
@@ -409,7 +427,9 @@ function SliderColumnFilter({column} : {column: any}): any {
           max={maxFilterDistanceKm}
           onChange={onChange}
       />);
-  
+  }, [column.id, column.preFilteredRows])
+
+  return slider;
 }
 
 const IndeterminateCheckbox = React.forwardRef(

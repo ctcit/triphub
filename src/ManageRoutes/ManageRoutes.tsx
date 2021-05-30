@@ -6,13 +6,13 @@ import { App } from '../App';
 import { IArchivedRoute, IMap } from '../Interfaces';
 import '../index.css';
 import { FullWidthLoading, Spinner } from '../Widgets';
-import { ManageRoutesMap } from './ManageRoutesMap';
+import { ManageRoutesMap, MapOperation } from './ManageRoutesMap';
 import { ManageRoutesTable } from './ManageRoutesTable';
 import 'leaflet-gpx';
 import * as L from 'leaflet';
 import { ButtonWithTooltip } from 'src/ButtonWithTooltip';
-import { MdAddBox, MdCallSplit, MdDeleteSweep, MdEdit, MdLibraryAdd } from 'react-icons/md';
-import { FaRegHandPointUp } from "react-icons/fa";
+import { MdAddBox, MdCallSplit, MdDeleteSweep, MdEdit, MdLibraryAdd, MdZoomOutMap } from 'react-icons/md';
+import { FaArrowUp, FaMapMarkerAlt } from "react-icons/fa";
 import { ButtonWithConfirm } from 'src/ButtonWithConfirm';
 import { Accordian } from 'src/Accordian';
 import { htmlToText } from 'html-to-text';
@@ -27,7 +27,8 @@ export class ManageRoutes extends Component<{
         selectedRoutes: IArchivedRoute[]
         mergedRoutes: IArchivedRoute,
         isEditing: boolean,
-        makerLatLng: L.LatLng | undefined
+        makerLatLng: L.LatLng | undefined,
+        mapOperation: MapOperation
     }> {
 
     public app : App;
@@ -46,7 +47,8 @@ export class ManageRoutes extends Component<{
             selectedRoutes: [],
             mergedRoutes: this.mergeRoutes([]),
             isEditing: false,
-            makerLatLng: undefined
+            makerLatLng: undefined,
+            mapOperation: MapOperation.None
         }
         this.app = this.props.app
         
@@ -159,6 +161,20 @@ export class ManageRoutes extends Component<{
             this.setState({ makerLatLng: latLng }); 
         }
 
+        const onMoveMarker = () => {
+            // trigger the move
+            this.setState({ mapOperation: MapOperation.MoveMarker }, async () => {
+                this.setState({ mapOperation: MapOperation.None }); 
+            }); 
+        }
+
+        const onZoomExtents = () =>{
+            // trigger the move
+            this.setState({ mapOperation: MapOperation.ZoomExtents }, async () => {
+                this.setState({ mapOperation: MapOperation.None }); 
+            }); 
+        } 
+
         return [
             <Container className={this.props.app.containerClassName()} key='manageroutes' fluid={true}>
                 <h1 key="title">Manage Routes</h1>
@@ -166,16 +182,16 @@ export class ManageRoutes extends Component<{
                 {!isLoading &&
                     <Container key='form' fluid={true}>
                         <Row>
-                            <Col sm={6} md={6}>
+                            <Col lg={12} xl={6}>
                                 <ManageRoutesTable 
                                     routes={this.state.routes} 
                                     enableSorting={true}
                                     onRoutesSelected={onRoutesSelected}
                                     markerLatLng={this.state.makerLatLng}
                                 />  
-                               <FormText color="muted"><FaRegHandPointUp/> CTRL/CMD-click to select multiple routes</FormText>
+                               <FormText color="muted">&nbsp;&nbsp;<FaArrowUp/>&nbsp;CTRL/CMD-click to select multiple routes</FormText>
                             </Col>
-                            <Col sm={6} md={6}>
+                            <Col lg={12} xl={6}>
                                 <Row>
                                     <ButtonGroup>
                                         <ButtonWithTooltip id="NewRouteButton" color='secondary' 
@@ -213,6 +229,18 @@ export class ManageRoutes extends Component<{
                                             <MdDeleteSweep/>
                                         </ButtonWithConfirm>
                                     </ButtonGroup>
+                                    <ButtonGroup>
+                                        <ButtonWithTooltip id="MoveMarkerButton" color='secondary' 
+                                            onClick={onMoveMarker} disabled={false} 
+                                            placement="top" tooltipText="Move the map marker to the centre of the current map extents">
+                                            <FaMapMarkerAlt/>
+                                        </ButtonWithTooltip>
+                                        <ButtonWithTooltip id="ZoomExtentsButton" color='secondary' 
+                                            onClick={onZoomExtents} disabled={routesSelectedCount < 1}  
+                                            placement="top" tooltipText="Zoom to the extents of the selected route(s)">
+                                            <MdZoomOutMap/>
+                                        </ButtonWithTooltip>
+                                    </ButtonGroup>
                                 </Row>
                                 <Row>
                                     <Accordian key='routes' id='routes' className='trip-section' headerClassName='trip-section-header'
@@ -240,6 +268,7 @@ export class ManageRoutes extends Component<{
                                         readOnly={this.state.isLoadingRoute}
                                         onBoundsChanged={onBoundsChanged}
                                         onMarkerMoved={onMarkerMoved}
+                                        mapOperation={this.state.mapOperation}
                                     />
                                 </Row>
                             </Col>
@@ -256,7 +285,9 @@ export class ManageRoutes extends Component<{
         await Promise.all(promises)
         .then(() => {
             const mergedRoutes = this.mergeRoutes(routes);
-            this.setState({selectedRoutes: routes, mergedRoutes});
+            this.setState({selectedRoutes: routes, mergedRoutes, mapOperation: MapOperation.ZoomExtents}, async () => {
+                    this.setState({mapOperation: MapOperation.None});
+            });
         })
         .finally(() => {
             this.setState({isLoadingRoute: false});

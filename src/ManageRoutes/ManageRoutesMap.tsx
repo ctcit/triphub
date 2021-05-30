@@ -14,6 +14,8 @@ export class RouteDetails {
     public description : string;
 }
 
+export enum MapOperation { None, MoveMarker, ZoomExtents }
+
 export class ManageRoutesMap extends MapCommon<{
     readOnly? : boolean,
     route: IArchivedRoute,
@@ -26,6 +28,7 @@ export class ManageRoutesMap extends MapCommon<{
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onBoundsChanged: (bounds: L.LatLngBounds) => void;
     onMarkerMoved: (latLng: L.LatLng) => void;
+    mapOperation: MapOperation
 },{
     isSaving : boolean,
     editsMade: boolean,
@@ -36,6 +39,8 @@ export class ManageRoutesMap extends MapCommon<{
         description: ""
     }; // changed details before being saved
     private pendingRoutesLatLngs: Array<Array<[number, number]>> = [];  // changed routes before being saved
+
+    private mapMarker: L.Marker<any>;
 
     constructor(props:any) {
         super(props);
@@ -97,7 +102,14 @@ export class ManageRoutesMap extends MapCommon<{
         this.pendingRoutesLatLngs = this.getRoutes() || [];
         this.setRoutesFromLatLngs((this.pendingRoutesLatLngs) as Array<Array<[number, number]>>);
 
-        this.fitBounds();
+        switch (this.props.mapOperation) {
+            case MapOperation.MoveMarker:
+                this.mapMarker.setLatLng(this.map.getCenter());
+                break;
+            case MapOperation.ZoomExtents:
+                this.fitBounds();
+                break;
+        }
 
         return (
             <div>
@@ -158,7 +170,7 @@ export class ManageRoutesMap extends MapCommon<{
         this.resizeMap(mapHeight, mapWidth);
 
         const zServiceStationLatLng = new L.LatLng(-43.5191470506675, 172.62654304504397);
-        L.marker(zServiceStationLatLng, {
+        this.mapMarker = L.marker(zServiceStationLatLng, {
             icon: L.icon({
                 iconUrl: icon,
                 shadowUrl: iconShadow
@@ -169,6 +181,8 @@ export class ManageRoutesMap extends MapCommon<{
         .on('move', (e) => {
             this.props.onMarkerMoved((e as any).latlng as L.LatLng)
         });
+
+        this.props.onMarkerMoved(this.mapMarker.getLatLng())
     }
     
     private getRouteDetails(): RouteDetails {

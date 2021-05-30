@@ -6,7 +6,9 @@ function GetTrips($con,$userId,$id = null) {
 	$closed 			 = 2;
 	$suggested 			 = 3;
 	$deleted 			 = 4;
-	$rejected 			 = 5;
+	$rejected 	 		 = 5;
+	$suggestImprovements = 6;
+	$draft               = 7;
 	$currencyInDays	     = ConfigServer::currencyInDays;
 	$tripsTable          = ConfigServer::tripsTable;		
 	$participantsTable   = ConfigServer::participantsTable;		
@@ -20,16 +22,13 @@ function GetTrips($con,$userId,$id = null) {
 	$trips = SqlResultArray($con, 
 	   "SELECT *,
 	   		(CASE 
-			   WHEN isDeleted = 1			THEN $deleted
-			   WHEN approval  = 'Rejected' 	THEN $rejected
-			   WHEN approval  = 'Pending' 	THEN $suggested
-			   WHEN CURDATE() < openDate 	THEN $suggested
-			   WHEN CURDATE() <= closeDate	THEN $open
-											ELSE $closed 
-			END) 			as tripGroup,
-			'' 				as leaders,
-			false			as isOpen,
-			0 				as participantCount,
+			   WHEN isDeleted = 1		         	THEN 'Deleted'
+			   WHEN approval  != 'Approved' 		THEN approval
+			   WHEN CURDATE() < openDate 			THEN approval
+			   WHEN CURDATE() <= closeDate			THEN 'Open' ELSE 'Closed'
+			END) 			as `state`,
+			'' 				as `leaders`,
+			0 				as `participantCount`,
 			'' 				as `role`
 	    FROM $tripsTable t
 			WHERE $where
@@ -37,7 +36,7 @@ function GetTrips($con,$userId,$id = null) {
 
 	$participants = SqlResultArray($con,
 	   "SELECT	p.tripId, 
-				coalesce(p.name,concat(trim(m.firstname),' ',trim(m.lastname))) as name,
+				coalesce(p.name,concat(trim(m.firstname),' ',trim(m.lastname))) as `name`,
 				isLeader
 			FROM      $tripsTable t 
 			JOIN      $participantsTable p ON p.tripId = t.id and p.isDeleted = 0
@@ -46,13 +45,13 @@ function GetTrips($con,$userId,$id = null) {
 
 	$roles = SqlResultArray($con,
 	   "SELECT c.tripId, 
-	   			'Editor'  as role 
+	   			'Editor'  as `role` 
 			FROM $historyTable c
 				JOIN $tripsTable          t on t.id = c.tripId 
 				WHERE $where AND c.userId != 0 AND c.userId = $userId 
 		UNION
 		SELECT p.tripId, 
-				(case when p.isDeleted then 'Removed' when p.isLeader then 'Leader' else 'Tramper' end) as role 
+				(case when p.isDeleted then 'Removed' when p.isLeader then 'Leader' else 'Tramper' end) as `role`
 			FROM $participantsTable p 
 				JOIN $tripsTable        t on t.id = p.tripId 
 				WHERE $where AND p.memberId = $userId",
@@ -71,16 +70,13 @@ function GetTrips($con,$userId,$id = null) {
 		}
 
 		$trip["leaders"] = implode(", ",$leaders);
-		$trip["isOpen"] = $trip["tripGroup"] === $open;
 
-		if ($trip["approval"] == "Approved"
-			&& $trip["tripGroup"] < $suggested
+		if ($trip["approval"] == 'Approved'
+			&& in_array($trip["state"],['Open','Closed','Approved'])
 			&& array_key_exists($trip["id"],$roles) && $roles[$trip["id"]]["role"] != "Removed") {
 			$trip["role"] = $roles[$trip["id"]]["role"];
-			if ( $roles[$trip["id"]]["role"] != "Editor" )
-			{
-				$trip["tripGroup"] = $mytrips;
-			}
+			if ($roles[$trip["id"]]["role"] != "Editor")
+				$trip["state"] = 'MyTrips';
 		}
 	}
 

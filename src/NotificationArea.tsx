@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {useState}  from 'react';
+import { useState } from 'react';
 import { Alert, Container } from 'reactstrap';
 
 export interface INotification {
@@ -7,24 +7,22 @@ export interface INotification {
     colour: string,
 }
 
-const Notification = (props:INotification) : JSX.Element => {
+const Notification = (props: INotification): JSX.Element => {
     const [visible, setVisible] = useState(true)
     const onDismiss = () => setVisible(false)
 
     return <Alert color={props.colour} isOpen={visible} toggle={onDismiss}>
-            {props.text}
+        {props.text}
     </Alert>
 }
 
 
 export interface INotificationAreaProps {
-    notifications : INotification[],
+    notifications: INotification[],
     containerClassName: string
 }
 
-export const NotificationArea = (props:INotificationAreaProps) : JSX.Element  =>
+export const NotificationArea = (props: INotificationAreaProps): JSX.Element =>
     <Container className={props.containerClassName + 'my-3'} fluid={true}>
-        {props.notifications.map(((notification, index) => {
-            return <Notification {...notification}/>
-        }))}
+        {props.notifications.map((notification, index) => <Notification key={index} {...notification} />)}
     </Container>

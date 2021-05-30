@@ -1,20 +1,18 @@
 import * as React from 'react';
 import { Button, Navbar, ButtonGroup, ListGroup, ListGroupItem } from 'reactstrap';
 import { Component } from 'react';
-import { IMember, IParticipant } from './Interfaces';
+import { IParticipant } from './Interfaces';
 import { Spinner } from './Widgets';
 import { Trip } from './Trip';
 import { App } from './App';
-import { GetDisplayPriority } from './Utilities';
+import { BindMethods, GetDisplayPriority } from './Utilities';
 import { TripParticipant } from './TripParticipant';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 export class TripParticipants extends Component<{
     trip: Trip,
-    app: App,
-    isLoading: boolean
+    app: App
 }, {
-    namePrefix?: string
 }> {
 
     public participant: React.RefObject<any>
@@ -22,26 +20,19 @@ export class TripParticipants extends Component<{
     constructor(props: any) {
         super(props)
         this.state = {}
-        this.signMeUp = this.signMeUp.bind(this)
-        this.signUpTramper = this.signUpTramper.bind(this)
-        this.signUpTramperSave = this.signUpTramperSave.bind(this)
-        this.signUpTramperCancel = this.signUpTramperCancel.bind(this)
-        this.toggleLegend = this.toggleLegend.bind(this)
-        this.setPosition = this.setPosition.bind(this)
-        this.setParticipant = this.setParticipant.bind(this)
-        this.onDropOnDeleted = this.onDropOnDeleted.bind(this)
         this.participant = React.createRef()
+        BindMethods(this)
     }
 
-    public signUpTramper() {
+    public onSignUpTramper() {
         const participants = this.props.trip.state.participants
 
-        this.props.trip.setState({ participants: [this.props.trip.blankTramper(), ...participants] })
+        this.props.trip.setState({ participants: [...participants, this.props.trip.blankTramper] })
     }
 
-    public signMeUp() {
+    public onSignMeUp() {
 
-        if (!this.props.app.getMe().id) {
+        if (!this.props.app.me.id) {
             const newMembersRep = this.props.app.state.members[0]
             alert(`Non members are most welcome to join club trips.\n` +
                 `Please either:\n` +
@@ -53,28 +44,29 @@ export class TripParticipants extends Component<{
         }
 
         this.props.trip.setState({ isSaving: true })
-        this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants', this.props.trip.signMeUpTramper(), true)
-            .then(this.props.trip.requeryParticipants)
+        this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants',
+            this.props.trip.signMeUpTramper, true)
+            .then(this.props.trip.onRequeryParticipants)
     }
 
-    public signUpTramperSave() {
+    public onSignUpTramperSave() {
         const participant = this.props.trip.state.participants[0]
 
         this.props.trip.setState({ isSaving: true })
         this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants', participant, true)
-            .then(this.props.trip.requeryParticipants)
+            .then(this.props.trip.onRequeryParticipants)
     }
 
-    public signUpTramperCancel() {
-        this.props.trip.setState({ participants: this.props.trip.state.participants.filter((p: any) => p.id !== -1) })
+    public onSignUpTramperCancel() {
+        this.props.trip.setState({ participants: this.props.trip.state.participants.filter(p => p.id !== -1) })
     }
 
-    public toggleLegend() {
+    public onToggleLegend() {
         this.props.trip.setState({ showLegend: !this.props.trip.state.showLegend })
     }
 
-    public setPosition(id: number, target?: IParticipant, showMenu?: boolean): Promise<any> {
-        const info = this.props.trip.getParticipantsInfo()
+    public onSetPosition(id: number, target?: IParticipant, showMenu?: boolean): Promise<any> {
+        const info = this.props.trip.participantsInfo
         const source = info.all.find(p => p.id === id) as IParticipant
         const sourceIndex = info.moveable.indexOf(source)
         let displayPriority = source.id
@@ -101,10 +93,10 @@ export class TripParticipants extends Component<{
                     : GetDisplayPriority(target) / 2 + GetDisplayPriority(info.moveable[nextIndex]) / 2
         }
 
-        return this.setParticipant(id, { isDeleted: false, displayPriority: displayPriority.toString() }, showMenu)
+        return this.onSetParticipant(id, { isDeleted: false, displayPriority: displayPriority.toString() }, showMenu)
     }
 
-    public setParticipant(id: number, props: {}, showMenu?: boolean): Promise<any> {
+    public onSetParticipant(id: number, props: {}, showMenu?: boolean): Promise<any> {
 
         const participants = [...this.props.trip.state.participants]
         const participant = participants.find((p: IParticipant) => p.id === id) as IParticipant
@@ -117,104 +109,105 @@ export class TripParticipants extends Component<{
     }
 
     public onDropOnDeleted(ev: any) {
-        this.setParticipant(parseInt(ev.dataTransfer.getData('id'), 10), { isDeleted: true })
+        this.onSetParticipant(parseInt(ev.dataTransfer.getData('id'), 10), { isDeleted: true })
     }
 
     public render() {
 
-        const me = this.props.app.getMe()
+        const me = this.props.app.me
         const anon = !me.id
-        const info = this.props.trip.getParticipantsInfo()
-        const isPrivileged = this.props.trip.canEditTrip()
-        const isOpen = this.props.trip.state.trip.isOpen || isPrivileged
+        const info = this.props.trip.participantsInfo
+        const isPrivileged = this.props.trip.canEditTrip
+        const isOpen = this.props.trip.state.trip.state === 'Open' || isPrivileged
         const isNewTrip = this.props.trip.props.isNew
         const hasNewTramper = !!info.all.find((p: IParticipant) => p.id === -1)
         const imOnList = !!info.all.find((m: IParticipant) => m.memberId === me.id)
         const onDragOver = (ev: any) => ev.preventDefault()
-        const onDropOnWaitlist = (ev: any) => this.setPosition(parseInt(ev.dataTransfer.getData('id'), 10), undefined)
+        const onDropOnWaitlist = (ev: any) => this.onSetPosition(parseInt(ev.dataTransfer.getData('id'), 10), undefined)
         const showLegend = this.props.trip.state.showLegend
-        const legendIcon = (className: string, description: string) =>
-            <div><span className={className}/>{description}</div>
-        const legendButton = (className: string, description: string) =>
-            <div><Button disabled={true}><span className={className}/></Button>{description}</div>
+        const LegendIcon = (props: { icon: string, children: any }) =>
+            <div><span className={`fas ${props.icon}`} />{props.children}</div>
+        const LegendButton = (props: { icon: string, children: any }) =>
+            <div><Button disabled={true}><span className={`fa ${props.icon}`} /></Button>{props.children}</div>
 
         return [
             <Navbar key='navbar' color='light' light={true} expand='md'>
                 {[
-                    <Button key={'signmeup' + info.all.length} onClick={this.signMeUp} hidden={this.props.isLoading || isNewTrip || imOnList || !isOpen}>
+                    <Button key={'signmeup' + info.all.length} onClick={this.onSignMeUp}
+                        hidden={isNewTrip || imOnList || !isOpen}>
                         <span className='fa fa-pen wiggle' />
                         {this.props.trip.state.isSaving ? ['Signing up ', Spinner] : 'Sign me up!'}
                         {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
-                    <Button key={'signup' + info.all.length} onClick={this.signUpTramper} hidden={this.props.isLoading || isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
+                    <Button key={'signup' + info.all.length} onClick={this.onSignUpTramper}
+                        hidden={isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
                         <span className='fa fa-user-plus' /> Sign up a tramper
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
-                    <ButtonGroup key={'signupcomplete' + info.all.length} hidden={this.props.isLoading || isNewTrip || !hasNewTramper || !isOpen}>
-                        <Button onClick={this.signUpTramper} disabled={true}>
+                    <ButtonGroup key={'signupcomplete' + info.all.length}
+                        hidden={isNewTrip || !hasNewTramper || !isOpen}>
+                        <Button onClick={this.onSignUpTramper} disabled={true}>
                             <span className='fa fa-user-plus' /> Sign up a tramper:
                     </Button>
-                        <Button key='save' color='primary' onClick={this.signUpTramperSave}>
+                        <Button key='save' color='primary' onClick={this.onSignUpTramperSave}>
                             {this.props.trip.state.isSaving ? ['Saving ', Spinner] : 'Save'}
                         </Button>
-                        <Button key='cancel' color='primary' onClick={this.signUpTramperCancel}>
+                        <Button key='cancel' color='primary' onClick={this.onSignUpTramperCancel}>
                             Cancel
                     </Button>
                     </ButtonGroup>,
-                    <Button key={'help' + info.all.length} onClick={this.toggleLegend} hidden={this.props.isLoading || isNewTrip || anon}>
+                    <Button key={'help' + info.all.length} onClick={this.onToggleLegend} hidden={isNewTrip || anon}>
                         <span className='fa fa-question-circle' />{showLegend ? 'Hide legend' : 'Show legend'}
                     </Button>,
-                    <span key={'participants' + info.all.length} hidden={this.props.isLoading || isNewTrip}>
+                    <span key={'participants' + info.all.length} hidden={isNewTrip}>
                         &nbsp; {info.early.length} Participants
                     </span>
                 ]}
             </Navbar>,
             (showLegend ? <div className='participant-buttons-legend'>
-                {legendIcon('fas fa-star','This person is the leader')}
-                {legendIcon('fas fa-podcast','This person is taking a Personal Location Beacon')}
-                {legendIcon('fas fa-car','This person is taking a Car')}
-                {legendIcon('fas fa-comment','There is special logistical information here')}
-                {legendIcon('fas fa-id-badge','This person is not a member of the CTC')}
-                {legendButton('fa fa-angle-up','Moves the person up the list')}
-                {legendButton('fa fa-angle-down','Moves the person down the list')}
-                {legendButton('fa fa-trash','Takes the person off the list')}
-                {legendButton('fa fa-sm fa-pen','Puts the person back on the list')}
-                {legendButton('fa fa-sm fa-user-plus','Puts the person on the wait-list')}
-                {legendButton('fa fa-sm fa-user-times','Takes the person off the wait-list')}
-                {legendButton('fa fa-sm fa-phone','Updates emergency contact details')}
+                <LegendIcon icon='fa-star'>This person is the leader</LegendIcon>
+                <LegendIcon icon='fa-podcast'>This person is taking a Personal Location Beacon</LegendIcon>
+                <LegendIcon icon='fa-car'>This person is taking a Car</LegendIcon>
+                <LegendIcon icon='fa-comment'>There is special logistical information here</LegendIcon>
+                <LegendIcon icon='fa-id-badge'>This person is not a member of the CTC</LegendIcon>
+                <LegendButton icon='fa-angle-up'>Moves the person up the list</LegendButton>
+                <LegendButton icon='fa-angle-down'>Moves the person down the list</LegendButton>
+                <LegendButton icon='fa-trash'>Takes the person off the list</LegendButton>
+                <LegendButton icon='fa-sm fa-pen'>Puts the person back on the list</LegendButton>
+                <LegendButton icon='fa-sm fa-user-plus'>Puts the person on the wait-list</LegendButton>
+                <LegendButton icon='fa-sm fa-user-times'>Takes the person off the wait-list</LegendButton>
+                <LegendButton icon='fa-sm fa-phone'>Updates emergency contact details</LegendButton>
             </div> : null),
             <ListGroup key='participants'>
                 <ListGroupItem>
                     {
                         info.current.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip}
-                                owner={this} app={this.props.app} loading={this.props.isLoading} canWaitList={info.late.length !== 0} ref={this.participant}
-                                info={info} />)
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
+                                data={JSON.stringify(p)} trip={this.props.trip}
+                                owner={this} app={this.props.app}
+                                canWaitList={info.late.length !== 0} ref={this.participant} info={info} />)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={info.late.length === 0}>
                     <div onDragOver={onDragOver} onDrop={onDropOnWaitlist}><b>Waitlist</b></div>
                     {
                         info.late.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip}
-                                owner={this} app={this.props.app} loading={this.props.isLoading} canUnwaitList={true} info={info} />)
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
+                                data={JSON.stringify(p)} trip={this.props.trip}
+                                owner={this} app={this.props.app}
+                                canUnwaitList={true} info={info} />)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={isNewTrip || info.deleted.length === 0}>
                     <div onDragOver={onDragOver} onDrop={this.onDropOnDeleted}><b>Deleted</b></div>
                     {
                         info.deleted.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participant={p} trip={this.props.trip}
-                                owner={this} app={this.props.app} loading={this.props.isLoading} info={info} />)
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
+                                data={JSON.stringify(p)} trip={this.props.trip}
+                                owner={this} app={this.props.app} info={info} />)
                     }
                 </ListGroupItem>
             </ListGroup>,
-            <datalist key='memberlist' id='memberlist'>
-                {this.props.app.getMembers()
-                    .filter((m: IMember) => this.state.namePrefix && m.name.toUpperCase().startsWith(this.state.namePrefix.toUpperCase()))
-                    .filter((m: IMember, i: number) => i < 10)
-                    .map((m: any) => <option key={'datalistoption' + m.id} value={m.name} />)}
-            </datalist>
         ]
     }
 }

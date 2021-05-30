@@ -32,7 +32,7 @@ function GetMembers($con, $userid, $id = 0) {
 			FROM $membersTable             m
 			JOIN $membershipsTable         ms  on ms.id = m.membershipId
 			JOIN $memberRolesTable         mr  on mr.memberId = m.id
-			WHERE ms.statusAdmin = 'Active'
+			WHERE ms.statusAdmin = 'Active' AND ms.membershipTypeId NOT IN (9,10)
 			UNION
 			SELECT 
 				0 as id,

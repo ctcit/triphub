@@ -1,80 +1,89 @@
 <html>
-    <title>API Test</title>
-    <body>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-        <script>
-            $( document ).ready(function() {
-                const params = new URLSearchParams(window.location.search);
-                const method = params.get('method')
-                const path = params.get('basehref') + '/' + params.get('path')
-                const fields = JSON.parse(params.get('fields'))
-                const regex = /{\w+}/g
+<title>API Test</title>
 
-                $('#Header').html(method + ' ' + path)
-                $('#Home').html("<a href='"+params.get('basehref')+"'><i>(home)</i></a>")
-                $('#Submit').html(method)
-                $('#Input').html(params.get('input'))
-                $('#Output').html(params.get('output'))
-                $('#Description').html(params.get('description'))
+<body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            const params = new URLSearchParams(window.location.search);
+            const method = params.get('method')
+            const endpoint = `${params.get('basehref')}/${params.get('endpoint')}`
+            const fields = JSON.parse(params.get('fields'))
+            const regex = /{\w+}/g
 
-                path.replace(regex, function(key, id) {
-                    $('#Fields').append($("<tr><td>"+key+"</td>"+
-                                              "<td></td>"+
-                                              "<td><input type='text' id='"+id+"'/></td></tr>"))
-                });
+            $('#Header').html(`${method} ${endpoint}`)
+            $('#Home').html(`<a href='${params.get('basehref')}'><i>(home)</i></a>`)
+            $('#Submit').html(method)
+            $('#Input').html(params.get('input'))
+            $('#Output').html(params.get('output'))
+            $('#Description').html(params.get('description'))
 
+            endpoint.replace(regex, (key, id) =>
+                $('#Fields').append($(
+                    `<tr><td>${key}</td>
+                         <td></td>
+                         <td><input type='text' id='${id}'/></td></tr>`))
+            );
+
+            for (let field of fields) {
+                const checkbox = field.readonly == 'Yes' ? '' 
+                    : `<input type='checkbox' id='${field.col}_enabled'/>`
+                const input = field.readonly == 'Yes' ? '' : field.type == 'text'
+                    ? `<textarea id=${field.col}'></textarea>`
+                    : `<input id='${field.col}' type='text'/>`
+                $('#Fields').append($(
+                    `<tr><td>${field.col}</td>
+                         <td>${checkbox}</td>
+                         <td>${input}</td>
+                         <td>${field.type}</td>
+                         <td>${field.comment}</td></tr>`))
+            }
+
+            $("#Submit").click(function () {
+                let data = {}
+                let submitEndpoint = endpoint.replace(regex, (key, id) => $("#" + id).val());
+                $("#Submit").attr("disabled", true)
+                $('#PrettyPrintJsonOutput').html('<i>waiting...</i>')
                 for (let field of fields) {
-                    const checkbox = field.readonly == 'Yes' ? '' : "<input type='checkbox' id='"+field.col+"_enabled'/>"
-                    const input = field.readonly == 'Yes' ? '' :
-                                    field.type == 'text' ? "<textarea id='"+field.col+"'></textarea>" 
-                                                       : "<input type='text' id='"+field.col+"'/>"
-                    $('#Fields').append($("<tr><td>"+field.col+"</td>"+
-                                            "<td>"+checkbox+"</td>"+
-                                            "<td>"+input+"</td>"+
-                                            "<td>"+field.type+"</td>"+
-                                            "<td>"+field.comment+"</td></tr>"))
+                    if ($(`#${field.col}_enabled`).prop('checked'))
+                        data[field.col] = $("#" + field.col).val()
                 }
-
-                $("#Submit").click(function(){
-                    let data = {}
-                    let submitpath = path.replace(regex, function(key, id) { return $("#"+id).val() });
-                    $("#Submit").attr("disabled", true)
-                    $('#PrettyPrintJsonOutput').html('<i>waiting...</i>')
-                    for (let field of fields) {
-                        if ($("#"+field.col+"_enabled").prop('checked'))
-                            data[field.col] = $("#"+field.col).val()
-                    }
-                    $.ajax({
-                        url:submitpath + '?prettyprintjson=1',
-                        type:method,
-                        data:method == 'GET' || method == 'DELETE' ? null : JSON.stringify(data),
-                        success:function(data,status){
-                                $("#Submit").attr("disabled", false)
-                                $('#PrettyPrintJsonOutput').html(data);
-                                $('.block').css('cursor', 'hand')
-                                $('.block').click(function() {
-                                    var id = this.id.split('-')[0]
-                                    $('#' + id + '-hide').toggle()
-                                    $('#' + id + '-show').toggle()
-                                })
-                            }
+                $.ajax({
+                    url: submitEndpoint + '?prettyprintjson=1',
+                    type: method,
+                    data: method == 'GET' || method == 'DELETE' ? null : JSON.stringify(data),
+                    success: (data, status) => {
+                        $("#Submit").attr("disabled", false)
+                        $('#PrettyPrintJsonOutput').html(data);
+                        $('.block').css('cursor', 'hand')
+                        $('.block').click(function () {
+                            var id = this.id.split('-')[0]
+                            $('#' + id + '-hide').toggle()
+                            $('#' + id + '-show').toggle()
                         })
+                    },
+                    error: (jqXHR, textStatus, errorThrown) => {
+                        $("#Submit").attr("disabled", false)
+                        $('#PrettyPrintJsonOutput').text(`${textStatus} ${errorThrown}`)
+                    }
                 })
             })
-        </script>
-        <h2><span id="Header"></span> <span id="Home"></span></h2>
-        <h3>Input</h3>
-        <div id="Input"></div>
-        <h3>Output</h3>
-        <div id="Output"></div>
-        <h3>Description</h3>
-        <div id="Description"></div>
+        })
+    </script>
+    <h2><span id="Header"></span> <span id="Home"></span></h2>
+    <h3>Input</h3>
+    <div id="Input"></div>
+    <h3>Output</h3>
+    <div id="Output"></div>
+    <h3>Description</h3>
+    <div id="Description"></div>
 
-        <table id="Fields">
-        
+    <table id="Fields">
 
-        </table>
-        <button id="Submit" type="button">Submit</button>
-        <div id="PrettyPrintJsonOutput"></div>
-    </body>
+
+    </table>
+    <button id="Submit" type="button">Submit</button>
+    <div id="PrettyPrintJsonOutput"></div>
+</body>
+
 </html>

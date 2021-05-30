@@ -8,7 +8,7 @@ import Table from 'reactstrap/lib/Table';
 import { BaseUrl } from '..';
 import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from '../Control';
 import Button from 'reactstrap/lib/Button';
-import { IsValidDateString, GetDateString, GetStartOfNextMonth } from '../Utilities';
+import { IsValidDateString, GetDateString, GetStartOfNextMonth, BindMethods } from '../Utilities';
 import { Accordian } from '../Accordian';
 
 class Section {
@@ -24,74 +24,70 @@ const Sections: Section[] = [
 ]
 
 class NoticeDetail extends Component<{
-    app: App,
+    app: App
     notice: INotice
 }, {
     isLoading: boolean
-}> {
+}> { 
 
     public app: App;
 
     constructor(props: any) {
         super(props)
-        this.state = {
-            isLoading: false
-        }
+        this.state = { isLoading: false }
         this.app = this.props.app
     }
 
     public render() {
         let validations: IValidation[] = this.validate(this.props.notice);
 
-        const onGet = (id: string): any => {
-            return this.props.notice[id];
+        const onGet = (field: string): any => {
+            return this.props.notice[field];
+        }
+
+        const onSet = (field: string, value: any): void => {
+            this.props.notice[field] = value;
         }
 
         const onSave = (id: string, value: any): Promise<void> => {
-            this.props.notice[id] = value;
             validations = this.validate(this.props.notice)
             // Don't actually save until the save button is pressed
             return Promise.resolve();
         }
 
-        const onGetValidationMessage = (id: string): any => {
-            const found: IValidation | undefined = validations.find(validation => validation.id === id && !validation.ok);
+        const onGetValidationMessage = (field: string): any => {
+            const found: IValidation | undefined = 
+                validations.find(validation => validation.field === field && !validation.ok);
             return found ? found.message : null;
         }
 
         const common = {
+            id: 'notice',
             readOnly: false,
             isLoading: this.state.isLoading,
             owner: this,
+            data: JSON.stringify(this.props.notice),
             'onGet': onGet,
+            'onSet': onSet,
             'onSave': onSave,
             'onGetValidationMessage': onGetValidationMessage
         }
 
-        const section_options = {}
-        for( const section of Sections )
-        {
-            section_options[section.name] = section.name
-        }
         return <div>
             <h2>Edit Notice</h2>
-            <InputControl id='title' label='Title' type='text' {...common} />
-            <InputControl id='date' label='Expiry Date' type='date' {...common} />
-            <SelectControl id='section' label='Section' options={section_options} {...common} />
-            <TextAreaInputControl id='text' label='Text' {...common} />
-            <SwitchControl id='publish' label='Publish' {...common} />
-            <datalist key='section_list' id='section_list'>
-                {Sections.map(section => <option value={section.name} key={section.name}>{section.name}</option>)
-                }
-            </datalist>
+            <InputControl field='title' label='Title' type='text' {...common} />
+            <InputControl field='date' label='Expiry Date' type='date' {...common} />
+            <SelectControl field='section' label='Section' options={Sections.map(s => s.name)} {...common} />
+            <TextAreaInputControl field='text' label='Text' {...common} />
+            <SwitchControl field='publish' label='Publish' {...common} />
         </div>;
     }
 
     private validate(notice:INotice): IValidation[] {
         return [
-            { id: 'title', ok: notice.title.length > 0, message: 'Must set a title!' },
-            { id: 'text', ok: notice.text.length > 0, message: 'Must set some body text!' },
-            { id: 'date', ok: IsValidDateString(notice.date), message: 'Expiry date is not valid' },
+            { field: 'title', ok: notice.title.length > 0, message: 'Must set a title!' },
+            { field: 'text', ok: notice.text.length > 0, message: 'Must set some body text!' },
+            { field: 'date', ok: IsValidDateString(notice.date), message: 'Expiry date is not valid' },
         ];
     }
 
@@ -118,11 +114,7 @@ export class NoticeList extends Component<{
             showAllExpired: false,
         }
         this.app = this.props.app
-        this.handleSaveDetail = this.handleSaveDetail.bind(this)
-        this.handleCancelDetail = this.handleCancelDetail.bind(this)
-        this.handleEditNotice = this.handleEditNotice.bind(this)
-        this.handleNewNotice = this.handleNewNotice.bind(this)
-        this.handleShowAll = this.handleShowAll.bind(this)
+        BindMethods(this)
     }
 
     public componentDidMount() {
@@ -131,7 +123,7 @@ export class NoticeList extends Component<{
 
     public render() {
         return [
-            <Button onClick={this.handleNewNotice} key="newNoticeButton" color="primary" className='my-2'><span className='fas fa-plus'/> New Notice</Button>,
+            <Button onClick={this.onNewNotice} key="newNoticeButton" color="primary" className='my-2'><span className='fas fa-plus'/> New Notice</Button>,
             this.state.notices.length === 0 && <p className='newsletter-no-notices'>No notices - use the "New Notice" button or add an expired notice.</p>,
             Sections.map((section: Section) => {
                 const notices = this.state.notices.filter(n => n.section === section.name)
@@ -159,7 +151,7 @@ export class NoticeList extends Component<{
                                     return ''
                                 }
                                 const onClick = (): any => {
-                                    return this.handleEditNotice(notice);
+                                    return this.onEditNotice(notice);
                                 }
                                 const onUpClick = (): any => {
                                     return this.moveNoticeUp(notice);
@@ -171,7 +163,7 @@ export class NoticeList extends Component<{
                                         <td className="mobile-only"  onClick={onClick}/>
                                         <td onClick={onClick}>{notice.title}</td>
                                         <td onClick={onClick}>{notice.date}</td>
-                                        <td><SwitchControl id='publish' label='' isLoading={false} onGet={onGet}
+                                        <td><SwitchControl id='publish' field='publish' label='' isLoading={false} onGet={onGet}
                                             onSave={onSave} onGetValidationMessage={onGetValidationMessage} /></td>
                                         <td>
                                         {(index!==0) && <Button onClick={onUpClick}><span className='fa fa-arrow-up' style={{marginRight: '0'}}/></Button> }
@@ -214,7 +206,7 @@ export class NoticeList extends Component<{
                         }
                     </tbody>
                 </Table>
-                {!this.state.showAllExpired && <Button onClick={this.handleShowAll} color="primary" className="mr-1">Show All</Button>}
+                {!this.state.showAllExpired && <Button onClick={this.onShowAll} color="primary" className="mr-1">Show All</Button>}
             </Accordian>,
             <ReactModal
                 key="notice-edit-modal"
@@ -242,13 +234,13 @@ export class NoticeList extends Component<{
 
                     <NoticeDetail notice={this.state.showDetailFor} app={this.app} />
                 }
-                <Button onClick={this.handleSaveDetail} color="primary" className="mr-1">Save</Button>
-                <Button onClick={this.handleCancelDetail} className="mr-1">Cancel</Button>
+                <Button onClick={this.onSaveDetail} color="primary" className="mr-1">Save</Button>
+                <Button onClick={this.onCancelDetail} className="mr-1">Cancel</Button>
             </ReactModal>
         ];
     }
 
-    public handleSaveDetail() {
+    public onSaveDetail() {
         if (this.state.showDetailFor != null ) {
             this.saveNotice(this.state.showDetailFor.id, this.state.showDetailFor)
             .then( ( notice : INotice[] ) => {
@@ -258,15 +250,15 @@ export class NoticeList extends Component<{
         }
     }
 
-    public handleCancelDetail() {
+    public onCancelDetail() {
         this.setState({ showDetailFor: null })
     }
 
-    public handleEditNotice(notice: INotice) {
+    public onEditNotice(notice: INotice) {
         this.setState({ showDetailFor: {...notice} })
     }
 
-    public handleNewNotice() {
+    public onNewNotice() {
         const newNotice = { id: -1, title: "", text: "", date: GetDateString( GetStartOfNextMonth() ), publish: true, section: "Notice", order: this.getNextOrder() }
         this.setState({ showDetailFor: {...newNotice} })
     }
@@ -322,7 +314,7 @@ export class NoticeList extends Component<{
         return notices.filter( (notice) => valid_section_names.includes(notice.section) )
     }
 
-    private handleShowAll() {
+    private onShowAll() {
         this.setState({showAllExpired: true})
         this.requeryExpired(false)
     }

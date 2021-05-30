@@ -4,7 +4,7 @@ import { Alert, Container } from 'reactstrap';
 import { BaseUrl } from 'src';
 import { Accordian } from './Accordian';
 import { StateFilter } from './Calendar';
-import {ITrip, TripGroup} from './Interfaces'
+import {ITrip} from './Interfaces'
 import { apiCall, GetDate, GetLength } from './Utilities';
 import { FullWidthLoading } from './Widgets';
 
@@ -15,14 +15,14 @@ export interface IPublicCalendarProps {
 export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
     const [trips, setTrips] = useState([] as ITrip[])
     const [isLoading, setIsLoading] = useState(true)
-    const [dummy, setDummy] = useState(0)
+    const [dummy, _] = useState(0)
 
     const isSocialOnly = props.path.startsWith('/socials')
     const isTripsOnly = props.path.startsWith('/trips')
 
     React.useEffect( () => {
         apiCall('GET',BaseUrl + '/trips').then( (retrievedTrips:ITrip[]) => {
-            retrievedTrips = retrievedTrips.filter(trip => trip.isOpen)
+            retrievedTrips = retrievedTrips.filter(trip => trip.state === 'Open')
             if (isTripsOnly) {
                 retrievedTrips = retrievedTrips.filter( trip => !trip.isSocial)
             }

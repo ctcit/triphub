@@ -580,25 +580,27 @@ function IsReadOnly($table, $col) {
 
 function ApiHelp($con,$basehref) {
     $html = "";
-    $content = array();
+    $endpoints = array();
     $entities = array();
     $constants = (new ReflectionClass("ConfigServer"))->getConstants();
     $filehandle = fopen("api.php", "r") or die("Unable to open file!");
-    $item = Array('security'=>'NonPrivileged');
+    $endpoint = Array('security'=>'NonPrivileged');
 
     // Parses this file to extract endpoint information
     while (!feof($filehandle)) {
         $line = str_replace('$basehref',$basehref,trim(fgets($filehandle)));
-        if (preg_match('/case "(GET|POST|PATCH|DELETE)( (.*))?":/',$line,$matches))
-            $item['entries'] []= array("method"=>$matches[1], "path"=>$matches[3]);
-        else if (preg_match('/\/\/ (DESCRIPTION|INPUT|OUTPUT|INPUTENTITY) (.*)/',$line,$matches))
-            $item[strtolower($matches[1])] .= "$matches[2]<br/>";
-        else if (preg_match('/UserIdIfHasRoleOrDie\(\$con,"(.*?)"\)/',$line,$matches))
-            $item["security"] = "$matches[1]";
+        if (preg_match('/case "(GET|POST|PATCH|DELETE)( (.*))?":/',$line,$matches)) {
+            $endpoint['methods'] []= $matches[1];
+            $endpoint['endpoint'] = $matches[3];
+        } else if (preg_match('/\/\/ (DESCRIPTION|INPUT|OUTPUT|INPUTENTITY) (.*)/',$line,$matches)) {
+            $endpoint[strtolower($matches[1])] .= "$matches[2]<br/>";
+        } else if (preg_match('/UserIdIfHasRoleOrDie\(\$con,"(.*?)"\)/',$line,$matches)) {
+            $endpoint["security"] = "$matches[1]";
+        }
 
-        if (preg_match('/return .*;/',$line,$matches) && array_key_exists('entries',$item)) {
-            $content [] = $item;
-            $item = Array('security'=>'NonPrivileged');
+        if (preg_match('/return .*;/',$line,$matches) && array_key_exists('methods',$endpoint)) {
+            $endpoints [] = $endpoint;
+            $endpoint = Array('security'=>'NonPrivileged');
         }
     }
     fclose($filehandle);
@@ -644,7 +646,7 @@ function ApiHelp($con,$basehref) {
     $html .= "<style>
                 body {font-family: arial;}
                 table {border-collapse: collapse} 
-                td,th {border: solid 1px gray}
+                td,th {border: solid 1px gray; vertical-align: top}
                 .GET    {background: lightgreen; }
                 .POST   {background: cyan;       }
                 .PATCH  {background: plum;       }
@@ -652,25 +654,26 @@ function ApiHelp($con,$basehref) {
             </style>";
 
     // Add endpoint information as HTML
-    $apipath = str_replace('api.php','ApiTest.html',$basehref);
+    $apitest = str_replace('api.php','ApiTest.html',$basehref);
     $html .= "<table>";
-    $html .= "<tr><th colspan='2'>Endpoint</th><th>Security</th><th>Description</th><th>Input</th><th>Output</th></tr>";
-    foreach ($content as &$val) {
-        $val['basehref'] = $basehref;
-        $val['fields'] = array_key_exists('inputentity',$val) ? json_encode($entities[str_replace('<br/>','',$val['inputentity'])]) : "[]";
-        foreach ($val['entries'] as $index => $entry) {
-            $val['method'] = $entry['method'];
-            $val['path'] = $entry['path'];
-            $html .= "<tr>
-                        <th class='$val[method]'>$val[method]</th>
-                        <td><a href='$apipath?".http_build_query($val)."'>$val[path]</a></td>";
-            if ($index == 0)
-                $html .= "<td rowspan='".sizeof($val['entries'])."'>$val[security]</td>
-                          <td rowspan='".sizeof($val['entries'])."'>$val[description]</td>
-                          <td rowspan='".sizeof($val['entries'])."'>$val[input]</td>
-                          <td rowspan='".sizeof($val['entries'])."'>$val[output]</td>";
-            $html .= "</tr>";
+    $html .= "<tr><th>Method</th><th>Endpoint</th><th>Security</th><th>Description</th><th>Input</th><th>Output</th></tr>";
+    foreach ($endpoints as &$endpoint) {
+        $endpoint['basehref'] = $basehref;
+        $endpoint['fields'] = array_key_exists('inputentity',$endpoint) ? json_encode($entities[str_replace('<br/>','',$endpoint['inputentity'])]) : "[]";
+        foreach ($endpoint['methods'] as $method) {
+            $endpoint['method'] = $method;
+            $endpoint['apitest'] .= "<div class='$method'>
+                                        <a href='$apitest?".http_build_query($endpoint)."'>$method</a>
+                                    </div>";
         }
+        $html .= "<tr>
+                    <th>$endpoint[apitest]</th>
+                    <td>$endpoint[endpoint]</td>
+                    <td>$endpoint[security]</td>
+                    <td>$endpoint[description]</td>
+                    <td>$endpoint[input]</td>
+                    <td>$endpoint[output]</td>
+                  </tr>";
     }
     $html .= "</table>";
 

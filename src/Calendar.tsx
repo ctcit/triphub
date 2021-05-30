@@ -2,13 +2,12 @@ import * as React from 'react';
 import { Component } from 'react';
 import { App } from './App';
 import { BaseUrl } from '.';
-import { ITrip, TripGroup, Role } from './Interfaces';
+import { ITrip, Role } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile, GetDate } from './Utilities';
 import ButtonGroup from 'reactstrap/lib/ButtonGroup';
 import Table from 'reactstrap/lib/Table';
 import { PriorityNavItem } from './TriphubNavBar';
 import Badge from 'reactstrap/lib/Badge';
-import { Spinner } from './Widgets';
 import Dropdown from 'reactstrap/lib/Dropdown';
 import DropdownToggle from 'reactstrap/lib/DropdownToggle';
 import DropdownMenu from 'reactstrap/lib/DropdownMenu';
@@ -52,8 +51,9 @@ class CalendarWeek extends Component<{
         const rows = []
 
         for (let row = 0; row < rowCount; row++) {
-            const cells = row === 0 ? [<td key={GetDateString(this.props.week.date)}
-                className='calendar label' rowSpan={rowCount}>{label}</td>] : []
+            const cells = row === 0 ?
+                [<td key={GetDateString(this.props.week.date)}
+                    className='calendar label' rowSpan={rowCount}>{label}</td>] : []
 
             for (let col = 0; col < 7;) {
                 let colSpan = 1
@@ -66,9 +66,9 @@ class CalendarWeek extends Component<{
                     const oldTrip = item.trip as ITrip
                     const newTrip = { ...oldTrip, [field]: GetDateString(date) } as ITrip
                     const before = this.props.calendar.props.app.validateTrip(oldTrip)
-                                            .find(i => i.id === field && !i.ok)
+                        .find(i => i.field === field && !i.ok)
                     const after = this.props.calendar.props.app.validateTrip(newTrip)
-                                            .find(i => i.id === field && !i.ok)
+                        .find(i => i.field === field && !i.ok)
 
                     if (!before && after &&
                         !window.confirm('Trip validation resulted in this message:\n\n' + after.message + '\n\nproceed anyway?')) {
@@ -125,7 +125,7 @@ class CalendarWeek extends Component<{
                 }
 
                 const isToday = GetDateString(date) === GetDateString(new Date())
-                const isWeekend = this.props.calendar.props.app.state.holidayMap[GetDateString(date)] ||
+                const isWeekend = this.props.calendar.props.app.state.holidayMap.has(GetDateString(date)) ||
                     date.getDay() === 0 || date.getDay() === 6
                 const className = [
                     isToday ? 'today' : MonthOfYear[date.getMonth()].toLowerCase(),
@@ -150,7 +150,8 @@ class CalendarWeek extends Component<{
 export class Calendar extends Component<{
     app: App
 }, {
-    trips: ITrip[];
+    isLoadingCalendar: boolean
+    trips: ITrip[]
     showDropdownIsOpen: boolean
     openClose: boolean
     state: StateFilter
@@ -163,15 +164,13 @@ export class Calendar extends Component<{
     constructor(props: any) {
         super(props)
         this.state = {
+            isLoadingCalendar: true,
             showDropdownIsOpen: false,
             openClose: false,
             length: LengthFilter.Trips,
             state: StateFilter.Open,
             selected: 0, trips: [],
         }
-        this.processTrips = this.processTrips.bind(this)
-        this.requery = this.requery.bind(this)
-        this.showItem = this.showItem.bind(this)
     }
 
     public dayIndex(date: Date): number {
@@ -207,16 +206,16 @@ export class Calendar extends Component<{
             const stop = AddDays(max, -this.dayIndex(max) + 14 + 6)
             const datemap: { [key: string]: ICalendarItem[][] } = {}
 
-            items = items.filter(this.showItem)
+            items = items.filter(item => this.showItem(item))
 
             // Add items for date labels
             for (let date = start; date <= stop; date = AddDays(date, 1)) {
-                items.push({id: 0, date, text: `${date.getDate()}`, field: '', tooltip: '', length: 1})
+                items.push({ id: 0, date, text: `${date.getDate()}`, field: '', tooltip: '', length: 1 })
                 datemap[GetDateString(date)] = [[]]
             }
 
             items.sort((a, b) => a.field < b.field ? -1 : a.field > b.field ? 1 : 0)
-            items.forEach((item,i) => item.id = i)
+            items.forEach((item, i) => item.id = i)
 
             for (const item of items) {
                 if (item.field === 'tripDate') {
@@ -262,12 +261,10 @@ export class Calendar extends Component<{
     }
 
     public requery() {
-        this.props.app.setStatus(['Loading ', Spinner])
+        this.setState({ isLoadingCalendar: true })
         this.props.app.triphubApiCall('GET', BaseUrl + '/trips')
             .then((trips: ITrip[]) => {
-                this.props.app.setStatus('Loaded', 3000)
-                this.props.app.setState({ isLoading: false })
-                this.setState({ trips })
+                this.setState({ trips, isLoadingCalendar: false })
             })
     }
 
@@ -284,9 +281,9 @@ export class Calendar extends Component<{
         }
 
         return (state.openClose || item.field === 'tripDate')
-            && ((state.state === StateFilter.MyTrips && trip.tripGroup === TripGroup.MyTrip) ||
-                (state.state === StateFilter.Open && trip.isOpen) ||
-                (state.state === StateFilter.Suggested && trip.tripGroup <= TripGroup.SuggestedTrip) ||
+            && ((state.state === StateFilter.MyTrips && trip.state === 'MyTrip') ||
+                (state.state === StateFilter.Open && trip.state === 'Open') ||
+                (state.state === StateFilter.Suggested && trip.state <= 'SuggestedTrip') ||
                 (state.state === StateFilter.All))
             && ((state.length === LengthFilter.Day && !trip.isSocial && trip.length === 1) ||
                 (state.length === LengthFilter.Weekend && !trip.isSocial && trip.length > 1) ||
@@ -297,57 +294,45 @@ export class Calendar extends Component<{
 
     public render() {
 
+        if (this.state.isLoadingCalendar) {
+            return this.props.app.loadingStatus({...this.props.app.state, ...this.state})
+        }
+
         const config = this.props.app.state.config
         const state = this.state
         const toggleShowDropdown = () => this.setState({ showDropdownIsOpen: !this.state.showDropdownIsOpen });
-        const toggelShowOpenAndCloseDates = () => this.setState({ openClose: !this.state.openClose })
-        const stateFilterMyTrips = () => this.setState({ state: StateFilter.MyTrips })
-        const stateFilterOpen = () => this.setState({ state: StateFilter.Open })
-        const stateFilterSuggested = () => this.setState({ state: StateFilter.Suggested })
-        const stateFilterAll = () => this.setState({ state: StateFilter.All })
-        const lengthFilterDay = () => this.setState({ length: LengthFilter.Day })
-        const lengthFilterWeekend = () => this.setState({ length: LengthFilter.Weekend })
-        const lengthFilterTrips = () => this.setState({ length: LengthFilter.Trips })
-        const lengthFilterSocial = () => this.setState({ length: LengthFilter.Social })
-        const lengthFilterAll = () => this.setState({ length: LengthFilter.All })
+        const StateItem = (props: { field: string, value: any, toggle?: boolean, children: any }) => {
+            const onClick =
+                () => this.setState({ [props.field]: props.toggle ? !state[props.field] : props.value } as any)
+            return (
+                <DropdownItem onClick={onClick}>
+                    <span className={state[props.field] === props.value ? 'fa fa-check' : 'fa fa-fw'} />{props.children}
+                </DropdownItem>
+            )
+        }
 
         this.processTrips()
-
 
         const filterElement: JSX.Element = (
             <Dropdown key='filterDropdown' nav={true} isOpen={this.state.showDropdownIsOpen} toggle={toggleShowDropdown}>
                 <DropdownToggle className="triphub-navbar" nav={true} caret={true}>
-                    <span className='fa fa-filter' />
-                    &nbsp; Filter trips
+                    <span className='fa fa-filter' />&nbsp; Filter trips
                 </DropdownToggle>
                 <DropdownMenu color='primary'>
-
                     <DropdownItem header={true}>Trip State</DropdownItem>
-                    <DropdownItem onClick={stateFilterMyTrips}>
-                        <span className={'fa ' + (state.state === StateFilter.MyTrips ? 'fa-check' : 'fa-fw') + ' fa-fw'} />Mine</DropdownItem>
-                    <DropdownItem onClick={stateFilterOpen}>
-                        <span className={'fa ' + (state.state === StateFilter.Open ? 'fa-check' : 'fa-fw') + ' fa-fw'} />Open</DropdownItem>
-                    <DropdownItem onClick={stateFilterSuggested}>
-                        <span className={'fa ' + (state.state === StateFilter.Suggested ? 'fa-check' : 'fa-fw') + ' fa-fw'} />Suggested</DropdownItem>
-                    <DropdownItem onClick={stateFilterAll}>
-                        <span className={'fa ' + (state.state === StateFilter.All ? 'fa-check' : 'fa-fw') + ' fa-fw'} />All</DropdownItem>
-
+                    <StateItem field='state' value={StateFilter.MyTrips}>Mine</StateItem>
+                    <StateItem field='state' value={StateFilter.Open}>Open</StateItem>
+                    <StateItem field='state' value={StateFilter.Suggested}>Suggested</StateItem>
+                    <StateItem field='state' value={StateFilter.All}>All</StateItem>
                     <DropdownItem divider={true} />
                     <DropdownItem header={true}>Trip Length/Type</DropdownItem>
-                    <DropdownItem onClick={lengthFilterDay}>
-                        <span className={'fa ' + (state.length === LengthFilter.Day ? 'fa-check' : 'fa-fw') + ' fa-fw'} />Day</DropdownItem>
-                    <DropdownItem onClick={lengthFilterWeekend}>
-                        <span className={'fa ' + (state.length === LengthFilter.Weekend ? 'fa-check' : 'fa-fw') + ' fa-fw'} />Weekend</DropdownItem>
-                    <DropdownItem onClick={lengthFilterTrips}>
-                        <span className={'fa ' + (state.length === LengthFilter.Trips ? 'fa-check' : 'fa-fw') + ' fa-fw'} />Trip</DropdownItem>
-                    <DropdownItem onClick={lengthFilterSocial}>
-                        <span className={'fa ' + (state.length === LengthFilter.Social ? 'fa-check' : 'fa-fw') + ' fa-fw'} />Social</DropdownItem>
-                    <DropdownItem onClick={lengthFilterAll}>
-                        <span className={'fa ' + (state.length === LengthFilter.All ? 'fa-check' : 'fa-fw') + ' fa-fw'} />All</DropdownItem>
-
+                    <StateItem field='length' value={LengthFilter.Day}>Day</StateItem>
+                    <StateItem field='length' value={LengthFilter.Weekend}>Weekend</StateItem>
+                    <StateItem field='length' value={LengthFilter.Trips}>Trip</StateItem>
+                    <StateItem field='length' value={LengthFilter.Social}>Social</StateItem>
+                    <StateItem field='length' value={LengthFilter.All}>All</StateItem>
                     <DropdownItem divider={true} />
-                    <DropdownItem onClick={toggelShowOpenAndCloseDates}>
-                        <span className={'fa ' + (state.openClose ? 'fa-check' : 'fa-fw') + ' fa-fw'} />Show open and close dates</DropdownItem>
+                    <StateItem field='openClose' value={true} toggle={true}>Show open and close dates</StateItem>
                 </DropdownMenu>
             </Dropdown>)
 
@@ -356,7 +341,7 @@ export class Calendar extends Component<{
                 {filterElement}
             </PriorityNavItem>,
 
-            <Container className={this.props.app.containerClassName()} key='calendar' fluid={true}>
+            <Container className={this.props.app.containerClassName} key='calendar' fluid={true}>
                 <Table className='calendar' responsive={true}>
                     <tbody>
                         <tr>

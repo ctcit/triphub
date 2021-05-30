@@ -52,13 +52,13 @@ export class ManageRoutes extends Component<{
         }
         this.app = this.props.app
         
-        const nz50Maps: IMap[] = this.props.app.getMaps();
+        const nz50Maps: IMap[] = this.props.app.maps;
         this.nz50MapsBySheet = {};
         nz50Maps.forEach((nz50Map: IMap) => {
             this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
         });
 
-        const archivedRoutes: IArchivedRoute[] = this.props.app.getArchivedRoutes();
+        const archivedRoutes: IArchivedRoute[] = this.props.app.archivedRoutes;
         this.archivedRoutesById = {};
         archivedRoutes.forEach((archivedRoute: IArchivedRoute) => {
             this.archivedRoutesById[archivedRoute.id] = archivedRoute;
@@ -70,7 +70,7 @@ export class ManageRoutes extends Component<{
     }
 
     public componentDidMount() {
-        this.props.app.setStatus(['Loading ', Spinner])
+        this.setState({isLoading: true});
         const promises: Array<Promise<IArchivedRoute[]>> = [
             this.props.app.triphubApiCall('GET', BaseUrl + "/routes"),
             this.props.app.triphubApiCall('GET', BaseUrl + "/routesroutearchive"),
@@ -83,8 +83,7 @@ export class ManageRoutes extends Component<{
                 isLoading: false,
                 routes: routeGroups.reduce((previous: IArchivedRoute[], current: IArchivedRoute[]) => previous.concat(current), [])
             });
-            this.props.app.setState({ isLoading: false });
-            this.props.app.setStatus('Loaded', 3000)
+            this.setState({ isLoading: false });
         })
             
     }
@@ -176,7 +175,7 @@ export class ManageRoutes extends Component<{
         } 
 
         return [
-            <Container className={this.props.app.containerClassName()} key='manageroutes' fluid={true}>
+            <Container className={this.props.app.containerClassName} key='manageroutes' fluid={true}>
                 <h1 key="title">Manage Routes</h1>
                 {isLoading && <FullWidthLoading />}
                 {!isLoading &&

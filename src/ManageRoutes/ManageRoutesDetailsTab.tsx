@@ -28,39 +28,45 @@ export class ManageRoutesDetailsTab extends Component<{
             return (this.props.routeDetails as any)[id];
         }
 
+        const onSet = (id: string, value: any): void => {
+            return;
+        }
+
         const onSave = (id: string, value: any): Promise<void> => {
             const routeDetails: RouteDetails = this.props.routeDetails;
             (routeDetails as any)[id] = value;
             return this.props.saveDetailsChange(routeDetails);
         }
 
-        const onGetValidationMessage = (id: string): any => {
-            return null;
+        const onGetValidationMessage = (id: string): string => {
+            return "";
             // const found: IValidation | undefined = validations.find(validation => validation.id === id && !validation.ok);
             // return found ? found.message : null;
         }
 
         const common = {
+            id: 'manageroutes',
             // readOnly: trip.id !== -1 && !this.props.owner.canEditTrip(), 
             isLoading: false,
             owner: this,
             // forceValidation: this.props.forceValidation,
-            'onGet': onGet,
-            'onSave': onSave,
-            'onGetValidationMessage': onGetValidationMessage
+            onGet,
+            onSet,
+            onSave,
+            onGetValidationMessage
         }
 
         return (
             <TabPane tabId="Details">
                 <Row>
                     <Col>
-                        <InputControl id='title' label='Title' type='text' {...common}/>
+                        <InputControl field='title' label='Title' type='text' {...common}/>
                     </Col>
                 </Row>
 
                 <Row>
                     <Col>
-                        <TextAreaInputControl id='description' label='Description' style={{minHeight: '350px'}} rows={1} {...common}/>
+                        <TextAreaInputControl field='description' label='Description' style={{minHeight: '350px'}} {...common}/>
                     </Col>
                 </Row>
 

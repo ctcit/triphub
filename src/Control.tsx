@@ -117,6 +117,7 @@ export class TextAreaInputControl extends Component<{
     label: string,
     hidden?: boolean,
     readOnly?: boolean,
+    style?: any,
     isLoading?: boolean,
     validationMessage?: string,
     helpText?: string,
@@ -165,7 +166,7 @@ export class TextAreaInputControl extends Component<{
                 hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText} >
                 <Textarea id={this.props.id + '_' + this.props.field} className={className} readOnly={this.props.readOnly}
-                    value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} rows={6} />
+                    value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} style={this.props.style} />
             </ControlWrapper>
         )
     }

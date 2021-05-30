@@ -123,7 +123,7 @@ export class TriphubNavbar extends Component<{
             </NavItem>)
         }
 
-        // if (this.props.app.state.role >= Role.Admin && this.props.app.state.path !== '/routes') {
+        if (this.props.app.state.role >= Role.Admin && this.props.app.state.path !== '/routes') {
             navItems.push(
             <NavItem>
                 <NavLink onClick={routes}>
@@ -133,7 +133,7 @@ export class TriphubNavbar extends Component<{
                     </span>
                 </NavLink>
             </NavItem>)
-        // }
+        }
 
         if (this.props.app.state.role >= Role.Webmaster) {
             navItems.push(

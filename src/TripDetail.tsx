@@ -6,9 +6,10 @@ import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl, Swi
 import './index.css';
 import { Trip } from './Trip';
 import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces';
-import { MapControl } from './MapControl';
+import { TripMap } from './TripMap';
 import { BaseUrl } from 'src';
 import { AddDays, GetDateString } from './Utilities';
+import { TripState } from './TripStates';
 
 export class TripDetail extends Component<{
     owner: Trip
@@ -76,12 +77,14 @@ export class TripDetail extends Component<{
         const isSocial = trip.isSocial
 
         // TODO Move to service
-        const getArchivedRoute = (archivedRouteId: string): Promise<IArchivedRoute | undefined> =>
-            this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId)
-                .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined)
+        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
+            return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
+                .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
+        }
 
-        const updateArchivedRouteSummary = (archivedRouteId: string, routeSummary: string): Promise<void> =>
-            this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary)
+        const updateArchivedRouteSummary = (archivedRouteId: number, routeSummary: string): Promise<void> =>  {
+            return this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
+        }
 
         const onGet = (field: string): any => this.props.owner.state.trip[field]
         const onGetInverted = (field: string): any => !this.props.owner.state.trip[field]

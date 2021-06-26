@@ -24,7 +24,7 @@ export class ManageRoutesMap extends MapCommon<{
     isEditing: boolean,
     leafletMapId: string,
     nz50MapsBySheet: { [mapSheet: string] : IMap },
-    archivedRoutesById: { [archivedRouteId: number] : IArchivedRoute },
+    getArchivedRoutes: (force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onBoundsChanged: (bounds: L.LatLngBounds) => void;
     onMarkerMoved: (latLng: L.LatLng) => void;
@@ -120,12 +120,12 @@ export class ManageRoutesMap extends MapCommon<{
                         <ModalBody>
                             <ManageRoutesMapEditor 
                                 nz50MapsBySheet={this.props.nz50MapsBySheet} 
-                                archivedRoutesById={this.props.archivedRoutesById}
                                 routeDetails={this.getRouteDetails()}
                                 routesAsLatLngs={this.getRoutesAsLatLngs()}
                                 onDetailsChanged={onDetailsChanged}
                                 onRoutesChanged={onRoutesChanged}
-                                getArchivedRoute={this.props.getArchivedRoute} // TODO replace with service
+                                getArchivedRoutes={this.props.getArchivedRoutes}
+                                getArchivedRoute={this.props.getArchivedRoute}
                             />
                         </ModalBody>
                         <ModalFooter>

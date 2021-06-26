@@ -126,8 +126,7 @@ function GetTripReportsRoutes($con, $userid)
             r.title,
             STR_TO_DATE(CONCAT(r.year, '-', r.month, '-', r.day), '%Y-%m-%d') as date
          FROM $tripReportsTripReportTable r 
-         JOIN $tripReportsTripReportGpxTable rg ON r.id = rg.tripreport_id
-         JOIN $tripReportsGpxTable g ON rg.gpx_id = g.id
+         JOIN (SELECT DISTINCT tripreport_id FROM $tripReportsTripReportGpxTable) rg ON r.id = rg.tripreport_id
          ORDER BY r.id");
 }
 
@@ -137,6 +136,9 @@ function GetTripReportsRoute($con, $userid, $id)
 	$tripReportsTripReportGpxTable = ConfigServer::tripReportsTripReportGpxTable;
 	$tripReportsGpxTable = ConfigServer::tripReportsGpxTable;
 	$membersTable = ConfigServer::membersTable;
+
+    $sql = "SET SESSION group_concat_max_len = 10000000";
+    mysqli_query($con, $sql);
 
     // All fields
     return SqlResultArray($con, 
@@ -148,15 +150,15 @@ function GetTripReportsRoute($con, $userid, $id)
             r.body AS description,
             STR_TO_DATE(CONCAT(r.year, '-', r.month, '-', r.day), '%Y-%m-%d') as date,
             r.upload_date AS creationDate,
-            g.name AS gpxFileName,
-            CONVERT(g.gpx USING utf8) AS gpx,
+            GROUP_CONCAT(g.name) AS gpxFileName,
+            GROUP_CONCAT( CONVERT(g.gpx USING utf8) SEPARATOR '<GpxSeparator/>') AS gpx,
             m.firstName, m.lastName
          FROM $tripReportsTripReportTable r 
          JOIN $tripReportsTripReportGpxTable rg ON r.id = rg.tripreport_id
          JOIN $tripReportsGpxTable g ON g.id = rg.gpx_id
          LEFT JOIN $membersTable m ON r.uploader_id = m.id
          WHERE r.id = $id
-         ORDER BY r.id");
+         GROUP BY r.id");
  }
 
  # ---------------------------------------------

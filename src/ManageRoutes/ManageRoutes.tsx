@@ -16,6 +16,7 @@ import { FaArrowUp, FaMapMarkerAlt } from "react-icons/fa";
 import { ButtonWithConfirm } from 'src/ButtonWithConfirm';
 import { Accordian } from 'src/Accordian';
 import { htmlToText } from 'html-to-text';
+import { ManageRoutesUtilities } from './ManageRoutesUtilities';
 
 export class ManageRoutes extends Component<{
     app: App,
@@ -33,7 +34,6 @@ export class ManageRoutes extends Component<{
 
     public app : App;
     private nz50MapsBySheet: { [mapSheet: string] : IMap } = {};
-    private archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute } = {};
     private bounds: L.LatLngBounds | undefined = undefined;
 
 
@@ -56,12 +56,6 @@ export class ManageRoutes extends Component<{
         this.nz50MapsBySheet = {};
         nz50Maps.forEach((nz50Map: IMap) => {
             this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
-        });
-
-        const archivedRoutes: IArchivedRoute[] = this.props.app.archivedRoutes;
-        this.archivedRoutesById = {};
-        archivedRoutes.forEach((archivedRoute: IArchivedRoute) => {
-            this.archivedRoutesById[archivedRoute.id] = archivedRoute;
         });
     }
 
@@ -142,7 +136,7 @@ export class ManageRoutes extends Component<{
             return Promise.resolve()
         }
 
-        // TODO Move to service
+        const getArchivedRoutes = (force: boolean) => this.app.getArchivedRoutes(force);
         const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
             return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
@@ -247,11 +241,14 @@ export class ManageRoutes extends Component<{
                                             <span>
                                                 {routesSelectedCount === 0 && !this.state.isLoadingRoute && <FormText color="muted">No routes selected</FormText>}
                                                 {this.state.isLoadingRoute && <span className='fa fa-spinner fa-spin' key='spinner'/>}
-                                                <b>{this.state.mergedRoutes.title}</b>
+                                                <b>{ManageRoutesUtilities.TripLink(this.state.mergedRoutes)}</b>
                                             </span>
                                         }
                                         expanded={true}>
-                                        {this.state.mergedRoutes.description}
+                                            <span>
+                                                {this.state.mergedRoutes.description.split("\r")
+                                                    .map((paragraph, index) => <div key={"para" + index}><p>{paragraph}</p></div>)}
+                                            </span>
                                     </Accordian>
                                 </Row>
                                 <Row>
@@ -262,7 +259,7 @@ export class ManageRoutes extends Component<{
                                         onCancel={onCancel}
                                         leafletMapId='manageroutesmap'
                                         nz50MapsBySheet={this.nz50MapsBySheet} 
-                                        archivedRoutesById={this.archivedRoutesById}
+                                        getArchivedRoutes={getArchivedRoutes}
                                         getArchivedRoute={getArchivedRoute}
                                         readOnly={this.state.isLoadingRoute}
                                         onBoundsChanged={onBoundsChanged}
@@ -304,13 +301,7 @@ export class ManageRoutes extends Component<{
     }
 
     private async getRouteDetails(route: IArchivedRoute): Promise<IArchivedRoute | undefined> {
-        const apiMethod = 
-            route?.source === 'Routes' ? "/routes/" + route.id :
-            route?.source === 'CtcRoutes' ? "/routesroutearchive/" + route.ctcRoutesId :
-            route?.source === 'TripHub' ? "/routestriphub/" + route.tripHubId :
-            route?.source === 'TripReports' ? "/routestripreports/" + route.tripReportsId :
-            null;
-
+        const apiMethod = this.getRouteApiMethod(route);
         if (apiMethod == null) {
             return undefined;
         }
@@ -321,7 +312,7 @@ export class ManageRoutes extends Component<{
         }
         const detailedRoute = response[0];
         if (!detailedRoute.routes && detailedRoute.gpx) {
-            const routesFromGpx = await this.importGpx(detailedRoute.gpx);
+            const routesFromGpx = await this.importMultiGpx(detailedRoute.gpx);
             if (routesFromGpx) {
                 detailedRoute.routes = routesFromGpx;
             }
@@ -340,7 +331,17 @@ export class ManageRoutes extends Component<{
         }
         
         return detailedRoute;
-}
+    }
+
+    private getRouteApiMethod(route: IArchivedRoute): string | null {
+        const apiMethod = 
+        route?.source === 'Routes' ? "/routes/" + route.id :
+        route?.source === 'CtcRoutes' ? "/routesroutearchive/" + route.ctcRoutesId :
+        route?.source === 'TripHub' ? "/routestriphub/" + route.tripHubId :
+        route?.source === 'TripReports' ? "/routestripreports/" + route.tripReportsId :
+        null;
+        return apiMethod;
+    }
 
     private calculateBounds(routes: Array<Array<[number, number]>>): Array<[number, number]> {
         if (routes.length === 0 || routes[0].length === 0) {
@@ -358,6 +359,14 @@ export class ManageRoutes extends Component<{
             const generalizedLatLngs = this.generalize(latLngs, 100);
             return generalizedLatLngs.map(gpxLatLng => [gpxLatLng.lat, gpxLatLng.lng] as [number, number]);
         });
+    }
+
+    private importMultiGpx(multiGpx: string): Promise<Array<Array<[number, number]>> | undefined> {
+        // import multiple gpx file contents which may or may not have been appended together with <Separator/> separator
+        const gpxs = multiGpx.split("<GpxSeparator/>").filter((gpx: string) => gpx.length > 0);
+        return Promise.all(gpxs.map((gpx: string) => this.importGpx(gpx))).then(results => 
+            results.reduce(
+                (allRoutes: Array<Array<[number, number]>>, newRoutes: Array<Array<[number, number]>>) => allRoutes.concat(newRoutes), []));
     }
 
     private importGpx(gpx: string): Promise<Array<Array<[number, number]>> | undefined> {
@@ -421,7 +430,7 @@ export class ManageRoutes extends Component<{
             tripReportsId: this.singleIdValue(routes.map(route => route.tripReportsId)),
             source: "Routes",
             title: this.concatValues(routes.map(route => route.title), "; "),
-            description: this.concatValues(routes.map(route => route.description), "\r\r"),
+            description: this.mergeDescriptions(routes),
             date: this.singleValue(routes.map(route => route.date)),
             creationDate: (new Date()).toISOString().substr(0, 10),
             gpxFilename: this.singleValue(routes.map(route => route.gpxFilename)),
@@ -432,6 +441,35 @@ export class ManageRoutes extends Component<{
             firstName: this.singleValue(routes.map(route => route.firstName)),
             lastName: this.singleValue(routes.map(route => route.lastName))
         };
+    }
+
+    // private tripLink(route: IArchivedRoute ): string {
+    //     const subPath = 
+    //     route?.source === 'Routes' ? "/routes/" + route.id :
+    //     route?.source === 'CtcRoutes' ? "route-archivenew" + route.ctcRoutesId :
+    //     route?.source === 'TripHub' ? "/routestriphub/" + route.tripHubId :
+    //     route?.source === 'TripReports' ? "trip-reports?goto=tripreport=%2F" + route.tripReportsId :
+    //     null;
+    //     const ctcBaseUrl = "https://ctc.org.nz/index.php/"; // BJ TODO
+    //     return subPath === null ? "" : ctcBaseUrl + subPath;
+    // }
+
+    private mergeDescriptions(routes: IArchivedRoute[]): string {
+        if (routes.length === 1 && routes[0].source === "Routes") {
+            // leave single Routes as is
+            return routes[0].description;
+        } else {
+            // otherwise, truncate descriptions to reasonable length
+            return routes.reduce((combined: string, route: IArchivedRoute) => {
+                const maxDescriptionLength = 800;
+                const abbreviatedDescription = route.description.length > (maxDescriptionLength + 20) ?
+                    (route.description.substr(0, maxDescriptionLength) + " ...") : route.description;
+                const routeSummary = (abbreviatedDescription.length === 0) ? "" :
+                    route.title + ": " + abbreviatedDescription;
+                return combined +
+                    (combined.length > 0 ? "\r" : "") + routeSummary;
+            }, "");
+        }
     }
 
     private singleIdValue( s: number[]): number {

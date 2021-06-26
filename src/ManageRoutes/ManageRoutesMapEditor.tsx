@@ -15,11 +15,11 @@ import { RouteDetails } from './ManageRoutesMap';
 
 export class ManageRoutesMapEditor extends Component<{
     nz50MapsBySheet: { [mapSheet: string] : IMap },
-    archivedRoutesById: { [archivedRouteId: number] : IArchivedRoute },
     routeDetails: RouteDetails,
     routesAsLatLngs: Array<Array<[number, number]>>,
     onDetailsChanged: (route: RouteDetails) => Promise<void>,
     onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) =>void,
+    getArchivedRoutes: (force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 }, {
     activeTab: string,
@@ -143,12 +143,12 @@ export class ManageRoutesMapEditor extends Component<{
                         isActiveTab={this.state.activeTab === "RoutesArchive"}
                         mapComponent={this.state.mapComponent}
                         nz50MapsBySheet={this.props.nz50MapsBySheet}
-                        archivedRoutesById={this.props.archivedRoutesById}
                         routesAsLatLngs={this.props.routesAsLatLngs}
                         currentRouteIndex={this.state.currentRouteIndex}
                         canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
                         saveRouteChange={saveRouteChange}
                         undoLastRouteEdit={undoLastRouteEdit}
+                        getArchivedRoutes={this.props.getArchivedRoutes}
                         getArchivedRoute={this.props.getArchivedRoute}
                     />
                 </TabContent>

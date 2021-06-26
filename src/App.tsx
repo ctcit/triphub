@@ -20,7 +20,6 @@ export class App extends Component<{
     path: string
     isLoadingConfig: boolean
     isLoadingMaps: boolean
-    isLoadingArchivedRoutes: boolean
     isLoadingMembers: boolean
     isLoadingHolidays: boolean
     role: Role
@@ -29,7 +28,6 @@ export class App extends Component<{
     membersById: Map<number, IMember>
     membersByName: Map<string, IMember>
     maps: IMap[],
-    archivedRoutes: IArchivedRoute[],
     holidayMap: Map<string, IHoliday>
     config: IConfig
     statusId?: any
@@ -39,6 +37,7 @@ export class App extends Component<{
     public trip: React.RefObject<Trip>
     public triplist: React.RefObject<TripsList>
     public calendar: React.RefObject<Calendar>
+    private archivedRoutes: IArchivedRoute[] | undefined = undefined
 
     constructor(props: any) {
         super(props)
@@ -53,7 +52,6 @@ export class App extends Component<{
             path: window.top.location.hash.replace('#', ''),
             isLoadingConfig: true,
             isLoadingMaps: true,
-            isLoadingArchivedRoutes: true,
             isLoadingMembers: true,
             isLoadingHolidays: true,
             role: Role.NonMember,
@@ -62,7 +60,6 @@ export class App extends Component<{
             membersById: new Map(),
             membersByName: new Map(),
             maps: [],
-            archivedRoutes: [],
             holidayMap: new Map(),
             inIFrame: true, // true if to style/behave for use in iFrame; false to style/behave as standalone app
             notifications: []
@@ -115,8 +112,11 @@ export class App extends Component<{
         return this.state.maps
     }
 
-    public get archivedRoutes(): IArchivedRoute[] {
-        return this.state.archivedRoutes;
+    public async getArchivedRoutes(force: boolean = false): Promise<IArchivedRoute[]> {
+        if (force || !this.archivedRoutes) {
+            this.archivedRoutes = await this.triphubApiCall('GET', BaseUrl + '/routes');
+        }
+        return this.archivedRoutes as IArchivedRoute[];
     }
 
     public validateTrip(trip: ITrip): IValidation[] {
@@ -173,8 +173,6 @@ export class App extends Component<{
             .then(config => this.setState({ config: config[0], isLoadingConfig: false }));
         this.triphubApiCall('GET', BaseUrl + '/maps')
             .then(maps => this.setState({ maps, isLoadingMaps: false }));
-        this.triphubApiCall('GET', BaseUrl + '/routes')
-            .then(archivedRoutes => this.setState({ archivedRoutes, isLoadingArchivedRoutes: false }));
         this.triphubApiCall('GET', BaseUrl + '/public_holidays')
             .then((holidays: IHoliday[]) => {
                 const holidayMap = new Map<string, IHoliday>(

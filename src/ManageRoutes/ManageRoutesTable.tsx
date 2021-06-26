@@ -1,12 +1,15 @@
 import * as React from 'react';
 import { Column, useExpanded, useFilters, useGroupBy, usePagination, useSortBy, useRowSelect, useTable } from "react-table";
 import { IArchivedRoute } from 'src/Interfaces';
-import { Table } from 'reactstrap';
+import { Button, Table } from 'reactstrap';
 import { useCallback, useEffect } from 'react';
 import * as L from 'leaflet';
 import ReactSlider from 'react-slider';
 import styled from 'styled-components';
 import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDown, FaAngleLeft, FaAngleRight, FaAngleUp, FaCaretLeft } from 'react-icons/fa';
+import { ManageRoutesUtilities } from './ManageRoutesUtilities';
+import { ButtonWithTooltip } from 'src/ButtonWithTooltip';
+import { MdClear } from 'react-icons/md';
 
 export interface IManageRoutesTableProps {
     routes: IArchivedRoute[]; 
@@ -26,68 +29,87 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
     const tripHubIds = props.routes.filter(route => route.id > 0 && route.tripHubId > 0).map(route => route.tripHubId);
     const tripReportsIds = props.routes.filter(route => route.id > 0 && route.tripReportsId > 0).map(route => route.tripReportsId);
 
-    const columns = React.useMemo<Array<Column<IArchivedRoute>>>(() => [{
-            id: 'date',
-            Header: 'Date',
-            accessor: 'date',
-            filter: 'includesText',
-            width: 100
-            },
-            {
-            id: 'title',
-            Header: 'Title',
-            accessor: 'title',
-            filter: 'includesText',
-            width: 200
-            },
-            {
-            id: 'source',
-            Header: 'Source',
-            accessor: 'source',
-            Filter: SelectColumnFilter,
-            filter: 'equals',
-            width: 80
-            },
-            {
-            id: 'imported',
-            Header: 'Imported',
-            accessor: (route: IArchivedRoute) => {
-              return route.id > 0 ? '-' :
-                (
-                  route.ctcRoutesId > 0 && ctcRoutesIds.find(id => id === route.ctcRoutesId) ||
-                  route.tripHubId > 0 && tripHubIds.find(id => id === route.tripHubId) ||
-                  route.tripReportsId > 0 && tripReportsIds.find(id => id === route.tripReportsId) 
-                ) ? 'Yes' : 'No';
-            },
-            Filter: SelectColumnFilter,
-            filter: 'equals',
-            width: 60
-
-            },
-            {
-            id: 'distance',
-            Header: 'Distance',
-            accessor: (route: IArchivedRoute) => {
-              if (!props.markerLatLng || !route.bounds) {
-                return maxDistanceKm;
-              } else {
-                const routeBounds = new L.LatLngBounds(route.bounds); // as [[number, number], [number, number]];
-                const distance = Math.min(maxDistanceKm, Math.round((props.markerLatLng as L.LatLng).distanceTo(routeBounds.getCenter()) / 1000));
-                return distance;
-              }
-            },
-            Cell: ({ value }: any) => <div style={{ textAlign: "right" }}>{value === maxDistanceKm ? '-' : String(value) + ' km'}</div>,
-            Filter: SliderColumnFilter,
-            filter: 'lessThanOrEqualToNumber',
-            // useMemo gives an error on sortYpe - don't know why
-            sortType: (rowA: any, rowB: any, columnId: string, desc: boolean): number => {
-              const a = rowA.values[columnId]
-              const b = rowB.values[columnId]
-              return a > b ? 1 : b > a ? -1 : 0;
-            },
-            width: 80
-
-            }], [data, props.markerLatLng]);
+    const columns = React.useMemo<Array<Column<IArchivedRoute>>>(() => [
+        {
+          id: 'date',
+          Header: 'Date',
+          accessor: 'date',
+          filter: 'includesText',
+          width: 100
+        },
+        {
+          id: 'title',
+          Header: 'Title',
+          accessor: 'title',
+          Cell: ({ row }: any) => ManageRoutesUtilities.TripLink(row.original),
+          filter: 'includesText',
+          width: 200
+        },
+        {
+          id: 'source',
+          Header: 'Source',
+          accessor: 'source',
+          Cell: ({ row }: any) => ManageRoutesUtilities.TripSourceAndOriginalSource(row.original),
+          Filter: SelectColumnFilter,
+          filter: 'equals',
+          width: 80
+        },
+        {
+          id: 'imported',
+          Header: 'Imported',
+          accessor: (route: IArchivedRoute) => {
+            return route.id > 0 ? '-' :
+              (
+                route.ctcRoutesId > 0 && ctcRoutesIds.find(id => id === route.ctcRoutesId) ||
+                route.tripHubId > 0 && tripHubIds.find(id => id === route.tripHubId) ||
+                route.tripReportsId > 0 && tripReportsIds.find(id => id === route.tripReportsId) 
+              ) ? 'Yes' : 'No';
+          },
+          Filter: SelectColumnFilter,
+          filter: 'equals',
+          width: 60
+        },
+        {
+          id: 'distance',
+          Header: 'Distance',
+          accessor: (route: IArchivedRoute) => {
+            if (!props.markerLatLng || !route.bounds) {
+              return maxDistanceKm;
+            } else {
+              const routeBounds = new L.LatLngBounds(route.bounds); // as [[number, number], [number, number]];
+              const distance = Math.min(maxDistanceKm, Math.round((props.markerLatLng as L.LatLng).distanceTo(routeBounds.getCenter()) / 1000));
+              return distance;
+            }
+          },
+          Cell: ({ value }: any) => <div style={{ textAlign: "right" }}>{value === maxDistanceKm ? '-' : String(value) + ' km'}</div>,
+          Filter: SliderColumnFilter,
+          filter: 'lessThanOrEqualToNumber',
+          // useMemo gives an error on sortYpe - don't know why
+          sortType: (rowA: any, rowB: any, columnId: string, desc: boolean): number => {
+            const a = rowA.values[columnId]
+            const b = rowB.values[columnId]
+            return a > b ? 1 : b > a ? -1 : 0;
+          },
+          width: 80
+        },
+        // {
+        //   id: 'text',
+        //   Header: 'Text',
+        //   accessor: (route: IArchivedRoute) => {
+        //     return route.description?.length ?? 0;
+        //   },
+        //   width: 80
+        // },
+        // {
+        //   id: 'coords',
+        //   Header: 'Coords',
+        //   accessor: (route: IArchivedRoute) => {
+        //     const coordsCount = (route.summarizedRoutes ?? []).reduce((pv, cv) => pv + cv?.length ?? 0, 0);
+        //     return coordsCount;
+        //   },
+        //   width: 80
+        // }
+      ], [data, props.markerLatLng]);
 
       const filterTypes = React.useMemo(() => ({
           // startsWithText: (rowsToFilter: any[], id: any, filterValue: any) => {
@@ -148,16 +170,30 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         canNextPage,
         toggleAllRowsSelected
     } = useTable<IArchivedRoute>({ 
-      columns, 
-      data,
-      initialState: { 
-        pageIndex: 0, 
-        pageSize: 10
-      },
-      autoResetSelectedRows: true,
-      defaultColumn, // Be sure to pass the defaultColumn option
-      filterTypes
-    }, 
+        columns, 
+        data,
+        initialState: { 
+          pageIndex: 0, 
+          pageSize: 10
+        },
+        autoResetSelectedRows: true,
+        defaultColumn, // Be sure to pass the defaultColumn option
+        filterTypes,
+        stateReducer: (newState, action) => {
+          // hack so that toggleAllRowsSelected unselects all rather than just what's on the current page
+          // https://stackoverflow.com/questions/65096897/remove-all-selected-rows-even-though-im-in-other-page-using-react-table-with-co
+          switch (action.type) {
+            case 'toggleAllRowsSelected':
+              return {
+                ...newState,
+                selectedRowIds: {},
+              };
+      
+            default:
+              return newState;
+          }
+        }
+      }, 
       useFilters,
       useGroupBy,
       useSortBy, 
@@ -166,14 +202,22 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
       useRowSelect,
       hooks => {
         hooks.visibleColumns.push(visibleColumns => [
-          // column for selection
+          // column for selection checkboxes
           {
             id: 'selection',
             // The header can use the table's getToggleAllRowsSelectedProps method
             // to render a checkbox
             Header: ({ getToggleAllPageRowsSelectedProps }) => (
               <div>
-                <IndeterminateCheckbox {...getToggleAllPageRowsSelectedProps()} />
+                <div>
+                  <Button 
+                    style={{height: 15, width: 15, backgroundColor: "transparent", color: "black", padding: "0", margin: "0", lineHeight: "0.5"}}
+                    onClick={onClearAllClick}>x
+                  </Button>
+                </div>
+                <div>
+                  <IndeterminateCheckbox {...getToggleAllPageRowsSelectedProps()} />
+                </div>
               </div>
             ),
             // The cell can use the individual row's getToggleRowSelectedProps method
@@ -207,6 +251,10 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
     const onSetPageSizeChange = (e: any) => {
       setPageSize(Number(e.target.value))
     };
+
+    const onClearAllClick = useCallback((e: any) => {
+      toggleAllRowsSelected(false);
+    }, [selectedRowIds, toggleAllRowsSelected]);
 
     const onRowClick = useCallback((e: any) => {
       // if CTRL key pressed, then multi-select rows; else single-select

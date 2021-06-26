@@ -24,15 +24,16 @@ export class RoutesArchiveTab extends Component<{
     isActiveTab: boolean,
     mapComponent: MapComponent | undefined,
     nz50MapsBySheet: { [mapSheet: string] : IMap },
-    archivedRoutesById: { [archivedRouteId: string] : IArchivedRoute },
     routesAsLatLngs: Array<Array<[number, number]>>,
     currentRouteIndex: number,
     canUndoLastRouteEdit: boolean,
     saveRouteChange: (routesAsLatLngs?: Array<Array<[number, number]>>, currentRouteIndex?: number) => Promise<void>,
     undoLastRouteEdit: () => Promise<[Array<Array<[number, number]>>, number, boolean]>, 
+    getArchivedRoutes: (force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     activated: boolean,
+    archivedRoutes: IArchivedRoute[],
     archivedRouteSuggestions: Tag[],
     busy: boolean
 }>{
@@ -46,13 +47,18 @@ export class RoutesArchiveTab extends Component<{
 
         this.state = { 
             activated: false,
-            archivedRouteSuggestions: Object.keys(this.props.archivedRoutesById).map((archivedRouteId: string) => {
-                const archivedRoute: IArchivedRoute = this.props.archivedRoutesById[archivedRouteId];
-                return { id: archivedRoute.id.toString(), text: archivedRoute.title };
-            }),
-
-            busy: false
+            archivedRoutes: [],
+            archivedRouteSuggestions: [],
+            busy: true
         };
+
+        this.props.getArchivedRoutes(false)
+            .then((archivedRoutes: IArchivedRoute[]) => {
+                const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
+                    return { id: archivedRoute.id.toString(), text: archivedRoute.title };
+                });
+                this.setState({archivedRoutes, archivedRouteSuggestions, busy: false});
+            });
     }
 
     public render() {
@@ -152,8 +158,7 @@ export class RoutesArchiveTab extends Component<{
     
             // -----
             const polylineOptions: any = {color: 'green', weight: 5, opacity: 0.4};
-            Object.keys(this.props.archivedRoutesById).map((id: string) => {
-                const archivedRoute: IArchivedRoute = this.props.archivedRoutesById[id];
+            this.state.archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                 if (archivedRoute.summarizedRoutes) {
                     const routesLatLngsArray: L.LatLng[][] = archivedRoute.summarizedRoutes.map((route: number[][]) => 
                         route.map((point: number[]) => new L.LatLng(point[0], point[1])));

@@ -23,7 +23,6 @@ export class TripDetail extends Component<{
     public href?: string
     public app: App
     private nz50MapsBySheet: { [mapSheet: string]: IMap } = {}
-    private archivedRoutesById: { [archivedRouteId: string]: IArchivedRoute } = {}
     private closeDateIteration: number = 0
 
     constructor(props: any) {
@@ -39,12 +38,6 @@ export class TripDetail extends Component<{
         this.nz50MapsBySheet = {}
         nz50Maps.forEach((nz50Map: IMap) => {
             this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map
-        })
-
-        const archivedRoutes: IArchivedRoute[] = this.props.app.archivedRoutes
-        this.archivedRoutesById = {}
-        archivedRoutes.forEach((archivedRoute: IArchivedRoute) => {
-            this.archivedRoutesById[archivedRoute.id] = archivedRoute
         })
     }
 
@@ -76,7 +69,7 @@ export class TripDetail extends Component<{
         const approval = TripState[trip.approval || ''] || TripState.Pending
         const isSocial = trip.isSocial
 
-        // TODO Move to service
+        const getArchivedRoutes = (force: boolean) => this.app.getArchivedRoutes(force);
         const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
             return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
@@ -278,7 +271,7 @@ export class TripDetail extends Component<{
                             mapsId='maps' mapsLabel='Maps'
                             nz50MapsBySheet={this.nz50MapsBySheet} 
                             leafletMapId='tripmap'
-                            archivedRoutesById={this.archivedRoutesById}
+                            getArchivedRoutes={getArchivedRoutes}
                             getArchivedRoute={getArchivedRoute}
                             updateArchivedRouteSummary={updateArchivedRouteSummary}
                             {...common}

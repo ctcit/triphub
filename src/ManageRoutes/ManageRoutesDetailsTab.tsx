@@ -12,30 +12,27 @@ export class ManageRoutesDetailsTab extends Component<{
     routeDetails: RouteDetails, 
     saveDetailsChange: (route: RouteDetails) => Promise<void>
 },{
-    activated: boolean
+    activated: boolean,
+    routeDetails: RouteDetails
 }>{
+
     constructor(props:any) {
         super(props);
 
         this.state = {
             activated: false,
+            routeDetails: props.routeDetails
         }
     }
 
     public render() {
+        const self = this;
 
-        const onGet = (id: string): any => {
-            return (this.props.routeDetails as any)[id];
-        }
-
-        const onSet = (id: string, value: any): void => {
-            return;
-        }
+        const onGet = (id: string): any => (self.state.routeDetails as any)[id];
+        const onSet = (id: string, value: any): void => self.setState(state => ({ routeDetails: { ...self.state.routeDetails, [id]: value } }));
 
         const onSave = (id: string, value: any): Promise<void> => {
-            const routeDetails: RouteDetails = this.props.routeDetails;
-            (routeDetails as any)[id] = value;
-            return this.props.saveDetailsChange(routeDetails);
+            return this.props.saveDetailsChange(self.state.routeDetails);
         }
 
         const onGetValidationMessage = (id: string): string => {

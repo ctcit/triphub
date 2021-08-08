@@ -17,6 +17,7 @@ import { ButtonWithConfirm } from 'src/ButtonWithConfirm';
 import { Accordian } from 'src/Accordian';
 import { htmlToText } from 'html-to-text';
 import { ManageRoutesUtilities } from './ManageRoutesUtilities';
+import { AiOutlineEye } from 'react-icons/ai';
 
 export class ManageRoutes extends Component<{
     app: App,
@@ -25,11 +26,12 @@ export class ManageRoutes extends Component<{
         isLoading: boolean,
         routes: IArchivedRoute[]
         isLoadingRoute: boolean,
-        selectedRoutes: IArchivedRoute[]
+        selectedRoutes: IArchivedRoute[],
         mergedRoutes: IArchivedRoute,
         isEditing: boolean,
         makerLatLng: L.LatLng | undefined,
-        mapOperation: MapOperation
+        mapOperation: MapOperation,
+        filters: Array<{id: string, value: any}>
     }> {
 
     public app : App;
@@ -48,7 +50,8 @@ export class ManageRoutes extends Component<{
             mergedRoutes: this.mergeRoutes([]),
             isEditing: false,
             makerLatLng: undefined,
-            mapOperation: MapOperation.None
+            mapOperation: MapOperation.None,
+            filters: []
         }
         this.app = this.props.app
         
@@ -75,7 +78,23 @@ export class ManageRoutes extends Component<{
         .then((routeGroups: IArchivedRoute[][]) => {
             this.setState({
                 isLoading: false,
-                routes: routeGroups.reduce((previous: IArchivedRoute[], current: IArchivedRoute[]) => previous.concat(current), [])
+                routes: routeGroups
+                    .reduce((previous: IArchivedRoute[], current: IArchivedRoute[]) => previous.concat(current), [])
+                    .sort((r1: IArchivedRoute, r2: IArchivedRoute) => {
+                        if (r1.creationDate || r2.creationDate) {
+                            if (r1.creationDate && r2.creationDate) {
+                                return r1.creationDate > r2.creationDate ? -1 : r1.creationDate < r2.creationDate ? -1 : 0;
+                            }
+                            return !r1.creationDate ? 1 : -1;
+                        }
+                        if (r1.date || r2.date) {
+                            if (r1.date && r2.date) {
+                                return r1.date > r2.date ? -1 : r1.date < r2.date ? -1 : 0;
+                            }
+                            return !r1.date ? 1 : -1;
+                        }
+                        return 0;                        
+                    }) // display in reverse creation or trip date order
             });
             this.setState({ isLoading: false });
         })
@@ -88,6 +107,7 @@ export class ManageRoutes extends Component<{
 
         const archivedRoutesSelectedCount = this.state.selectedRoutes.filter(r => r.id > 0).length;
         const routesSelectedCount = this.state.selectedRoutes.length;
+        const selectedRouteIds = this.state.selectedRoutes.map(route => route.id).filter(id => id > 0);
 
         const onRoutesSelected = async (routes: IArchivedRoute[]) => {
             await this.setSelectedRoutes(routes);
@@ -99,7 +119,7 @@ export class ManageRoutes extends Component<{
 
         const onMultipleNew = async () => { 
             this.setState({ isEditing: false, isSaving: true }); 
-            await this.CopyAndSaveSelectedRoutes();
+            await this.setSelectedRoutes(await this.CopyAndSaveSelectedRoutes());
             this.setState({ isSaving: false }); 
         }
 
@@ -109,7 +129,7 @@ export class ManageRoutes extends Component<{
 
         const onSplit = async () => { 
             this.setState({ isEditing: false, isSaving: true }); 
-            await this.SplitRoute();
+            await this.setSelectedRoutes(await this.SplitRoute());
             this.setState({ isSaving: false }); 
         }
 
@@ -125,9 +145,13 @@ export class ManageRoutes extends Component<{
             this.setState({ isSaving: false }); 
         }
 
+        const onResetFilters = async () => {
+            this.setState({ filters: [] })
+        }
+
         const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
             this.setState({ isEditing: false, isSaving: true }); 
-            await this.SaveRoute(newRoute);
+            await this.setSelectedRoutes([await this.SaveRoute(newRoute)]);
             this.setState({isSaving: false});
         }
 
@@ -168,6 +192,11 @@ export class ManageRoutes extends Component<{
             }); 
         } 
 
+        const onFiltersChanged = (filters: Array<{id: string, value: any}>) => {
+            this.setState({ filters });
+        };
+
+
         return [
             <Container className={this.props.app.containerClassName} key='manageroutes' fluid={true}>
                 <h1 key="title">Manage Routes</h1>
@@ -177,12 +206,22 @@ export class ManageRoutes extends Component<{
                         <Row>
                             <Col lg={12} xl={6}>
                                 <ManageRoutesTable 
-                                    routes={this.state.routes} 
+                                    routes={this.state.routes}
+                                    selectedRouteIds={selectedRouteIds} 
                                     enableSorting={true}
                                     onRoutesSelected={onRoutesSelected}
                                     markerLatLng={this.state.makerLatLng}
-                                />  
-                               <FormText color="muted">&nbsp;&nbsp;<FaArrowUp/>&nbsp;CTRL/CMD-click to select multiple routes</FormText>
+                                    filters={this.state.filters}
+                                    onFiltersChanged={onFiltersChanged}
+                                /> 
+                                <Row>
+                                    <Col sm={6}>
+                                        <FormText color="muted">&nbsp;&nbsp;<FaArrowUp/>&nbsp;CTRL/CMD-click to select multiple routes</FormText>
+                                    </Col>
+                                    <Col sm={6}>
+                                        <strong>{this.state.selectedRoutes.length} of {this.state.routes.length}</strong>&nbsp;&nbsp;routes selected
+                                    </Col>
+                                </Row> 
                             </Col>
                             <Col lg={12} xl={6}>
                                 <Row>
@@ -232,6 +271,13 @@ export class ManageRoutes extends Component<{
                                             onClick={onZoomExtents} disabled={routesSelectedCount < 1}  
                                             placement="top" tooltipText="Zoom to the extents of the selected route(s)">
                                             <MdZoomOutMap/>
+                                        </ButtonWithTooltip>
+                                    </ButtonGroup>
+                                    <ButtonGroup>
+                                        <ButtonWithTooltip id="ResetFilters" color='secondary' 
+                                            onClick={onResetFilters} disabled={false} 
+                                            placement="top" tooltipText="Reset all filters">
+                                            <AiOutlineEye/>
                                         </ButtonWithTooltip>
                                     </ButtonGroup>
                                 </Row>
@@ -513,41 +559,44 @@ export class ManageRoutes extends Component<{
         return this.calculateBounds(routesBounds);
     }
 
-    private async CopyAndSaveSelectedRoutes(): Promise<any> {
-        this.state.selectedRoutes.forEach(async (route: IArchivedRoute) => {
-            await this.SaveRoute(this.copyRoute(route));
-        });
-        return Promise.resolve();
+    private async CopyAndSaveSelectedRoutes(): Promise<IArchivedRoute[]> {
+        return Promise.all(this.state.selectedRoutes.map(async (route: IArchivedRoute) => {
+            return await this.SaveRoute(this.copyRoute(route));
+        }));
     }
 
-    private async SplitRoute(): Promise<any> {
+    private async SplitRoute(): Promise<IArchivedRoute[]> {
+        const routes: IArchivedRoute[] = [];
         this.state.mergedRoutes.routes.forEach(async (route: Array<[number, number]>, index: number) => {
             const newRoute = this.copyRoute(this.state.mergedRoutes);
             newRoute.routes = [route];
             newRoute.summarizedRoutes = [newRoute.summarizedRoutes[index]];
             newRoute.bounds = this.calculateBounds(newRoute.routes);
-            await this.SaveRoute(newRoute);
+            routes.push(await this.SaveRoute(newRoute));
         });
-        return Promise.resolve();
+        return Promise.resolve(routes);
     }
 
-    private async SaveRoute(newRoute: IArchivedRoute): Promise<any> {
+    private async SaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute> {
         let response: IArchivedRoute[];
         if (newRoute.id > 0) {
-            response = await this.app.triphubApiCall('PUT', BaseUrl + '/routes/' + newRoute.id, newRoute );
+            response = await this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + newRoute.id, newRoute );
         } else {
             response = await this.app.triphubApiCall('POST', BaseUrl + '/routes', newRoute );
         }
-        if (response && response.length > 0) {
+        if (response && response.length > 0) { // should only be one
             response.forEach((route: IArchivedRoute) => {
                 route.source = "Routes";
             })
-            this.setState({
-                routes: response.concat(this.state.routes)
-            });
-            await this.setSelectedRoutes(response);
+            if (newRoute.id === 0) {
+                this.setState({
+                    routes: this.state.routes.concat(response)
+                }, async () => {
+                    await this.setSelectedRoutes(response);
+                });
+            }
         }
-        return Promise.resolve()
+        return Promise.resolve(response[0])
     }
 
     private async DeleteSelectedRoutes(): Promise<any> {

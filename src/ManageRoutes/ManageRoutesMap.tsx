@@ -31,25 +31,18 @@ export class ManageRoutesMap extends MapCommon<{
     mapOperation: MapOperation
 },{
     isSaving : boolean,
-    editsMade: boolean,
     cancelDropdownOpen: boolean
 }>{
-    private pendingRouteDetails: RouteDetails = {
-        title: "",
-        description: ""
-    }; // changed details before being saved
-    private pendingRoutesLatLngs: Array<Array<[number, number]>> = [];  // changed routes before being saved
+    private pendingRouteDetails: RouteDetails; // changed details before being saved
+    private pendingRoutesLatLngs: Array<Array<[number, number]>>;  // changed routes before being saved
 
     private mapMarker: L.Marker<any>;
 
     constructor(props:any) {
         super(props);
 
-        this.pendingRoutesLatLngs = [];
-
         this.state = { 
             isSaving: false,
-            editsMade: false,
             cancelDropdownOpen: false
         };
     }
@@ -58,38 +51,42 @@ export class ManageRoutesMap extends MapCommon<{
         this.setUpMap();
     }
 
-   public render() {
+    public render() {
+
+        this.pendingRouteDetails = {
+            title: this.props.route.title,
+            description: this.props.route.description
+        };
+        this.pendingRoutesLatLngs = this.props.route.routes;
+
         const onDetailsChanged = async (routeDetails: RouteDetails) => {
-            const pendingRoute = this.pendingRouteDetails;
-            pendingRoute.title = routeDetails.title;
-            pendingRoute.description = routeDetails.description;
-            this.setState({ editsMade: true });
+            this.pendingRouteDetails = routeDetails;
         }
 
         const onRoutesChanged = (routesAsLatLngs: Array<Array<[number, number]>>) => {
             this.pendingRoutesLatLngs = routesAsLatLngs;
-            this.setState({ editsMade: true });
         }
 
         const onSave = () => { 
-            // const mapVisible: boolean = this.pendingRoutesLatLngs && this.pendingRoutesLatLngs.length > 0;
+
+            const route: IArchivedRoute = this.props.route;
+            Object.assign(route, this.pendingRouteDetails); // copy routeDetails to route
+            route.routes = this.pendingRoutesLatLngs;
+            
             this.setState({ 
             }, async () => {
                 this.setUpMap();
-                this.setRoutesFromLatLngs(this.pendingRoutesLatLngs);
+                this.setRoutesFromLatLngs(route.routes);
 
                 this.fitBounds();
     
-                this.setState({ editsMade: false});
-
                 this.setState({isSaving: true});
-                this.saveRouteChanges(this.pendingRouteDetails, this.pendingRoutesLatLngs)
+                this.props.onSave(route)
                     .then(() => this.setState({isSaving: false}));
             }); 
         }
         const onCancel = () => { 
-            this.setState({ editsMade: false}); 
-            this.cancelRouteChanges();
+            this.props.onCancel();
         }
         const onCancelDropdownToggle = () => {
             this.setState({ cancelDropdownOpen: !this.state.cancelDropdownOpen }); 
@@ -99,7 +96,6 @@ export class ManageRoutesMap extends MapCommon<{
             this.resizeMap(data.size.height, data.size.width);
         }
 
-        this.pendingRoutesLatLngs = this.getRoutes() || [];
         this.setRoutesFromLatLngs((this.pendingRoutesLatLngs) as Array<Array<[number, number]>>);
 
         switch (this.props.mapOperation) {
@@ -120,8 +116,8 @@ export class ManageRoutesMap extends MapCommon<{
                         <ModalBody>
                             <ManageRoutesMapEditor 
                                 nz50MapsBySheet={this.props.nz50MapsBySheet} 
-                                routeDetails={this.getRouteDetails()}
-                                routesAsLatLngs={this.getRoutesAsLatLngs()}
+                                routeDetails={this.pendingRouteDetails}
+                                routesAsLatLngs={this.pendingRoutesLatLngs}
                                 onDetailsChanged={onDetailsChanged}
                                 onRoutesChanged={onRoutesChanged}
                                 getArchivedRoutes={this.props.getArchivedRoutes}
@@ -183,28 +179,6 @@ export class ManageRoutesMap extends MapCommon<{
         });
 
         this.props.onMarkerMoved(this.mapMarker.getLatLng())
-    }
-    
-    private getRouteDetails(): RouteDetails {
-        return {
-            title: this.props.route.title,
-            description: this.props.route.description
-        };
-    }
-
-    private getRoutes(): Array<Array<[number, number]>> {
-        return this.props.route.routes;
-    }
-
-    private saveRouteChanges = (routeDetails: RouteDetails, routesAsLatLngs: Array<Array<[number, number]>>): Promise<void> => {
-        const route: IArchivedRoute = this.props.route;
-        Object.assign(routeDetails, route); // copy routeDetails to route
-        route.routes = routesAsLatLngs;
-        return this.props.onSave(route);
-    }
-
-    private cancelRouteChanges = (): Promise<void> => {
-        return this.props.onCancel();
     }
 
 }

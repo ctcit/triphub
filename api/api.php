@@ -324,7 +324,7 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             UserIdIfHasRoleOrDie($con,"Admin");
             SqlExecOrDie($con,"DELETE FROM $table WHERE id = $id");
             return Array("Route $id deleted");    
-        case "PUT routes/{routeId}":
+        case "PATCH routes/{routeId}":
             return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
         case "GET routesroutearchive":
             return GetCtcRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));

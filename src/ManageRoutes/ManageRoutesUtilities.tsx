@@ -20,7 +20,7 @@ export class ManageRoutesUtilities {
             route.ctcRoutesId > 0 ? "CtcRoutes" :
             null;
             if (originalSource !== null) {
-                result = result + "/" + originalSource;
+                result = result + "(" + originalSource + ")";
             }
         }
         return <span>{result}</span>

@@ -11,6 +11,7 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 export class RouteDetails {
     public title: string;
+    public date: string;
     public description : string;
 }
 
@@ -55,6 +56,7 @@ export class ManageRoutesMap extends MapCommon<{
 
         this.pendingRouteDetails = {
             title: this.props.route.title,
+            date: this.props.route.date,
             description: this.props.route.description
         };
         this.pendingRoutesLatLngs = this.props.route.routes;

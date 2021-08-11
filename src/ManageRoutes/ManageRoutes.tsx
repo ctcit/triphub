@@ -226,6 +226,13 @@ export class ManageRoutes extends Component<{
                             <Col lg={12} xl={6}>
                                 <Row>
                                     <ButtonGroup>
+                                        <ButtonWithTooltip id="ResetFilters" color='secondary' 
+                                            onClick={onResetFilters} disabled={false} 
+                                            placement="top" tooltipText="Reset all filters">
+                                            <AiOutlineEye/>
+                                        </ButtonWithTooltip>
+                                    </ButtonGroup>
+                                    <ButtonGroup>
                                         <ButtonWithTooltip id="NewRouteButton" color='secondary' 
                                             onClick={onNew} disabled={false} 
                                             placement="top" tooltipText="Create a new merged route from selected routes (create empty, if none selected)">
@@ -271,13 +278,6 @@ export class ManageRoutes extends Component<{
                                             onClick={onZoomExtents} disabled={routesSelectedCount < 1}  
                                             placement="top" tooltipText="Zoom to the extents of the selected route(s)">
                                             <MdZoomOutMap/>
-                                        </ButtonWithTooltip>
-                                    </ButtonGroup>
-                                    <ButtonGroup>
-                                        <ButtonWithTooltip id="ResetFilters" color='secondary' 
-                                            onClick={onResetFilters} disabled={false} 
-                                            placement="top" tooltipText="Reset all filters">
-                                            <AiOutlineEye/>
                                         </ButtonWithTooltip>
                                     </ButtonGroup>
                                 </Row>
@@ -590,7 +590,7 @@ export class ManageRoutes extends Component<{
             })
             if (newRoute.id === 0) {
                 this.setState({
-                    routes: this.state.routes.concat(response)
+                    routes: response.concat(this.state.routes) // add to begining as these are the most recently created
                 }, async () => {
                     await this.setSelectedRoutes(response);
                 });

@@ -56,8 +56,11 @@ export class ManageRoutesDetailsTab extends Component<{
         return (
             <TabPane tabId="Details">
                 <Row>
-                    <Col>
+                    <Col sm={8} md={9}>
                         <InputControl field='title' label='Title' type='text' {...common}/>
+                    </Col>
+                    <Col sm={4} md={3}>
+                        <InputControl field='date' label='Date' type='date' {...common} />
                     </Col>
                 </Row>
 

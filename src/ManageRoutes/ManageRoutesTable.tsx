@@ -144,7 +144,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         //   },
         //   style: { width: '80px' }
         // }
-      ], [data, props.markerLatLng]);
+      ], [data, props.markerLatLng, props.filters]);
 
       const filterTypes = React.useMemo(() => ({
           // startsWithText: (rowsToFilter: any[], id: any, filterValue: any) => {
@@ -185,7 +185,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         // Let's set up our default Filter UI
         Filter: DefaultColumnFilter,
       }),
-      []
+      [props.filters]
     );
 
     const selectedRowIdsMap = React.useMemo(() => {
@@ -454,7 +454,7 @@ function SelectColumnFilter({column} : {column: any}) {
   // Render a multi-select box
   return (
     <select
-      value={column.filterValue}
+      value={column.filterValue || ""}
       onChange={onSelectColumnFilterChange}
     >
       <option value="">All</option>
@@ -507,8 +507,9 @@ function SliderColumnFilter({column} : {column: any}): any {
         renderThumb={Thumb}
         max={maxFilterDistanceKm}
         onChange={onChange}
+        value={column.filterValue || maxFilterDistanceKm}
     />);
-  }, [column.id, column.preFilteredRows])
+  }, [column.id, column.filterValue])
 
   return slider;
 }

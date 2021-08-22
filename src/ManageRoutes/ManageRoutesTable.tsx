@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Column, useExpanded, useFilters, useGroupBy, usePagination, useSortBy, useRowSelect, useTable } from "react-table";
+import { Column, useExpanded, useFilters, useGroupBy, usePagination, useSortBy, useRowSelect, useTable, SortingRule } from "react-table";
 import { IArchivedRoute } from 'src/Interfaces';
 import { Table } from 'reactstrap';
 import { useCallback, useEffect } from 'react';
@@ -9,6 +9,12 @@ import styled from 'styled-components';
 import { FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleLeft, FaAngleRight, FaSort, FaSortDown, FaSortUp } from 'react-icons/fa';
 import { ManageRoutesUtilities } from './ManageRoutesUtilities';
 
+export interface IManageRoutesTableState {
+  filters: Array<{id: string, value: any}>;
+  sortBy: Array<SortingRule<IArchivedRoute>>;
+  pageIndex: number;
+}
+
 export interface IManageRoutesTableProps {
     routes: IArchivedRoute[]; 
     selectedRouteIds: number[];
@@ -16,8 +22,8 @@ export interface IManageRoutesTableProps {
     enableSorting?: boolean;
     hideHeaders?: boolean;
     onRoutesSelected: (routes: IArchivedRoute[]) => any;
-    filters: Array<{id: string, value: any}>;
-    onFiltersChanged: (filters: Array<{id: string, value: any}>) => any;
+    tableState: IManageRoutesTableState;
+    onTableStateChanged: (tableState: IManageRoutesTableState) => any;
 }
 
 const maxFilterDistanceKm = 80;
@@ -144,7 +150,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         //   },
         //   style: { width: '80px' }
         // }
-      ], [data, props.markerLatLng, props.filters]);
+      ], [data, props.markerLatLng, props.tableState]);
 
       const filterTypes = React.useMemo(() => ({
           // startsWithText: (rowsToFilter: any[], id: any, filterValue: any) => {
@@ -185,7 +191,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         // Let's set up our default Filter UI
         Filter: DefaultColumnFilter,
       }),
-      [props.filters]
+      [props.tableState.filters, props.tableState.sortBy]
     );
 
     const selectedRowIdsMap = React.useMemo(() => {
@@ -197,7 +203,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         });
         return rowIdsMap;
       },
-      [props.selectedRouteIds]
+      [props.routes, props.selectedRouteIds]
     );
 
     const {
@@ -206,6 +212,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         headerGroups,
         prepareRow,
         setAllFilters,
+        setSortBy,
         pageOptions,
         pageCount,
         page,
@@ -225,12 +232,13 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         columns, 
         data,
         initialState: { 
-          pageIndex: 0, 
+          pageIndex: props.tableState.pageIndex, 
           pageSize: 10,
           selectedRowIds: selectedRowIdsMap
         },
         autoResetSelectedRows: false,
         autoResetFilters: false,
+        autoResetSortBy: false,
         defaultColumn, // Be sure to pass the defaultColumn option
         filterTypes,
         stateReducer: (newState, action) => {
@@ -244,9 +252,15 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
               };
 
             case 'setFilter':
-              props.onFiltersChanged(newState.filters);
+            case 'setSortBy':
+            case 'gotoPage':
+              props.onTableStateChanged({ 
+                filters: newState.filters, 
+                sortBy: newState.sortBy,
+                pageIndex: newState.pageIndex
+              });
               return newState;
-
+      
             default:
               return newState;
           }
@@ -288,8 +302,16 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
     }, [selectedRowIds, toggleAllRowsSelected]);
 
     useEffect(() => {
-      setAllFilters(props.filters);
-    }, [props.filters]);
+      setAllFilters(props.tableState.filters);
+    }, [props.tableState.filters]);
+    
+    useEffect(() => {
+      setSortBy(props.tableState.sortBy);
+    }, [props.tableState.sortBy]);
+    
+    useEffect(() => {
+      gotoPage(props.tableState.pageIndex);
+    }, [props.tableState.pageIndex]);
     
     useEffect(() => {
       const selectedRows = Object.keys(selectedRowIds).map(selectedRowId => data[selectedRowId]);

@@ -12,6 +12,7 @@ import { ArchivedRoutePolygon, MapCommon } from '../MapCommon';
 import { ButtonWithTooltip } from '../ButtonWithTooltip';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
+import memoizeOne from 'memoize-one';
 
 const KeyCodes = {
     comma: 188,
@@ -32,7 +33,6 @@ export class RoutesArchiveTab extends Component<{
     getArchivedRoutes: (force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
-    activated: boolean,
     archivedRoutes: IArchivedRoute[],
     archivedRouteSuggestions: Tag[],
     busy: boolean
@@ -41,40 +41,50 @@ export class RoutesArchiveTab extends Component<{
     private mapIsSetup: boolean = false;
     private infoControl: L.Control;
 
-
-    constructor(props:any) {
-        super(props);
-
-        this.state = { 
-            activated: false,
-            archivedRoutes: [],
-            archivedRouteSuggestions: [],
-            busy: true
-        };
-
-        this.props.getArchivedRoutes(false)
+    private memoizedGetArchivedRoutes = memoizeOne((force: boolean, isActiveTab: boolean) => {
+        if (isActiveTab) {
+            this.props.getArchivedRoutes(force)
             .then((archivedRoutes: IArchivedRoute[]) => {
                 const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                     return { id: archivedRoute.id.toString(), text: archivedRoute.title };
                 });
                 this.setState({archivedRoutes, archivedRouteSuggestions, busy: false});
             });
-    }
+        }
+    });
 
-    public render() {
-        if (this.props.mapComponent && !this.mapIsSetup) {
+    private memoizedSetUpMap = memoizeOne((mapComponent: MapComponent | undefined) => {
+        if (mapComponent && !this.mapIsSetup) {
             this.setUpMap();
             this.mapIsSetup = true;
         }
+    });
+
+    private memoizedShowOrHideArchivedRoutes = memoizeOne((isActiveTab: boolean, archivedRoutes: IArchivedRoute[]) => {
         if (this.mapIsSetup) {
-            if (this.props.isActiveTab && !this.state.activated) {
+            if (isActiveTab) {
                 this.showArchivedRoutes();
-                this.setState({activated: true});
-            } else if (!this.props.isActiveTab && this.state.activated) {
+           } else if (!isActiveTab) {
                 this.hideArchivedRoutes();
-                this.setState({activated: false});
             }
         }
+    });
+
+    constructor(props:any) {
+        super(props);
+
+        this.state = { 
+            archivedRoutes: [],
+            archivedRouteSuggestions: [],
+            busy: true
+        };
+    }
+
+    public render() {
+
+        this.memoizedGetArchivedRoutes(false, this.props.isActiveTab);
+        this.memoizedSetUpMap(this.props.mapComponent);
+        this.memoizedShowOrHideArchivedRoutes(this.props.isActiveTab, this.state.archivedRoutes);
 
         const zoomToRoutes = () => {
             this.props.mapComponent?.fitBounds();
@@ -150,46 +160,39 @@ export class RoutesArchiveTab extends Component<{
         const mapComponent = (this.props.mapComponent as MapComponent);
         const infoControl: any = this.infoControl;
 
-        if (!this.archivedRoutesLayerGroup) {
-            this.archivedRoutesLayerGroup = L.layerGroup()
-                .addTo(mapComponent.map);
-            this.infoControl
-                .addTo(mapComponent.map);
-    
-            // -----
-            const polylineOptions: any = {color: 'green', weight: 5, opacity: 0.4};
-            this.state.archivedRoutes.map((archivedRoute: IArchivedRoute) => {
-                if (archivedRoute.summarizedRoutes) {
-                    const routesLatLngsArray: L.LatLng[][] = archivedRoute.summarizedRoutes.map((route: number[][]) => 
-                        route.map((point: number[]) => new L.LatLng(point[0], point[1])));
-                    // the route summary polylines
-                    const polylines = routesLatLngsArray.map((routeLatLngs: L.LatLng[]) => 
-                        L.polyline(routeLatLngs, polylineOptions).addTo(this.archivedRoutesLayerGroup)
-                    );
-                    polylines.forEach(polyline => {
-                        // add click event handler for polyline
-                        (polyline as any).archivedRoute = archivedRoute;
-                        polyline.on('click', () => {
-                            this.selectArchivedRoute(archivedRoute.id);
-                        });
+        this.archivedRoutesLayerGroup = L.layerGroup()
+            .addTo(mapComponent.map);
+        this.infoControl
+            .addTo(mapComponent.map);
 
-                        polyline.on('mouseover', () => {
-                            polylines.forEach(p => { p.setStyle({weight: 10, opacity: 0.7})} );
-                            infoControl.update('<b>' + archivedRoute.title + '</b><br /><p>' + archivedRoute.description + '</p>');
-                        });
-                        polyline.on('mouseout', () => {
-                            polylines.forEach(p => { p.setStyle(polylineOptions)} );
-                            this.setDefaultInfoControlMessage();
-                        });
+        // -----
+        const polylineOptions: any = {color: 'green', weight: 5, opacity: 0.4};
+        this.state.archivedRoutes.map((archivedRoute: IArchivedRoute) => {
+            if (archivedRoute.summarizedRoutes) {
+                const routesLatLngsArray: L.LatLng[][] = archivedRoute.summarizedRoutes.map((route: number[][]) => 
+                    route.map((point: number[]) => new L.LatLng(point[0], point[1])));
+                // the route summary polylines
+                const polylines = routesLatLngsArray.map((routeLatLngs: L.LatLng[]) => 
+                    L.polyline(routeLatLngs, polylineOptions).addTo(this.archivedRoutesLayerGroup)
+                );
+                polylines.forEach(polyline => {
+                    // add click event handler for polyline
+                    (polyline as any).archivedRoute = archivedRoute;
+                    polyline.on('click', () => {
+                        this.selectArchivedRoute(archivedRoute.id);
                     });
-                }
-            });
-        } else {
-            this.archivedRoutesLayerGroup
-                .addTo(mapComponent.map);
-            this.infoControl
-                .addTo(mapComponent.map);
-        }
+
+                    polyline.on('mouseover', () => {
+                        polylines.forEach(p => { p.setStyle({weight: 10, opacity: 0.7})} );
+                        infoControl.update('<b>' + archivedRoute.title + '</b><br /><p>' + archivedRoute.description + '</p>');
+                    });
+                    polyline.on('mouseout', () => {
+                        polylines.forEach(p => { p.setStyle(polylineOptions)} );
+                        this.setDefaultInfoControlMessage();
+                    });
+                });
+            }
+        });
 
         this.setDefaultInfoControlMessage();
     }

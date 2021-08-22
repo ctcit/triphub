@@ -5,9 +5,9 @@ import { BaseUrl } from '..';
 import { App } from '../App';
 import { IArchivedRoute, IMap } from '../Interfaces';
 import '../index.css';
-import { FullWidthLoading, Spinner } from '../Widgets';
+import { FullWidthLoading, Pill, Spinner } from '../Widgets';
 import { ManageRoutesMap, MapOperation } from './ManageRoutesMap';
-import { ManageRoutesTable } from './ManageRoutesTable';
+import { IManageRoutesTableState, ManageRoutesTable } from './ManageRoutesTable';
 import 'leaflet-gpx';
 import * as L from 'leaflet';
 import { ButtonWithTooltip } from 'src/ButtonWithTooltip';
@@ -31,7 +31,7 @@ export class ManageRoutes extends Component<{
         isEditing: boolean,
         makerLatLng: L.LatLng | undefined,
         mapOperation: MapOperation,
-        filters: Array<{id: string, value: any}>
+        tableState: IManageRoutesTableState
     }> {
 
     public app : App;
@@ -51,7 +51,7 @@ export class ManageRoutes extends Component<{
             isEditing: false,
             makerLatLng: undefined,
             mapOperation: MapOperation.None,
-            filters: []
+            tableState: { filters: [], sortBy: [], pageIndex: 0 }
         }
         this.app = this.props.app
         
@@ -146,12 +146,13 @@ export class ManageRoutes extends Component<{
         }
 
         const onResetFilters = async () => {
-            this.setState({ filters: [] })
+            this.setState({ tableState: { filters: [], sortBy: [], pageIndex: 0 } })
         }
 
         const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
             this.setState({ isEditing: false, isSaving: true }); 
             await this.setSelectedRoutes([await this.SaveRoute(newRoute)]);
+            await this.app.getArchivedRoutes(true); // force reload
             this.setState({isSaving: false});
         }
 
@@ -192,8 +193,8 @@ export class ManageRoutes extends Component<{
             }); 
         } 
 
-        const onFiltersChanged = (filters: Array<{id: string, value: any}>) => {
-            this.setState({ filters });
+        const onTableStateChanged = (tableState: IManageRoutesTableState) => {
+            this.setState({ tableState });
         };
 
 
@@ -211,15 +212,18 @@ export class ManageRoutes extends Component<{
                                     enableSorting={true}
                                     onRoutesSelected={onRoutesSelected}
                                     markerLatLng={this.state.makerLatLng}
-                                    filters={this.state.filters}
-                                    onFiltersChanged={onFiltersChanged}
+                                    tableState={this.state.tableState}
+                                    onTableStateChanged={onTableStateChanged}
                                 /> 
                                 <Row>
                                     <Col sm={6}>
                                         <FormText color="muted">&nbsp;&nbsp;<FaArrowUp/>&nbsp;CTRL/CMD-click to select multiple routes</FormText>
                                     </Col>
-                                    <Col sm={6}>
+                                    <Col sm={5}>
                                         <strong>{this.state.selectedRoutes.length} of {this.state.routes.length}</strong>&nbsp;&nbsp;routes selected
+                                    </Col>
+                                    <Col sm={1}>
+                                        {(this.state.isSaving || this.state.isLoadingRoute) && <span className='fa fa-spinner fa-spin' key='spinner'/>}
                                     </Col>
                                 </Row> 
                             </Col>
@@ -228,7 +232,7 @@ export class ManageRoutes extends Component<{
                                     <ButtonGroup>
                                         <ButtonWithTooltip id="ResetFilters" color='secondary' 
                                             onClick={onResetFilters} disabled={false} 
-                                            placement="top" tooltipText="Reset all filters">
+                                            placement="top" tooltipText="Reset all filters and sorting">
                                             <AiOutlineEye/>
                                         </ButtonWithTooltip>
                                     </ButtonGroup>
@@ -286,7 +290,6 @@ export class ManageRoutes extends Component<{
                                         title={
                                             <span>
                                                 {routesSelectedCount === 0 && !this.state.isLoadingRoute && <FormText color="muted">No routes selected</FormText>}
-                                                {this.state.isLoadingRoute && <span className='fa fa-spinner fa-spin' key='spinner'/>}
                                                 <b>{ManageRoutesUtilities.TripLink(this.state.mergedRoutes)}</b>
                                             </span>
                                         }
@@ -585,17 +588,20 @@ export class ManageRoutes extends Component<{
             response = await this.app.triphubApiCall('POST', BaseUrl + '/routes', newRoute );
         }
         if (response && response.length > 0) { // should only be one
-            response.forEach((route: IArchivedRoute) => {
-                route.source = "Routes";
-            })
+            const savedRoute: IArchivedRoute = response[0];
+            savedRoute.source = "Routes";
+            let newRoutes; // new routes array will force table to re-render
             if (newRoute.id === 0) {
-                this.setState({
-                    routes: response.concat(this.state.routes) // add to begining as these are the most recently created
-                }, async () => {
-                    await this.setSelectedRoutes(response);
-                });
+                newRoutes = [savedRoute].concat(this.state.routes); // add to begining as these are the most recently created
+            } else {
+                newRoutes = this.state.routes.map((route: IArchivedRoute) => route.id === savedRoute.id ? savedRoute : route); // replace edited route
             }
-        }
+            this.setState({
+                routes: newRoutes
+            }, async () => {
+                await this.setSelectedRoutes([savedRoute]);
+            });
+    }
         return Promise.resolve(response[0])
     }
 

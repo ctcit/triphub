@@ -54,7 +54,8 @@ export class MapEditor extends Component<{
         await this.saveRouteChange(this.props.routesAsLatLngs, this.props.routesAsLatLngs.length - 1);
     }
 
-    public render(){
+    public render() {
+        
         const onResizeModal = (width: number, height: number) => {
             // event fired by ReactResizeDetector
             // limit the resizable maximum width for the map when the modal width changes

@@ -13,7 +13,7 @@ import { ButtonWithTooltip } from '../ButtonWithTooltip';
 import { IMap } from 'src/Interfaces';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
-import memoize from 'memoize-one';
+import memoizeOne from 'memoize-one';
 
 export class EditRoutesTab extends Component<{
     isActiveTab: boolean,
@@ -25,33 +25,41 @@ export class EditRoutesTab extends Component<{
     saveRouteChange: (routesAsLatLngs: Array<Array<[number, number]>>, currentRouteIndex?: number) => Promise<void>,
     undoLastRouteEdit: () => Promise<[Array<Array<[number, number]>>, number, boolean]> 
 },{
-    activated: boolean,
     splitMode: boolean,
     gpxFile?: File,
     invalidGpxFile: boolean,
     busy: boolean
 }>{
 
-    // public setRoutesFromLatLngs = memoize(
-    //     (mapIsSetup, routesAsLatLngs, currentRouteIndex) => {
-    //         if (mapIsSetup) {
-    //             (this.props.mapComponent as MapComponent).setRoutesFromLatLngs(routesAsLatLngs);
-    //             (this.props.mapComponent as MapComponent).currentRouteIndex = currentRouteIndex;
-    //         }
-    //     }
-    // );
-    
     private mapIsSetup: boolean = false;
     private infoControl: L.Control;
 
     private vertexIsDragging: boolean = false;
+
+    
+    private memoizedSetUpMap = memoizeOne((mapComponent: MapComponent | undefined) => {
+        if (mapComponent && !this.mapIsSetup) {
+            this.setUpMap();
+            this.mapIsSetup = true;
+        }
+    });
+
+    private memoizedContinueOrEndRoute = memoizeOne((isActiveTab: boolean) => {
+        if (this.mapIsSetup) {
+            if (this.props.isActiveTab) {
+                // this.props.mapComponent?.map.invalidateSize();
+                this.continueRoute();
+            } else if (!this.props.isActiveTab) {
+                this.endRoute();
+            }
+        }
+    });
 
 
     constructor(props:any) {
         super(props);
 
         this.state = { 
-            activated: false,
             splitMode: false,
             gpxFile: undefined,
             invalidGpxFile: false,
@@ -62,21 +70,9 @@ export class EditRoutesTab extends Component<{
     }
 
     public render() {
-        if (this.props.mapComponent && !this.mapIsSetup) {
-            this.setUpMap();
-            this.mapIsSetup = true;
-        }
-        if (this.mapIsSetup) {
-            if (this.props.isActiveTab && !this.state.activated) {
-                // this.props.mapComponent?.map.invalidateSize();
-                this.continueRoute();
-                this.setState({activated: true});
-            } else if (!this.props.isActiveTab && this.state.activated) {
-                this.endRoute();
-                this.setState({activated: false});
-            }
-        }
-        // this.setRoutesFromLatLngs(this.mapIsSetup, this.props.routesAsLatLngs, this.props.currentRouteIndex);
+
+        this.memoizedSetUpMap(this.props.mapComponent);
+        this.memoizedContinueOrEndRoute(this.props.isActiveTab);
 
         const addRoute = async () => {
             await this.endRoute();

@@ -2,7 +2,7 @@
   "name": "triphub",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://ctc.org.nz/triphub-alastair/web",
+  "homepage": "https://ctc.org.nz/triphub-bruce/web",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@styled-icons/boxicons-regular": "^10.18.0",
@@ -25,7 +25,7 @@
     "lodash.throttle": "^4.1.1",
     "luxon": "^1.22.0",
     "match-sorter": "^6.0.2",
-    "memoize-one": "^5.1.1",
+    "memoize-one": "^5.2.1",
     "react": "^16.13.1",
     "react-app-polyfill": "^2.0.0",
     "react-dnd": "^5.0.0",

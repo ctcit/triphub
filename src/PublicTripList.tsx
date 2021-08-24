@@ -22,7 +22,7 @@ export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
 
     React.useEffect( () => {
         apiCall('GET',BaseUrl + '/trips').then( (retrievedTrips:ITrip[]) => {
-            retrievedTrips = retrievedTrips.filter(trip => trip.state === 'Open')
+            retrievedTrips = retrievedTrips.filter(trip => trip.state === 'Open' || trip.state === 'MyTrips')
             if (isTripsOnly) {
                 retrievedTrips = retrievedTrips.filter( trip => !trip.isSocial)
             }
@@ -53,6 +53,8 @@ export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
                         <dd>{trip.cost}</dd>
                         <dt>Departure Point:</dt>
                         <dd>{trip.departurePoint} {trip.departureDetails}</dd>
+                        <dt>Leader:</dt>
+                        <dd>{trip.leaders}</dd>
                     </dl>
                     <p>{trip.description}</p>
                     <p>{trip.logisticInfo}</p>

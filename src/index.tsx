@@ -15,7 +15,7 @@ import './index.css';
 export const BaseUrl = 'https://ctc.org.nz/triphub-alastair/api/api.php'
 export const DbApiURL = 'https://ctc.org.nz/db/index.php/rest'
 export const BaseOpt = { 'Accept': 'application/json', 'Api-Key': '7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC'}
-export const NewsletterGenerateUrl = '/newsletter/generate.php?expand=newsletter.odt'
+export const NewsletterGenerateUrl = '/db/generate.php?expand=newsletter.odt'
 
 // This is intentionally *not* the top window hash as when running
 // in an iframe we want to get the path the iframe references

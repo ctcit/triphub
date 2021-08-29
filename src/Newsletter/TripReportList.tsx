@@ -41,7 +41,7 @@ export class TripReportList extends Component<{
         if (this.props.newsletterId === 0) {
             return
         }
-        this.props.app.triphubApiCall('GET', DbApiURL + "/recenttripreports/99999/90")
+        this.props.app.triphubApiCall('GET', DbApiURL + "/tripreports?limit=99999")
         .then((tripReports : ITripReport[]) => {
             this.props.app.triphubApiCall('GET', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports")
             .then((newsletterTripReports : INewsletterTripReport[]) => {

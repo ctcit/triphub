@@ -6,13 +6,13 @@ class ConfigClient
 	const printLines 		    	= 25;
 	const editRefreshInSec      	= 10;
 	const calendarStartOfWeek   	= 1; //0=Sun,6=Sat
-	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Rope'; 
-	const prerequisiteSkills    	= 'Snow Skills,River Crossing'; 
+	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Harness';
+	const prerequisiteSkills    	= 'Snow Skills,River Crossing';
 }
 
 class ConfigServer
 {
-	const triphubUrl          = "https://ctc.org.nz/index.php/trip-signup/";
+	const triphubUrl          = "http://188.166.148.160/triphub/";
 	const currencyInDays      = 7;
 	const emailHasLink        = true;
 	const emailHasDetails     = true;
@@ -38,7 +38,7 @@ class ConfigServer
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
 	const apiKey              = "7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC";
-	const apiKeyExpiry        = "00000000";//YYYYMMDD Should be 00000000 in production 
+	const apiKeyExpiry        = "20210901";//YYYYMMDD Should be 00000000 in production
 	const apiKeyUserId	      = 125;
 }
 

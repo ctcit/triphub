@@ -7,12 +7,11 @@ import '@fortawesome/fontawesome-free/css/all.css';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
-// import autosize from 'autosize';
 
 // use this chrome plugin to get this working if running locally using "npm start"
 // https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en
 
-export const BaseUrl = 'https://ctc.org.nz/triphub-alastair/api/api.php'
+export const BaseUrl = 'https://ctc.org.nz/triphub/api/api.php'
 export const DbApiURL = 'https://ctc.org.nz/db/index.php/rest'
 export const BaseOpt = { 'Accept': 'application/json', 'Api-Key': '7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC'}
 export const NewsletterGenerateUrl = '/db/generate.php?expand=newsletter.odt'

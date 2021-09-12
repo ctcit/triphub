@@ -10,8 +10,8 @@ function GetTrips($con,$userId,$id = null) {
 	$suggestImprovements = 6;
 	$draft               = 7;
 	$currencyInDays	     = ConfigServer::currencyInDays;
-	$tripsTable          = ConfigServer::tripsTable;		
-	$participantsTable   = ConfigServer::participantsTable;		
+	$tripsTable          = ConfigServer::tripsTable;
+	$participantsTable   = ConfigServer::participantsTable;
 	$historyTable        = ConfigServer::historyTable;
 	$membersTable        = ConfigServer::membersTable;
 	$where = $id === null ? "t.tripDate > DATE_ADD(now(),INTERVAL -$currencyInDays DAY)" : "t.id = $id";
@@ -19,9 +19,9 @@ function GetTrips($con,$userId,$id = null) {
 	// Change the trips table to store enum "approval".
 	// Return as a string and cast in the typescript (decouples numbering)
 
-	$trips = SqlResultArray($con, 
+	$trips = SqlResultArray($con,
 	   "SELECT *,
-	   		(CASE 
+	   		(CASE
 			   WHEN isDeleted = 1		         	THEN 'Deleted'
 			   WHEN approval  != 'Approved' 		THEN approval
 			   WHEN CURDATE() < openDate 			THEN approval
@@ -35,28 +35,28 @@ function GetTrips($con,$userId,$id = null) {
 			ORDER BY tripDate");
 
 	$participants = SqlResultArray($con,
-	   "SELECT	p.tripId, 
+	   "SELECT	p.tripId,
 				coalesce(p.name,concat(trim(m.firstname),' ',trim(m.lastname))) as `name`,
 				isLeader
-			FROM      $tripsTable t 
+			FROM      $tripsTable t
 			JOIN      $participantsTable p ON p.tripId = t.id and p.isDeleted = 0
 			LEFT JOIN $membersTable      m ON m.id = p.memberId
 			WHERE $where");
 
 	$roles = SqlResultArray($con,
-	   "SELECT c.tripId, 
-	   			'Editor'  as `role` 
+	   "SELECT c.tripId,
+	   			'Editor'  as `role`
 			FROM $historyTable c
-				JOIN $tripsTable          t on t.id = c.tripId 
-				WHERE $where AND c.userId != 0 AND c.userId = $userId 
+				JOIN $tripsTable          t on t.id = c.tripId
+				WHERE $where AND c.userId != 0 AND c.userId = $userId
 		UNION
-		SELECT p.tripId, 
+		SELECT p.tripId,
 				(case when p.isDeleted then 'Removed' when p.isLeader then 'Leader' else 'Tramper' end) as `role`
-			FROM $participantsTable p 
-				JOIN $tripsTable        t on t.id = p.tripId 
+			FROM $participantsTable p
+				JOIN $tripsTable        t on t.id = p.tripId
 				WHERE $where AND p.memberId = $userId",
 			"tripId");
-	
+
 	foreach ($trips as &$trip) {
 		$leaders = array();
 		$trip["participantCount"] = 0;
@@ -86,38 +86,38 @@ function GetTrips($con,$userId,$id = null) {
 function DeleteTripEdits($con) {
 	$expiryAge = ConfigClient::editRefreshInSec * 10;
 	$table = ConfigServer::editTable;
-	
+
 	SqlExecOrDie($con, "DELETE FROM $table WHERE stamp < TIMESTAMPADD(second,-$expiryAge,UTC_TIMESTAMP())");
 }
 
 // Send email function
-// $email should be an array with keys 'recipients', 'html', 'subject' 
+// $email should be an array with keys 'recipients', 'html', 'subject'
 // $historyAction is the action to record in the history table
 function SendEmail($con, $tripId, $email, $userId=null, $historyAction='email') {
 	$historyTable = ConfigServer::historyTable;
-	$tripsTable = ConfigServer::tripsTable;		
+	$tripsTable = ConfigServer::tripsTable;
 	$headers = "MIME-Version: 1.0\r\n".
 			   "Content-type: text/html;charset=UTF-8\r\n".
 			   "From: <noreply@ctc.org.nz>\r\n";
-	   
+
     foreach ($email['recipients'] as $recipient) {
 		if (filter_var($recipient['email'], FILTER_VALIDATE_EMAIL)) {
 			if (!mail($recipient['email'], $email['subject'], $email['html'], $headers)) {
-				Log($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]");
+				LogMessage($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]");
 			}
 		}
 		else
 		{
-			Log($con,"WARNING", "Didn't email $recipient[email] as it is invalid");
+			LogMessage($con,"WARNING", "Didn't email $recipient[email] as it is invalid");
 		}
 	}
 
 	$emailJson = SqlVal($con,json_encode($email));
 	$userId = ($userId==null) ? "NULL" : $userId;
-	$id = SqlExecOrDie($con, "INSERT $historyTable 
-								SET	`tripId` = $tripId, 
-									`userId` = $userId, 
-									`action` = '$historyAction', 
+	$id = SqlExecOrDie($con, "INSERT $historyTable
+								SET	`tripId` = $tripId,
+									`userId` = $userId,
+									`action` = '$historyAction',
 									`timestamp` = UTC_TIMESTAMP(),
 									`after` = $emailJson", true);
 	SqlExecOrDie($con, "UPDATE $tripsTable
@@ -174,7 +174,7 @@ function PostEmails($con) {
 	$tripsTable = ConfigServer::tripsTable;
 	$historyTable = ConfigServer::historyTable;
 	$editTable = ConfigServer::editTable;
-	$trips = SqlResultArray($con, 
+	$trips = SqlResultArray($con,
 				"SELECT t.id, t.title, t.tripDate
 				FROM $tripsTable t
 				LEFT JOIN $editTable e on e.tripId = t.id
@@ -191,7 +191,7 @@ function PostEmails($con) {
 					"SELECT t.id, t.title, t.tripDate
 					FROM $tripsTable t WHERE approval = 'PENDING'
 					AND tripDate > NOW()
-					AND (SELECT COUNT(*) FROM $historyTable WHERE tripId = t.id 
+					AND (SELECT COUNT(*) FROM $historyTable WHERE tripId = t.id
 						 AND action = 'approvalemail') = 0
 				    ORDER BY t.id");
 
@@ -204,11 +204,11 @@ function PostEmails($con) {
 	return $trips;
 }
 
-function GetTripHtmlValue($col,$row,$true="Yes",$false="") { 
+function GetTripHtmlValue($col,$row,$true="Yes",$false="") {
 	$val = $row[$col['Field']];
 	switch ($col["Type"]) {
 		case "bit(1)":
-			return $val ? $true : $false; 
+			return $val ? $true : $false;
 		case "date":
 			return date('D j M Y', strtotime($val));
 		default:
@@ -216,7 +216,7 @@ function GetTripHtmlValue($col,$row,$true="Yes",$false="") {
 				$return = "";
 				foreach ($val as $key => $item) {
 					if (is_string($item)) {
-						$return += htmlentities($item);
+						$return .= htmlentities($item);
 					}
 					else {
 						$valStr = print_r($val, true);
@@ -269,7 +269,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 											   WHERE tripId = $id","id");
 	$oldTrip 			= $trip;
 	$oldParticipants	= $participants;
-	$changes    		= SqlResultArray($con,"SELECT h.*, 
+	$changes    		= SqlResultArray($con,"SELECT h.*,
 													coalesce(concat(trim(m.firstname),' ',trim(m.lastname)),'?') as changedby
 											   FROM $historyTable h
 											   LEFT JOIN $membersTable m ON m.id = h.userId
@@ -330,7 +330,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		if (preg_match('/.*Id$/',$field) || $val === '')  {
 			continue;
 		}
-		
+
 		$style = $border.($trip[$field] === $oldTrip[$field] ? "" : $updated);
 		$header .= "<tr><th style='$style'>".htmlentities($col['Comment'])."</th>
 					    <td style='$style'>$val</td></tr>";
@@ -347,7 +347,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$detail .= "</tr>\n";
 	$notes = [];
 
-	
+
 	$oldApproval = $oldTrip['approval'];
 	$approval = $trip['approval'];
 	if ($oldApproval != $approval) {
@@ -364,7 +364,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	// Rows for participants
 	foreach ($participants as $index => &$participant) {
 		$id = $participant['id'];
-		$isNew = array_key_exists("$id,new",$changes); 
+		$isNew = array_key_exists("$id,new",$changes);
 		$classification = $participant['classification'];
 		$oldClassification = $oldParticipants[$id]['classification'];
 		$isCreated = array_key_exists('isCreated', $oldParticipants[$id]) && $oldParticipants[$id]['isCreated'];
@@ -406,7 +406,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	}
 
 	$legend = "<tr><th>Legend: </th><td style='$border $updated'> Updates </td><td style='$border $inserted'> Additions </td></tr>";
-	$email['html'] = 	
+	$email['html'] =
 		$message.
 		(count($notes) == 0 ? "" : "<h3>Please note:</h3>\n<ul>".implode("\n",$notes)."</ul>\n").
 		"<h3>Current trip details:</h3>\n".
@@ -450,12 +450,12 @@ function ImportLegacyTrips($con, $truncate)
 								   		  		   (SELECT count(*) FROM $participantsTable) AS participants")[0];
 
 	$trips1 = SqlExecOrDie($con,
-		"INSERT $tripsTable(legacyTripid, legacyEventid, isDeleted, isApproved, isSocial, 
-								title, openDate, closeDate, tripDate, 
-								length, departurePoint, cost, grade, maxParticipants, 
+		"INSERT $tripsTable(legacyTripid, legacyEventid, isDeleted, isApproved, isSocial,
+								title, openDate, closeDate, tripDate,
+								length, departurePoint, cost, grade, maxParticipants,
 								description, logisticInfo, mapHtml)
 		SELECT t.id, e.id, t.isRemoved, 1, e.type = 'Social',
-				coalesce(t.title,e.title), CURDATE(), t.closeDate, t.date, 
+				coalesce(t.title,e.title), CURDATE(), t.closeDate, t.date,
 				CASE WHEN t.length like 'Day' THEN 1
 					WHEN t.length like 'am' THEN 1
 					WHEN t.length like 'Easter%' THEN 4
@@ -483,12 +483,12 @@ function ImportLegacyTrips($con, $truncate)
 		SELECT t.id, p.memberid,
 					CASE coalesce(p.name,'') WHEN '' THEN concat(trim(m.firstname),' ',trim(m.lastname)) ELSE p.name END,
 					CASE coalesce(p.email,'') WHEN '' THEN m.primaryemail ELSE p.name END,
-					CASE coalesce(p.phone,'') WHEN '' THEN 
+					CASE coalesce(p.phone,'') WHEN '' THEN
 						coalesce((CASE m.mobilephone WHEN '' THEN null ELSE m.mobilephone END),
 								(CASE ms.homephone WHEN '' THEN null ELSE ms.homephone END),
 								(CASE m.workphone WHEN '' THEN null ELSE m.workphone END)) ELSE p.phone END,
 					p.isRemoved, p.isLeader, p.isPLBProvider, p.isVehicleProvider,
-					p.vehicleRego, p.status, p.displayPriority, 
+					p.vehicleRego, p.status, p.displayPriority,
 					coalesce(m.emergencyContactName,''), coalesce(m.emergencyContactPhone,'')
 		FROM $tripsTable            AS t
 		JOIN trip.participants       AS p  ON p.tripId = t.legacyTripId
@@ -498,9 +498,9 @@ function ImportLegacyTrips($con, $truncate)
 		ORDER BY p.id");
 	$trips2 = SqlExecOrDie($con,
 		"INSERT $tripsTable(legacyEventId, isSocial,
-								title, openDate, closeDate, tripDate, 
+								title, openDate, closeDate, tripDate,
 								length, departurePoint, cost, grade, description)
-		SELECT e.id, e.type = 'Social', e.title, e.date, e.date, e.date, 
+		SELECT e.id, e.type = 'Social', e.title, e.date, e.date, e.date,
 					e.tripLength, e.departurePoint, e.cost, e.grade, e.text
 		FROM newsletter.events e
 		WHERE e.id NOT IN (SELECT legacyEventId from $tripsTable WHERE legacyEventId IS NOT NULL)");

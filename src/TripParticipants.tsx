@@ -49,7 +49,7 @@ export class TripParticipants extends Component<{
     }
 
     public onSignUpTramperSave() {
-        const participant = this.props.trip.state.participants[0]
+        const participant = this.props.trip.state.participants[this.props.trip.state.participants.length - 1]
 
         this.props.trip.setState({ isSaving: true })
         this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants', participant, true)

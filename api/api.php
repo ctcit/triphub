@@ -315,11 +315,11 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             return GetLogonDetails($con,False);
 
         case "GET routes":
-            return GetRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
+            return GetRoutes($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $query);
         case "GET routes/{routeId}":
             return GetRoute($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"), $id);
         case "POST routes":
-            return ApiPost($con, UserIdIfHasRoleOrDie($con,"Admin"),$table,$input);
+            return ApiPost($con, UserIdIfHasRoleOrDie($con,"Admin"),$table,$input,0);
         case "DELETE routes/{routeId}":
             UserIdIfHasRoleOrDie($con,"Admin");
             SqlExecOrDie($con,"DELETE FROM $table WHERE id = $id");

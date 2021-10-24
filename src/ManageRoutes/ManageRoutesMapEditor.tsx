@@ -19,7 +19,7 @@ export class ManageRoutesMapEditor extends Component<{
     routesAsLatLngs: Array<Array<[number, number]>>,
     onDetailsChanged: (route: RouteDetails) => Promise<void>,
     onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) =>void,
-    getArchivedRoutes: (force: boolean) => Promise<IArchivedRoute[]>,
+    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 }, {
     activeTab: string,

@@ -112,9 +112,9 @@ export class App extends Component<{
         return this.state.maps
     }
 
-    public async getArchivedRoutes(force: boolean = false): Promise<IArchivedRoute[]> {
+    public async getArchivedRoutes(includeHidden: boolean = false, force: boolean = false): Promise<IArchivedRoute[]> {
         if (force || !this.archivedRoutes) {
-            this.archivedRoutes = await this.triphubApiCall('GET', BaseUrl + '/routes');
+            this.archivedRoutes = await this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden );
         }
         return this.archivedRoutes as IArchivedRoute[];
     }

@@ -11,13 +11,13 @@ import { IManageRoutesTableState, ManageRoutesTable } from './ManageRoutesTable'
 import 'leaflet-gpx';
 import * as L from 'leaflet';
 import { ButtonWithTooltip } from 'src/ButtonWithTooltip';
-import { MdAddBox, MdCallSplit, MdDeleteSweep, MdEdit, MdLibraryAdd, MdZoomOutMap } from 'react-icons/md';
+import { MdAddBox, MdCallSplit, MdDeleteSweep, MdEdit, MdLibraryAdd, MdZoomOutMap, MdRestore } from 'react-icons/md';
 import { FaArrowUp, FaMapMarkerAlt } from "react-icons/fa";
 import { ButtonWithConfirm } from 'src/ButtonWithConfirm';
 import { Accordian } from 'src/Accordian';
 import { htmlToText } from 'html-to-text';
 import { ManageRoutesUtilities } from './ManageRoutesUtilities';
-import { AiOutlineEye } from 'react-icons/ai';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 export class ManageRoutes extends Component<{
     app: App,
@@ -69,7 +69,7 @@ export class ManageRoutes extends Component<{
     public componentDidMount() {
         this.setState({isLoading: true});
         const promises: Array<Promise<IArchivedRoute[]>> = [
-            this.props.app.triphubApiCall('GET', BaseUrl + "/routes"),
+            this.props.app.triphubApiCall('GET', BaseUrl + "/routes?includeHidden=true"),
             this.props.app.triphubApiCall('GET', BaseUrl + "/routesroutearchive"),
             this.props.app.triphubApiCall('GET', BaseUrl + "/routestripreports"),
             this.props.app.triphubApiCall('GET', BaseUrl + "/routestriphub")
@@ -108,6 +108,8 @@ export class ManageRoutes extends Component<{
         const archivedRoutesSelectedCount = this.state.selectedRoutes.filter(r => r.id > 0).length;
         const routesSelectedCount = this.state.selectedRoutes.length;
         const selectedRouteIds = this.state.selectedRoutes.map(route => route.id).filter(id => id > 0);
+        const haveSelectedUnhiddenRoutes = routesSelectedCount > 0 && this.state.selectedRoutes.some(route => route.id > 0 && !route.hidden);
+        const haveSelectedHiddenRoutes = routesSelectedCount > 0 && this.state.selectedRoutes.some(route => route.id > 0 && route.hidden);
 
         const onRoutesSelected = async (routes: IArchivedRoute[]) => {
             await this.setSelectedRoutes(routes);
@@ -133,6 +135,18 @@ export class ManageRoutes extends Component<{
             this.setState({ isSaving: false }); 
         }
 
+        const onHide = async () => { 
+            this.setState({ isEditing: false, isSaving: true }); 
+            await this.HideOrUnhideSelectedRoutes(true);
+            this.setState({ isSaving: false }); 
+        }
+
+        const onUnhide = async () => { 
+            this.setState({ isEditing: false, isSaving: true }); 
+            await this.HideOrUnhideSelectedRoutes(false);
+            this.setState({ isSaving: false }); 
+        }
+
         // const onDelete = async () => { 
         //     this.setState({ isEditing: false, isSaving: true }); 
         //     await this.DeleteRoute(this.state.mergedRoutes);
@@ -152,7 +166,7 @@ export class ManageRoutes extends Component<{
         const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
             this.setState({ isEditing: false, isSaving: true }); 
             await this.setSelectedRoutes([await this.SaveRoute(newRoute)]);
-            await this.app.getArchivedRoutes(true); // force reload
+            await this.app.getArchivedRoutes(true, true); // force reload
             this.setState({isSaving: false});
         }
 
@@ -161,7 +175,7 @@ export class ManageRoutes extends Component<{
             return Promise.resolve()
         }
 
-        const getArchivedRoutes = (force: boolean) => this.app.getArchivedRoutes(force);
+        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => this.app.getArchivedRoutes(includeHidden, force);
         const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
             return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
@@ -233,7 +247,7 @@ export class ManageRoutes extends Component<{
                                         <ButtonWithTooltip id="ResetFilters" color='secondary' 
                                             onClick={onResetFilters} disabled={false} 
                                             placement="top" tooltipText="Reset all filters and sorting">
-                                            <AiOutlineEye/>
+                                            <MdRestore/>
                                         </ButtonWithTooltip>
                                     </ButtonGroup>
                                     <ButtonGroup>
@@ -259,6 +273,16 @@ export class ManageRoutes extends Component<{
                                             confirmText="Confirm split selected route(s)">
                                             <MdCallSplit/>
                                         </ButtonWithConfirm>
+                                        <ButtonWithTooltip id="HideRouteButton" color='secondary' 
+                                            onClick={onHide} disabled={!haveSelectedUnhiddenRoutes}  
+                                            placement="top" tooltipText="Hide the selected route(s)">
+                                            <AiOutlineEyeInvisible/>
+                                        </ButtonWithTooltip>
+                                        <ButtonWithTooltip id="UnhideRouteButton" color='secondary' 
+                                            onClick={onUnhide} disabled={!haveSelectedHiddenRoutes}  
+                                            placement="top" tooltipText="Unhide the selected route(s)">
+                                            <AiOutlineEye/>
+                                        </ButtonWithTooltip>
                                         {/* <ButtonWithConfirm id="DeleteRouteButton" color='secondary' 
                                             onClick={onDelete} disabled={!singleArchivedRouteSelected}  
                                             placement="top" tooltipText="Delete the selected route(s)"
@@ -427,24 +451,28 @@ export class ManageRoutes extends Component<{
 
         return new Promise<Array<Array<[number, number]>> | undefined>((resolve, reject) => {
             const routes: Array<Array<[number, number]>> = [];
-            new L.GPX(gpx, {
-                async: true, 
-                polyline_options: {},
-                gpx_options:{
-                    parseElements: ['track', 'route'] as any // yuk!
-                },
-                marker_options: {}
-            }).on('addline', (event: any) => {
-                const gpxLatLngs = (event.line as L.Polyline).getLatLngs() as L.LatLng[];
-                const generalizedLatLngs = this.generalize(gpxLatLngs)
-                const route = generalizedLatLngs.map(gpxLatLng => [gpxLatLng.lat, gpxLatLng.lng] as [number, number]);
-                routes.push(route);
-            }).on('loaded', () => {
+            if (gpx.length === 0 || gpx[0] !== '<') {
                 resolve(routes);
-            }).on('error', (event: any) => {
-                alert('Error loading file: ' + event.err);
-                reject(undefined);
-            });
+            } else {
+                new L.GPX(gpx, {
+                    async: true, 
+                    polyline_options: {},
+                    gpx_options:{
+                        parseElements: ['track', 'route'] as any // yuk!
+                    },
+                    marker_options: {}
+                }).on('addline', (event: any) => {
+                    const gpxLatLngs = (event.line as L.Polyline).getLatLngs() as L.LatLng[];
+                    const generalizedLatLngs = this.generalize(gpxLatLngs)
+                    const route = generalizedLatLngs.map(gpxLatLng => [gpxLatLng.lat, gpxLatLng.lng] as [number, number]);
+                    routes.push(route);
+                }).on('loaded', () => {
+                    resolve(routes);
+                }).on('error', (event: any) => {
+                    alert('Error loading file: ' + event.err);
+                    resolve(routes);
+                });
+            }
         });
     }
 
@@ -487,6 +515,7 @@ export class ManageRoutes extends Component<{
             bounds: this.mergeBounds(routes.map(route => route.bounds)),
             routes: this.concatArrays(routes.map(route => route.routes ?? [])), 
             summarizedRoutes: this.concatArrays(routes.map(route => route.summarizedRoutes ?? [])), 
+            hidden: false,
             firstName: this.singleValue(routes.map(route => route.firstName)),
             lastName: this.singleValue(routes.map(route => route.lastName))
         };
@@ -589,6 +618,16 @@ export class ManageRoutes extends Component<{
             routes.push(await this.SaveRoute(newRoute));
         });
         return Promise.resolve(routes);
+    }
+
+    private async HideOrUnhideSelectedRoutes(hide: boolean): Promise<any> {
+        this.state.selectedRoutes.forEach(async (route: IArchivedRoute) => {
+            if (route.id > 0) {
+                route.hidden = hide;
+                await this.SaveRoute(route);
+            }
+        });
+        return Promise.resolve();
     }
 
     private async SaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute> {

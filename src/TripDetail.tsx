@@ -69,7 +69,7 @@ export class TripDetail extends Component<{
         const approval = TripState[trip.approval || ''] || TripState.Pending
         const isSocial = trip.isSocial
 
-        const getArchivedRoutes = (force: boolean) => this.app.getArchivedRoutes(force);
+        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => this.app.getArchivedRoutes(includeHidden, force);
         const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
             return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  

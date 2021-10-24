@@ -95,15 +95,16 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
           style: { width: '100px' }
         },
         {
-          id: 'imported',
-          Header: 'Imported',
+          id: 'status',
+          Header: 'Status',
           accessor: (route: IArchivedRoute) => {
-            return route.id > 0 ? '-' :
+            return route.id > 0 ? 
+              ( route.hidden ? 'Hidden' : '-' ) :
               (
                 route.ctcRoutesId > 0 && ctcRoutesIds.find(id => id === route.ctcRoutesId) ||
                 route.tripHubId > 0 && tripHubIds.find(id => id === route.tripHubId) ||
                 route.tripReportsId > 0 && tripReportsIds.find(id => id === route.tripReportsId) 
-              ) ? 'Yes' : 'No';
+              ) ? 'Imported' : 'Not Imported';
           },
           Filter: SelectColumnFilter,
           filter: 'equals',
@@ -406,7 +407,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
                     prepareRow(row);
 
                     const style = row.original.source === "Routes" ?
-                      { color: "black" } :
+                      (row.original.hidden ? { color: "darkgrey", textDecoration: "line-through" } : { color: "black" }) :
                       { fontStyle: "italic", color: "grey" };
 
                     return (

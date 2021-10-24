@@ -30,7 +30,7 @@ export class RoutesArchiveTab extends Component<{
     canUndoLastRouteEdit: boolean,
     saveRouteChange: (routesAsLatLngs?: Array<Array<[number, number]>>, currentRouteIndex?: number) => Promise<void>,
     undoLastRouteEdit: () => Promise<[Array<Array<[number, number]>>, number, boolean]>, 
-    getArchivedRoutes: (force: boolean) => Promise<IArchivedRoute[]>,
+    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     archivedRoutes: IArchivedRoute[],
@@ -41,9 +41,9 @@ export class RoutesArchiveTab extends Component<{
     private mapIsSetup: boolean = false;
     private infoControl: L.Control;
 
-    private memoizedGetArchivedRoutes = memoizeOne((force: boolean, isActiveTab: boolean) => {
+    private memoizedGetArchivedRoutes = memoizeOne((includeHidden: boolean, force: boolean, isActiveTab: boolean) => {
         if (isActiveTab) {
-            this.props.getArchivedRoutes(force)
+            this.props.getArchivedRoutes(includeHidden, force)
             .then((archivedRoutes: IArchivedRoute[]) => {
                 const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                     return { id: archivedRoute.id.toString(), text: archivedRoute.title };
@@ -82,7 +82,7 @@ export class RoutesArchiveTab extends Component<{
 
     public render() {
 
-        this.memoizedGetArchivedRoutes(false, this.props.isActiveTab);
+        this.memoizedGetArchivedRoutes(false, false, this.props.isActiveTab);
         this.memoizedSetUpMap(this.props.mapComponent);
         this.memoizedShowOrHideArchivedRoutes(this.props.isActiveTab, this.state.archivedRoutes);
 

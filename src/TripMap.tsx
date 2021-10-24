@@ -22,7 +22,7 @@ export class TripMap extends MapCommon<{
     onGetValidationMessage?: (id: string) => string,
     leafletMapId: string,
     nz50MapsBySheet: { [mapSheet: string] : IMap },
-    getArchivedRoutes: (force: boolean) => Promise<IArchivedRoute[]>,
+    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     updateArchivedRouteSummary: (routeId: number, routeSummary: string) => Promise<void>
 },{

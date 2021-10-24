@@ -16,7 +16,7 @@ export class MapEditor extends Component<{
     nz50MapsBySheet: { [mapSheet: string] : IMap },
     mapSheets: string[],
     routesAsLatLngs: Array<Array<[number, number]>>,
-    getArchivedRoutes: (force: boolean) => Promise<IArchivedRoute[]>,
+    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onMapSheetsChanged: (mapSheets: string[]) => void,
     onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) => void,

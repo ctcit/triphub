@@ -110,6 +110,7 @@ export interface IArchivedRoute {
     bounds: Array<[number, number]>;
     routes: Array<Array<[number, number]>>;
     summarizedRoutes: Array<Array<[number, number]>>;
+    hidden: boolean;
     firstName: string;
     lastName: string;
 }

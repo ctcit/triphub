@@ -4,10 +4,16 @@
 # Routes (triphub.routes)
 # ---------------------------------------------
 
-function GetRoutes($con, $userid)
+function GetRoutes($con, $userid, $query = null)
 {
 	$routesTable = ConfigServer::routesTable;
 	$membersTable = ConfigServer::membersTable;
+
+    $where = "WHERE r.hidden = FALSE";
+    if (array_key_exists("includeHidden", $query) && strcasecmp($query[includeHidden], 'true') == 0)
+    {
+        $where = "";
+    }
 
     // Selected fields only
     return SqlResultArray($con, 
@@ -23,8 +29,10 @@ function GetRoutes($con, $userid)
             r.creationDate,
             r.gpxFileName,
             r.bounds,
-            r.summarizedRoutes
+            r.summarizedRoutes,
+            r.hidden
          FROM $routesTable r 
+         $where
          ORDER BY r.id");
 }
 
@@ -50,6 +58,7 @@ function GetRoute($con, $userid, $id)
             r.bounds,
             r.routes,
             r.summarizedRoutes,
+            r.hidden,
             m.firstName,m.lastName
          FROM $routesTable r 
          LEFT JOIN $membersTable m ON r.memberId = m.id

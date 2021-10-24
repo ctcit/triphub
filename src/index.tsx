@@ -11,9 +11,22 @@ import './index.css';
 // use this chrome plugin to get this working if running locally using "npm start"
 // https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en
 
-export const BaseUrl = 'https://ctc.org.nz/triphub/api/api.php'
-export const DbApiURL = 'https://ctc.org.nz/db/index.php/rest'
-export const BaseOpt = { 'Accept': 'application/json', 'Api-Key': '7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC'}
+// use run-time config settings (from optional "%PUBLIC_URL%/runtime-config.js") otherwise default to production settings
+//
+// // example runtime-config.js
+// window.RunConfig = {
+//     // ApiKey: '12345678-1234-1234-1234-123456789012',
+//     BaseUrl: 'https://ctc.org.nz/triphub-xxxxx/api/api.php',
+//     DbApiURL: 'https://ctc.org.nz/db/index.php/rest'
+// }
+
+const runConfig: any = (window as any).RunConfig;
+export const BaseUrl = runConfig?.BaseUrl ?? 'https://ctc.org.nz/triphub/api/api.php';
+export const DbApiURL = runConfig?.DbApiURL ?? 'https://ctc.org.nz/db/index.php/rest';
+export const BaseOpt = { 'Accept': 'application/json' }
+if (runConfig?.ApiKey) {
+    BaseOpt['Api-Key'] = runConfig.ApiKey;
+}
 export const NewsletterGenerateUrl = '/db/generate.php?expand=newsletter.odt'
 
 // This is intentionally *not* the top window hash as when running

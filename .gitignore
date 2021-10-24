@@ -24,3 +24,4 @@ deploy.sh
 deploy_api.sh
 install.log
 triphub-win.code-workspace
+public/runtime-config.js

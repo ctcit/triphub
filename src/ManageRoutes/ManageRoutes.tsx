@@ -119,7 +119,7 @@ export class ManageRoutes extends Component<{
 
         const onMultipleNew = async () => { 
             this.setState({ isEditing: false, isSaving: true }); 
-            await this.setSelectedRoutes(await this.CopyAndSaveSelectedRoutes());
+            await this.setSelectedRoutes(await this.CopyAndSaveSelectedRoutes(100));
             this.setState({ isSaving: false }); 
         }
 
@@ -290,7 +290,7 @@ export class ManageRoutes extends Component<{
                                         title={
                                             <span>
                                                 {routesSelectedCount === 0 && !this.state.isLoadingRoute && <FormText color="muted">No routes selected</FormText>}
-                                                <b>{ManageRoutesUtilities.TripLink(this.state.mergedRoutes)}</b>
+                                                <b>{ManageRoutesUtilities.TripTitleLink(this.state.mergedRoutes)}</b>
                                             </span>
                                         }
                                         expanded={true}>
@@ -393,7 +393,7 @@ export class ManageRoutes extends Component<{
     }
 
     private calculateBounds(routes: Array<Array<[number, number]>>): Array<[number, number]> {
-        if (routes.length === 0 || routes[0].length === 0) {
+        if (!routes || routes.length === 0 || !routes[0] || routes[0].length === 0) {
             return [];
         }
         const firstLatLng = routes[0][0];
@@ -515,8 +515,10 @@ export class ManageRoutes extends Component<{
                     (route.description.substr(0, maxDescriptionLength) + " ...") : route.description;
                 const routeSummary = (abbreviatedDescription.length === 0) ? "" :
                     route.title + ": " + abbreviatedDescription;
+                    const tripLink = ManageRoutesUtilities.TripLink(route);
                 return combined +
-                    (combined.length > 0 ? "\r" : "") + routeSummary;
+                    (combined.length > 0 ? "\r" : "") + 
+                    routeSummary;
             }, "");
         }
     }
@@ -562,9 +564,18 @@ export class ManageRoutes extends Component<{
         return this.calculateBounds(routesBounds);
     }
 
-    private async CopyAndSaveSelectedRoutes(): Promise<IArchivedRoute[]> {
+    private async CopyAndSaveSelectedRoutes(tolerance: number = 0): Promise<IArchivedRoute[]> {
         return Promise.all(this.state.selectedRoutes.map(async (route: IArchivedRoute) => {
-            return await this.SaveRoute(this.copyRoute(route));
+            const copiedRoute = this.copyRoute(route);
+            if (tolerance > 0) {
+                copiedRoute.routes = copiedRoute.routes.map(r => {
+                    const latLngs = r.map(c => new L.LatLng(c[0], c[1]));
+                    const generalizedLatLngs = this.generalize(latLngs, tolerance);
+                    const generalizedRoute = generalizedLatLngs.map(gpxLatLng => [gpxLatLng.lat, gpxLatLng.lng] as [number, number]);
+                    return generalizedRoute;
+                })
+            }
+            return await this.SaveRoute(copiedRoute);
         }));
     }
 

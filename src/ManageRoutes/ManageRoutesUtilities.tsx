@@ -2,13 +2,18 @@ import * as React from "react";
 import { IArchivedRoute } from "src/Interfaces";
 
 export class ManageRoutesUtilities {
-    public static TripLink(route: IArchivedRoute): JSX.Element | null {
+    public static TripTitleLink(route: IArchivedRoute): JSX.Element | null {
+        const tripLink = this.TripLink(route);
+        return tripLink ? <a href={tripLink} target="_blank">{route.title}</a> : <span>{route.title}</span>
+    }
+
+    public static TripLink(route: IArchivedRoute): string | null {
         const tripLink = 
             route.tripHubId > 0 ? "https://ctc.org.nz/index.php/trip-signup#/trips/" + route.tripHubId :
             route.tripReportsId > 0 ? "https://ctc.org.nz/index.php/trip-reports?goto=tripreports%2F" + route.tripReportsId :
             route.ctcRoutesId > 0 ? "https://ctc.org.nz/index.php/route-archivenew" : // not ideal; can't specify actual route id
             null;
-        return tripLink ? <a href={tripLink} target="_blank">{route.title}</a> : <span>{route.title}</span>
+        return tripLink;
     }
 
     public static TripSourceAndOriginalSource(route: IArchivedRoute): JSX.Element | null {

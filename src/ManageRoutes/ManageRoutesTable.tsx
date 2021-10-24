@@ -82,7 +82,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
           id: 'title',
           Header: 'Title',
           accessor: 'title',
-          Cell: ({ row }: any) => ManageRoutesUtilities.TripLink(row.original),
+          Cell: ({ row }: any) => ManageRoutesUtilities.TripTitleLink(row.original),
           filter: 'includesText'
         },
         {

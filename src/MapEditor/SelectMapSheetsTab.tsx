@@ -127,7 +127,7 @@ export class SelectMapSheetsTab extends Component<{
 
         });
 
-        this.showInitiallySelectedMaps();
+        // this.showInitiallySelectedMaps();
     }
 
     // -------------------------------------------------------
@@ -212,7 +212,7 @@ export class SelectMapSheetsTab extends Component<{
         newTags.splice(newPos, 0, tag);
         const newMapSheets = newTags.map(newTag => newTag.id);
         this.saveSelectedMaps(newMapSheets);
-}
+    }
 
     private async saveSelectedMaps(mapSheets: string[]): Promise<void> {
         await this.props.saveMapsheetsChange(mapSheets);

@@ -38,6 +38,7 @@ export class App extends Component<{
     public triplist: React.RefObject<TripsList>
     public calendar: React.RefObject<Calendar>
     private archivedRoutes: IArchivedRoute[] | undefined = undefined
+    private archivedRoutesPromise: Promise<IArchivedRoute[]> | undefined = undefined;
 
     constructor(props: any) {
         super(props)
@@ -112,11 +113,17 @@ export class App extends Component<{
         return this.state.maps
     }
 
-    public async getArchivedRoutes(includeHidden: boolean = false, force: boolean = false): Promise<IArchivedRoute[]> {
-        if (force || !this.archivedRoutes) {
-            this.archivedRoutes = await this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden );
+    public getArchivedRoutes(includeHidden: boolean = false, force: boolean = false): Promise<IArchivedRoute[]> {
+        if (force || !this.archivedRoutesPromise) {
+            this.archivedRoutesPromise = new Promise<IArchivedRoute[]>((resolve, reject) => {
+                this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden )
+                    .then((archivedRoutes: IArchivedRoute[]) => {
+                        this.archivedRoutes = archivedRoutes;
+                        resolve(archivedRoutes);
+                    }, () => resolve([]));
+            });
         }
-        return this.archivedRoutes as IArchivedRoute[];
+        return this.archivedRoutesPromise;
     }
 
     public validateTrip(trip: ITrip): IValidation[] {

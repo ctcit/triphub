@@ -124,7 +124,7 @@ export class RoutesArchiveTab extends Component<{
                             handleDelete={handleArchivedRouteDelete}
                             handleAddition={handleArchivedRouteAddition}
                             delimiters={delimiters}
-                            placeholder={'Start typing to add a route by name'} />
+                            placeholder={'Start typing to add a route from the archives by name'} />
                     </Col>
                     <Col sm={1}>
                         <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>

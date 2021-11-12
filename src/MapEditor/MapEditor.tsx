@@ -38,7 +38,7 @@ export class MapEditor extends Component<{
         super(props);
 
         this.state = { 
-            activeTab: "SelectMaps",
+            activeTab: "EditRoutes",
             showMap: true,
             maxMapWidth: 1200,
             mapComponent: undefined,
@@ -67,14 +67,14 @@ export class MapEditor extends Component<{
             this.state.mapComponent?.resizeMap(undefined, width);
         }
 
-        const setSelectMapsTab = () => {
-            setTab('SelectMaps', true);
-        }
         const setEditRoutesTab = () => {
             setTab('EditRoutes', true);
         }
         const setRoutesArchiveTab = () => {
             setTab('RoutesArchive', true);
+        }
+        const setSelectMapsTab = () => {
+            setTab('SelectMaps', true);
         }
         const setTab = (tab: string, showMap: boolean) => {
             if (this.state.activeTab !== tab) {
@@ -102,14 +102,6 @@ export class MapEditor extends Component<{
                 <Nav tabs={true}>
                     <NavItem>
                     <NavLink
-                        className={classnames({ active: this.state.activeTab === 'SelectMaps' })}
-                        onClick={setSelectMapsTab}
-                    >
-                        Select Map Sheets
-                    </NavLink>
-                    </NavItem>
-                    <NavItem>
-                    <NavLink
                         className={classnames({ active: this.state.activeTab === 'EditRoutes' })}
                         onClick={setEditRoutesTab}
                     >
@@ -124,16 +116,16 @@ export class MapEditor extends Component<{
                         Routes Archive
                     </NavLink>
                     </NavItem>
+                    <NavItem>
+                    <NavLink
+                        className={classnames({ active: this.state.activeTab === 'SelectMaps' })}
+                        onClick={setSelectMapsTab}
+                    >
+                        Select Map Sheets
+                    </NavLink>
+                    </NavItem>
                 </Nav>
                 <TabContent activeTab={this.state.activeTab}>
-                    <SelectMapSheetsTab
-                        isActiveTab={this.state.activeTab === "SelectMaps"}
-                        mapComponent={this.state.mapComponent}
-                        nz50MapsBySheet={this.props.nz50MapsBySheet}
-                        mapSheets={this.state.mapSheets}
-                        routesAsLatLngs={this.props.routesAsLatLngs}
-                        saveMapsheetsChange={saveMapsheetsChange}
-                    />
                     <EditRoutesTab 
                         isActiveTab={this.state.activeTab === "EditRoutes"}
                         mapComponent={this.state.mapComponent}
@@ -155,6 +147,14 @@ export class MapEditor extends Component<{
                         undoLastRouteEdit={undoLastRouteEdit}
                         getArchivedRoutes={this.props.getArchivedRoutes}
                         getArchivedRoute={this.props.getArchivedRoute}
+                    />
+                    <SelectMapSheetsTab
+                        isActiveTab={this.state.activeTab === "SelectMaps"}
+                        mapComponent={this.state.mapComponent}
+                        nz50MapsBySheet={this.props.nz50MapsBySheet}
+                        mapSheets={this.state.mapSheets}
+                        routesAsLatLngs={this.props.routesAsLatLngs}
+                        saveMapsheetsChange={saveMapsheetsChange}
                     />
                 </TabContent>
                 <MapComponent

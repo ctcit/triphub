@@ -44,12 +44,12 @@ export class EditRoutesTab extends Component<{
         }
     });
 
-    private memoizedContinueOrEndRoute = memoizeOne((isActiveTab: boolean) => {
-        if (this.mapIsSetup) {
-            if (this.props.isActiveTab) {
+    private memoizedContinueOrEndRoute = memoizeOne((mapIsSetup: boolean, isActiveTab: boolean) => {
+        if (mapIsSetup) {
+            if (isActiveTab) {
                 // this.props.mapComponent?.map.invalidateSize();
-                this.continueRoute();
-            } else if (!this.props.isActiveTab) {
+                setTimeout(() => this.continueRoute(), 0);
+            } else if (!isActiveTab) {
                 this.endRoute();
             }
         }
@@ -72,7 +72,7 @@ export class EditRoutesTab extends Component<{
     public render() {
 
         this.memoizedSetUpMap(this.props.mapComponent);
-        this.memoizedContinueOrEndRoute(this.props.isActiveTab);
+        this.memoizedContinueOrEndRoute(this.mapIsSetup, this.props.isActiveTab);
 
         const addRoute = async () => {
             await this.endRoute();

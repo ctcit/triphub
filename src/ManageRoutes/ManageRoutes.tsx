@@ -165,7 +165,7 @@ export class ManageRoutes extends Component<{
 
         const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
             this.setState({ isEditing: false, isSaving: true }); 
-            await this.setSelectedRoutes([await this.SaveRoute(newRoute)]);
+            await this.setSelectedRoutes([await this.RecalculateAndSaveRoute(newRoute)]);
             await this.app.getArchivedRoutes(true, true); // force reload
             this.setState({isSaving: false});
         }
@@ -348,6 +348,12 @@ export class ManageRoutes extends Component<{
         ]
     }
 
+    private async RecalculateAndSaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute> {
+        newRoute.bounds = this.calculateBounds(newRoute.routes);
+        newRoute.summarizedRoutes = this.summarizedRoutes(newRoute.routes);
+        return await this.SaveRoute(newRoute);
+    }
+    
     private async setSelectedRoutes(routes: IArchivedRoute[]): Promise<void> {
         this.setState({isLoadingRoute: true});
         const promises: Array<Promise<void>> = routes.map((route: IArchivedRoute) => this.fillRouteDetails(route));
@@ -651,7 +657,7 @@ export class ManageRoutes extends Component<{
             }, async () => {
                 await this.setSelectedRoutes([savedRoute]);
             });
-    }
+        }
         return Promise.resolve(response[0])
     }
 

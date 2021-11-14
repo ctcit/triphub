@@ -75,10 +75,6 @@ export class TripDetail extends Component<{
                 .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
         }
 
-        const updateArchivedRouteSummary = (archivedRouteId: number, routeSummary: string): Promise<void> =>  {
-            return this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + archivedRouteId, routeSummary );  
-        }
-
         const onGet = (field: string): any => this.props.owner.state.trip[field]
         const onGetInverted = (field: string): any => !this.props.owner.state.trip[field]
         const onSet = (field: string, value: any): void => this.set(field, value)
@@ -273,7 +269,6 @@ export class TripDetail extends Component<{
                             leafletMapId='tripmap'
                             getArchivedRoutes={getArchivedRoutes}
                             getArchivedRoute={getArchivedRoute}
-                            updateArchivedRouteSummary={updateArchivedRouteSummary}
                             {...common}
                         />
                     </Col>

@@ -35,8 +35,7 @@ export class TripMap extends MapCommon<{
     leafletMapId: string,
     nz50MapsBySheet: { [mapSheet: string] : IMap },
     getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
-    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
-    updateArchivedRouteSummary: (routeId: number, routeSummary: string) => Promise<void>
+    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     saving : boolean,
     mapVisible: boolean,
@@ -160,6 +159,7 @@ export class TripMap extends MapCommon<{
                         }
                         { ((this.props.readOnly && this.mapSheets.length > 0) || !this.props.readOnly) &&
                             <ReactTags tags={this.getTags()}
+                                autofocus={false}
                                 suggestions={this.state.mapSheetSuggestions}
                                 handleDelete={handleMapDelete}
                                 handleAddition={handleMapAddition}
@@ -185,6 +185,7 @@ export class TripMap extends MapCommon<{
                         { !this.props.readOnly &&
                             <ButtonGroup>
                                 <ReactTags tags={[]}
+                                    autofocus={false}
                                     suggestions={this.state.archivedRouteSuggestions}
                                     handleDelete={handleArchivedRouteDelete}
                                     handleAddition={handleArchivedRouteAddition}
@@ -219,7 +220,6 @@ export class TripMap extends MapCommon<{
                                     onRoutesChanged={onRoutesChanged}
                                     getArchivedRoutes={this.props.getArchivedRoutes}
                                     getArchivedRoute={this.props.getArchivedRoute}
-                                    // updateArchivedRouteSummary={this.props.updateArchivedRouteSummary}
                                 />
                             </ModalBody>
                             <ModalFooter>

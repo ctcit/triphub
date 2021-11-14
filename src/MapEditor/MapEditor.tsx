@@ -19,8 +19,7 @@ export class MapEditor extends Component<{
     getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onMapSheetsChanged: (mapSheets: string[]) => void,
-    onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) => void,
-    // updateArchivedRouteSummary: (routeId: string, routeSummary: string) => Promise<void>
+    onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) => void
 },{
     activeTab: string,
     showMap: boolean,

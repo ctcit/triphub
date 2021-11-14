@@ -39,6 +39,7 @@ export class App extends Component<{
     public calendar: React.RefObject<Calendar>
     private archivedRoutes: IArchivedRoute[] | undefined = undefined
     private archivedRoutesPromise: Promise<IArchivedRoute[]> | undefined = undefined;
+    private archivedRoutesIncludeHidden: boolean = false;
 
     constructor(props: any) {
         super(props)
@@ -114,7 +115,8 @@ export class App extends Component<{
     }
 
     public getArchivedRoutes(includeHidden: boolean = false, force: boolean = false): Promise<IArchivedRoute[]> {
-        if (force || !this.archivedRoutesPromise) {
+        if (force || !this.archivedRoutesPromise || includeHidden !== this.archivedRoutesIncludeHidden) {
+            this.archivedRoutesIncludeHidden = includeHidden;
             this.archivedRoutesPromise = new Promise<IArchivedRoute[]>((resolve, reject) => {
                 this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden )
                     .then((archivedRoutes: IArchivedRoute[]) => {

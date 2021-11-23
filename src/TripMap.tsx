@@ -348,13 +348,16 @@ export class TripMap extends MapCommon<{
             const promises = [];
 
             if (routesAsLatLngs) {
-                const mapVisible: boolean = routesAsLatLngs && routesAsLatLngs.length > 0;
+                if (routesAsLatLngs.length === 1 && routesAsLatLngs[0].length === 0) {
+                    routesAsLatLngs = [];
+                }
+                this.pendingRoutesLatLngs = routesAsLatLngs;
+                const mapVisible: boolean = routesAsLatLngs.length > 0;
                 this.setState({ mapVisible }, async () => {
                     if (mapVisible) {
-                        this.pendingRoutesLatLngs = routesAsLatLngs;
                         this.setUpMap();
                     }
-                    this.setRoutesFromLatLngs(routesAsLatLngs);
+                    this.setRoutesFromLatLngs(routesAsLatLngs as Array<Array<[number, number]>>);
                     this.fitBounds();
                     promises.push(this.props.onSave('routes', routesAsLatLngs));
                 });
@@ -362,6 +365,7 @@ export class TripMap extends MapCommon<{
 
             if (mapSheets) {
                 this.mapSheets = mapSheets;
+                this.pendingMapSheets = mapSheets;
                 promises.push(this.props.onSave('maps', mapSheets
                     .filter(mapSheet => mapSheet > "")
                     .map(mapSheet => mapSheet + " " +  this.props.nz50MapsBySheet[mapSheet].name)));

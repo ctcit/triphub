@@ -638,6 +638,7 @@ export class ManageRoutes extends Component<{
 
     private async SaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute> {
         let response: IArchivedRoute[];
+        newRoute = this.Sanitize(newRoute);
         if (newRoute.id > 0) {
             response = await this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + newRoute.id, newRoute );
         } else {
@@ -659,6 +660,24 @@ export class ManageRoutes extends Component<{
             });
         }
         return Promise.resolve(response[0])
+    }
+
+    private Sanitize(route: IArchivedRoute): IArchivedRoute {
+        route.routes = this.SanitizeRoutes(route.routes);
+        route.summarizedRoutes = this.SanitizeRoutes(route.summarizedRoutes);
+        return route;
+    }
+
+    private SanitizeRoutes(routes: Array<Array<[number, number]>>): Array<Array<[number, number]>> {
+        if (!routes) {
+            return [];
+        }
+        return routes.map(route => {
+            if (!route || route.length < 3) {
+                return null;
+            }
+            return route;
+        }).filter(route => route !== null) as Array<Array<[number, number]>>;
     }
 
     private async DeleteSelectedRoutes(): Promise<any> {

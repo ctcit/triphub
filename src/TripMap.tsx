@@ -37,7 +37,8 @@ export class TripMap extends MapCommon<{
     getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
-    saving : boolean,
+    savingMapSheets : boolean,
+    savingRoutes: boolean,
     mapVisible: boolean,
     editing: boolean,
     editsMade: boolean,
@@ -77,7 +78,8 @@ export class TripMap extends MapCommon<{
         this.pendingMapSheets = this.mapSheets;
 
         this.state = { 
-            saving: false,
+            savingMapSheets: false,
+            savingRoutes: false,
             mapVisible: routesAsLatLngs && routesAsLatLngs.length > 0,
             editing: false,
             editsMade: false,
@@ -152,7 +154,7 @@ export class TripMap extends MapCommon<{
             <div>
                 <Row>
                     <Col>
-                        <ControlWrapper id={this.props.mapsId} field={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+                        <ControlWrapper id={this.props.mapsId} field={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingMapSheets} >
                         {
                             this.mapSheets.length === 0 &&
                                 <FormText color="muted">No maps selected</FormText>
@@ -173,7 +175,7 @@ export class TripMap extends MapCommon<{
                 </Row>
                 <Row>
                     <Col>
-                        <ControlWrapper id={this.props.routesId} field={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
+                        <ControlWrapper id={this.props.routesId} field={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingRoutes} >
                         { !this.state.mapVisible &&
                             <FormText color="muted">No routes specified</FormText>
                         }
@@ -342,8 +344,14 @@ export class TripMap extends MapCommon<{
     // -----------------
 
     private Save = (mapSheets: string[] | null, routesAsLatLngs: Array<Array<[number, number]>> | null): void => { 
-
-        this.setState({ saving: true, editsMade: false, editing: false }, async () => {
+        const state: any = { editsMade: false, editing: false };
+        if (mapSheets) {
+            state.savingMapSheets = true;
+        }
+        if (routesAsLatLngs) {
+            state.savingRoutes = true;
+        }
+        this.setState(state, async () => {
 
             const promises = [];
 
@@ -373,7 +381,7 @@ export class TripMap extends MapCommon<{
 
             return Promise.all(promises)
                 .then(() => Promise.resolve(), () => Promise.resolve())
-                .then(() => this.setState({saving: false}));
+                .then(() => this.setState({savingMapSheets: false, savingRoutes: false}));
         }); 
     }
 

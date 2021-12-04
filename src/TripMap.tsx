@@ -170,9 +170,11 @@ export class TripMap extends MapCommon<{
                                     delimiters={delimiters}
                                     placeholder={'Start typing to add a map sheet by name'}
                                     readOnly={this.props.readOnly} />
-                                <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
-                                    <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
-                                </a>
+                                { !this.props.readOnly &&
+                                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                    </a>
+                                }
                             </ButtonGroup>
                         }
                         </ControlWrapper>
@@ -214,15 +216,17 @@ export class TripMap extends MapCommon<{
                 </Row>
                 <Row>
                     <Col>
-                        <Row>
-                            <Button onClick={onEdit} hidden={this.props.readOnly}>
-                                <span className='fa fa-map'/>
-                                Edit Maps/Routes (Advanced)
-                            </Button>
-                            <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
-                                    <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
-                                </a>
-                        </Row>
+                        { !this.props.readOnly &&
+                            <Row>
+                                <Button onClick={onEdit}>
+                                    <span className='fa fa-map'/>
+                                    Edit Maps/Routes (Advanced)
+                                </Button>
+                                <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                    </a>
+                            </Row>
+                        }
                         <Modal isOpen={this.state.editing} toggle={onSave} 
                             size="lg" style={{maxWidth: '1600px', width: '95%', margin: '10px auto'}} centered={true}>
                             <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>

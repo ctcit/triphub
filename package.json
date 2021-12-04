@@ -21,6 +21,7 @@
     "hoist-non-react-statics": "^3.3.2",
     "html-to-text": "^7.1.1",
     "leaflet": "^1.6.0",
+    "leaflet-arrowheads": "^1.2.3",
     "leaflet-gpx": "^1.4.0",
     "lodash.throttle": "^4.1.1",
     "luxon": "^1.22.0",

@@ -408,7 +408,7 @@ export class EditRoutesTab extends Component<{
                     if (index < latLngs.length) {
                         secondPart = secondPart.concat(latLngs.slice(index));
                     }
-                    const newRoute = L.polyline(secondPart, {}).addTo(mapComponent.map);
+                    const newRoute = mapComponent.addArrowheads(L.polyline(secondPart, {})).addTo(mapComponent.map);
                     
                     const newRoutes = mapComponent.routes.slice(0, this.props.currentRouteIndex + 1).concat(newRoute).concat(
                         mapComponent.routes.slice(this.props.currentRouteIndex + 1));
@@ -426,7 +426,7 @@ export class EditRoutesTab extends Component<{
             const currentRoute = mapComponent.routes[this.props.currentRouteIndex];
             const generalizedLatLngs: L.LatLng[] = mapComponent.generalize(currentRoute.getLatLngs() as L.LatLng[], tolerance);
             currentRoute.remove();
-            const generalizedRoute = L.polyline(generalizedLatLngs, {}).addTo(mapComponent.map);
+            const generalizedRoute = mapComponent.addArrowheads(L.polyline(generalizedLatLngs, {})).addTo(mapComponent.map);
             const newRoutes = mapComponent.routes.slice(); // shallow clone
             newRoutes[this.props.currentRouteIndex] = generalizedRoute;
             await this.updateRoutesState(newRoutes, this.props.currentRouteIndex);
@@ -473,12 +473,27 @@ export class EditRoutesTab extends Component<{
             this.vertexIsDragging = false; 
             this.saveRouteChange();
         });
+        route.on('editable:vertex:new', () => {
+            // arrowheads don't work when polyline has < 2 vertices
+            if (route.getLatLngs().length > 1 && !((route as any).getArrowheads())) {
+                const mapComponent = (this.props.mapComponent as MapComponent);
+                mapComponent.addArrowheads(route);
+            }
+        })
+        route.on('editable:vertex:deleted', () => {
+            // arrowheads don't work when polyline has < 2 vertices
+            if (route.getLatLngs().length <= 1 && (route as any).getArrowheads()) {
+                (route as any).getArrowheads().remove();
+            }
+        })
     }
 
     private setRouteEventsOff(route: L.Polyline) {
         route.off('editable:vertex:dragstart');
         route.off('editable:vertex:dragend');
         route.off('editable:editing');
+        route.off('editable:vertex:new');
+        route.off('editable:vertex:deleted');
     }
 
     private importGpxFromFile(gpxFile: File): Promise<void> {

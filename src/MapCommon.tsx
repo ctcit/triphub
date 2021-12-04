@@ -1,4 +1,6 @@
 import * as L from 'leaflet';
+import 'leaflet-geometryutil';
+import 'leaflet-arrowheads';
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
 import { Component } from 'react';
@@ -189,7 +191,7 @@ export class MapCommon<P extends {
                 const gpxLatLngs = (event.line as L.Polyline).getLatLngs() as L.LatLng[];
                 const generalizedLatLngs = this.generalize(gpxLatLngs, tolerance);
                 if (generalizedLatLngs.length > 0) {
-                    const route = L.polyline(generalizedLatLngs, {}).addTo(this.map);
+                    const route = this.addArrowheads(L.polyline(generalizedLatLngs, {})).addTo(this.map);
                     this.routes.push(route);
                     this.currentRouteIndex = this.routes.length - 1;
                     this.adjustRoutePositionIndicators();
@@ -241,11 +243,18 @@ export class MapCommon<P extends {
         this.routes = [];
         if (routesAsLatLngs) {
             routesAsLatLngs.forEach(routeLatLngs => {
-                this.routes.push(L.polyline(routeLatLngs, {}).addTo(this.map));
+                this.routes.push(this.addArrowheads(L.polyline(routeLatLngs, {})).addTo(this.map));
                 this.currentRouteIndex = this.routes.length - 1;
             });
             this.adjustRoutePositionIndicators();
         }
+    }
+
+    public addArrowheads(route: L.Polyline) {
+        if (route.getLatLngs().length > 1) {
+            (route as any).arrowheads({ size: '15px', frequency: 'endonly'});
+        }
+        return route;
     }
 
     public fitBounds(): void {

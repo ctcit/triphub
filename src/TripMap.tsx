@@ -215,10 +215,10 @@ export class TripMap extends MapCommon<{
                 <Row>
                     <Col>
                         <Row>
-                            <ButtonWithTooltip onClick={onEdit} hidden={this.props.readOnly}>
+                            <Button onClick={onEdit} hidden={this.props.readOnly}>
                                 <span className='fa fa-map'/>
                                 Edit Maps/Routes (Advanced)
-                            </ButtonWithTooltip>
+                            </Button>
                             <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
                                     <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                                 </a>

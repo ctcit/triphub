@@ -252,7 +252,7 @@ export class MapCommon<P extends {
 
     public addArrowheads(route: L.Polyline) {
         if (route.getLatLngs().length > 1) {
-            (route as any).arrowheads({ size: '15px', frequency: 'endonly'});
+            (route as any).arrowheads({ size: '10px', fill: true, frequency: '1000m'});
         }
         return route;
     }

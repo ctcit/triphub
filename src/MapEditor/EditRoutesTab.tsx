@@ -4,7 +4,7 @@ import 'leaflet-gpx';
 import * as React from 'react';
 import Col from 'reactstrap/lib/Col';
 import { Button, CustomInput, ButtonGroup, Row, FormText, TabPane } from 'reactstrap';
-import { MdAddCircle, MdClear, MdUndo, MdTimeline, MdNavigateNext, MdNavigateBefore, MdClearAll, MdContentCut, MdZoomOutMap} from 'react-icons/md';
+import { MdInfo, MdAddCircle, MdClear, MdUndo, MdTimeline, MdNavigateNext, MdNavigateBefore, MdClearAll, MdContentCut, MdZoomOutMap} from 'react-icons/md';
 import { GiJoint } from 'react-icons/gi';
 import { IoMdSwap } from 'react-icons/io';
 import { AiOutlineRollback } from 'react-icons/ai';
@@ -142,7 +142,12 @@ export class EditRoutesTab extends Component<{
         
         return (
             <TabPane tabId="EditRoutes">
-                <Row className="mb-2 ml-1"><FormText color='muted'>Click points on map to draw route, or import route from GPX file</FormText></Row>
+                <Row className="mb-2 ml-1">
+                    <FormText color='muted'>Click points on map to draw route, or import route from GPX file</FormText>
+                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                        <MdInfo size="30" color="#6899e4" style={{padding: '4px'}}/>
+                    </a>
+                </Row>
                 <Row className="mb-2">
                     <Col sm={5}>
                         <ButtonGroup>

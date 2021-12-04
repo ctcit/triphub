@@ -11,7 +11,7 @@ import { ControlWrapper } from './Control';
 import { MapCommon } from './MapCommon';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import memoizeOne from 'memoize-one';
-import { MdClear /* , MdMap */ } from 'react-icons/md';
+import { MdClear, MdInfo /* , MdMap */ } from 'react-icons/md';
 
 const KeyCodes = {
     comma: 188,
@@ -160,15 +160,20 @@ export class TripMap extends MapCommon<{
                                 <FormText color="muted">No maps selected</FormText>
                         }
                         { ((this.props.readOnly && this.mapSheets.length > 0) || !this.props.readOnly) &&
-                            <ReactTags tags={this.getTags()}
-                                autofocus={false}
-                                suggestions={this.state.mapSheetSuggestions}
-                                handleDelete={handleMapDelete}
-                                handleAddition={handleMapAddition}
-                                handleDrag={handleMapDrag}
-                                delimiters={delimiters}
-                                placeholder={'Start typing to add a map sheet by name'}
-                                readOnly={this.props.readOnly} />
+                            <ButtonGroup>
+                                <ReactTags tags={this.getTags()}
+                                    autofocus={false}
+                                    suggestions={this.state.mapSheetSuggestions}
+                                    handleDelete={handleMapDelete}
+                                    handleAddition={handleMapAddition}
+                                    handleDrag={handleMapDrag}
+                                    delimiters={delimiters}
+                                    placeholder={'Start typing to add a map sheet by name'}
+                                    readOnly={this.props.readOnly} />
+                                <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                                    <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                </a>
+                            </ButtonGroup>
                         }
                         </ControlWrapper>
                     </Col>
@@ -185,31 +190,39 @@ export class TripMap extends MapCommon<{
                             </ResizableBox>
                         }
                         { !this.props.readOnly &&
-                            <ButtonGroup>
-                                <ReactTags tags={[]}
-                                    autofocus={false}
-                                    suggestions={this.state.archivedRouteSuggestions}
-                                    handleDelete={handleArchivedRouteDelete}
-                                    handleAddition={handleArchivedRouteAddition}
-                                    delimiters={delimiters}
-                                    placeholder={'Start typing to add a route from the archives by name'} />
-                                <ButtonWithConfirm id="ClearRoutesButton" color='secondary'
-                                    onClick={onClearRoute} disabled={!this.state.mapVisible}  
-                                    placement="top" tooltipText="Clear routes"
-                                    confirmText="Confirm clear routes">
-                                        <MdClear/>
-                                </ButtonWithConfirm>
-                            </ButtonGroup>
+                                <ButtonGroup>
+                                    <ReactTags tags={[]}
+                                        autofocus={false}
+                                        suggestions={this.state.archivedRouteSuggestions}
+                                        handleDelete={handleArchivedRouteDelete}
+                                        handleAddition={handleArchivedRouteAddition}
+                                        delimiters={delimiters}
+                                        placeholder={'Start typing to add a route from the archives by name'} />
+                                    <ButtonWithConfirm id="ClearRoutesButton" color='secondary'
+                                        onClick={onClearRoute} disabled={!this.state.mapVisible}  
+                                        placement="top" tooltipText="Clear routes"
+                                        confirmText="Confirm clear routes">
+                                            <MdClear/>
+                                    </ButtonWithConfirm>
+                                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                    </a>
+                                </ButtonGroup>
                         }
                         </ControlWrapper>
                     </Col>
                 </Row>
                 <Row>
                     <Col>
-                        <Button onClick={onEdit} hidden={this.props.readOnly}>
-                            <span className='fa fa-map'/>
-                            Edit Maps/Routes (Advanced)
-                        </Button>
+                        <Row>
+                            <ButtonWithTooltip onClick={onEdit} hidden={this.props.readOnly}>
+                                <span className='fa fa-map'/>
+                                Edit Maps/Routes (Advanced)
+                            </ButtonWithTooltip>
+                            <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                                    <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                </a>
+                        </Row>
                         <Modal isOpen={this.state.editing} toggle={onSave} 
                             size="lg" style={{maxWidth: '1600px', width: '95%', margin: '10px auto'}} centered={true}>
                             <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>

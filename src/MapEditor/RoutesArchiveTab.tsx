@@ -6,7 +6,7 @@ import Col from 'reactstrap/lib/Col';
 import { Button, TabPane, ButtonGroup, Row, FormText } from 'reactstrap';
 import { IArchivedRoute, IMap } from '../Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
-import { MdUndo, MdZoomOutMap} from 'react-icons/md';
+import { MdInfo, MdUndo, MdZoomOutMap} from 'react-icons/md';
 import { Spinner } from '../Widgets';
 import { ArchivedRoutePolygon, MapCommon } from '../MapCommon';
 import { ButtonWithTooltip } from '../ButtonWithTooltip';
@@ -102,7 +102,12 @@ export class RoutesArchiveTab extends Component<{
 
         return (
             <TabPane tabId="RoutesArchive">
-                <Row className="mb-2 ml-1"><FormText color='muted'>Import routes from the routes archive</FormText></Row>
+                <Row className="mb-2 ml-1">
+                    <FormText color='muted'>Import routes from the routes archive</FormText>
+                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                        <MdInfo size="30" color="#6899e4" style={{padding: '4px'}}/>
+                    </a>
+                </Row>
                 <Row className="mb-2">
                     <Col sm={2}>
                         <ButtonGroup>

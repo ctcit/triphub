@@ -6,7 +6,7 @@ import Col from 'reactstrap/lib/Col';
 import { TabPane, ButtonGroup, Row, FormText } from 'reactstrap';
 import { IMap } from '../Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
-import { MdClear, MdGridOff, MdZoomOutMap} from 'react-icons/md';
+import { MdInfo, MdClear, MdGridOff, MdZoomOutMap} from 'react-icons/md';
 import { NZ50MapPolygon } from '../MapCommon';
 import { ButtonWithTooltip } from '../ButtonWithTooltip';
 import { Component } from 'react';
@@ -75,7 +75,12 @@ export class SelectMapSheetsTab extends Component<{
         
         return (
             <TabPane tabId="SelectMaps">
-                <Row className="mb-2 ml-1"><FormText color='muted'>Click on map sheet to select; click again to unselect</FormText></Row>
+                <Row className="mb-2 ml-1">
+                    <FormText color='muted'>Click on map sheet to select; click again to unselect</FormText>
+                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                        <MdInfo size="30" color="#6899e4" style={{padding: '4px'}}/>
+                    </a>
+                </Row>
                 <Row className="mb-2">
                     <Col sm={2}>
                         <ButtonGroup>

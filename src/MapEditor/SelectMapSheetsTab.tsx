@@ -11,6 +11,7 @@ import { NZ50MapPolygon } from '../MapCommon';
 import { ButtonWithTooltip } from '../ButtonWithTooltip';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
+import memoizeOne from 'memoize-one';
 
 const KeyCodes = {
     comma: 188,
@@ -33,6 +34,27 @@ export class SelectMapSheetsTab extends Component<{
 }>{
     private mapIsSetup: boolean = false;
 
+    private memoizedSetUpMap = memoizeOne((mapComponent: MapComponent | undefined) => {
+        if (mapComponent && !this.mapIsSetup) {
+            this.setUpMap();
+            this.mapIsSetup = true;
+        }
+    });
+
+    private memoizedHighlightOrUnhighlightSelectedMaps = memoizeOne((mapIsSetup: boolean, isActiveTab: boolean) => {
+        if (this.mapIsSetup) {
+            if (this.props.isActiveTab && !this.state.activated) {
+                this.setMapSheetsEventsOn();
+                this.highlightSelectedMaps();
+                this.setState({activated: true});
+            } else if (!this.props.isActiveTab && this.state.activated) {
+                this.setMapSheetsEventsOff();
+                this.unhighlightSelectedMaps();
+                this.setState({activated: false});
+            }
+        }
+    });
+
     constructor(props:any) {
         super(props);
 
@@ -48,19 +70,8 @@ export class SelectMapSheetsTab extends Component<{
     }
 
     public render(){
-        if (this.props.mapComponent && !this.mapIsSetup) {
-            this.setUpMap();
-            this.mapIsSetup = true;
-        }
-        if (this.mapIsSetup) {
-            if (this.props.isActiveTab && !this.state.activated) {
-                this.highlightSelectedMaps();
-                this.setState({activated: true});
-            } else if (!this.props.isActiveTab && this.state.activated) {
-                this.unhighlightSelectedMaps();
-                this.setState({activated: false});
-            }
-        }
+        this.memoizedSetUpMap(this.props.mapComponent);
+        this.memoizedHighlightOrUnhighlightSelectedMaps(this.mapIsSetup, this.props.isActiveTab);
 
         const handleMapDelete = (pos: number) => this.deleteSelectedMaps(pos);
         const handleMapAddition = (tag: Tag) => this.addSelectedMaps([tag.id]);
@@ -120,6 +131,10 @@ export class SelectMapSheetsTab extends Component<{
 
         (this.props.mapComponent as MapComponent).fitBounds();
 
+        // this.showInitiallySelectedMaps();
+    }
+
+    private setMapSheetsEventsOn() {
         Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
             const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
             const polygon = (this.props.mapComponent as MapComponent).nz50MapPolygonsBySheet[nz50Map.sheetCode];
@@ -132,7 +147,17 @@ export class SelectMapSheetsTab extends Component<{
 
         });
 
-        // this.showInitiallySelectedMaps();
+    }
+
+    private setMapSheetsEventsOff() {
+        Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
+            const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+            const polygon = (this.props.mapComponent as MapComponent).nz50MapPolygonsBySheet[nz50Map.sheetCode];
+
+            // add click event handler for polygon
+            (polygon as any).nz50map = nz50Map;
+            polygon.off('click');
+        });
     }
 
     // -------------------------------------------------------

@@ -217,7 +217,7 @@ export class TripMap extends MapCommon<{
                 <Row>
                     <Col>
                         { !this.props.readOnly &&
-                            <Row>
+                            <ButtonGroup>
                                 <Button onClick={onEdit}>
                                     <span className='fa fa-map'/>
                                     Edit Maps/Routes (Advanced)
@@ -225,7 +225,7 @@ export class TripMap extends MapCommon<{
                                 <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
                                         <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                                     </a>
-                            </Row>
+                            </ButtonGroup>
                         }
                         <Modal isOpen={this.state.editing} toggle={onSave} 
                             size="lg" style={{maxWidth: '1600px', width: '95%', margin: '10px auto'}} centered={true}>

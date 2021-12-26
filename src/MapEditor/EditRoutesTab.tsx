@@ -136,6 +136,11 @@ export class EditRoutesTab extends Component<{
             this.setState( {gpxFile});
             await this.endRoute();
             await this.importGpxFromFile(gpxFile);
+            const mapComponent = (this.props.mapComponent as MapComponent);
+            const currentRoute = mapComponent.routes[this.props.currentRouteIndex];
+            if (currentRoute.getLatLngs().length === 0) {
+                await this.deleteRoute();
+            }
             await this.saveRouteChange(true, true);
             await this.continueRoute();
         }
@@ -144,7 +149,7 @@ export class EditRoutesTab extends Component<{
             <TabPane tabId="EditRoutes">
                 <Row className="mb-2 ml-1">
                     <FormText color='muted'>Click points on map to draw route, or import route from GPX file</FormText>
-                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                    <a href="https://youtu.be/0NFCjs_BJok" target="_blank">
                         <MdInfo size="30" color="#6899e4" style={{padding: '4px'}}/>
                     </a>
                 </Row>
@@ -215,15 +220,23 @@ export class EditRoutesTab extends Component<{
                                 placement="top" tooltipText="Undo last change">
                                     <MdUndo/>
                             </ButtonWithTooltip>
+                            <a href="https://youtu.be/UZ3qVtAviRE" target="_blank">
+                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                            </a>
                         </ButtonGroup>
                     </Col>
                     <Col sm={6}>
-                        <CustomInput
-                            type="file" id="GpxFileInput" name="customFile"
-                            label={this.state.gpxFile ? this.state.gpxFile.name : 'Import from GPX'}
-                            onChange={importGpx}
-                            invalid={this.state.invalidGpxFile} 
-                        />
+                        <ButtonGroup>
+                            <CustomInput
+                                type="file" id="GpxFileInput" name="customFile"
+                                label={this.state.gpxFile ? this.state.gpxFile.name : 'Import from GPX'}
+                                onChange={importGpx}
+                                invalid={this.state.invalidGpxFile} 
+                            />
+                            <a href="https://youtu.be/SO9joIDj2To" target="_blank">
+                                    <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                            </a>
+                        </ButtonGroup>
                     </Col>
                     <Col sm={1}>
                         <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>

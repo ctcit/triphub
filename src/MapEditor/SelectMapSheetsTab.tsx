@@ -88,7 +88,7 @@ export class SelectMapSheetsTab extends Component<{
             <TabPane tabId="SelectMaps">
                 <Row className="mb-2 ml-1">
                     <FormText color='muted'>Click on map sheet to select; click again to unselect</FormText>
-                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                    <a href="https://youtu.be/kpxAIiyTWHs" target="_blank">
                         <MdInfo size="30" color="#6899e4" style={{padding: '4px'}}/>
                     </a>
                 </Row>

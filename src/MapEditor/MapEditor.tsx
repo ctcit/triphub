@@ -36,6 +36,10 @@ export class MapEditor extends Component<{
     constructor(props:any) {
         super(props);
 
+        if (this.props.routesAsLatLngs.length === 0) {
+            this.props.routesAsLatLngs.push([]);
+        }
+
         this.state = { 
             activeTab: "EditRoutes",
             showMap: true,

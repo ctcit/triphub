@@ -117,6 +117,7 @@ export class MapCommon<P extends {
 
             // the map sheet polygon
             const polygon = L.polygon(nz50Map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
+            (polygon as any).nz50map = nz50Map;
 
             // the map sheet label
             const polygonLabel = L.divIcon({className: 'sheet-div-icon',

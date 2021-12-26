@@ -8,10 +8,10 @@ import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { ButtonWithConfirm } from './ButtonWithConfirm';
 import { ControlWrapper } from './Control';
-import { MapCommon } from './MapCommon';
+import { MapCommon, NZ50MapPolygon } from './MapCommon';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import memoizeOne from 'memoize-one';
-import { MdClear, MdInfo /* , MdMap */ } from 'react-icons/md';
+import { MdClear, MdGridOff, MdInfo /* , MdMap */ } from 'react-icons/md';
 
 const KeyCodes = {
     comma: 188,
@@ -138,6 +138,8 @@ export class TripMap extends MapCommon<{
         const handleMapDrag = (tag: Tag, currPos: number, newPos: number) => {
             this.dragSelectedMaps(tag, currPos, newPos);
         } 
+        const onSelectRouteMaps = () => this.selectRouteMaps();
+        const onClearRouteMaps = () => this.clearRouteMaps();
 
         const onResize = (e: React.SyntheticEvent, data: ResizeCallbackData) => {
             this.resizeMap(data.size.height, data.size.width);
@@ -152,34 +154,6 @@ export class TripMap extends MapCommon<{
 
         return (
             <div>
-                <Row>
-                    <Col>
-                        <ControlWrapper id={this.props.mapsId} field={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingMapSheets} >
-                        {
-                            this.mapSheets.length === 0 &&
-                                <FormText color="muted">No maps selected</FormText>
-                        }
-                        { ((this.props.readOnly && this.mapSheets.length > 0) || !this.props.readOnly) &&
-                            <ButtonGroup>
-                                <ReactTags tags={this.getTags()}
-                                    autofocus={false}
-                                    suggestions={this.state.mapSheetSuggestions}
-                                    handleDelete={handleMapDelete}
-                                    handleAddition={handleMapAddition}
-                                    handleDrag={handleMapDrag}
-                                    delimiters={delimiters}
-                                    placeholder={'Start typing to add a map sheet by name'}
-                                    readOnly={this.props.readOnly} />
-                                { !this.props.readOnly &&
-                                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
-                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
-                                    </a>
-                                }
-                            </ButtonGroup>
-                        }
-                        </ControlWrapper>
-                    </Col>
-                </Row>
                 <Row>
                     <Col>
                         <ControlWrapper id={this.props.routesId} field={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingRoutes} >
@@ -206,10 +180,49 @@ export class TripMap extends MapCommon<{
                                         confirmText="Confirm clear routes">
                                             <MdClear/>
                                     </ButtonWithConfirm>
-                                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                                    <a href="https://youtu.be/8qkCNAz8Vv4" target="_blank">
                                         <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                                     </a>
                                 </ButtonGroup>
+                        }
+                        </ControlWrapper>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col>
+                        <ControlWrapper id={this.props.mapsId} field={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingMapSheets} >
+                        {
+                            this.mapSheets.length === 0 &&
+                                <FormText color="muted">No maps selected</FormText>
+                        }
+                        { ((this.props.readOnly && this.mapSheets.length > 0) || !this.props.readOnly) &&
+                            <ButtonGroup>
+                                <ReactTags tags={this.getTags()}
+                                    autofocus={false}
+                                    suggestions={this.state.mapSheetSuggestions}
+                                    handleDelete={handleMapDelete}
+                                    handleAddition={handleMapAddition}
+                                    handleDrag={handleMapDrag}
+                                    delimiters={delimiters}
+                                    placeholder={'Start typing to add a map sheet by name'}
+                                    readOnly={this.props.readOnly} />
+                                <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
+                                    onClick={onSelectRouteMaps} disabled={!this.routes || this.routes.length === 0 }  
+                                    placement="top" tooltipText="Select maps overlapping the route">
+                                        <MdGridOff/>
+                                </ButtonWithTooltip>
+                                <ButtonWithConfirm id="ClearMapsButton" color='secondary'
+                                        onClick={onClearRouteMaps} disabled={!this.state.mapVisible}  
+                                        placement="top" tooltipText="Clear maps"
+                                        confirmText="Confirm clear maps">
+                                            <MdClear/>
+                                </ButtonWithConfirm>
+                                { !this.props.readOnly &&
+                                    <a href="https://youtu.be/Sde82gTPOd0" target="_blank">
+                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                    </a>
+                                }
+                            </ButtonGroup>
                         }
                         </ControlWrapper>
                     </Col>
@@ -222,9 +235,9 @@ export class TripMap extends MapCommon<{
                                     <span className='fa fa-map'/>
                                     Edit Maps/Routes (Advanced)
                                 </Button>
-                                <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                                <a href="https://youtu.be/mF0jPHLjanI" target="_blank">
                                         <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
-                                    </a>
+                                </a>
                             </ButtonGroup>
                         }
                         <Modal isOpen={this.state.editing} toggle={onSave} 
@@ -352,6 +365,32 @@ export class TripMap extends MapCommon<{
         newTags.splice(newPos, 0, tag);
         const newMapSheets = newTags.map(newTag => newTag.id);
         this.saveSelectedMaps(newMapSheets);
+    }
+
+    private selectRouteMaps(): void {
+        const x = this.nz50LayerGroup.getLayers() as NZ50MapPolygon[];
+        const mapPolygons = (this.nz50LayerGroup.getLayers() as NZ50MapPolygon[]).filter((polygon) => {
+            return polygon.nz50map;
+        });
+        const mapSheets: string[] = [];
+        // crude, but good enough, overlap detection
+        mapPolygons.forEach((polygon: NZ50MapPolygon) => {
+            const mapSheet: string = polygon.nz50map.sheetCode;
+            const polygonBounds = polygon.getBounds();
+            const intersects = this.routes.some((route: L.Polyline) => {
+                return (route.getLatLngs() as L.LatLng[]).some((latLng: L.LatLng) => {
+                    return polygonBounds.contains(latLng);
+                });
+            });
+            if (intersects) {
+                mapSheets.push(mapSheet);
+            }
+        });
+        this.saveSelectedMaps(mapSheets);
+    }
+
+    private clearRouteMaps(): void {
+        this.saveSelectedMaps([]);
     }
 
     private saveSelectedMaps(mapSheets: string[]): void {

@@ -104,7 +104,7 @@ export class RoutesArchiveTab extends Component<{
             <TabPane tabId="RoutesArchive">
                 <Row className="mb-2 ml-1">
                     <FormText color='muted'>Import routes from the routes archive</FormText>
-                    <a href="https://ctc.org.nz/index.php/trip-signup-system-trip-leaders-guide" target="_blank">
+                    <a href="https://youtu.be/NxxHF-H0I7A" target="_blank">
                         <MdInfo size="30" color="#6899e4" style={{padding: '4px'}}/>
                     </a>
                 </Row>

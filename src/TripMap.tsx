@@ -180,7 +180,7 @@ export class TripMap extends MapCommon<{
                                         confirmText="Confirm clear routes">
                                             <MdClear/>
                                     </ButtonWithConfirm>
-                                    <a href="https://youtu.be/8qkCNAz8Vv4" target="_blank">
+                                    <a href="https://youtu.be/77B6EzYLcmo" target="_blank">
                                         <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                                     </a>
                                 </ButtonGroup>
@@ -206,19 +206,23 @@ export class TripMap extends MapCommon<{
                                     delimiters={delimiters}
                                     placeholder={'Start typing to add a map sheet by name'}
                                     readOnly={this.props.readOnly} />
-                                <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
-                                    onClick={onSelectRouteMaps} disabled={!this.routes || this.routes.length === 0 }  
-                                    placement="top" tooltipText="Select maps overlapping the route">
-                                        <MdGridOff/>
-                                </ButtonWithTooltip>
-                                <ButtonWithConfirm id="ClearMapsButton" color='secondary'
-                                        onClick={onClearRouteMaps} disabled={!this.state.mapVisible}  
+                                { !this.props.readOnly &&
+                                    <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
+                                        onClick={onSelectRouteMaps} disabled={!this.routes || this.routes.length === 0 }  
+                                        placement="top" tooltipText="Select maps overlapping the route">
+                                            <MdGridOff/>
+                                    </ButtonWithTooltip>
+                                }
+                                { !this.props.readOnly &&
+                                    <ButtonWithConfirm id="ClearMapsButton" color='secondary'
+                                        onClick={onClearRouteMaps} disabled={this.mapSheets.length === 0}  
                                         placement="top" tooltipText="Clear maps"
                                         confirmText="Confirm clear maps">
                                             <MdClear/>
-                                </ButtonWithConfirm>
+                                    </ButtonWithConfirm>
+                                }
                                 { !this.props.readOnly &&
-                                    <a href="https://youtu.be/Sde82gTPOd0" target="_blank">
+                                    <a href="https://youtu.be/ybP2xjWb0t0" target="_blank">
                                         <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                                     </a>
                                 }

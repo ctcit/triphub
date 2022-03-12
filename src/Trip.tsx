@@ -371,7 +371,7 @@ export class Trip extends Component<{
                 </div>
                 <div key='adminActions' className="py-1">
                     {approvalButtons}
-                    <Button color='primary' onClick={this.onDeleteTrip} hidden={isNew || trip.isDeleted} className="px-2 mx-1">
+                    <Button color='primary' onClick={this.onDeleteTrip} hidden={ !this.canEditTrip || isNew || trip.isDeleted} className="px-2 mx-1">
                         <span className='fa fa-trash fa-fw' />Delete this trip
                     </Button>
                     <Button onClick={this.onDeleteTrip} hidden={isNew || !trip.isDeleted} className="px-2 mx-1">

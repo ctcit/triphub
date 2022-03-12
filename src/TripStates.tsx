@@ -32,7 +32,7 @@ export const TripState: { [id: string]: IState } = {
         prompt: 'Please describe why this trip is being returned to pending',
         label: 'Return to Pending reasoning',
         nextStates: ['Approved',/*'Rejected',*/'SuggestChanges','Draft'],
-        roleToChange: Role.TripLeader,
+        roleToChange: Role.Admin,
         roleToView: Role.TripLeader,
         isRequiringApproval: true,
     },

@@ -167,8 +167,8 @@ export class Calendar extends Component<{
             isLoadingCalendar: true,
             showDropdownIsOpen: false,
             openClose: false,
-            length: LengthFilter.Trips,
-            state: StateFilter.Open,
+            length: LengthFilter.All,
+            state: StateFilter.All,
             selected: 0, trips: [],
         }
     }

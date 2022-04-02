@@ -609,7 +609,7 @@ function ApiHelp($con,$basehref) {
     // Add data structure meta data for config and members, from API results
     foreach (array("config","members") as $entity) {
         $table = $constants[$entity."Table"];
-        $data = ApiProcess($con,$basehref,"GET","GET $entity",$entity,null,null,null,null)[0];
+        $data = ApiProcess($con,$basehref,"GET","GET $entity",$entity,null,null,null,null,null)[0];
         $cols = array();
 
         foreach ($data as $col => $val) {

@@ -51,7 +51,7 @@ export class App extends Component<{
                 prerequisiteEquipment: 'Ice Axe,Crampons,Helmet,Rope',
                 prerequisiteSkills: 'Snow Skills,River Crossing',
             },
-            path: window.top.location.hash.replace('#', ''),
+            path: window.top?.location.hash.replace('#', '') ?? '',
             isLoadingConfig: true,
             isLoadingMaps: true,
             isLoadingMembers: true,
@@ -70,7 +70,9 @@ export class App extends Component<{
         this.triplist = React.createRef()
         this.calendar = React.createRef()
 
-        window.top.onpopstate = this.onPopState.bind(this)
+        if (window.top) {
+            window.top.onpopstate = this.onPopState.bind(this)
+        }
     }
 
     public onPopState(event: PopStateEvent) {
@@ -78,7 +80,9 @@ export class App extends Component<{
     }
 
     public setPath(path: string): void {
-        window.top.history.pushState({ path }, path, "#" + path);
+        if (window.top) {
+            window.top.history.pushState({ path }, path, "#" + path);
+        }
         this.changePath(path)
     }
 

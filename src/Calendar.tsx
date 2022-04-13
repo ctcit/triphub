@@ -102,7 +102,7 @@ class CalendarWeek extends Component<{
 
                     slots.push(' ')
                     slots.push(
-                        <Badge key={item.id} id={`badge${item.id}`} onDragStart={onDragStart}
+                        <Badge key={item.id} id={'badge' + item.id} onDragStart={onDragStart}
                             draggable={this.props.calendar.props.app.state.role >= Role.Admin}
                             className={isSelected ? 'selected' : ''}>
                             <span>

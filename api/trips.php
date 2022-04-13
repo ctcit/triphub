@@ -233,12 +233,16 @@ function GetTripHtmlValue($col,$row,$true="Yes",$false="") {
 function CmpParticipant($a,$b) {
 	$dele = intval($a['isDeleted']) - intval($b['isDeleted']);
 	$lead = intval($a['isLeader']) - intval($b['isLeader']);
-	$disp = Coalesce($a['displayPriority'],$a['id']) - Coalesce($b['displayPriority'],$b['id']);
+	$disp = intval($a['order']) - intval($b['order']);
 	return ($dele != 0 ? $dele : ($lead != 0 ? -$lead : $disp));
 }
 
 function SortParticipants(&$participants) {
 	$participants = array_values($participants);
+	foreach ($participants as &$participant) {
+		$participant['order'] = Coalesce($participant['displayPriority'],$participant['id']);
+	}
+
 	usort($participants, "CmpParticipant");
 }
 
@@ -398,7 +402,9 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		}
 
 		if ($message != '' || $tripChanges || $participantChanges || ($participant['isLeader'] && count($changes))) {
-			if (preg_match(ConfigServer::emailFilter, $participant["email"]))
+			if ($participant['isDeleted'])
+				$email['deletedRecipients'] []= ['name'=>$participant['name'],'email'=>$participant['email']];
+			else if (preg_match(ConfigServer::emailFilter, $participant["email"]))
 				$email['recipients'] []= ['name'=>$participant['name'],'email'=>$participant['email']];
 			else
 				$email['filteredRecipients'] []= ['name'=>$participant['name'],'email'=>$participant['email']];
@@ -481,15 +487,15 @@ function ImportLegacyTrips($con, $truncate)
 									vehicleRego,logisticInfo,displayPriority,
 									emergencyContactName,emergencyContactPhone)
 		SELECT t.id, p.memberid,
-					CASE coalesce(p.name,'') WHEN '' THEN concat(trim(m.firstname),' ',trim(m.lastname)) ELSE p.name END,
-					CASE coalesce(p.email,'') WHEN '' THEN m.primaryemail ELSE p.name END,
-					CASE coalesce(p.phone,'') WHEN '' THEN
-						coalesce((CASE m.mobilephone WHEN '' THEN null ELSE m.mobilephone END),
-								(CASE ms.homephone WHEN '' THEN null ELSE ms.homephone END),
-								(CASE m.workphone WHEN '' THEN null ELSE m.workphone END)) ELSE p.phone END,
-					p.isRemoved, p.isLeader, p.isPLBProvider, p.isVehicleProvider,
-					p.vehicleRego, p.status, p.displayPriority,
-					coalesce(m.emergencyContactName,''), coalesce(m.emergencyContactPhone,'')
+				CASE coalesce(p.name,'') WHEN '' THEN concat(trim(m.firstname),' ',trim(m.lastname)) ELSE p.name END,
+				CASE coalesce(p.email,'') WHEN '' THEN m.primaryemail ELSE p.name END,
+				CASE coalesce(p.phone,'') WHEN '' THEN
+					coalesce((CASE m.mobilephone WHEN '' THEN null ELSE m.mobilephone END),
+							 (CASE ms.homephone WHEN '' THEN null ELSE ms.homephone END),
+							 (CASE m.workphone WHEN '' THEN null ELSE m.workphone END)) ELSE p.phone END,
+				p.isRemoved, p.isLeader, p.isPLBProvider, p.isVehicleProvider,
+				p.vehicleRego, p.status, p.displayPriority,
+				coalesce(m.emergencyContactName,''), coalesce(m.emergencyContactPhone,'')
 		FROM $tripsTable            AS t
 		JOIN trip.participants       AS p  ON p.tripId = t.legacyTripId
 		LEFT JOIN $membersTable     AS m  ON m.id = p.memberid

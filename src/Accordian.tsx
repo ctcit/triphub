@@ -11,10 +11,10 @@ export class Accordian extends Component<{
     title?: any
     className?: string
     headerClassName?: string
-    ondemand?: () => JSX.Element
+    onDemand?: () => JSX.Element | JSX.Element[]
 }, {
     expanded: boolean
-    demanded?: any
+    demanded?: JSX.Element | JSX.Element[]
 }> {
     constructor(props: any) {
         super(props)
@@ -25,20 +25,24 @@ export class Accordian extends Component<{
     public onToggle() {
         this.setState({
             expanded: !this.state.expanded,
-            demanded: this.state.demanded || (this.props.ondemand && this.props.ondemand())
+            demanded: this.state.demanded ?? (this.props.onDemand?.())
         })
     }
 
     public render() {
 
+        const { expanded, demanded } = this.state
+        const { title, className, headerClassName, children, id, onDemand } = this.props
+        const expandable = onDemand || children
+
         return (
-            <Card className={'accordian ' + this.props.className + ' noprint'}>
-                <CardHeader className={this.props.headerClassName + ' accordian-header'} onClick={this.onToggle}>
-                    <span className={'accordian-expand ' + (this.state.expanded ? 'fa fa-chevron-up' : 'fa fa-chevron-down')} />
-                    {this.props.title}
+            <Card className={'accordian ' + className + ' noprint'}>
+                <CardHeader className={headerClassName + ' accordian-header'} onClick={this.onToggle}>
+                    {expandable && <span className={'accordian-expand fa fa-chevron-' + (expanded ? 'up' : 'down')} />}
+                    {title}
                 </CardHeader>
-                <Collapse key={this.props.id} id={this.props.id} isOpen={this.state.expanded}>
-                    {this.state.demanded || this.props.children}
+                <Collapse key={id} id={id} isOpen={expanded}>
+                    {demanded ?? children}
                 </Collapse>
             </Card>
         )

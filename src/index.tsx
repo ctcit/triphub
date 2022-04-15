@@ -14,9 +14,12 @@ import './index.css';
 // use run-time config settings (from optional "%PUBLIC_URL%/runtime-config.js") otherwise default to production settings
 //
 // // example runtime-config.js
-// window.RunConfig = {
-//     // ApiKey: '12345678-1234-1234-1234-123456789012',
-//     BaseUrl: 'https://ctc.org.nz/triphub-xxxxx/api/api.php',
+//
+// or just temporarily uncomment these lines:
+//
+// (window as any).RunConfig = {
+//     ApiKey: '12345678-1234-1234-1234-123456789012',
+//     BaseUrl: 'https://ctc.org.nz/triphub-xxxxxx/api/api.php',
 //     DbApiURL: 'https://ctc.org.nz/db/index.php/rest'
 // }
 

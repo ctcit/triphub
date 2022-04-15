@@ -102,7 +102,7 @@ class CalendarWeek extends Component<{
 
                     slots.push(' ')
                     slots.push(
-                        <Badge key={item.id} id={`badge${item.id}`} onDragStart={onDragStart}
+                        <Badge key={item.id} id={'badge' + item.id} onDragStart={onDragStart}
                             draggable={this.props.calendar.props.app.state.role >= Role.Admin}
                             className={isSelected ? 'selected' : ''}>
                             <span>
@@ -295,7 +295,7 @@ export class Calendar extends Component<{
     public render() {
 
         if (this.state.isLoadingCalendar) {
-            return this.props.app.loadingStatus({...this.props.app.state, ...this.state})
+            return this.props.app.loadingStatus({ ...this.props.app.state, ...this.state })
         }
 
         const config = this.props.app.state.config
@@ -350,7 +350,7 @@ export class Calendar extends Component<{
                                 {DayOfWeek[(i + config.calendarStartOfWeek) % 7]}
                             </td>)}
                         </tr>
-                        {this.weeks.map(week => <CalendarWeek key={week.date.toISOString().substr(0, 10)} week={week} calendar={this} />)}
+                        {this.weeks.map(week => <CalendarWeek key={week.date.toISOString().substring(0, 10)} week={week} calendar={this} />)}
                     </tbody>
                 </Table>
             </Container>

@@ -19,6 +19,7 @@ export class ControlWrapper extends Component<{
     onGetValidationMessage?: (id: string) => string,
     saving: boolean,
     helpText?: string,
+    labelFor?: string
 }, {
 }> {
 
@@ -31,7 +32,9 @@ export class ControlWrapper extends Component<{
         return (
             <FormGroup hidden={this.props.hidden} disabled={this.props.disabled || this.props.isLoading}>
                 <Row noGutters={true}>
-                    <FormText id={this.props.id + '_formtext'} color='muted'>{this.props.label}</FormText>
+                    <FormText id={this.props.id + '_formtext'} color='muted'>
+                        <label htmlFor={this.props.labelFor}>{this.props.label}</label>
+                    </FormText>
                     <Badge color='success' hidden={!this.props.saving} className='ml-sm-2' tabIndex={-1}>Saving {Spinner}</Badge>
                 </Row>
                 {this.props.children}
@@ -99,11 +102,15 @@ export class InputControl extends Component<{
         }
 
         const val = `${this.props.onGet(this.props.field)}`.replace(/\W/g, v => `${v.charCodeAt(0)}`)
+        const id = this.props.id + '_' + this.props.field
 
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field + '_' + val} field={this.props.field} label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
-                onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText}>
-                <Input id={this.props.id + '_' + this.props.field} type={this.props.type} readOnly={this.props.readOnly} list={this.props.list} min={this.props.min} max={this.props.max}
+            <ControlWrapper id={id + '_' + val} field={this.props.field} labelFor={id}
+                label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
+                onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} 
+                helpText={this.state.helpText}>
+                <Input id={id} type={this.props.type} readOnly={this.props.readOnly} 
+                    list={this.props.list} min={this.props.min} max={this.props.max}
                     value={this.value || ""} onFocus={onFocus} onChange={onChange} onBlur={onBlur}
                     autoComplete='nope' autoFocus={this.props.autoFocus} className={className} />
             </ControlWrapper>
@@ -124,7 +131,7 @@ export class TextAreaInputControl extends Component<{
     forceValidation?: boolean,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,
-    onGetValidationMessage: (id: string) => string
+    onGetValidationMessage: (id: string) => string,
 }, {
     oldValue: any,
     value: any,
@@ -140,6 +147,7 @@ export class TextAreaInputControl extends Component<{
     }
 
     public render() {
+        const id = this.props.id + '_' + this.props.field
         const onFocus = (): void => {
             const oldValue = this.props.onGet(this.props.field);
             this.setState({ oldValue, value: oldValue, helpText: this.props.helpText });
@@ -161,11 +169,12 @@ export class TextAreaInputControl extends Component<{
         if (onGetValidationMessage && onGetValidationMessage(this.props.field)) {
             className += " is-invalid"
         }
+        
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label}
+            <ControlWrapper id={id} field={this.props.field} label={this.props.label} labelFor={id}
                 hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText} >
-                <Textarea id={this.props.id + '_' + this.props.field} className={className} readOnly={this.props.readOnly}
+                <Textarea id={id} className={className} readOnly={this.props.readOnly}
                     value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} style={this.props.style} />
             </ControlWrapper>
         )
@@ -179,7 +188,7 @@ export class SwitchControl extends Component<{
     hidden?: boolean,
     isLoading?: boolean,
     validationMessage?: string,
-    readOnly? : boolean,
+    readOnly?: boolean,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,
     onGetValidationMessage: (id: string) => string
@@ -193,6 +202,7 @@ export class SwitchControl extends Component<{
     }
 
     public render() {
+        const id = this.props.id + '_' + this.props.field
         const value = this.props.onGet(this.props.field);
         const onChange = (checked: boolean) => {
             this.setState({ saving: true });
@@ -200,10 +210,11 @@ export class SwitchControl extends Component<{
                 .then(() => this.setState({ saving: false }));
         }
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label}
+            <ControlWrapper id={id} field={this.props.field} 
+                label={this.props.label} labelFor={id}
                 hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
                 saving={this.state.saving} >
-                <Switch id={this.props.id + '_' + this.props.field} checked={value || false} onChange={onChange}
+                <Switch id={id} checked={value || false} onChange={onChange}
                     className="react-switch" disabled={this.props.readOnly} />
             </ControlWrapper>
         )
@@ -268,8 +279,8 @@ export class SwitchesControl extends Component<{
         })
 
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label} 
-                hidden={this.props.hidden} isLoading={this.props.isLoading} 
+            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label}
+                hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.saving} >
                 {switches}
             </ControlWrapper>
@@ -307,6 +318,7 @@ export class SelectControl extends Component<{
     }
 
     public render() {
+        const id = this.props.id + '_' + this.props.field
         const onChange = (event: React.ChangeEvent) => {
             const newValue = (event.target as any).value;
             this.setState({ saving: !this.props.noSaveBadge });
@@ -322,18 +334,18 @@ export class SelectControl extends Component<{
 
             options = Object.keys(groups).map((group, groupIndex) =>
                 <optgroup label={group} key={groupIndex}>
-                    {groups[group].map((option, optionIndex) =>
-                        <option value={option} key={optionIndex}>{option}</option>)}
+                    {groups[group].map((option, i) =>
+                        <option value={option} key={i}>{option}</option>)}
                 </optgroup>
             )
         }
 
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field}
-                field={this.props.field} label={this.props.label} hidden={this.props.hidden}
+            <ControlWrapper id={id} field={this.props.field} 
+                label={this.props.label} labelFor={id} hidden={this.props.hidden}
                 isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
                 saving={this.state.saving} >
-                <Input id={this.props.id + '_' + this.props.field} type="select" readOnly={this.props.readOnly}
+                <Input id={id} type="select" readOnly={this.props.readOnly}
                     value={this.props.onGet(this.props.field)}
                     // data-data={this.props.data}
                     onChange={onChange} autoComplete='nope'>
@@ -371,6 +383,7 @@ export class ComboBoxControl extends Component<{
     }
 
     public render() {
+        const id = this.props.id + '_' + this.props.field
         const dropdownToggle = (): void => {
             this.setState({ dropdownOpen: !this.state.dropdownOpen });
         }
@@ -400,16 +413,17 @@ export class ComboBoxControl extends Component<{
         }
 
         return (
-            <ControlWrapper id={this.props.id + '_' + this.props.field} field={this.props.field} label={this.props.label} hidden={this.props.hidden}
+            <ControlWrapper id={id} field={this.props.field} 
+                label={this.props.label} labelFor={id} hidden={this.props.hidden}
                 isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
                 saving={this.state.saving} helpText={this.state.helpText} >
                 <InputGroup>
-                    <Input id={this.props.id + '_' + this.props.field} type="text" readOnly={this.props.readOnly} value={this.state.value}
+                    <Input id={id} type="text" readOnly={this.props.readOnly} value={this.state.value}
                         onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='nope' />
                     <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={dropdownToggle} hidden={this.props.readOnly}>
                         <DropdownToggle color='transparent' caret={true} />
                         <DropdownMenu right={true}>
-                            {this.props.options.map((value: string, i: number) =>
+                            {this.props.options.map((value, i) =>
                                 <div key={i} onClick={onClick}><DropdownItem>{value}</DropdownItem></div>
                             )}
                         </DropdownMenu>

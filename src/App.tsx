@@ -51,7 +51,7 @@ export class App extends Component<{
                 prerequisiteEquipment: 'Ice Axe,Crampons,Helmet,Rope',
                 prerequisiteSkills: 'Snow Skills,River Crossing',
             },
-            path: window.top.location.hash.replace('#', ''),
+            path: window.top?.location.hash.replace('#', '') ?? '',
             isLoadingConfig: true,
             isLoadingMaps: true,
             isLoadingMembers: true,
@@ -70,7 +70,9 @@ export class App extends Component<{
         this.triplist = React.createRef()
         this.calendar = React.createRef()
 
-        window.top.onpopstate = this.onPopState.bind(this)
+        if (window.top) {
+            window.top.onpopstate = this.onPopState.bind(this)
+        }
     }
 
     public onPopState(event: PopStateEvent) {
@@ -78,7 +80,7 @@ export class App extends Component<{
     }
 
     public setPath(path: string): void {
-        window.top.history.pushState({ path }, path, "#" + path);
+        window.top?.history.pushState({ path }, path, "#" + path);
         this.changePath(path)
     }
 
@@ -118,7 +120,7 @@ export class App extends Component<{
         if (force || !this.archivedRoutesPromise || includeHidden !== this.archivedRoutesIncludeHidden) {
             this.archivedRoutesIncludeHidden = includeHidden;
             this.archivedRoutesPromise = new Promise<IArchivedRoute[]>((resolve, reject) => {
-                this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden )
+                this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden)
                     .then((archivedRoutes: IArchivedRoute[]) => {
                         this.archivedRoutes = archivedRoutes;
                         resolve(archivedRoutes);
@@ -212,7 +214,7 @@ export class App extends Component<{
         return <Container className={this.containerClassName + "triphub-loading-container"}>
             <Jumbotron key='loadingAlert' variant='primary'>
                 {this.loadingFields(state).map(f =>
-                    <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substr(2))}</div>)}
+                    <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substring(2))}</div>)}
             </Jumbotron>
         </Container>
     }
@@ -225,7 +227,7 @@ export class App extends Component<{
             calendar: () => <Calendar app={this} />,
             newtrip: () => <Trip app={this} isNew={true} isNewSocial={false} />,
             newsocial: () => <Trip app={this} isNew={true} isNewSocial={true} />,
-            routes: () => <ManageRoutes app={this}/>,
+            routes: () => <ManageRoutes app={this} />,
             newsletter: () => <Newsletter app={this} />,
             trips: () => <Trip app={this} isNew={false} isNewSocial={true} href={BaseUrl + path} />,
             default: () => <TripsList app={this} />,
@@ -243,5 +245,4 @@ export class App extends Component<{
         window.scrollTo(0, 0)
         this.setState({ path, notifications: [] })
     }
-
 }

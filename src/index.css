@@ -14,21 +14,15 @@ h3>span>button,
 h4>span>button,
 nav>button,
 nav>.btn-group {
-    margin-left: 5px;
+  margin-left: 5px;
 }
 
 button>span.fa {
   margin-right: 5px;
 }
 
-/* h3 {
-  margin-left: 20px
-}
-h4 {
-  margin-left: 30px
-} */
-table.changehistory{
-  margin-left: 4em
+.history-item {
+  margin: 1rem;
 }
 
 .pill {
@@ -45,8 +39,7 @@ table.changehistory{
 }
 */
 
-.textarea
-{
+.textarea {
   min-height: 80px;
 }
 
@@ -73,11 +66,13 @@ table.changehistory{
 /* ---------------------------- */
 
 .triphub-navbar {
-  color: white; /* hack */
+  color: white;
+  /* hack */
 }
 
 .triphub-navbar:hover {
-  color: lightblue; /* hack */
+  color: lightblue;
+  /* hack */
   cursor: pointer
 }
 
@@ -86,7 +81,8 @@ table.changehistory{
 }
 
 .navbar-toggler {
-  background: rgba(255, 255, 255, 0.822); /* pick your color */
+  background: rgba(255, 255, 255, 0.822);
+  /* pick your color */
 }
 
 .triphub-form-help {
@@ -98,15 +94,8 @@ table.changehistory{
 /* Tripgroup  */
 /* ---------------------------- */
 
-.trip-group {
-}
-
 .trip-group-header {
-  background-color: #d6e5f8d8; 
-}
-
-.TripGroup {
-  /* margin-left: 40px */
+  background-color: #d6e5f8d8;
 }
 
 .TripGroup td {
@@ -129,24 +118,20 @@ table.changehistory{
 /* Trip detail section  */
 /* ---------------------------- */
 
-.trip-section {
-}
-
 .trip-section-header {
-  background-color: #d6e5f8d8; 
+  background-color: #d6e5f8d8;
 }
 
 /* ---------------------------- */
 /* Participant */
 /* ---------------------------- */
 
-.participant {
-}
 
 .participant-header {
   padding: 0.40rem 1.25rem;
-  margin-top: -10px; /* hack */
-  background-color: rgb(241, 241, 241); 
+  margin-top: -10px;
+  /* hack */
+  background-color: rgb(241, 241, 241);
 }
 
 .participant-buttons {
@@ -156,8 +141,7 @@ table.changehistory{
 }
 
 .participant-buttons .btn,
-.participant-buttons-legend .btn
- {
+.participant-buttons-legend .btn {
   margin: -2px 2px;
   padding: 0px 5px;
   height: 25px;
@@ -175,17 +159,10 @@ table.changehistory{
   width: 100%
 }
 
-.accordian-header {
-}
 
 .accordian-expand {
   float: right;
-}
-
-/* ---------------------------- */
-/* ExpandableTableRow */
-/* ---------------------------- */
-.expandable-table-row-expand {
+  cursor: pointer;
 }
 
 /* ---------------------------- */
@@ -201,26 +178,50 @@ table.changehistory{
     display: none !important;
   }
 }
-  
+
 @media screen and (max-width: 991px) {
   .desktop-only {
     display: none !important;
   }
 }
-  
+
 .wiggle {
-  -webkit-animation:wiggle 1.5s infinite linear;
-  animation:        wiggle 1.5s infinite linear
+  -webkit-animation: wiggle 1.5s infinite linear;
+  animation: wiggle 1.5s infinite linear
 }
-@-webkit-keyframes wiggle{
-  0%  {-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
-  50% {-webkit-transform:rotate(+20deg);transform:rotate(+20deg)}
-  100%{-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
+
+@-webkit-keyframes wiggle {
+  0% {
+    -webkit-transform: rotate(-20deg);
+    transform: rotate(-20deg)
+  }
+
+  50% {
+    -webkit-transform: rotate(+20deg);
+    transform: rotate(+20deg)
+  }
+
+  100% {
+    -webkit-transform: rotate(-20deg);
+    transform: rotate(-20deg)
+  }
 }
-@keyframes wiggle{
-  0%  {-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
-  50% {-webkit-transform:rotate(+20deg);transform:rotate(+20deg)}
-  100%{-webkit-transform:rotate(-20deg);transform:rotate(-20deg)}
+
+@keyframes wiggle {
+  0% {
+    -webkit-transform: rotate(-20deg);
+    transform: rotate(-20deg)
+  }
+
+  50% {
+    -webkit-transform: rotate(+20deg);
+    transform: rotate(+20deg)
+  }
+
+  100% {
+    -webkit-transform: rotate(-20deg);
+    transform: rotate(-20deg)
+  }
 }
 
 /* ---------------------------- */
@@ -264,6 +265,7 @@ table.changehistory{
 .calendar td.top {
   border-top: 1px solid darkgray;
 }
+
 .calendar td.bottom {
   border-bottom: 1px solid darkgray;
 }
@@ -339,12 +341,22 @@ table.changehistory{
   border-color: grey;
   border-style: solid;
 }
-.sheet-div-icon { 
-  text-align: center; 
-  min-width: 100px; /* hack */
+
+.sheet-div-icon {
+  text-align: center;
+  min-width: 100px;
+  /* hack */
 }
-.sheet-code { font-size: 14pt; font-weight: bold; }
-.sheet-name { font-size: 11pt; font-weight: bold }
+
+.sheet-code {
+  font-size: 14pt;
+  font-weight: bold;
+}
+
+.sheet-name {
+  font-size: 11pt;
+  font-weight: bold
+}
 
 /* ---------------------------- */
 /* resizable leaflet map */
@@ -353,6 +365,7 @@ table.changehistory{
 .react-resizable {
   position: relative;
 }
+
 .react-resizable-handle {
   position: absolute;
   width: 20px;
@@ -365,53 +378,63 @@ table.changehistory{
   padding: 0 3px 3px 0;
   z-index: 1000
 }
+
 .react-resizable-handle-sw {
   bottom: 0;
   left: 0;
   cursor: sw-resize;
   transform: rotate(90deg);
 }
+
 .react-resizable-handle-se {
   bottom: 0;
   right: 0;
   cursor: se-resize;
 }
+
 .react-resizable-handle-nw {
   top: 0;
   left: 0;
   cursor: nw-resize;
   transform: rotate(180deg);
 }
+
 .react-resizable-handle-ne {
   top: 0;
   right: 0;
   cursor: ne-resize;
   transform: rotate(270deg);
 }
+
 .react-resizable-handle-w,
 .react-resizable-handle-e {
   top: 50%;
   margin-top: -10px;
   cursor: ew-resize;
 }
+
 .react-resizable-handle-w {
   left: 0;
   transform: rotate(135deg);
 }
+
 .react-resizable-handle-e {
   right: 0;
   transform: rotate(315deg);
 }
+
 .react-resizable-handle-n,
 .react-resizable-handle-s {
   left: 50%;
   margin-left: -10px;
   cursor: ns-resize;
 }
+
 .react-resizable-handle-n {
   top: 0;
   transform: rotate(225deg);
 }
+
 .react-resizable-handle-s {
   bottom: 0;
   transform: rotate(45deg);
@@ -424,12 +447,14 @@ table.changehistory{
 div.ReactTags__tags {
   position: relative;
 }
+
 /* Styles for the input */
 div.ReactTags__tagInput {
   width: 320px;
   border-radius: 2px;
   display: inline-block;
 }
+
 div.ReactTags__tagInput input.ReactTags__tagInputField,
 div.ReactTags__tagInput input.ReactTags__tagInputField:focus {
   height: 37px;
@@ -439,6 +464,7 @@ div.ReactTags__tagInput input.ReactTags__tagInputField:focus {
   border: 1px solid #eee;
   padding: 0 4px;
 }
+
 /* Styles for selected tags */
 div.ReactTags__selected span.ReactTags__tag {
   border: 1px solid #ddd;
@@ -451,32 +477,38 @@ div.ReactTags__selected span.ReactTags__tag {
   cursor: move;
   border-radius: 2px;
 }
+
 div.ReactTags__selected a.ReactTags__remove {
   color: #aaa;
   margin-left: 5px;
   cursor: pointer;
 }
+
 /* Styles for suggestions */
 div.ReactTags__suggestions {
   position: absolute;
   z-index: 2000
 }
+
 div.ReactTags__suggestions ul {
   list-style-type: none;
-  box-shadow: .05em .01em .5em rgba(0,0,0,.2);
+  box-shadow: .05em .01em .5em rgba(0, 0, 0, .2);
   background: white;
   width: 200px;
 }
+
 div.ReactTags__suggestions li {
   border-bottom: 1px solid #ddd;
   padding: 5px 10px;
   margin: 0;
 }
+
 div.ReactTags__suggestions li mark {
   text-decoration: underline;
   background: none;
   font-weight: 600;
 }
+
 div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   background: #b7cfe0;
   cursor: pointer;
@@ -494,23 +526,23 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
 }
 
 .marker-ring::after {
-    content: '';
-    width: 16px;
-    height: 16px;
-    margin: 2px 0 0 2px;
-    background: #fff;
-    position: absolute;
-    border-radius: 50%;
- }
+  content: '';
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0 2px;
+  background: #fff;
+  position: absolute;
+  border-radius: 50%;
+}
 
- .route-marker-div-icon i {
-   position: absolute;
-   width: 18px;
-   font-size: 14px;
-   font-weight: bold;
-   left: 0;
-   right: 0;
-   text-align: center;
+.route-marker-div-icon i {
+  position: absolute;
+  width: 18px;
+  font-size: 14px;
+  font-weight: bold;
+  left: 0;
+  right: 0;
+  text-align: center;
 }
 
 
@@ -538,18 +570,16 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   padding: 6px 8px;
   font: 14px/16px Arial, Helvetica, sans-serif;
   background: white;
-  background: rgba(255,255,255,0.8);
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
   border-radius: 5px;
 }
 
-.full-width-loading-wrapper
-{
+.full-width-loading-wrapper {
   text-align: center;
 }
 
-.full-width-loading
-{
+.full-width-loading {
   display: inline-block;
   padding: 0 30px;
 }
@@ -559,37 +589,39 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
 /* ---------------------------- */
 
 .public-calendar-definition dt {
-    float: left;
-    font-weight: bold;
-    margin-right: 0.3em;
-  }
-  
+  float: left;
+  font-weight: bold;
+  margin-right: 0.3em;
+}
+
 .public-calendar-definition dd {
   margin-bottom: 0;
-  }
+}
 
 .public-calendar-definition dd::after {
-    content: " ";
-    display: block;
-    clear: left;
-  }  
+  content: " ";
+  display: block;
+  clear: left;
+}
 
 
 /* ---------------------------- */
 /* ManageRoutes  */
 /* ---------------------------- */
 
-.manage-routes {
-}
 
 .manage-routes-header {
-  background-color: #d6e5f8d8; 
-}
-
-.ManageRoutes {
-  /* margin-left: 40px */
+  background-color: #d6e5f8d8;
 }
 
 .ManageRoutes td {
   cursor: pointer
+}
+
+button-badge {
+  float: right;
+}
+
+button-badge:hover {
+  cursor: pointer;
 }

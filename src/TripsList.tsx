@@ -112,7 +112,7 @@ export class TripsGroup extends Component<{
                         <span key='count' className='trip-count'> ({trips.length})</span>
                     </span>
                     }>
-                    <Table className='TripGroup' size='sm' striped={true} reflow={false}>
+                    <Table className='TripGroup' size='sm' striped={true}>
                         <thead>
                             <tr>
                                 <th />

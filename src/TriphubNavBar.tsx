@@ -163,7 +163,7 @@ export class TriphubNavbar extends Component<{
         const collapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? [] : navItems.slice(nonCollapsedCount)
     
         return (
-            <Navbar color='primary' inverse={true} toggleable={true} expand={false}>
+            <Navbar color='primary' expand={false}>
                 <NavbarBrand className='triphub-navbar' href="#home" hidden={this.props.app.state.inIFrame}>
                     <img src="CTCLogo.png" width="40" height="40" className="d-inline-block" />
                     <b>Trips</b>

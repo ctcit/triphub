@@ -30,10 +30,11 @@ export class Accordian extends Component<{
     }
 
     public render() {
+        const onToggle = () => this.onToggle();
 
         return (
             <Card className={'accordian ' + this.props.className + ' noprint'}>
-                <CardHeader className={this.props.headerClassName + ' accordian-header'} onClick={this.onToggle}>
+                <CardHeader className={this.props.headerClassName + ' accordian-header'} onClick={onToggle}>
                     <span className={'accordian-expand ' + (this.state.expanded ? 'fa fa-chevron-up' : 'fa fa-chevron-down')} />
                     {this.props.title}
                 </CardHeader>

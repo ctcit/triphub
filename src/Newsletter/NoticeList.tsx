@@ -122,8 +122,13 @@ export class NoticeList extends Component<{
     }
 
     public render() {
+        const onNewNotice = () => this.onNewNotice();
+        const onShowAll = () => this.onShowAll();
+        const onSaveDetail = () => this.onSaveDetail();
+        const onCancelDetail = () => this.onCancelDetail();
+
         return [
-            <Button onClick={this.onNewNotice} key="newNoticeButton" color="primary" className='my-2'><span className='fas fa-plus'/> New Notice</Button>,
+            <Button onClick={onNewNotice} key="newNoticeButton" color="primary" className='my-2'><span className='fas fa-plus'/> New Notice</Button>,
             this.state.notices.length === 0 && <p className='newsletter-no-notices'>No notices - use the "New Notice" button or add an expired notice.</p>,
             Sections.map((section: Section) => {
                 const notices = this.state.notices.filter(n => n.section === section.name)
@@ -206,7 +211,7 @@ export class NoticeList extends Component<{
                         }
                     </tbody>
                 </Table>
-                {!this.state.showAllExpired && <Button onClick={this.onShowAll} color="primary" className="mr-1">Show All</Button>}
+                {!this.state.showAllExpired && <Button onClick={onShowAll} color="primary" className="mr-1">Show All</Button>}
             </Accordian>,
             <ReactModal
                 key="notice-edit-modal"
@@ -234,8 +239,8 @@ export class NoticeList extends Component<{
 
                     <NoticeDetail notice={this.state.showDetailFor} app={this.app} />
                 }
-                <Button onClick={this.onSaveDetail} color="primary" className="mr-1">Save</Button>
-                <Button onClick={this.onCancelDetail} className="mr-1">Cancel</Button>
+                <Button onClick={onSaveDetail} color="primary" className="mr-1">Save</Button>
+                <Button onClick={onCancelDetail} className="mr-1">Cancel</Button>
             </ReactModal>
         ];
     }

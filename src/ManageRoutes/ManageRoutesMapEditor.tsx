@@ -95,6 +95,11 @@ export class ManageRoutesMapEditor extends Component<{
             return await this.undoLastRouteEdit();
         }
 
+        const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
+            this.props.getArchivedRoutes(includeHidden, force);
+        const getArchivedRoute = (routeId: number): Promise<IArchivedRoute | undefined> => 
+            this.props.getArchivedRoute(routeId);
+
         return (
             <FormGroup>
                 <ReactResizeDetector handleWidth={true} handleHeight={false} onResize={onResizeModal} />
@@ -149,8 +154,8 @@ export class ManageRoutesMapEditor extends Component<{
                         canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
                         saveRouteChange={saveRouteChange}
                         undoLastRouteEdit={undoLastRouteEdit}
-                        getArchivedRoutes={this.props.getArchivedRoutes}
-                        getArchivedRoute={this.props.getArchivedRoute}
+                        getArchivedRoutes={getArchivedRoutes}
+                        getArchivedRoute={getArchivedRoute}
                     />
                 </TabContent>
                 <MapComponent

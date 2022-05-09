@@ -27,6 +27,7 @@ export class ButtonWithConfirm extends Component<{
     }
 
     public render(){
+        const onClick = () => this.props.onClick();
         const toggle = () => { this.setState( { tooltipOpen: !this.state.tooltipOpen }) };
         const onCancelDropdownToggle = () => { this.setState({ cancelDropdownOpen: !this.state.cancelDropdownOpen }); }
 
@@ -35,7 +36,7 @@ export class ButtonWithConfirm extends Component<{
                 <ButtonDropdown color={this.props.color} disabled={this.props.disabled} drop={'right'} isOpen={this.state.cancelDropdownOpen} toggle={onCancelDropdownToggle}>
                     <DropdownToggle disabled={this.props.disabled} caret={false}>{this.props.children}</DropdownToggle>
                     <DropdownMenu>
-                        <DropdownItem color="red" onClick={this.props.onClick}>{this.props.confirmText}</DropdownItem>
+                        <DropdownItem color="red" onClick={onClick}>{this.props.confirmText}</DropdownItem>
                     </DropdownMenu>
                 </ButtonDropdown>
             </div>

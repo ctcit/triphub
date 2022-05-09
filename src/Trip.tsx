@@ -77,7 +77,7 @@ export class Trip extends Component<{
                             editId: editList[0].id,
                             editHref: `${this.props.href}/edit/${editList[0].id}`,
                             editIsEdited: false,
-                            editHeartbeatId: setInterval(this.onEditHeartbeat, this.props.app.state.config.editRefreshInSec * 1000)
+                            editHeartbeatId: setInterval(() => this.onEditHeartbeat(), this.props.app.state.config.editRefreshInSec * 1000)
                         })
                     }
                 })
@@ -275,12 +275,13 @@ export class Trip extends Component<{
                 return Promise.resolve()
             }
         }
+        const onApprovalCancel = () => this.onApprovalCancel();
 
         return (
             <Container>
                 <div>
                     {this.approvalButton(approval, this.onApprovalSubmit)}
-                    <Button color='primary' onClick={this.onApprovalCancel} className="px-2 mx-1">
+                    <Button color='primary' onClick={onApprovalCancel} className="px-2 mx-1">
                         Cancel</Button>
                 </div>
                 <Container fluid={true}>
@@ -320,9 +321,11 @@ export class Trip extends Component<{
         // Note - approved trips can't be rejected (unless user is admin), but they can be deleted
         const approvalButtons = Object.keys(TripState).map(a =>
             this.approvalButton(TripState[a], () => this.setState({ approval: TripState[a] })))
+        const onDeleteTrip = () => this.onDeleteTrip();
+        const onSaveSuggestedTrip = () => this.onSaveSuggestedTrip();
+        const onCancelSuggestedTrip = () => this.onCancelSuggestedTrip();
+
         let status: JSX.Element | null = null
-
-
         if (trip.id <= 0) {
             status = <Pill>New trip - not saved!</Pill>
         } else {
@@ -371,10 +374,10 @@ export class Trip extends Component<{
                 </div>
                 <div key='adminActions' className="py-1">
                     {approvalButtons}
-                    <Button color='primary' onClick={this.onDeleteTrip} hidden={ !this.canEditTrip || isNew || trip.isDeleted} className="px-2 mx-1">
+                    <Button color='primary' onClick={onDeleteTrip} hidden={ !this.canEditTrip || isNew || trip.isDeleted} className="px-2 mx-1">
                         <span className='fa fa-trash fa-fw' />Delete this trip
                     </Button>
-                    <Button onClick={this.onDeleteTrip} hidden={isNew || !trip.isDeleted} className="px-2 mx-1">
+                    <Button onClick={onDeleteTrip} hidden={isNew || !trip.isDeleted} className="px-2 mx-1">
                         <span className='fa fa-undo fa-fw' />Undelete this trip
                     </Button>
                 </div>
@@ -385,10 +388,10 @@ export class Trip extends Component<{
                         forceValidation={this.state.showValidationMessage} />
                 </Accordian>
                 <div hidden={!isNew} key='saveCancel' className="py-2">
-                    <Button color='primary' onClick={this.onSaveSuggestedTrip} className="px-2 mx-1">
+                    <Button color='primary' onClick={onSaveSuggestedTrip} className="px-2 mx-1">
                         Save
                         </Button>
-                    <Button color='primary' onClick={this.onCancelSuggestedTrip} className="px-2 mx-1">
+                    <Button color='primary' onClick={onCancelSuggestedTrip} className="px-2 mx-1">
                         Cancel
                         </Button>
                 </div>

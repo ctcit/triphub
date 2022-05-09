@@ -124,39 +124,46 @@ export class TripParticipants extends Component<{
         const imOnList = !!info.all.find((m: IParticipant) => m.memberId === me.id)
         const onDragOver = (ev: any) => ev.preventDefault()
         const onDropOnWaitlist = (ev: any) => this.onSetPosition(parseInt(ev.dataTransfer.getData('id'), 10), undefined)
+        const onDropOnDeleted = (ev: any) => this.onDropOnDeleted(ev);
         const showLegend = this.props.trip.state.showLegend
         const LegendIcon = (props: { icon: string, children: any }) =>
             <div><span className={`fas ${props.icon}`} />{props.children}</div>
         const LegendButton = (props: { icon: string, children: any }) =>
             <div><Button disabled={true}><span className={`fa ${props.icon}`} /></Button>{props.children}</div>
+        
+        const onSignMeUp = () => this.onSignMeUp();
+        const onSignUpTramper = () => this.onSignUpTramper();
+        const onSignUpTramperSave = () => this.onSignUpTramperSave();
+        const onSignUpTramperCancel = () => this.onSignUpTramperCancel();
+        const onToggleLegend = () => this.onToggleLegend();
 
         return [
             <Navbar key='navbar' color='light' light={true} expand='md'>
                 {[
-                    <Button key={'signmeup' + info.all.length} onClick={this.onSignMeUp}
+                    <Button key={'signmeup' + info.all.length} onClick={onSignMeUp}
                         hidden={isNewTrip || imOnList || !isOpen}>
                         <span className='fa fa-pen wiggle' />
                         {this.props.trip.state.isSaving ? ['Signing up ', Spinner] : 'Sign me up!'}
                         {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
-                    <Button key={'signup' + info.all.length} onClick={this.onSignUpTramper}
+                    <Button key={'signup' + info.all.length} onClick={onSignUpTramper}
                         hidden={isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
                         <span className='fa fa-user-plus' /> Sign up a tramper
                     {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
                     <ButtonGroup key={'signupcomplete' + info.all.length}
                         hidden={isNewTrip || !hasNewTramper || !isOpen}>
-                        <Button onClick={this.onSignUpTramper} disabled={true}>
+                        <Button onClick={onSignUpTramper} disabled={true}>
                             <span className='fa fa-user-plus' /> Sign up a tramper:
                     </Button>
-                        <Button key='save' color='primary' onClick={this.onSignUpTramperSave}>
+                        <Button key='save' color='primary' onClick={onSignUpTramperSave}>
                             {this.props.trip.state.isSaving ? ['Saving ', Spinner] : 'Save'}
                         </Button>
-                        <Button key='cancel' color='primary' onClick={this.onSignUpTramperCancel}>
+                        <Button key='cancel' color='primary' onClick={onSignUpTramperCancel}>
                             Cancel
                     </Button>
                     </ButtonGroup>,
-                    <Button key={'help' + info.all.length} onClick={this.onToggleLegend} hidden={isNewTrip || anon}>
+                    <Button key={'help' + info.all.length} onClick={onToggleLegend} hidden={isNewTrip || anon}>
                         <span className='fa fa-question-circle' />{showLegend ? 'Hide legend' : 'Show legend'}
                     </Button>,
                     <span key={'participants' + info.all.length} hidden={isNewTrip}>
@@ -199,7 +206,7 @@ export class TripParticipants extends Component<{
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={isNewTrip || info.deleted.length === 0}>
-                    <div onDragOver={onDragOver} onDrop={this.onDropOnDeleted}><b>Deleted</b></div>
+                    <div onDragOver={onDragOver} onDrop={onDropOnDeleted}><b>Deleted</b></div>
                     {
                         info.deleted.map(p =>
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}

@@ -98,6 +98,11 @@ export class MapEditor extends Component<{
         const undoLastRouteEdit = async () => {
             return await this.undoLastRouteEdit();
         }
+
+        const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
+            this.props.getArchivedRoutes(includeHidden, force);
+        const getArchivedRoute = (routeId: number): Promise<IArchivedRoute | undefined> => 
+            this.props.getArchivedRoute(routeId);        
         
         return (
             <FormGroup>
@@ -148,8 +153,8 @@ export class MapEditor extends Component<{
                         canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
                         saveRouteChange={saveRouteChange}
                         undoLastRouteEdit={undoLastRouteEdit}
-                        getArchivedRoutes={this.props.getArchivedRoutes}
-                        getArchivedRoute={this.props.getArchivedRoute}
+                        getArchivedRoutes={getArchivedRoutes}
+                        getArchivedRoute={getArchivedRoute}
                     />
                     <SelectMapSheetsTab
                         isActiveTab={this.state.activeTab === "SelectMaps"}

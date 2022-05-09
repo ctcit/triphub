@@ -101,6 +101,9 @@ export class Newsletter extends Component<{
         const { newsletter, isNew } = this.state
         const app = this.app
 
+        const generate = () => this.generate();
+        const onSaveNewNewsletter = () => this.onSaveNewNewsletter();
+
         return [
             <Container className={this.props.app.containerClassName} key='newsletter' fluid={true}>
                 <h1 key="title">Manage Newsletter</h1>
@@ -126,11 +129,11 @@ export class Newsletter extends Component<{
                         </Col>
                     </Row>
                     {!isNew &&
-                        <Button key="generate" color='primary' onClick={this.generate}>
+                        <Button key="generate" color='primary' onClick={generate}>
                             <span className='fas fa-download' /> Generate
                             </Button>}
                     {isNew &&
-                        <Button key="saveNew" color='primary' onClick={this.onSaveNewNesletter}>
+                        <Button key="saveNew" color='primary' onClick={onSaveNewNewsletter}>
                             Save
                             </Button>
                     }
@@ -239,7 +242,7 @@ export class Newsletter extends Component<{
         return this.app.triphubApiCall('POST', BaseUrl + '/newsletters/' + this.state.newsletter.id, body, false);
     }
 
-    private onSaveNewNesletter() {
+    private onSaveNewNewsletter() {
         const newsletter = this.state.newsletter
 
         this.setState({ isLoadingNewsletter: true })

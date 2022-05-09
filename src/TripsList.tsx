@@ -45,10 +45,11 @@ class TripsLine extends Component<{
                     tooltip={e.message} className='warning-icon' />)
         }
 
+        const onClick = () => this.onClick();
         const tablerow = [
             <td key={'open' + id}>
                 <ButtonGroup className='trip-list-buttons'>
-                    <ButtonWithTooltip id={`open-${id}`} onClick={this.onClick} tooltipText="Go to trip">
+                    <ButtonWithTooltip id={`open-${id}`} onClick={onClick} tooltipText="Go to trip">
                         <span className={trip.isSocial ? 'fas fa-users' : 'fas fa-hiking'} />
                     </ButtonWithTooltip>
                 </ButtonGroup>
@@ -57,23 +58,23 @@ class TripsLine extends Component<{
                     <ToolTipIcon id={id + 'notapproved'} icon='exclamation-circle' className='warning-icon' tooltip="Not approved yet" />
                 }
             </td>,
-            <td key={'date' + id} onClick={this.onClick}>
+            <td key={'date' + id} onClick={onClick}>
                 {GetDate(trip.tripDate)}{extractWarnings(/date/)}
             </td>,
-            <td key={'length' + id} onClick={this.onClick} className='centered'>
+            <td key={'length' + id} onClick={onClick} className='centered'>
                 {(!trip.isSocial) && GetLength(trip.length, new Date(trip.tripDate))}{extractWarnings(/length/)}
             </td>,
-            <td key={'title' + id} onClick={this.onClick}>
+            <td key={'title' + id} onClick={onClick}>
                 {trip.title}{extractWarnings(/title/)}
             </td>,
-            <td key={'grade' + id} onClick={this.onClick} className='desktop-only'>
+            <td key={'grade' + id} onClick={onClick} className='desktop-only'>
                 <span hidden={!trip.isSocial}><ToolTipIcon id={'social' + id} icon='users' tooltip='Social Event' /> </span>
                 {trip.grade}{extractWarnings(/grade/)}
             </td>,
-            <td key={'leaders' + id} onClick={this.onClick} hidden={!me.id} className='desktop-only'>
+            <td key={'leaders' + id} onClick={onClick} hidden={!me.id} className='desktop-only'>
                 {trip.leaders}{extractWarnings(/leaders/)}
             </td>,
-            <td key={'role' + id} onClick={this.onClick} hidden={trip.state !== 'MyTrip'}>
+            <td key={'role' + id} onClick={onClick} hidden={trip.state !== 'MyTrip'}>
                 {trip.role}{extractWarnings(/role/)}
             </td>,
         ]

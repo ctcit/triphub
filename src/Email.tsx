@@ -46,6 +46,7 @@ export class Email extends Component<{
             const found: IValidation | undefined = validations.find(v => v.field === id && !v.ok);
             return found ? found.message : null;
         }
+        const onSend = () => this.onSend();
 
         const common = {
             id: 'email',
@@ -74,7 +75,7 @@ export class Email extends Component<{
                         <FormGroup key='button'>
                             <Label />
                             <Col sm={10}>
-                                <Button onClick={this.onSend}>
+                                <Button onClick={onSend}>
                                     <span className='fa fa-paper-plane' />
                                     {this.state.sending ? ['Sending ', Spinner] : 'Send'}
                                 </Button>

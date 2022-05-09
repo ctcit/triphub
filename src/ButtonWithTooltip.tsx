@@ -25,11 +25,12 @@ export class ButtonWithTooltip extends Component<{
     }
 
     public render(){
+        const onClick = () => this.props.onClick();
         const toggle = () => { this.setState( { tooltipOpen: !this.state.tooltipOpen }) };
 
         return <div>
             <div id={this.props.id}>
-                <Button color={this.props.color} disabled={this.props.disabled} onClick={this.props.onClick} >{this.props.children}</Button>
+                <Button color={this.props.color} disabled={this.props.disabled} onClick={onClick} >{this.props.children}</Button>
             </div>
             <Tooltip target={this.props.id} isOpen={this.state.tooltipOpen} placement={this.props.placement} toggle={toggle}>{this.props.tooltipText}</Tooltip>
         </div>

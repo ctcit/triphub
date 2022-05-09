@@ -152,6 +152,11 @@ export class TripMap extends MapCommon<{
         }
         const onClearRoute = () => this.clearRoute();
 
+        const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
+            this.props.getArchivedRoutes(includeHidden, force);
+        const getArchivedRoute = (routeId: number): Promise<IArchivedRoute | undefined> => 
+            this.props.getArchivedRoute(routeId);
+
         return (
             <div>
                 <Row>
@@ -254,8 +259,8 @@ export class TripMap extends MapCommon<{
                                     routesAsLatLngs={this.getRoutesAsLatLngs()}
                                     onMapSheetsChanged={onMapSheetsChanged} 
                                     onRoutesChanged={onRoutesChanged}
-                                    getArchivedRoutes={this.props.getArchivedRoutes}
-                                    getArchivedRoute={this.props.getArchivedRoute}
+                                    getArchivedRoutes={getArchivedRoutes}
+                                    getArchivedRoute={getArchivedRoute}
                                 />
                             </ModalBody>
                             <ModalFooter>

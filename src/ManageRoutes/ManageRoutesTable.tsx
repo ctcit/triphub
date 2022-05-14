@@ -375,8 +375,8 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
                     headerGroups.map((headerGroup: any) => (
                       <tr {...headerGroup.getHeaderGroupProps()}>
                         {
-                          headerGroup.headers.map((column: any) => (
-                            <th style={column.style} scope="col">
+                          headerGroup.headers.map((column: any, i: number) => (
+                            <th key={'column' + i} style={column.style} scope="col">
                                 <div>
                                   <span  {...column.getHeaderProps(column.getSortByToggleProps())}>
                                     {props.enableSorting ? (

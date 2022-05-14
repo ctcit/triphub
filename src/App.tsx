@@ -213,7 +213,7 @@ export class App extends Component<{
         return Object.keys(state).filter(f => /^isLoading[A-Z]/.test(f))
     }
     public loadingStatus(state: any): JSX.Element {
-        return <Container className={this.containerClassName + "triphub-loading-container"}>
+        return <Container key='loadingStatus' className={this.containerClassName + "triphub-loading-container"}>
             <Jumbotron key='loadingAlert' variant='primary'>
                 {this.loadingFields(state).map(f =>
                     <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substr(2))}</div>)}
@@ -226,13 +226,13 @@ export class App extends Component<{
         const rendering = this.isLoading ? 'loading' : `${path}/`.split('/')[1]
         const renderings = {
             loading: () => this.loadingStatus(this.state),
-            calendar: () => <Calendar app={this} />,
-            newtrip: () => <Trip app={this} isNew={true} isNewSocial={false} />,
-            newsocial: () => <Trip app={this} isNew={true} isNewSocial={true} />,
-            routes: () => <ManageRoutes app={this}/>,
-            newsletter: () => <Newsletter app={this} />,
-            trips: () => <Trip app={this} isNew={false} isNewSocial={true} href={BaseUrl + path} />,
-            default: () => <TripsList app={this} />,
+            calendar: () => <Calendar key='calendar' app={this} />,
+            newtrip: () => <Trip key='newTrip' app={this} isNew={true} isNewSocial={false} />,
+            newsocial: () => <Trip key='newSocial' app={this} isNew={true} isNewSocial={true} />,
+            routes: () => <ManageRoutes key='routes' app={this}/>,
+            newsletter: () => <Newsletter key='newsletter' app={this} />,
+            trips: () => <Trip key='trips' app={this} isNew={false} isNewSocial={true} href={BaseUrl + path} />,
+            default: () => <TripsList key='default' app={this} />,
         }
 
         return [

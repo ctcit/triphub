@@ -127,7 +127,7 @@ export class TripsGroup extends Component<{
                         </thead>
                         <tbody>
                             {this.props.trips.map(
-                                (trip: ITrip) => <TripsLine trip={trip} key={trip.id} owner={this} />)}
+                                (trip: ITrip) => <TripsLine key={'trip' + trip.id} trip={trip} owner={this} />)}
                         </tbody>
                     </Table>
                 </Accordian>
@@ -177,13 +177,13 @@ export class TripsList extends Component<{
         const role = this.props.app.state.role
         return [
             isAdmin && groups.length > 0 &&
-            <TripCoordinatorDashboard trips={groups.reduce((a,b) => [...a, ...b], [])} app={this.props.app} />,
+            <TripCoordinatorDashboard key='tripCoordinatorDashboard' trips={groups.reduce((a,b) => [...a, ...b], [])} app={this.props.app} />,
             // Only Tripleaders+ can see suggested trips
             // Only Admin+ can see deleted and rejected trips
             groups
                 .filter(group => role >= TripState[group[0].state].roleToView)
                 .map((group, i) =>
-                    <TripsGroup trips={group} key={i} app={this.props.app} expanded={i <= 1} />)
+                    <TripsGroup key={'group' + i} trips={group} app={this.props.app} expanded={i <= 1} />)
         ]
     }
 }

@@ -117,7 +117,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
             if (!props.markerLatLng || !route.bounds || route.bounds.length < 2) {
               return maxDistanceKm;
             } else {
-              console.log(">>> " + route.bounds);
+              // console.log(">>> " + route.bounds);
               const routeBounds = new L.LatLngBounds(route.bounds); // as [[number, number], [number, number]];
               const distance = Math.min(maxDistanceKm, Math.round((props.markerLatLng as L.LatLng).distanceTo(routeBounds.getCenter()) / 1000));
               return distance;

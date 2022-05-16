@@ -255,11 +255,12 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
             case 'setFilter':
             case 'setSortBy':
             case 'gotoPage':
-              props.onTableStateChanged({ 
+              // pass state change to parent via callback (but deferred to avoid state change while rendering)
+              setTimeout(() => props.onTableStateChanged({ 
                 filters: newState.filters, 
                 sortBy: newState.sortBy,
                 pageIndex: newState.pageIndex
-              });
+              }), 0);
               return newState;
       
             default:

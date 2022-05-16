@@ -54,6 +54,8 @@ export class TripMap extends MapCommon<{
     // routes
     private pendingRoutesLatLngs: Array<Array<[number, number]>> = [];  // changed routes before being saved
 
+    private mounted: boolean = false;
+
     private memoizedGetArchivedRoutes = memoizeOne((loadArchivedRoutes: boolean) => {
         if (loadArchivedRoutes) {
             this.setState({ busy: true }, async () => {
@@ -62,7 +64,9 @@ export class TripMap extends MapCommon<{
                         const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                             return { id: archivedRoute.id.toString(), text: archivedRoute.title };
                         });
-                        this.setState({archivedRoutes, archivedRouteSuggestions, busy: false});
+                        if (this.mounted) {
+                            this.setState({archivedRoutes, archivedRouteSuggestions, busy: false});
+                        }
                     });
             });
         }
@@ -95,15 +99,19 @@ export class TripMap extends MapCommon<{
     }
 
     public componentDidMount() {
+        this.mounted = true;
+        this.memoizedGetArchivedRoutes(!(this.props.readOnly ?? true));
+        
         if (this.state.mapVisible) {
             this.setUpMap();
         }
     }
 
-   public render(){
+    public componentWillUnmount() {
+        this.mounted = false;
+    }
 
-        this.memoizedGetArchivedRoutes(!(this.props.readOnly ?? true));
-        
+   public render(){
         const onEdit = () => { 
             this.setState({ editsMade: false, editing: true }); 
         }

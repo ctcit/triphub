@@ -165,10 +165,7 @@ export class TripParticipants extends Component<{
                     </ButtonGroup>,
                     <Button key={'help' + info.all.length} onClick={onToggleLegend} hidden={isNewTrip || anon}>
                         <span className='fa fa-question-circle' />{showLegend ? 'Hide legend' : 'Show legend'}
-                    </Button>,
-                    <span key={'participants' + info.all.length} hidden={isNewTrip}>
-                        &nbsp; {info.early.length} Participants
-                    </span>
+                    </Button>
                 ]}
             </Navbar>,
             (showLegend ? <div className='participant-buttons-legend'>

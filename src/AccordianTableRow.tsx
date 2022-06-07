@@ -1,14 +1,13 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Component } from 'react';
 import * as React from 'react';
-import { Button, Collapse  } from 'reactstrap';
+import { Collapse  } from 'reactstrap';
 import './index.css';
-import { ToolTipIcon } from './ToolTipIcon';
 
-export class ExpandableTableRow extends Component<{
+export class AccordianTableRow extends Component<{
     id : string
     expanded? : boolean
-    tablerow : any
+    tablerow : JSX.Element[]
     expandClassName? : string
 },{
     expanded : boolean
@@ -31,12 +30,11 @@ export class ExpandableTableRow extends Component<{
             <tr key={'expodd' + this.props.id}/>,
             <tr key={'expbody' + this.props.id}>
                 <td style={{padding: 0}}/>
-                <td colSpan={9} style={{padding: 0}}>
+                <td colSpan={this.props.tablerow.length+1} style={{padding: 0}}>
                     <Collapse key={'collapse' + this.props.id} isOpen={this.state.expanded} className='noprint'>
                             {this.props.children}
                     </Collapse>
                 </td>
-            </tr>
-        ];
+            </tr>]
     }
 }

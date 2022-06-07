@@ -7,7 +7,6 @@ import { Trip } from './Trip';
 import { App } from './App';
 import { BindMethods, GetDisplayPriority } from './Utilities';
 import { TripParticipant } from './TripParticipant';
-import { ButtonWithTooltip } from './ButtonWithTooltip';
 
 export class TripParticipants extends Component<{
     trip: Trip,
@@ -149,19 +148,19 @@ export class TripParticipants extends Component<{
                     <Button key={'signup' + info.all.length} onClick={onSignUpTramper}
                         hidden={isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
                         <span className='fa fa-user-plus' /> Sign up a tramper
-                    {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
+                        {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
                     <ButtonGroup key={'signupcomplete' + info.all.length}
                         hidden={isNewTrip || !hasNewTramper || !isOpen}>
                         <Button onClick={onSignUpTramper} disabled={true}>
                             <span className='fa fa-user-plus' /> Sign up a tramper:
-                    </Button>
+                        </Button>
                         <Button key='save' color='primary' onClick={onSignUpTramperSave}>
                             {this.props.trip.state.isSaving ? ['Saving ', Spinner] : 'Save'}
                         </Button>
                         <Button key='cancel' color='primary' onClick={onSignUpTramperCancel}>
                             Cancel
-                    </Button>
+                        </Button>
                     </ButtonGroup>,
                     <Button key={'help' + info.all.length} onClick={onToggleLegend} hidden={isNewTrip || anon}>
                         <span className='fa fa-question-circle' />{showLegend ? 'Hide legend' : 'Show legend'}

@@ -133,9 +133,11 @@ export class Trip extends Component<{
         }
     }
 
-    public onDeleteTrip() {
-        this.props.app.triphubApiCall('POST', this.props.href as string, { isDeleted: !this.state.trip.isDeleted }, true)
-            .then(() => this.props.app.setPath('/'))
+    public async onDeleteTrip() {
+        if (this.state.trip.isDeleted || confirm('Are you sure you want to delete this trip?')) {
+            await this.props.app.triphubApiCall('POST', this.props.href as string, { isDeleted: !this.state.trip.isDeleted }, true)
+            this.props.app.setPath('/')
+        }
     }
 
     public onStartNewEvent() {
@@ -146,7 +148,7 @@ export class Trip extends Component<{
         const closeDate: Date = AddDays(openDate, offset - openDate.getDay())
         // For trips, The day after the close date (a Saturday)
         // For socials, the trip date is the same as the close date
-        const tripDate : Date = (this.props.isNewSocial) ? closeDate : AddDays(closeDate, 1)
+        const tripDate: Date = (this.props.isNewSocial) ? closeDate : AddDays(closeDate, 1)
 
         this.suggestedTrip = {
             trip: {
@@ -222,7 +224,6 @@ export class Trip extends Component<{
 
     public onHistory(): JSX.Element {
         return <History key={'History' + this.state.trip.id} owner={this} app={this.props.app} />
-
     }
 
     public get participantsInfo(): IParticipantsInfo {
@@ -297,7 +298,7 @@ export class Trip extends Component<{
 
     public render() {
         if (this.state.isLoadingTrip) {
-            return this.props.app.loadingStatus({...this.props.app.state, ...this.state})
+            return this.props.app.loadingStatus({ ...this.props.app.state, ...this.state })
         }
 
         if (this.state.approval) {
@@ -335,15 +336,15 @@ export class Trip extends Component<{
                     break
                 case TripState.Approved.id:
                     status = <Pill>This trip is not open yet</Pill>
-                    break 
+                    break
                 case TripState.Pending.id:
                 case TripState.Resubmitted.id:
-                        if (amAdmin) {
+                    if (amAdmin) {
                         status = <TripHubAlert>
                             This trip needs to be approved or be given some suggestions for improvement.
                             Please check that all details are filled out correctly and
                             that the trip is suitable then use the buttons below to approve or suggest imrovements.
-                            </TripHubAlert>
+                        </TripHubAlert>
                     } else {
                         status = <Pill>This trip has only been suggested, and not yet approved</Pill>
                     }
@@ -374,7 +375,7 @@ export class Trip extends Component<{
                 </div>
                 <div key='adminActions' className="py-1">
                     {approvalButtons}
-                    <Button color='primary' onClick={onDeleteTrip} hidden={ !this.canEditTrip || isNew || trip.isDeleted} className="px-2 mx-1">
+                    <Button color='primary' onClick={onDeleteTrip} hidden={!this.canEditTrip || isNew || trip.isDeleted} className="px-2 mx-1">
                         <span className='fa fa-trash fa-fw' />Delete this trip
                     </Button>
                     <Button onClick={onDeleteTrip} hidden={isNew || !trip.isDeleted} className="px-2 mx-1">
@@ -390,14 +391,14 @@ export class Trip extends Component<{
                 <div hidden={!isNew} key='saveCancel' className="py-2">
                     <Button color='primary' onClick={onSaveSuggestedTrip} className="px-2 mx-1">
                         Save
-                        </Button>
+                    </Button>
                     <Button color='primary' onClick={onCancelSuggestedTrip} className="px-2 mx-1">
                         Cancel
-                        </Button>
+                    </Button>
                 </div>
                 <div className="alert alert-danger" role="alert" hidden={!this.state.showValidationMessage || tripWarnings.length === 0} key='validation'>
                     Some trip details are missing or incorrect. Please correct before saving.
-                    </div>
+                </div>
                 {this.state.trip.isSocial && this.state.trip.isNoSignup ? null :
                     <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-user fa-fw' />{['Participants', participantWarning, participantCount]}</b></span>}
@@ -410,16 +411,16 @@ export class Trip extends Component<{
                     <Accordian key={`email${this.state.trip.id}_${this.state.participants.length}`} id='email'
                         className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-paper-plane fa-fw' />Email</b></span>}
-                        expanded={false} ondemand={this.onEmail}>
+                        expanded={false} onDemand={this.onEmail}>
                         Email ...
                     </Accordian>
                 }
                 {(!amAdmin || this.props.isNew) ? null :
                     <Accordian key='history' id='history' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-history fa-fw' />History</b></span>}
-                        expanded={false} ondemand={this.onHistory}>
+                        expanded={false} onDemand={this.onHistory}>
                         History ...
-                        </Accordian>
+                    </Accordian>
                 }
                 <TripPrint key='tripprint' trip={this} app={this.props.app} />
             </Container>

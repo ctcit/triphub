@@ -11,7 +11,7 @@ import './index.css'
 import Table from 'reactstrap/lib/Table'
 import { ToolTipIcon } from './ToolTipIcon'
 import { Accordian } from './Accordian'
-import { ExpandableTableRow } from './ExpandableTableRow'
+import { AccordianTableRow } from './AccordianTableRow'
 import { TripCoordinatorDashboard } from './TripCoordinatorDashboard'
 import { TripState } from './TripStates'
 import { ButtonWithTooltip } from './ButtonWithTooltip'
@@ -80,10 +80,10 @@ class TripsLine extends Component<{
         ]
 
         return (
-            <ExpandableTableRow id={'trip' + id} tablerow={tablerow} expandClassName='mobile-only'>
+            <AccordianTableRow id={'trip' + id} tablerow={tablerow} expandClassName='mobile-only'>
                 <div><strong>Grade: </strong>{trip.grade}</div>
                 <div><strong>Leader: </strong>{trip.leaders}</div>
-            </ExpandableTableRow>
+            </AccordianTableRow>
         )
     }
 }

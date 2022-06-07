@@ -122,7 +122,7 @@ export class App extends Component<{
         if (force || !this.archivedRoutesPromise || includeHidden !== this.archivedRoutesIncludeHidden) {
             this.archivedRoutesIncludeHidden = includeHidden;
             this.archivedRoutesPromise = new Promise<IArchivedRoute[]>((resolve, reject) => {
-                this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden )
+                this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden)
                     .then((archivedRoutes: IArchivedRoute[]) => {
                         this.archivedRoutes = archivedRoutes;
                         resolve(archivedRoutes);
@@ -216,7 +216,7 @@ export class App extends Component<{
         return <Container key='loadingStatus' className={this.containerClassName + "triphub-loading-container"}>
             <Jumbotron key='loadingAlert' variant='primary'>
                 {this.loadingFields(state).map(f =>
-                    <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substr(2))}</div>)}
+                    <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substring(2))}</div>)}
             </Jumbotron>
         </Container>
     }
@@ -247,5 +247,4 @@ export class App extends Component<{
         window.scrollTo(0, 0)
         this.setState({ path, notifications: [] })
     }
-
 }

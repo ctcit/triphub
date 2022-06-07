@@ -6,21 +6,56 @@ export const DayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export const MonthOfYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export function GetDateString(date: Date): string {
-    return `${date.getFullYear()}-${(date.getMonth() + 101).toString().substr(1, 2)}-${(date.getDate() + 100).toString().substr(1, 2)}`
+    return `${date.getFullYear()}-${(date.getMonth() + 1).toFixed(0).padStart(2, '0')}-${date.getDate().toFixed().padStart(2, '0')}`
 }
 
 export function AddDays(date: Date, days: number): Date {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
 }
 
-export function GetDate(dateString: string): string {
-    const date = new Date(dateString)
-    return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()]
+const dateFormats: { [key: string]: (d: Date) => string} = {
+    YYYY: d => d.getFullYear().toFixed(),
+    mmmm: d => d.toLocaleString('default', { month: 'long' }).toLowerCase(),
+    Mmmm: d => d.toLocaleString('default', { month: 'long' }),
+    MMMM: d => d.toLocaleString('default', { month: 'long' }).toUpperCase(),
+    mmm: d => d.toLocaleString('default', { month: 'short' }).toLowerCase(),
+    Mmm: d => d.toLocaleString('default', { month: 'short' }),
+    MMM: d => d.toLocaleString('default', { month: 'short' }).toUpperCase(),
+    MM: d => d.toLocaleString('default', { month: '2-digit' }),
+    M: d => d.toLocaleString('default', { month: 'numeric' }),
+    dddd: d => d.toLocaleString('default', { weekday: 'long' }).toLowerCase(),
+    Dddd: d => d.toLocaleString('default', { weekday: 'long' }),
+    DDDD: d => d.toLocaleString('default', { weekday: 'long' }).toUpperCase(),
+    ddd: d => d.toLocaleString('default', { weekday: 'short' }).toLowerCase(),
+    Ddd: d => d.toLocaleString('default', { weekday: 'short' }),
+    DDD: d => d.toLocaleString('default', { weekday: 'short' }).toUpperCase(),
+    DD: d => d.toLocaleString('default', { day: '2-digit' }),
+    D: d => d.toLocaleString('default', { day: 'numeric' }),
+    HH: d => d.getHours().toFixed().padStart(2, '0'),
+    H: d => d.getHours().toFixed(),
+    h: d => (((d.getHours() + 11) % 12) + 1).toFixed(),
+    AMPM: d => d.getHours() < 12 ? 'AM' : 'PM',
+    ampm: d => d.getHours() < 12 ? 'am' : 'pm',
+    mm: d => d.getMinutes().toFixed().padStart(2, '0'),
+    m: d => d.getMinutes().toFixed(),
+    ss: d => d.getSeconds().toFixed().padStart(2, '0'),
+    s: d => d.getSeconds().toFixed(),
+    '.sss': d => (d.getMilliseconds() / 1000).toFixed(3).substring(1),
+    '.ss': d => (d.getMilliseconds() / 1000).toFixed(2).substring(1),
+    '.s': d => (d.getMilliseconds() / 1000).toFixed(1).substring(1),
+}
+const formatsRegex = new RegExp(["'(.*?)'", ...Object.keys(dateFormats).map(f => f.replace('.', '\\.'))].join('|'), 'g')
+
+export function FormatDate(value: Date | string | number, format: string) {
+    return format.replace(formatsRegex, (part, quoted) => dateFormats[part]?.(new Date(value)) ?? quoted)
 }
 
-export function GetFullDate(dateString: string): string {
-    const date = new Date(dateString)
-    return DayOfWeek[date.getDay()] + ' ' + date.getDate() + ' ' + MonthOfYear[date.getMonth()] + ' ' + date.getFullYear()
+export function GetDate(value: Date | string | number): string {
+    return FormatDate(value, 'Ddd D Mmm')
+}
+
+export function GetFullDate(value: Date | string | number): string {
+    return FormatDate(value, 'Ddd D Mmm YYYY')
 }
 
 export function GetLength(length: number, startDate: Date): string {
@@ -75,6 +110,7 @@ export function CapitaliseFirstLetter(input: string): string {
 
 export async function apiCall(method: string, url: string, data?: any): Promise<any> {
     const request: RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
+
     // Accept header is required when querying the db api, and doesn't hurt when querying the triphub api
     request.headers = { ...request.headers, 'Accept': 'application/json' }
 
@@ -91,8 +127,7 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
 
     try {
         return JSON.parse(text)
-    }
-    catch (ex) {
+    } catch (ex) {
         console.log(text)
         return null
     }

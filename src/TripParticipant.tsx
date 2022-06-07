@@ -98,7 +98,7 @@ export class TripParticipant extends Component<{
         const participantActual = { ...participant, name: participant.name || this.state.newTramper }
         const validations: IValidation[] = this.app.validateParticipant(participantActual, participants)
         const canEdit = this.props.trip.canEditTrip || this.props.app.me.id === participant.memberId
-        const canEditAsLeader = this.props.app.state.role >= Role.Admin
+        const canEditAsLeader = this.props.app.state.role >= Role.TripLeader
         const member = this.props.app.getMemberById(participant.memberId)
         const isMemberDiff = participant.memberId === this.props.app.me.id && participant.memberId && (
             participant.emergencyContactName !== member.emergencyContactName ||

@@ -175,7 +175,7 @@ export class MapCommon<P extends {
 
         // HACK - UTF-16 BOM - remove, otherwise gpzx.parse won't work
         if (gpx.charCodeAt(0) === 65279) {
-            gpx = gpx.substr(1);
+            gpx = gpx.substring(1);
         }
         
         return new Promise<void>((resolve, reject) => {

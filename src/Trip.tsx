@@ -325,6 +325,8 @@ export class Trip extends Component<{
         const onDeleteTrip = () => this.onDeleteTrip();
         const onSaveSuggestedTrip = () => this.onSaveSuggestedTrip();
         const onCancelSuggestedTrip = () => this.onCancelSuggestedTrip();
+        const onEmail = () => this.onEmail();
+        const onHistory = () => this.onHistory();
 
         let status: JSX.Element | null = null
         if (trip.id <= 0) {
@@ -411,14 +413,14 @@ export class Trip extends Component<{
                     <Accordian key={`email${this.state.trip.id}_${this.state.participants.length}`} id='email'
                         className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-paper-plane fa-fw' />Email</b></span>}
-                        expanded={false} onDemand={this.onEmail}>
+                        expanded={false} onDemand={onEmail}>
                         Email ...
                     </Accordian>
                 }
                 {(!amAdmin || this.props.isNew) ? null :
                     <Accordian key='history' id='history' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-history fa-fw' />History</b></span>}
-                        expanded={false} onDemand={this.onHistory}>
+                        expanded={false} onDemand={onHistory}>
                         History ...
                     </Accordian>
                 }

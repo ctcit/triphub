@@ -452,7 +452,7 @@ export class ManageRoutes extends Component<{
 
         // HACK - UTF-16 BOM - remove, otherwise gpzx.parse won't work
         if (gpx.charCodeAt(0) === 65279) {
-            gpx = gpx.substr(1);
+            gpx = gpx.substring(1);
         }
 
         return new Promise<Array<Array<[number, number]>> | undefined>((resolve, reject) => {
@@ -515,7 +515,7 @@ export class ManageRoutes extends Component<{
             title: this.concatValues(routes.map(route => route.title), "; "),
             description: this.mergeDescriptions(routes),
             date: this.singleValue(routes.map(route => route.date)),
-            creationDate: (new Date()).toISOString().substr(0, 10),
+            creationDate: (new Date()).toISOString().substring(0, 10),
             gpxFilename: this.singleValue(routes.map(route => route.gpxFilename)),
             gpx: this.singleValue(routes.map(route => route.gpx)),
             bounds: this.mergeBounds(routes.map(route => route.bounds)),
@@ -547,7 +547,7 @@ export class ManageRoutes extends Component<{
             return routes.reduce((combined: string, route: IArchivedRoute) => {
                 const maxDescriptionLength = 800;
                 const abbreviatedDescription = route.description.length > (maxDescriptionLength + 20) ?
-                    (route.description.substr(0, maxDescriptionLength) + " ...") : route.description;
+                    (route.description.substring(0, maxDescriptionLength) + " ...") : route.description;
                 const routeSummary = (abbreviatedDescription.length === 0) ? "" :
                     route.title + ": " + abbreviatedDescription;
                     const tripLink = ManageRoutesUtilities.TripLink(route);

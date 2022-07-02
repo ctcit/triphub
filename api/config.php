@@ -6,7 +6,7 @@ class ConfigClient
 	const printLines 		    	= 25;
 	const editRefreshInSec      	= 10;
 	const calendarStartOfWeek   	= 1; //0=Sun,6=Sat
-	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Harness';
+	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Avalanche Gear,Harness';
 	const prerequisiteSkills    	= 'Snow Skills,River Crossing';
 }
 

@@ -178,7 +178,8 @@ function PostEmails($con) {
 				"SELECT t.id, t.title, t.tripDate
 				FROM $tripsTable t
 				LEFT JOIN $editTable e on e.tripId = t.id
-				WHERE e.id IS NULL
+				WHERE t.tripDate > NOW() - INTERVAL 1 MONTH
+				AND e.id IS NULL
 				AND coalesce((SELECT max(h.id) FROM $historyTable h WHERE h.tripId = t.id),9999999) > t.historyId
 				ORDER BY t.id");
 
@@ -375,7 +376,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		$isDeleted = $participant['isDeleted'];
 		if ($classification == 'waitlisted' && $index == $trip['maxParticipants']) {
 			$detail .= "<tr><td colspan='100' style='$border $deleted'>Waitlist</td></tr>\n";
-		} else if ($classification == 'removed' && !$participants[$index-1]['isDeleted']) {
+		} else if ($classification == 'removed' && ($index==0 || !$participants[$index-1]['isDeleted'])) {
 			$detail .= "<tr><td colspan='100' style='$border $deleted'>Deleted</td></tr>\n";
 		}
 

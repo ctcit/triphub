@@ -134,7 +134,8 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
 }
 
 export function BindMethods(obj: any) {
-    for (const method of Object.keys(Object.getPrototypeOf(obj)).filter(m => /^on[A-Z]/.test(m))) {
+    const handlers = Object.getOwnPropertyNames(Object.getPrototypeOf(obj)).filter(m => /^on[A-Z]/.test(m))
+    for (const method of handlers) {
         obj[method] = obj[method].bind(obj)
     }
 }

@@ -1,3 +1,4 @@
+# Triphub
 Christchurch Tramping Club "TripHub" trip management system.
 
 ## Building

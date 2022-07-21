@@ -45,7 +45,7 @@ export class TripParticipants extends Component<{
         this.props.trip.setState({ isSaving: true })
         this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants',
             this.props.trip.signMeUpTramper, true)
-            .then(this.props.trip.onRequeryParticipants)
+            .then(() => this.props.trip.onRequeryParticipants())
     }
 
     public onSignUpTramperSave() {
@@ -53,7 +53,7 @@ export class TripParticipants extends Component<{
 
         this.props.trip.setState({ isSaving: true })
         this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants', participant, true)
-            .then(this.props.trip.onRequeryParticipants)
+            .then(() => this.props.trip.onRequeryParticipants())
     }
 
     public onSignUpTramperCancel() {

@@ -36,9 +36,7 @@ export class TripPrint extends Component<{
                     <tbody>
                         <tr>
                             <th>Leader:</th>
-                            <td>
-                                {info.leaders.map(l => <div key={l.id}>{l.name}</div>)}
-                            </td>
+                            <td>{info.leaders.map(l => <div key={l.id}>{l.name}</div>)}</td>
                             <th>Date:</th>
                             <td>{GetFullDate(trip.tripDate)}</td>
                             <th>Length:</th>

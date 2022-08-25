@@ -13,7 +13,7 @@ export function AddDays(date: Date, days: number): Date {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
 }
 
-const dateFormats: { [key: string]: (d: Date) => string} = {
+const dateFormats: { [key: string]: (d: Date) => string } = {
     YYYY: d => d.getFullYear().toFixed(),
     mmmm: d => d.toLocaleString('default', { month: 'long' }).toLowerCase(),
     Mmmm: d => d.toLocaleString('default', { month: 'long' }),
@@ -108,6 +108,27 @@ export function CapitaliseFirstLetter(input: string): string {
     return input.charAt(0).toUpperCase() + input.slice(1)
 }
 
+const Grades = [
+    { pattern: /Bike/, value: null, icon: 'bicycle' },
+    { pattern: /Water|Wet/, value: null, icon: 'water' },
+    { pattern: /Training/i, value: null, icon: 'graduation-cap' },
+    { pattern: /Easy.*Mod/i, value: 3, icon: 'hiking' },
+    { pattern: /Mod.*Easy/i, value: 3, icon: 'hiking' },
+    { pattern: /Mod.*Hard/i, value: 5, icon: 'hiking' },
+    { pattern: /Hard.*Mod/i, value: 5, icon: 'hiking' },
+    { pattern: /Social/i, value: 1, icon: 'users' },
+    { pattern: /Easy/i, value: 2, icon: 'hiking' },
+    { pattern: /Mod/i, value: 4, icon: 'hiking' },
+    { pattern: /Hard/i, value: 6, icon: 'hiking' }] as const
+
+export function GradeValue({ grade }: { grade: string }) {
+    return Grades.find(({ pattern, value }) => value && grade.match(pattern))?.value ?? 7
+}
+
+export function GradeIcon({ grade }: { grade: string }) {
+    return Grades.find(({ pattern }) => grade.match(pattern))?.icon ?? 'hiking'
+}
+
 export async function apiCall(method: string, url: string, data?: any): Promise<any> {
     const request: RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
 
@@ -134,7 +155,8 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
 }
 
 export function BindMethods(obj: any) {
-    for (const method of Object.keys(Object.getPrototypeOf(obj)).filter(m => /^on[A-Z]/.test(m))) {
+    for (const method of Object.getOwnPropertyNames(Object.getPrototypeOf(obj)).filter(m => /^on[A-Z]/.test(m))) {
         obj[method] = obj[method].bind(obj)
     }
 }
+

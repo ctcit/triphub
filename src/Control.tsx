@@ -60,6 +60,7 @@ export class InputControl extends Component<{
     helpText?: string
     forceValidation?: boolean
     autoFocus?: boolean
+    className?: string
     onGet: (id: string) => any
     onSet: (id: string, value: any) => void
     onSave: (id: string, value: any) => Promise<void>
@@ -96,7 +97,7 @@ export class InputControl extends Component<{
             }
         }
         const onGetValidationMessage = (this.state.showValidation || this.props.forceValidation) ? this.props.onGetValidationMessage : undefined;
-        let className = "triphub-input"
+        let className = `${this.props.className ?? ''} triphub-input`
         if (onGetValidationMessage && onGetValidationMessage(this.props.field)) {
             className += " is-invalid"
         }
@@ -107,9 +108,9 @@ export class InputControl extends Component<{
         return (
             <ControlWrapper id={id + '_' + val} field={this.props.field} labelFor={id}
                 label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
-                onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} 
+                onGetValidationMessage={onGetValidationMessage} saving={this.state.saving}
                 helpText={this.state.helpText}>
-                <Input id={id} type={this.props.type} readOnly={this.props.readOnly} 
+                <Input id={id} type={this.props.type} readOnly={this.props.readOnly}
                     list={this.props.list} min={this.props.min} max={this.props.max}
                     value={this.value || ""} onFocus={onFocus} onChange={onChange} onBlur={onBlur}
                     autoComplete='nope' autoFocus={this.props.autoFocus} className={className} />
@@ -169,7 +170,7 @@ export class TextAreaInputControl extends Component<{
         if (onGetValidationMessage && onGetValidationMessage(this.props.field)) {
             className += " is-invalid"
         }
-        
+
         return (
             <ControlWrapper id={id} field={this.props.field} label={this.props.label} labelFor={id}
                 hidden={this.props.hidden} isLoading={this.props.isLoading}
@@ -210,7 +211,7 @@ export class SwitchControl extends Component<{
                 .then(() => this.setState({ saving: false }));
         }
         return (
-            <ControlWrapper id={id} field={this.props.field} 
+            <ControlWrapper id={id} field={this.props.field}
                 label={this.props.label} labelFor={id}
                 hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
                 saving={this.state.saving} >
@@ -222,18 +223,19 @@ export class SwitchControl extends Component<{
 }
 
 export class SwitchesControl extends Component<{
-    id: string,
+    id: string
     field: string
-    label: string,
-    hidden?: boolean,
-    isLoading?: boolean,
-    validationMessage?: string,
-    readOnly?: boolean,
-    onGet: (id: string) => any,
-    onSave: (id: string, value: any) => Promise<void>,
-    onGetValidationMessage: (id: string) => string,
-    options: string,
-    allOptions: string,
+    label: string
+    hidden?: boolean
+    isLoading?: boolean
+    validationMessage?: string
+    readOnly?: boolean
+    onGet: (id: string) => any
+    onSave: (id: string, value: any) => Promise<void>
+    onGetValidationMessage: (id: string) => string
+    options: string
+    allOptions?: string
+    renderOption?: (option: string) => JSX.Element | string | undefined
 }, {
     saving: boolean
 }> {
@@ -246,9 +248,9 @@ export class SwitchesControl extends Component<{
     public render() {
         const value = this.value
         const options = this.parse(this.props.options)
-        const allOptions = this.parse(this.props.allOptions)
+        const allOptions = this.parse(this.props.allOptions ?? this.props.options)
         const switches = options.map(option => {
-            const id = `${this.props.id}_${allOptions.indexOf(option)}`
+            const id = `${this.props.id}_${this.props.field}_${allOptions.indexOf(option)}`
             const selected = value.some(v => v === option)
             const onChange = (checked: boolean) => {
                 const newValue = this.value.filter(v => v !== option)
@@ -268,10 +270,10 @@ export class SwitchesControl extends Component<{
                     <tbody>
                         <tr>
                             <td style={{ verticalAlign: "center" }}>
-                                <Switch id={id} key={id} checked={selected} onChange={onChange}
+                                <Switch id={id} checked={selected} onChange={onChange}
                                     className="react-switch" /></td>
                             <td style={{ verticalAlign: "center" }}>
-                                <Label for={id}>{option}</Label></td>
+                                <Label for={id}>{this.props.renderOption?.(option) ?? option}</Label></td>
                         </tr>
                     </tbody>
                 </table>
@@ -305,8 +307,7 @@ export class SelectControl extends Component<{
     onGet: (field: string) => any
     onSave: (field: string, value: any) => Promise<void>
     onGetValidationMessage: (id: string) => string
-    options: string[] | { [id: string]: string[] }
-    data: string
+    options: readonly string[] | { [id: string]: string[] }
     noSaveBadge?: boolean
 }, {
     saving: boolean
@@ -341,13 +342,12 @@ export class SelectControl extends Component<{
         }
 
         return (
-            <ControlWrapper id={id} field={this.props.field} 
+            <ControlWrapper id={id} field={this.props.field}
                 label={this.props.label} labelFor={id} hidden={this.props.hidden}
                 isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
                 saving={this.state.saving} >
                 <Input id={id} type="select" readOnly={this.props.readOnly}
                     value={this.props.onGet(this.props.field)}
-                    // data-data={this.props.data}
                     onChange={onChange} autoComplete='nope'>
                     {options}
                 </Input>
@@ -413,7 +413,7 @@ export class ComboBoxControl extends Component<{
         }
 
         return (
-            <ControlWrapper id={id} field={this.props.field} 
+            <ControlWrapper id={id} field={this.props.field}
                 label={this.props.label} labelFor={id} hidden={this.props.hidden}
                 isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
                 saving={this.state.saving} helpText={this.state.helpText} >

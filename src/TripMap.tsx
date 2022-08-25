@@ -12,32 +12,33 @@ import { MapCommon, NZ50MapPolygon } from './MapCommon';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import memoizeOne from 'memoize-one';
 import { MdClear, MdGridOff, MdInfo /* , MdMap */ } from 'react-icons/md';
+import { App } from './App';
 
 const KeyCodes = {
     comma: 188,
     enter: 13,
-  };
-   
+};
+
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
 export class TripMap extends MapCommon<{
-    routesId : string, 
-    routesLabel : string,
-    mapsId : string, 
-    mapsLabel : string,
-    hidden? : boolean,
-    readOnly? : boolean,
+    app: App
+    routesId: string,
+    routesLabel: string,
+    mapsId: string,
+    mapsLabel: string,
+    hidden?: boolean,
+    hiddenMap?: boolean,
+    hiddenRoute?: boolean,
+    readOnly?: boolean,
     isLoading?: boolean,
-    list? : any,
+    list?: any,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<void>,
     onGetValidationMessage?: (id: string) => string,
     leafletMapId: string,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
-    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
-    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
-},{
-    savingMapSheets : boolean,
+}, {
+    savingMapSheets: boolean,
     savingRoutes: boolean,
     mapVisible: boolean,
     editing: boolean,
@@ -59,20 +60,20 @@ export class TripMap extends MapCommon<{
     private memoizedGetArchivedRoutes = memoizeOne((loadArchivedRoutes: boolean) => {
         if (loadArchivedRoutes) {
             this.setState({ busy: true }, async () => {
-                this.props.getArchivedRoutes(false, false)
+                this.props.app.getArchivedRoutes(false, false)
                     .then((archivedRoutes: IArchivedRoute[]) => {
                         const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                             return { id: archivedRoute.id.toString(), text: archivedRoute.title };
                         });
                         if (this.mounted) {
-                            this.setState({archivedRoutes, archivedRouteSuggestions, busy: false});
+                            this.setState({ archivedRoutes, archivedRouteSuggestions, busy: false });
                         }
                     });
             });
         }
     });
 
-    constructor(props:any) {
+    constructor(props: any) {
         super(props);
 
         const routesAsLatLngs: Array<Array<[number, number]>> = this.getRoutes();
@@ -81,7 +82,7 @@ export class TripMap extends MapCommon<{
         this.pendingRoutesLatLngs = routesAsLatLngs || [];
         this.pendingMapSheets = this.mapSheets;
 
-        this.state = { 
+        this.state = {
             savingMapSheets: false,
             savingRoutes: false,
             mapVisible: routesAsLatLngs && routesAsLatLngs.length > 0,
@@ -91,17 +92,15 @@ export class TripMap extends MapCommon<{
             archivedRoutes: [],
             archivedRouteSuggestions: [],
             busy: true,
-            mapSheetSuggestions: Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
-                const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
-                return { id: nz50Map.sheetCode, text: nz50Map.sheetCode + ' ' + nz50Map.name };
-            })
+            mapSheetSuggestions: Object.values(this.props.app.maps).map(nz50Map =>
+                ({ id: nz50Map.sheetCode, text: nz50Map.sheetCode + ' ' + nz50Map.name }))
         };
     }
 
     public componentDidMount() {
         this.mounted = true;
         this.memoizedGetArchivedRoutes(!(this.props.readOnly ?? true));
-        
+
         if (this.state.mapVisible) {
             this.setUpMap();
         }
@@ -111,9 +110,9 @@ export class TripMap extends MapCommon<{
         this.mounted = false;
     }
 
-   public render(){
-        const onEdit = () => { 
-            this.setState({ editsMade: false, editing: true }); 
+    public render() {
+        const onEdit = () => {
+            this.setState({ editsMade: false, editing: true });
         }
 
         // changed in MapEditor - save deferred
@@ -126,26 +125,26 @@ export class TripMap extends MapCommon<{
             this.setState({ editsMade: true });
         }
 
-        const onSave = () => { 
+        const onSave = () => {
             this.Save(this.pendingMapSheets, this.pendingRoutesLatLngs);
         }
-        const onCancel = () => { 
-            this.setState({ editsMade: false, editing: false }); 
+        const onCancel = () => {
+            this.setState({ editsMade: false, editing: false });
         }
         const onCancelDropdownToggle = () => {
-            this.setState({ cancelDropdownOpen: !this.state.cancelDropdownOpen }); 
+            this.setState({ cancelDropdownOpen: !this.state.cancelDropdownOpen });
         }
 
         // changed in TripMap - save immediate
         const handleMapDelete = (pos: number) => {
             this.deleteSelectedMaps(pos);
-        } 
+        }
         const handleMapAddition = (tag: Tag) => {
             this.addSelectedMaps([tag.id]);
         }
         const handleMapDrag = (tag: Tag, currPos: number, newPos: number) => {
             this.dragSelectedMaps(tag, currPos, newPos);
-        } 
+        }
         const onSelectRouteMaps = () => this.selectRouteMaps();
         const onClearRouteMaps = () => this.clearRouteMaps();
 
@@ -160,25 +159,22 @@ export class TripMap extends MapCommon<{
         }
         const onClearRoute = () => this.clearRoute();
 
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
-            this.props.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (routeId: number): Promise<IArchivedRoute | undefined> => 
-            this.props.getArchivedRoute(routeId);
-
         return (
             <div>
                 <Row>
                     <Col>
-                        <ControlWrapper id={this.props.routesId} field={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingRoutes} >
-                        { !this.state.mapVisible &&
-                            <FormText color="muted">No routes specified</FormText>
-                        }
-                        { this.state.mapVisible &&
-                            <ResizableBox width={this.initialWidth} height={this.initialHeight} minConstraints={[200, 200]} onResize={onResize}>
-                                <div id="tripmap"/>
-                            </ResizableBox>
-                        }
-                        { !this.props.readOnly &&
+                        <ControlWrapper id={this.props.routesId} field={this.props.routesId} label={this.props.routesLabel}
+                            hidden={this.props.hidden || this.props.hiddenRoute} isLoading={this.props.isLoading}
+                            onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingRoutes} >
+                            {!this.state.mapVisible &&
+                                <FormText color="muted">No routes specified</FormText>
+                            }
+                            {this.state.mapVisible &&
+                                <ResizableBox width={this.initialWidth} height={this.initialHeight} minConstraints={[200, 200]} onResize={onResize}>
+                                    <div id="tripmap" />
+                                </ResizableBox>
+                            }
+                            {!this.props.readOnly &&
                                 <ButtonGroup>
                                     <ReactTags tags={[]}
                                         autofocus={false}
@@ -188,93 +184,95 @@ export class TripMap extends MapCommon<{
                                         delimiters={delimiters}
                                         placeholder={'Start typing to add a route from the archives by name'} />
                                     <ButtonWithConfirm id="ClearRoutesButton" color='secondary'
-                                        onClick={onClearRoute} disabled={!this.state.mapVisible}  
+                                        onClick={onClearRoute} disabled={!this.state.mapVisible}
                                         placement="top" tooltipText="Clear routes"
                                         confirmText="Confirm clear routes">
-                                            <MdClear/>
+                                        <MdClear />
                                     </ButtonWithConfirm>
                                     <a href="https://youtu.be/77B6EzYLcmo" target="_blank">
-                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                        <MdInfo size="36" color="#6899e4" style={{ padding: '7px' }} />
                                     </a>
                                 </ButtonGroup>
-                        }
+                            }
                         </ControlWrapper>
                     </Col>
                 </Row>
                 <Row>
                     <Col>
-                        <ControlWrapper id={this.props.mapsId} field={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingMapSheets} >
-                        {
-                            this.mapSheets.length === 0 &&
+                        <ControlWrapper id={this.props.mapsId} field={this.props.mapsId} label={this.props.mapsLabel}
+                            hidden={this.props.hidden || this.props.hiddenMap} isLoading={this.props.isLoading}
+                            onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingMapSheets} >
+                            {
+                                this.mapSheets.length === 0 &&
                                 <FormText color="muted">No maps selected</FormText>
-                        }
-                        { ((this.props.readOnly && this.mapSheets.length > 0) || !this.props.readOnly) &&
-                            <ButtonGroup>
-                                <ReactTags tags={this.getTags()}
-                                    autofocus={false}
-                                    suggestions={this.state.mapSheetSuggestions}
-                                    handleDelete={handleMapDelete}
-                                    handleAddition={handleMapAddition}
-                                    handleDrag={handleMapDrag}
-                                    delimiters={delimiters}
-                                    placeholder={'Start typing to add a map sheet by name'}
-                                    readOnly={this.props.readOnly} />
-                                { !this.props.readOnly &&
-                                    <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
-                                        onClick={onSelectRouteMaps} disabled={!this.routes || this.routes.length === 0 }  
-                                        placement="top" tooltipText="Select maps overlapping the route">
-                                            <MdGridOff/>
-                                    </ButtonWithTooltip>
-                                }
-                                { !this.props.readOnly &&
-                                    <ButtonWithConfirm id="ClearMapsButton" color='secondary'
-                                        onClick={onClearRouteMaps} disabled={this.mapSheets.length === 0}  
-                                        placement="top" tooltipText="Clear maps"
-                                        confirmText="Confirm clear maps">
-                                            <MdClear/>
-                                    </ButtonWithConfirm>
-                                }
-                                { !this.props.readOnly &&
-                                    <a href="https://youtu.be/ybP2xjWb0t0" target="_blank">
-                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
-                                    </a>
-                                }
-                            </ButtonGroup>
-                        }
+                            }
+                            {((this.props.readOnly && this.mapSheets.length > 0) || !this.props.readOnly) &&
+                                <ButtonGroup>
+                                    <ReactTags tags={this.getTags()}
+                                        autofocus={false}
+                                        suggestions={this.state.mapSheetSuggestions}
+                                        handleDelete={handleMapDelete}
+                                        handleAddition={handleMapAddition}
+                                        handleDrag={handleMapDrag}
+                                        delimiters={delimiters}
+                                        placeholder={'Start typing to add a map sheet by name'}
+                                        readOnly={this.props.readOnly} />
+                                    {!this.props.readOnly && !this.props.hiddenRoute &&
+                                        <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary'
+                                            onClick={onSelectRouteMaps} disabled={!this.routes || this.routes.length === 0}
+                                            placement="top" tooltipText="Select maps overlapping the route">
+                                            <MdGridOff />
+                                        </ButtonWithTooltip>
+                                    }
+                                    {!this.props.readOnly &&
+                                        <ButtonWithConfirm id="ClearMapsButton" color='secondary'
+                                            onClick={onClearRouteMaps} disabled={this.mapSheets.length === 0}
+                                            placement="top" tooltipText="Clear maps"
+                                            confirmText="Confirm clear maps">
+                                            <MdClear />
+                                        </ButtonWithConfirm>
+                                    }
+                                    {!this.props.readOnly &&
+                                        <a href="https://youtu.be/ybP2xjWb0t0" target="_blank">
+                                            <MdInfo size="36" color="#6899e4" style={{ padding: '7px' }} />
+                                        </a>
+                                    }
+                                </ButtonGroup>
+                            }
                         </ControlWrapper>
                     </Col>
                 </Row>
                 <Row>
                     <Col>
-                        { !this.props.readOnly &&
+                        {!this.props.readOnly &&
                             <ButtonGroup>
                                 <Button onClick={onEdit}>
-                                    <span className='fa fa-map'/>
-                                    Edit Maps/Routes (Advanced)
+                                    <span className='fa fa-map' />
+                                    {this.props.hiddenRoute ? 'Pick map' : 'Edit Maps/Routes (Advanced)'}
                                 </Button>
                                 <a href="https://youtu.be/mF0jPHLjanI" target="_blank">
-                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                    <MdInfo size="36" color="#6899e4" style={{ padding: '7px' }} />
                                 </a>
                             </ButtonGroup>
                         }
-                        <Modal isOpen={this.state.editing} toggle={onSave} 
-                            size="lg" style={{maxWidth: '1600px', width: '95%', margin: '10px auto'}} centered={true}>
+                        <Modal isOpen={this.state.editing} toggle={onSave}
+                            size="lg" style={{ maxWidth: '1600px', width: '95%', margin: '10px auto' }} centered={true}>
                             <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
                             <ModalBody>
-                                <MapEditor 
-                                    nz50MapsBySheet={this.props.nz50MapsBySheet} 
-                                    mapSheets={this.mapSheets} 
+                                <MapEditor
+                                    app={this.props.app}
+                                    hiddenMap={this.props.hiddenMap}
+                                    hiddenRoute={this.props.hiddenRoute}
+                                    mapSheets={this.mapSheets}
                                     routesAsLatLngs={this.getRoutesAsLatLngs()}
-                                    onMapSheetsChanged={onMapSheetsChanged} 
+                                    onMapSheetsChanged={onMapSheetsChanged}
                                     onRoutesChanged={onRoutesChanged}
-                                    getArchivedRoutes={getArchivedRoutes}
-                                    getArchivedRoute={getArchivedRoute}
                                 />
                             </ModalBody>
                             <ModalFooter>
-                                { !this.state.editsMade && <Button color="secondary" onClick={onCancel}>Close</Button> }                                    
-                                { this.state.editsMade && <Button color="primary" onClick={onSave}>Save</Button> }
-                                { this.state.editsMade && 
+                                {!this.state.editsMade && <Button color="secondary" onClick={onCancel}>Close</Button>}
+                                {this.state.editsMade && <Button color="primary" onClick={onSave}>Save</Button>}
+                                {this.state.editsMade &&
                                     <ButtonDropdown color="secondary" drop={'right'} isOpen={this.state.cancelDropdownOpen} toggle={onCancelDropdownToggle}>
                                         <DropdownToggle caret={false}>Cancel</DropdownToggle>
                                         <DropdownMenu>
@@ -287,7 +285,7 @@ export class TripMap extends MapCommon<{
                     </Col>
                 </Row>
             </div>
-         );
+        );
     }
 
     public setUpMap(): void {
@@ -308,14 +306,14 @@ export class TripMap extends MapCommon<{
 
         this.fitBounds();
     }
-    
+
     private getMapSheets(): string[] {
         const mapSheets: string[] = [];
         const maps: string[] = this.props.onGet("maps") || [];
         maps.forEach(map => {
             if (map && map !== "") {
                 const parts = map.split(" ");
-                if (parts.length > 0 && this.props.nz50MapsBySheet[parts[0]]) {
+                if (parts.length > 0 && this.props.app.maps[parts[0]]) {
                     mapSheets.push(parts[0]);
                 }
             }
@@ -329,18 +327,18 @@ export class TripMap extends MapCommon<{
 
     // -----------------
 
-    private selectArchivedRoute(archivedRouteId: number) : void {
+    private selectArchivedRoute(archivedRouteId: number): void {
         this.setState({ busy: true });
-         this.props.getArchivedRoute(archivedRouteId)
-             .then(async (archivedRoute: IArchivedRoute) => {
-                 this.saveSelectedRoute(archivedRoute.routes);
-             })
+        this.props.app.getArchivedRoute(archivedRouteId)
+            .then(async (archivedRoute: IArchivedRoute) => {
+                this.saveSelectedRoute(archivedRoute.routes);
+            })
             .finally(() => {
                 this.setState({ busy: false });
             });
     }
-    
-    private clearRoute() : void {
+
+    private clearRoute(): void {
         this.saveSelectedRoute([]);
     }
 
@@ -354,7 +352,7 @@ export class TripMap extends MapCommon<{
         if (!this.mapSheets) {
             return [];
         }
-        return this.mapSheets.map((mapSheet: string) => 
+        return this.mapSheets.map((mapSheet: string) =>
             ({ id: mapSheet, text: this.mapSheetWithName(mapSheet) }));
     }
 
@@ -374,7 +372,7 @@ export class TripMap extends MapCommon<{
             this.saveSelectedMaps(newMapSheets);
         }
     }
- 
+
     private dragSelectedMaps(tag: Tag, currPos: number, newPos: number): void {
         const tags = [...this.getTags()];
         const newTags = tags.slice();
@@ -416,7 +414,7 @@ export class TripMap extends MapCommon<{
 
     // -----------------
 
-    private Save = (mapSheets: string[] | null, routesAsLatLngs: Array<Array<[number, number]>> | null): void => { 
+    private Save = (mapSheets: string[] | null, routesAsLatLngs: Array<Array<[number, number]>> | null): void => {
         const state: any = { editsMade: false, editing: false };
         if (mapSheets) {
             state.savingMapSheets = true;
@@ -448,14 +446,14 @@ export class TripMap extends MapCommon<{
                 this.mapSheets = mapSheets;
                 this.pendingMapSheets = mapSheets;
                 promises.push(this.props.onSave('maps', mapSheets
-                    .filter(mapSheet => mapSheet > "")
-                    .map(mapSheet => mapSheet + " " +  this.props.nz50MapsBySheet[mapSheet].name)));
+                    .filter(mapSheet => mapSheet)
+                    .map(mapSheet => mapSheet + " " + this.props.app.maps[mapSheet].name)));
             }
 
             return Promise.all(promises)
                 .then(() => Promise.resolve(), () => Promise.resolve())
-                .then(() => this.setState({savingMapSheets: false, savingRoutes: false}));
-        }); 
+                .then(() => this.setState({ savingMapSheets: false, savingRoutes: false }));
+        });
     }
 
 }

@@ -2,7 +2,7 @@
   "name": "triphub",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://ctc.org.nz/triphub/web",
+  "homepage": "https://ctc.org.nz/triphub-alastair/web",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",
     "@styled-icons/boxicons-regular": "^10.18.0",

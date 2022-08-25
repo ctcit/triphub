@@ -20,9 +20,6 @@ export class TripDetail extends Component<{
     editMaps: boolean
 }> {
 
-    public href?: string
-    public app: App
-    private nz50MapsBySheet: { [mapSheet: string]: IMap } = {}
     private closeDateIteration: number = 0
 
     constructor(props: any) {
@@ -31,15 +28,10 @@ export class TripDetail extends Component<{
             editMap: false,
             editMaps: false,
         }
-        this.href = this.props.owner.props.href
-        this.app = this.props.app
-
-        const nz50Maps: IMap[] = this.props.app.maps
-        this.nz50MapsBySheet = {}
-        nz50Maps.forEach((nz50Map: IMap) => {
-            this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map
-        })
     }
+
+    public get app() { return this.props.app }
+    public get href() { return this.props.owner.props.href }
 
     public set(field: string, value: any): void {
         // Use an update function rather than setting the value directly,
@@ -68,13 +60,6 @@ export class TripDetail extends Component<{
         const validations: IValidation[] = this.app.validateTrip(this.props.owner.state.trip)
         const approval = TripState[trip.approval || ''] || TripState.Pending
         const isSocial = trip.isSocial
-
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => this.app.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
-            return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
-                .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
-        }
-
         const onGet = (field: string): any => this.props.owner.state.trip[field]
         const onGetInverted = (field: string): any => !this.props.owner.state.trip[field]
         const onSet = (field: string, value: any): void => this.set(field, value)
@@ -263,12 +248,10 @@ export class TripDetail extends Component<{
                 <Row>
                     <Col sm={10}>
                         <TripMap 
+                            app={this.app}
                             routesId='routes' routesLabel='Routes'
                             mapsId='maps' mapsLabel='Maps'
-                            nz50MapsBySheet={this.nz50MapsBySheet} 
                             leafletMapId='tripmap'
-                            getArchivedRoutes={getArchivedRoutes}
-                            getArchivedRoute={getArchivedRoute}
                             {...common}
                         />
                     </Col>

@@ -111,14 +111,15 @@ export class Trip extends Component<{
     }
 
     public get canEditTrip() {
-        const me = this.props.app.me
+        const { me } = this.props.app
         return this.props.app.amAdmin ||
             this.state.participants.some((p: IParticipant) => me.id === p.memberId && p.isLeader)
     }
 
     public get blankTramper(): IParticipant {
         return {
-            id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false,
+            id: -1, isLeader: false, isPlbProvider: false, isVehicleProvider: false,
+            isAvalancheGearProvider: false, isDeleted: false,
             logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '',
             emergencyContactName: '', emergencyContactPhone: ''
         }
@@ -174,7 +175,7 @@ export class Trip extends Component<{
                 approval: this.props.isNewSocial || this.props.app.amAdmin ? TripState.Approved.id : TripState.Pending.id,
                 approvalText: '',
                 title: '',
-                state: this.props.isNewSocial ? 'Open' : 'Suggested'
+                state: this.props.isNewSocial ? 'Open' : 'Suggested',
             },
             participants: [
                 { ...this.signMeUpTramper, isLeader: true }
@@ -230,7 +231,7 @@ export class Trip extends Component<{
         const participants = this.state.participants || []
         const all = [...participants].sort((a, b) => GetDisplayPriority(a) - GetDisplayPriority(b))
         const trip = this.state.trip
-        const maxParticipants = trip.maxParticipants === 0 ? 999 : trip.maxParticipants
+        const maxParticipants = trip.maxParticipants || 999
         const leaders = all.filter(p => p.isLeader && !p.isDeleted)
         const moveable = all.filter(p => !p.isLeader && !p.isDeleted)
         const deleted = all.filter(p => p.isDeleted)
@@ -405,7 +406,7 @@ export class Trip extends Component<{
                     <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-user fa-fw' />{['Participants', participantWarning, participantCount]}</b></span>}
                         expanded={true}>
-                        <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this}
+                        <TripParticipants key={`TripParticipants${this.state.trip.id}${this.state.trip.prerequisites}`} trip={this}
                             app={this.props.app} />
                     </Accordian>
                 }

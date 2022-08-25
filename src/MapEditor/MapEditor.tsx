@@ -11,16 +11,17 @@ import { SelectMapSheetsTab } from './SelectMapSheetsTab';
 import { EditRoutesTab } from './EditRoutesTab';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
+import { App } from 'src/App';
 
 export class MapEditor extends Component<{
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
+    app: App
+    hiddenMap?: boolean,
+    hiddenRoute?: boolean,
     mapSheets: string[],
     routesAsLatLngs: Array<Array<[number, number]>>,
-    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
-    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onMapSheetsChanged: (mapSheets: string[]) => void,
     onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) => void
-},{
+}, {
     activeTab: string,
     showMap: boolean,
     maxMapWidth: number,
@@ -33,15 +34,15 @@ export class MapEditor extends Component<{
     // routes
     private routesUndoStack: Array<{ routesAsLatLngs: Array<Array<[number, number]>>, currentRouteIndex: number }> = [];
 
-    constructor(props:any) {
+    constructor(props: any) {
         super(props);
 
         if (this.props.routesAsLatLngs.length === 0) {
             this.props.routesAsLatLngs.push([]);
         }
 
-        this.state = { 
-            activeTab: "EditRoutes",
+        this.state = {
+            activeTab: this.props.hiddenRoute ? "SelectMaps" : "EditRoutes",
             showMap: true,
             maxMapWidth: 1200,
             mapComponent: undefined,
@@ -58,11 +59,11 @@ export class MapEditor extends Component<{
     }
 
     public render() {
-        
+
         const onResizeModal = (width: number, height: number) => {
             // event fired by ReactResizeDetector
             // limit the resizable maximum width for the map when the modal width changes
-            this.setState({maxMapWidth: width});
+            this.setState({ maxMapWidth: width });
             // resize the ResizableBox containing the map
             const layerControl: HTMLStyleElement = document.getElementsByClassName('resizableMap')[0] as HTMLStyleElement;
             layerControl.style.width = Math.floor(width).toString() + 'px';
@@ -86,7 +87,7 @@ export class MapEditor extends Component<{
         }
 
         const setMapComponent = (mapComponent: MapComponent): void => {
-            this.setState( { mapComponent });
+            this.setState({ mapComponent });
         }
 
         const saveMapsheetsChange = async (mapSheets: string[]) => {
@@ -99,78 +100,74 @@ export class MapEditor extends Component<{
             return await this.undoLastRouteEdit();
         }
 
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
-            this.props.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (routeId: number): Promise<IArchivedRoute | undefined> => 
-            this.props.getArchivedRoute(routeId);        
-        
         return (
             <FormGroup>
                 <ReactResizeDetector handleWidth={true} handleHeight={false} onResize={onResizeModal} />
                 <Nav tabs={true}>
-                    <NavItem>
-                    <NavLink
-                        className={classnames({ active: this.state.activeTab === 'EditRoutes' })}
-                        onClick={setEditRoutesTab}
-                    >
-                        Edit Routes
-                    </NavLink>
-                    </NavItem>
-                    <NavItem>
-                    <NavLink
-                        className={classnames({ active: this.state.activeTab === 'RoutesArchive' })}
-                        onClick={setRoutesArchiveTab}
-                    >
-                        Routes Archive
-                    </NavLink>
-                    </NavItem>
-                    <NavItem>
-                    <NavLink
-                        className={classnames({ active: this.state.activeTab === 'SelectMaps' })}
-                        onClick={setSelectMapsTab}
-                    >
-                        Select Map Sheets
-                    </NavLink>
-                    </NavItem>
+                    {!this.props.hiddenRoute &&
+                        <NavItem>
+                            <NavLink
+                                className={classnames({ active: this.state.activeTab === 'EditRoutes' })}
+                                onClick={setEditRoutesTab}>
+                                Edit Routes
+                            </NavLink>
+                        </NavItem>}
+                    {!this.props.hiddenRoute &&
+                        <NavItem>
+                            <NavLink
+                                className={classnames({ active: this.state.activeTab === 'RoutesArchive' })}
+                                onClick={setRoutesArchiveTab}>
+                                Routes Archive
+                            </NavLink>
+                        </NavItem>}
+                    {!this.props.hiddenMap &&
+                        <NavItem>
+                            <NavLink
+                                className={classnames({ active: this.state.activeTab === 'SelectMaps' })}
+                                onClick={setSelectMapsTab}>
+                                Select Map Sheets
+                            </NavLink>
+                        </NavItem>}
                 </Nav>
                 <TabContent activeTab={this.state.activeTab}>
-                    <EditRoutesTab 
-                        isActiveTab={this.state.activeTab === "EditRoutes"}
-                        mapComponent={this.state.mapComponent}
-                        nz50MapsBySheet={this.props.nz50MapsBySheet}
-                        routesAsLatLngs={this.props.routesAsLatLngs}
-                        currentRouteIndex={this.state.currentRouteIndex}
-                        canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
-                        saveRouteChange={saveRouteChange}
-                        undoLastRouteEdit={undoLastRouteEdit}
-                    />
-                    <RoutesArchiveTab
-                        isActiveTab={this.state.activeTab === "RoutesArchive"}
-                        mapComponent={this.state.mapComponent}
-                        nz50MapsBySheet={this.props.nz50MapsBySheet}
-                        routesAsLatLngs={this.props.routesAsLatLngs}
-                        currentRouteIndex={this.state.currentRouteIndex}
-                        canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
-                        saveRouteChange={saveRouteChange}
-                        undoLastRouteEdit={undoLastRouteEdit}
-                        getArchivedRoutes={getArchivedRoutes}
-                        getArchivedRoute={getArchivedRoute}
-                    />
-                    <SelectMapSheetsTab
-                        isActiveTab={this.state.activeTab === "SelectMaps"}
-                        mapComponent={this.state.mapComponent}
-                        nz50MapsBySheet={this.props.nz50MapsBySheet}
-                        mapSheets={this.state.mapSheets}
-                        routesAsLatLngs={this.props.routesAsLatLngs}
-                        saveMapsheetsChange={saveMapsheetsChange}
-                    />
+                    {!this.props.hiddenRoute &&
+                        <EditRoutesTab
+                            isActiveTab={this.state.activeTab === "EditRoutes"}
+                            mapComponent={this.state.mapComponent}
+                            nz50MapsBySheet={this.props.app.maps}
+                            routesAsLatLngs={this.props.routesAsLatLngs}
+                            currentRouteIndex={this.state.currentRouteIndex}
+                            canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
+                            saveRouteChange={saveRouteChange}
+                            undoLastRouteEdit={undoLastRouteEdit}
+                        />}
+                    {!this.props.hiddenRoute &&
+                        <RoutesArchiveTab
+                            app={this.props.app}
+                            isActiveTab={this.state.activeTab === "RoutesArchive"}
+                            mapComponent={this.state.mapComponent}
+                            routesAsLatLngs={this.props.routesAsLatLngs}
+                            currentRouteIndex={this.state.currentRouteIndex}
+                            canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
+                            saveRouteChange={saveRouteChange}
+                            undoLastRouteEdit={undoLastRouteEdit}
+                        />}
+                    {!this.props.hiddenMap &&
+                        <SelectMapSheetsTab
+                            isActiveTab={this.state.activeTab === "SelectMaps"}
+                            mapComponent={this.state.mapComponent}
+                            nz50MapsBySheet={this.props.app.maps}
+                            mapSheets={this.state.mapSheets}
+                            routesAsLatLngs={this.props.routesAsLatLngs}
+                            saveMapsheetsChange={saveMapsheetsChange}
+                        />}
                 </TabContent>
                 <MapComponent
-                        leafletMapId='mapeditormap'
-                        nz50MapsBySheet={this.props.nz50MapsBySheet}
-                        setMapComponent={setMapComponent}
-                        showMap = {this.state.showMap}
-                        maxMapWidth={this.state.maxMapWidth}
+                    app={this.props.app}
+                    leafletMapId='mapeditormap'
+                    setMapComponent={setMapComponent}
+                    showMap={this.state.showMap}
+                    maxMapWidth={this.state.maxMapWidth}
                 />
             </FormGroup>
         );
@@ -181,7 +178,7 @@ export class MapEditor extends Component<{
     // -------------------------------------------------------
 
     private async saveMapsheetsChange(mapSheets: string[]): Promise<void> {
-        await this.setStateAsync({mapSheets});
+        await this.setStateAsync({ mapSheets });
         this.props.onMapSheetsChanged(mapSheets);
     }
 
@@ -214,7 +211,7 @@ export class MapEditor extends Component<{
                 currentRouteIndex = undoStackItem?.currentRouteIndex ?? -1;
                 canUndoLastRouteEdit = this.routesUndoStack.length > 1;
                 // console.log("<<<< " + this.routesUndoStack.length + ", " + routesAsLatLngs);
-                await this.setStateAsync({routesAsLatLngs, currentRouteIndex, canUndoLastRouteEdit });
+                await this.setStateAsync({ routesAsLatLngs, currentRouteIndex, canUndoLastRouteEdit });
                 this.props.onRoutesChanged(routesAsLatLngs);
             }
         }

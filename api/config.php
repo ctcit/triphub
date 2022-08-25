@@ -6,7 +6,7 @@ class ConfigClient
 	const printLines 		    	= 25;
 	const editRefreshInSec      	= 10;
 	const calendarStartOfWeek   	= 1; //0=Sun,6=Sat
-	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Harness';
+	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Harness,Avalanche Gear';
 	const prerequisiteSkills    	= 'Snow Skills,River Crossing';
 }
 
@@ -22,6 +22,7 @@ class ConfigServer
 	const newMembersRepView   = "triphub.view_new_members_rep";
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";
+	const membershipTypesTable    = "ctc.membership_types";
 	const committeeTable      = "ctc.view_committee";
 	const newslettersTable    = "newsletter.newsletters";
 	const noticesTable        = "newsletter.notices";
@@ -41,8 +42,8 @@ class ConfigServer
 	const routesTable 		  = "triphub.routes";
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
-	const apiKey              = "7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC";
-	const apiKeyExpiry        = "00000000";//YYYYMMDD Should be 00000000 in production 
+	const apiKey              = "C5HFNPH2H887JJ4B9H22UMC42DMHVL4VVUCD84WGKEWMQG2RUZ";//Should be blank in production
+	const apiKeyExpiry        = "20220831";//YYYYMMDD Should be 00000000 in production 
 	const apiKeyUserId	      = 125;
 }
 

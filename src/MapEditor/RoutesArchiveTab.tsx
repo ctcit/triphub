@@ -13,6 +13,7 @@ import { ButtonWithTooltip } from '../ButtonWithTooltip';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
 import memoizeOne from 'memoize-one';
+import { App } from 'src/App';
 
 const KeyCodes = {
     comma: 188,
@@ -22,16 +23,14 @@ const KeyCodes = {
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
 export class RoutesArchiveTab extends Component<{
+    app: App,
     isActiveTab: boolean,
     mapComponent: MapComponent | undefined,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
     routesAsLatLngs: Array<Array<[number, number]>>,
     currentRouteIndex: number,
     canUndoLastRouteEdit: boolean,
     saveRouteChange: (routesAsLatLngs?: Array<Array<[number, number]>>, currentRouteIndex?: number) => Promise<void>,
     undoLastRouteEdit: () => Promise<[Array<Array<[number, number]>>, number, boolean]>, 
-    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
-    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     archivedRoutes: IArchivedRoute[],
     archivedRouteSuggestions: Tag[],
@@ -43,7 +42,7 @@ export class RoutesArchiveTab extends Component<{
 
     private memoizedGetArchivedRoutes = memoizeOne((includeHidden: boolean, force: boolean, isActiveTab: boolean) => {
         if (isActiveTab) {
-            this.props.getArchivedRoutes(includeHidden, force)
+            this.props.app.getArchivedRoutes(includeHidden, force)
             .then((archivedRoutes: IArchivedRoute[]) => {
                 const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                     return { id: archivedRoute.id.toString(), text: archivedRoute.title };
@@ -215,7 +214,7 @@ export class RoutesArchiveTab extends Component<{
     private selectArchivedRoute(archivedRouteId: number) {
         this.setState({ busy: true });
         const mapComponent = (this.props.mapComponent as MapComponent);
-        this.props.getArchivedRoute(archivedRouteId)
+        this.props.app.getArchivedRoute(archivedRouteId)
             .then(async (archivedRoute: IArchivedRoute) => {
                 let routesAsLatLngs: Array<Array<[number, number]>> = mapComponent.getRoutesAsLatLngs();
                 routesAsLatLngs = routesAsLatLngs.concat(archivedRoute.routes);

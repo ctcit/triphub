@@ -33,9 +33,6 @@ export class ManageRoutes extends Component<{
         mapOperation: MapOperation,
         tableState: IManageRoutesTableState
     }> {
-
-    public app : App;
-    private nz50MapsBySheet: { [mapSheet: string] : IMap } = {};
     private bounds: L.LatLngBounds | undefined = undefined;
 
 
@@ -53,14 +50,9 @@ export class ManageRoutes extends Component<{
             mapOperation: MapOperation.None,
             tableState: { filters: [], sortBy: [], pageIndex: 0 }
         }
-        this.app = this.props.app
-        
-        const nz50Maps: IMap[] = this.props.app.maps;
-        this.nz50MapsBySheet = {};
-        nz50Maps.forEach((nz50Map: IMap) => {
-            this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
-        });
     }
+
+    public get app() { return this.props.app }
 
     public get(id: string) : any {
         return this.state.mergedRoutes[id];
@@ -173,16 +165,6 @@ export class ManageRoutes extends Component<{
         const onCancel = (): Promise<void> => {
             this.setState({ isEditing: false }); 
             return Promise.resolve()
-        }
-
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => this.app.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
-            return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
-                .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
-        }
-
-        const onGetValidationMessage = (): any => {
-            return null;
         }
 
         const onBoundsChanged = (bounds: L.LatLngBounds) => {
@@ -325,15 +307,13 @@ export class ManageRoutes extends Component<{
                                     </Accordian>
                                 </Row>
                                 <Row>
-                                    <ManageRoutesMap 
+                                    <ManageRoutesMap
+                                        app={this.props.app} 
                                         route={this.state.mergedRoutes}
                                         isEditing={this.state.isEditing}
                                         onSave={onSave}
                                         onCancel={onCancel}
                                         leafletMapId='manageroutesmap'
-                                        nz50MapsBySheet={this.nz50MapsBySheet} 
-                                        getArchivedRoutes={getArchivedRoutes}
-                                        getArchivedRoute={getArchivedRoute}
                                         readOnly={this.state.isLoadingRoute}
                                         onBoundsChanged={onBoundsChanged}
                                         onMarkerMoved={onMarkerMoved}

@@ -2,10 +2,8 @@ import 'bootstrap/dist/css/bootstrap.min.css'
 import './index.css'
 import { Component } from 'react'
 import * as React from 'react'
-import { App } from './App'
 import { Container, ButtonGroup } from 'reactstrap'
-import { BaseUrl } from '.'
-import { ITrip } from './Interfaces'
+import { ITrip, Role } from './Interfaces'
 import { BindMethods, GetDate, GetLength } from './Utilities'
 import './index.css'
 import Table from 'reactstrap/lib/Table'
@@ -15,10 +13,13 @@ import { AccordianTableRow } from './AccordianTableRow'
 import { TripCoordinatorDashboard } from './TripCoordinatorDashboard'
 import { TripState } from './TripStates'
 import { ButtonWithTooltip } from './ButtonWithTooltip'
+import { MembersService } from './Services/MembersService'
+import { TripsService } from './Services/TripsService'
+import { ConfigService } from './Services/ConfigService'
 
 class TripsLine extends Component<{
-    owner: TripsGroup,
-    trip: ITrip,
+    trip: ITrip
+    setPath(path: string): void
 }, {}> {
     constructor(props: any) {
         super(props)
@@ -26,16 +27,15 @@ class TripsLine extends Component<{
     }
 
     public onClick() {
-        this.props.owner.props.app.setPath('/trips/' + this.props.trip.id)
+        this.props.setPath('/trips/' + this.props.trip.id)
     }
 
     public render() {
-        const app = this.props.owner.props.app
         const trip = this.props.trip
         const id = trip.id
-        const me = this.props.owner.props.app.me
+        const me = MembersService.Me
 
-        let validation = app.validateTrip(trip).filter(i => !i.ok)
+        let validation = TripsService.validateTrip(trip).filter(i => !i.ok)
 
         const extractWarnings = (match: RegExp) => {
             const errors = validation.filter(i => match.test(i.field))
@@ -89,9 +89,9 @@ class TripsLine extends Component<{
 }
 
 export class TripsGroup extends Component<{
-    app: App
     trips: ITrip[]
     expanded: boolean
+    setPath(path: string): void
 }, {
 }> {
 
@@ -102,10 +102,10 @@ export class TripsGroup extends Component<{
     public render() {
 
         const trips = this.props.trips
-        const me = this.props.app.me
+        const me = MembersService.Me
 
         return (
-            <Container className={this.props.app.containerClassName} fluid={true}>
+            <Container className={ConfigService.containerClassName} fluid={true}>
                 <Accordian id={`tg${trips[0].state}`} className='trip-group' headerClassName='trip-group-header' expanded={this.props.expanded}
                     title={<span>
                         <b>{TripState[trips[0].state].groupTitle || trips[0].state}</b>
@@ -127,7 +127,10 @@ export class TripsGroup extends Component<{
                         </thead>
                         <tbody>
                             {this.props.trips.map(
-                                (trip: ITrip) => <TripsLine key={'trip' + trip.id} trip={trip} owner={this} />)}
+                                (trip: ITrip) => <TripsLine key={'trip' + trip.id} 
+                                    trip={trip}
+                                    setPath={this.props.setPath}
+                                     />)}
                         </tbody>
                     </Table>
                 </Accordian>
@@ -137,7 +140,9 @@ export class TripsGroup extends Component<{
 }
 
 export class TripsList extends Component<{
-    app: App
+    role: Role
+    setPath(path: string): void
+    loadingStatus(state: any): JSX.Element
 }, {
     isLoadingTrips: boolean
     groups: ITrip[][],
@@ -148,7 +153,7 @@ export class TripsList extends Component<{
     }
 
     public requery() {
-        this.props.app.triphubApiCall('GET', BaseUrl + '/trips')
+        TripsService.getTrips()
             .then((data: ITrip[]) => {
                 const order = Object.keys(TripState)
                 const groups = new Map<string, ITrip[]>(
@@ -169,21 +174,27 @@ export class TripsList extends Component<{
 
     public render() {
         if (this.state.isLoadingTrips) {
-            return this.props.app.loadingStatus({ ...this.props.app.state, ...this.state })
+            return this.props.loadingStatus({ ...this.state })
         }
 
         const groups = this.state.groups
-        const isAdmin = this.props.app.amAdmin
-        const role = this.props.app.state.role
+        const role = this.props.role
+        const isAdmin = MembersService.amAdmin(role)
         return [
             isAdmin && groups.length > 0 &&
-            <TripCoordinatorDashboard key='tripCoordinatorDashboard' trips={groups.reduce((a,b) => [...a, ...b], [])} app={this.props.app} />,
+            <TripCoordinatorDashboard key='tripCoordinatorDashboard' 
+                trips={groups.reduce((a,b) => [...a, ...b], [])} 
+                setPath={this.props.setPath} />,
             // Only Tripleaders+ can see suggested trips
             // Only Admin+ can see deleted and rejected trips
             groups
                 .filter(group => role >= TripState[group[0].state].roleToView)
                 .map((group, i) =>
-                    <TripsGroup key={'group' + i} trips={group} app={this.props.app} expanded={i <= 1} />)
+                    <TripsGroup key={'group' + i} 
+                        trips={group} 
+                        expanded={i <= 1} 
+                        setPath={this.props.setPath}
+                        />)
         ]
     }
 }

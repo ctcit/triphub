@@ -1,38 +1,43 @@
 import * as React from 'react';
 import { Button, Navbar, ButtonGroup, ListGroup, ListGroupItem } from 'reactstrap';
 import { Component } from 'react';
-import { IParticipant } from './Interfaces';
+import { IParticipant, IParticipantsInfo, ITrip, Role } from './Interfaces';
 import { Spinner } from './Widgets';
-import { Trip } from './Trip';
-import { App } from './App';
 import { BindMethods, GetDisplayPriority } from './Utilities';
 import { TripParticipant } from './TripParticipant';
+import { MembersService } from './Services/MembersService';
+import { TripsService } from './Services/TripsService';
 
 export class TripParticipants extends Component<{
-    trip: Trip,
-    app: App
+    participants: IParticipant[],
+    participantsInfo: IParticipantsInfo
+    trip: ITrip,
+    isNew: boolean,
+    role: Role,
+    canEditTrip: boolean,
+    setTripParticipants: (participants: IParticipant[], setEdited: boolean) => void
+    saveNewTripParticipant: (participant: IParticipant) => Promise<IParticipant[]>
 }, {
+    showLegend: boolean
+    isSaving: boolean
 }> {
 
     public participant: React.RefObject<any>
 
     constructor(props: any) {
         super(props)
-        this.state = {}
+        this.state = {
+            showLegend: false,
+            isSaving: false,
+        }
         this.participant = React.createRef()
         BindMethods(this)
     }
 
-    public onSignUpTramper() {
-        const participants = this.props.trip.state.participants
-
-        this.props.trip.setState({ participants: [...participants, this.props.trip.blankTramper] })
-    }
-
     public onSignMeUp() {
 
-        if (!this.props.app.me.id) {
-            const newMembersRep = this.props.app.state.members[0]
+        if (!MembersService.Me.id) {
+            const newMembersRep = MembersService.Members[0]
             alert(`Non members are most welcome to join club trips.\n` +
                 `Please either:\n` +
                 `• Get to meet us at our weekly meetings at\n` +
@@ -41,31 +46,56 @@ export class TripParticipants extends Component<{
                 `• Contact ${newMembersRep.name} via the via the prospective members form`)
             return
         }
+        this.setState({ isSaving: true })
+        this.props.saveNewTripParticipant(TripParticipants.signMeUpTramper)
+            .then(() => this.setState({ isSaving: false }))
+    }
 
-        this.props.trip.setState({ isSaving: true })
-        this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants',
-            this.props.trip.signMeUpTramper, true)
-            .then(() => this.props.trip.onRequeryParticipants())
+    public onSignUpTramper() {
+        const participants = this.props.participants
+
+        this.props.setTripParticipants([...participants, TripParticipants.blankTramper], false)
     }
 
     public onSignUpTramperSave() {
-        const participant = this.props.trip.state.participants[this.props.trip.state.participants.length - 1]
-
-        this.props.trip.setState({ isSaving: true })
-        this.props.app.triphubApiCall('POST', this.props.trip.props.href + '/participants', participant, true)
-            .then(() => this.props.trip.onRequeryParticipants())
+        const participant = this.props.participants[this.props.participants.length - 1]
+        this.setState({ isSaving: true })
+        this.props.saveNewTripParticipant(participant)
+            .then(() => this.setState({ isSaving: false }))
     }
 
     public onSignUpTramperCancel() {
-        this.props.trip.setState({ participants: this.props.trip.state.participants.filter(p => p.id !== -1) })
+        this.props.setTripParticipants( this.props.participants.filter(p => p.id !== -1), false )
+    }
+
+    public static get blankTramper(): IParticipant {
+        return {
+            id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false,
+            logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '',
+            emergencyContactName: '', emergencyContactPhone: '',
+
+            broughtVehicle: false, engineSize: 0, totalDistance: 0, ratePerKm: 0, vehicleCost: 0, vehicleExcess: 0,
+            vehicleFee: 0, 
+            nonMemberFee: 0, otherFees: 0, 
+            toPay: 0, paid: 0
+        }
+    }
+
+    public static get signMeUpTramper(): IParticipant {
+        const me = MembersService.Me
+        return {
+            ...this.blankTramper,
+            memberId: me.id, name: me.name, email: me.email, phone: me.phone,
+            emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone
+        }
     }
 
     public onToggleLegend() {
-        this.props.trip.setState({ showLegend: !this.props.trip.state.showLegend })
+        this.setState({ showLegend: !this.state.showLegend })
     }
 
-    public onSetPosition(id: number, target?: IParticipant, showMenu?: boolean): Promise<any> {
-        const info = this.props.trip.participantsInfo
+    public onSetPosition(id: number, target?: IParticipant): Promise<any> {
+        const info = this.props.participantsInfo
         const source = info.all.find(p => p.id === id) as IParticipant
         const sourceIndex = info.moveable.indexOf(source)
         let displayPriority = source.id
@@ -92,39 +122,38 @@ export class TripParticipants extends Component<{
                     : GetDisplayPriority(target) / 2 + GetDisplayPriority(info.moveable[nextIndex]) / 2
         }
 
-        return this.onSetParticipant(id, { isDeleted: false, displayPriority: displayPriority.toString() }, showMenu)
+        return this.setParticipant(id, { isDeleted: false, displayPriority: displayPriority.toString() }, true)
     }
 
-    public onSetParticipant(id: number, props: {}, showMenu?: boolean): Promise<any> {
+    public setParticipant(id: number, fields: { [id: string]: any }, save: boolean): Promise<IParticipant> {
+        const participants = [...this.props.participants]
+        const index = participants.findIndex(p => p.id === id)
+        const participant = { ...participants[index], ...fields }
 
-        const participants = [...this.props.trip.state.participants]
-        const participant = participants.find((p: IParticipant) => p.id === id) as IParticipant
-        const index = participants.indexOf(participant)
+        participants[index] = participant
 
-        participants[index] = { ...participant, ...props, showMenu }
-
-        this.props.trip.setState({ participants })
-        return this.props.app.triphubApiCall('POST', `${this.props.trip.props.href}/participants/${id}`, props, true)
+        this.props.setTripParticipants(participants, true)
+        return Promise.resolve(
+            save? 
+                TripsService.postTripParticipantUpdate(this.props.trip.id, id, fields) :
+                participant
+            )
     }
-
-    public onDropOnDeleted(ev: any) {
-        this.onSetParticipant(parseInt(ev.dataTransfer.getData('id'), 10), { isDeleted: true })
-    }
-
+    
     public render() {
 
-        const me = this.props.app.me
+        const me = MembersService.Me
         const anon = !me.id
-        const info = this.props.trip.participantsInfo
-        const isPrivileged = this.props.trip.canEditTrip
-        const isOpen = this.props.trip.state.trip.state === 'Open' || isPrivileged
-        const isNewTrip = this.props.trip.props.isNew
+        const info = this.props.participantsInfo
+        const isPrivileged = this.props.canEditTrip
+        const isOpen = this.props.trip.state === 'Open' || isPrivileged
+        const isNewTrip = this.props.isNew
         const hasNewTramper = !!info.all.find((p: IParticipant) => p.id === -1)
         const imOnList = !!info.all.find((m: IParticipant) => m.memberId === me.id)
         const onDragOver = (ev: any) => ev.preventDefault()
         const onDropOnWaitlist = (ev: any) => this.onSetPosition(parseInt(ev.dataTransfer.getData('id'), 10), undefined)
-        const onDropOnDeleted = (ev: any) => this.onDropOnDeleted(ev);
-        const showLegend = this.props.trip.state.showLegend
+        const onDropOnDeleted = (ev: any) => this.setParticipant(parseInt(ev.dataTransfer.getData('id'), 10), { isDeleted: true }, true)
+        const showLegend = this.state.showLegend
         const LegendIcon = (props: { icon: string, children: any }) =>
             <div><span className={`fas ${props.icon}`} />{props.children}</div>
         const LegendButton = (props: { icon: string, children: any }) =>
@@ -135,6 +164,8 @@ export class TripParticipants extends Component<{
         const onSignUpTramperSave = () => this.onSignUpTramperSave();
         const onSignUpTramperCancel = () => this.onSignUpTramperCancel();
         const onToggleLegend = () => this.onToggleLegend();
+        const setParticipant = (id: number, data: { [id: string]: any }, save: boolean) => this.setParticipant(id, data, save);
+        const setPosition = (id: number, target?: IParticipant) => this.onSetPosition(id, target)
 
         return [
             <Navbar key='navbar' color='light' light={true} expand='md'>
@@ -142,7 +173,7 @@ export class TripParticipants extends Component<{
                     <Button key={'signmeup' + info.all.length} onClick={onSignMeUp}
                         hidden={isNewTrip || imOnList || !isOpen}>
                         <span className='fa fa-pen wiggle' />
-                        {this.props.trip.state.isSaving ? ['Signing up ', Spinner] : 'Sign me up!'}
+                        {this.state.isSaving ? ['Signing up ', Spinner] : 'Sign me up!'}
                         {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
                     <Button key={'signup' + info.all.length} onClick={onSignUpTramper}
@@ -156,7 +187,7 @@ export class TripParticipants extends Component<{
                             <span className='fa fa-user-plus' /> Sign up a tramper:
                         </Button>
                         <Button key='save' color='primary' onClick={onSignUpTramperSave}>
-                            {this.props.trip.state.isSaving ? ['Saving ', Spinner] : 'Save'}
+                            {this.state.isSaving ? ['Saving ', Spinner] : 'Save'}
                         </Button>
                         <Button key='cancel' color='primary' onClick={onSignUpTramperCancel}>
                             Cancel
@@ -185,29 +216,48 @@ export class TripParticipants extends Component<{
                 <ListGroupItem>
                     {
                         info.current.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
-                                data={JSON.stringify(p)} trip={this.props.trip}
-                                owner={this} app={this.props.app}
-                                canWaitList={info.late.length !== 0} ref={this.participant} info={info} />)
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} 
+                                participant={p}
+                                trip={this.props.trip}
+                                canEditTrip={this.props.canEditTrip}
+                                role={this.props.role}
+                                setParticipant={setParticipant}
+                                setPosition={setPosition}
+                                canWaitList={info.late.length !== 0}
+                                participants={this.props.participants}
+                                participantsInfo={info} />)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={info.late.length === 0}>
                     <div onDragOver={onDragOver} onDrop={onDropOnWaitlist}><b>Waitlist</b></div>
                     {
                         info.late.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
-                                data={JSON.stringify(p)} trip={this.props.trip}
-                                owner={this} app={this.props.app}
-                                canUnwaitList={true} info={info} />)
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`}
+                                participant={p}
+                                trip={this.props.trip}
+                                canEditTrip={this.props.canEditTrip}
+                                role={this.props.role}
+                                setParticipant={setParticipant}
+                                setPosition={setPosition}
+                                canUnwaitList={true} 
+                                participants={this.props.participants}
+                                participantsInfo={info} 
+                            />)
                     }
                 </ListGroupItem>
                 <ListGroupItem hidden={isNewTrip || info.deleted.length === 0}>
                     <div onDragOver={onDragOver} onDrop={onDropOnDeleted}><b>Deleted</b></div>
                     {
                         info.deleted.map(p =>
-                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} participantId={p.id}
-                                data={JSON.stringify(p)} trip={this.props.trip}
-                                owner={this} app={this.props.app} info={info} />)
+                            <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} 
+                                participant={p}
+                                trip={this.props.trip}
+                                canEditTrip={this.props.canEditTrip}
+                                role={this.props.role}
+                                setParticipant={setParticipant}
+                                setPosition={setPosition}
+                                participants={this.props.participants}
+                                participantsInfo={info} />)
                     }
                 </ListGroupItem>
             </ListGroup>,

@@ -7,6 +7,7 @@ import '@fortawesome/fontawesome-free/css/all.css';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import './index.css';
+import registerServiceWorker from './registerServiceWorker';
 
 // use this chrome plugin to get this working if running locally using "npm start"
 // https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en
@@ -42,10 +43,4 @@ if (path.startsWith('/public')) {
     ReactDOM.render(<App/>, document.getElementById('root'))
 }
 
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (const registration of registrations) {
-            registration.unregister();
-        }
-    });
-}
+registerServiceWorker();

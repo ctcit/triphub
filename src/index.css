@@ -38,6 +38,9 @@ button>span.fa {
   max-width: 850px;
 }
 */
+.triphub-input::placeholder {
+  font-style: italic;
+}
 
 .textarea {
   min-height: 80px;

@@ -10,6 +10,7 @@ import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from
 import Button from 'reactstrap/lib/Button';
 import { IsValidDateString, GetDateString, GetStartOfNextMonth, BindMethods } from '../Utilities';
 import { Accordian } from '../Accordian';
+import { NoticesService } from 'src/Services/NoticesService';
 
 class Section {
     public name: string
@@ -271,10 +272,10 @@ export class NoticeList extends Component<{
     private saveNotice(id: number, body: any): Promise<any> {
         if ( id === -1 ) {
             // New notice
-            return this.app.triphubApiCall('POST', BaseUrl + '/notices/', body, false);
+            return NoticesService.postNewNotice(body);
         } else {
             // Updating an existing notice
-            return this.app.triphubApiCall('POST', BaseUrl + '/notices/' + id, body, false);
+            return NoticesService.postNotice(id, body);
         }
     }
 
@@ -286,9 +287,9 @@ export class NoticeList extends Component<{
         })
     }
 
-    private setPublishNotice(notice: INotice, publish: boolean): Promise<void> {
+    private setPublishNotice(notice: INotice, publish: boolean): Promise<INotice> {
         notice.publish = publish;
-        return this.props.app.triphubApiCall('PATCH', BaseUrl + "/notices/" + notice.id, notice)
+        return NoticesService.patchNotice(notice.id, notice)
     }
 
     private requery() {
@@ -297,18 +298,14 @@ export class NoticeList extends Component<{
     }
     
     private requeryCurrent() {
-        this.props.app.triphubApiCall('GET', BaseUrl + "/notices/current")
+        NoticesService.getNoticesCurrent()
         .then((notices: INotice[]) => {
             this.setState({ notices: this.filterNotices(notices) })
         })
     }
 
     private requeryExpired(apply_limit:boolean = true) {
-        let limit = ""
-        if (apply_limit) {
-            limit = "?limit="+this.expiredLimit
-        }
-        this.props.app.triphubApiCall('GET', BaseUrl + "/notices/expired"+limit)
+        NoticesService.getNoticesExpired(apply_limit ? this.expiredLimit : undefined)
         .then((expiredNotices: INotice[]) => {
             this.setState({ expiredNotices: this.filterNotices(expiredNotices) })
         })

@@ -3,7 +3,7 @@ import * as React from 'react';
 import { ButtonGroup, Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Form, Container } from 'reactstrap';
 import { MapEditor } from './MapEditor/MapEditor';
 import Button from 'reactstrap/lib/Button';
-import { IMap, IArchivedRoute } from './Interfaces';
+import { IMap, IArchivedRoute, ITrip } from './Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { ButtonWithConfirm } from './ButtonWithConfirm';
@@ -30,7 +30,7 @@ export class TripMap extends MapCommon<{
     isLoading?: boolean,
     list? : any,
     onGet: (id: string) => any,
-    onSave: (id: string, value: any) => Promise<void>,
+    onSave: (id: string, value: any) => Promise<ITrip>,
     onGetValidationMessage?: (id: string) => string,
     leafletMapId: string,
     nz50MapsBySheet: { [mapSheet: string] : IMap },

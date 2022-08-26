@@ -18,6 +18,9 @@ import { Accordian } from 'src/Accordian';
 import { htmlToText } from 'html-to-text';
 import { ManageRoutesUtilities } from './ManageRoutesUtilities';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import { ArchivedRoutesService } from 'src/Services/ArchivedRoutesService';
+import { MapsService } from 'src/Services/MapsService';
+import { ConfigService } from 'src/Services/ConfigService';
 
 export class ManageRoutes extends Component<{
     app: App,
@@ -55,7 +58,7 @@ export class ManageRoutes extends Component<{
         }
         this.app = this.props.app
         
-        const nz50Maps: IMap[] = this.props.app.maps;
+        const nz50Maps: IMap[] = MapsService.Maps;
         this.nz50MapsBySheet = {};
         nz50Maps.forEach((nz50Map: IMap) => {
             this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
@@ -69,10 +72,10 @@ export class ManageRoutes extends Component<{
     public componentDidMount() {
         this.setState({isLoading: true});
         const promises: Array<Promise<IArchivedRoute[]>> = [
-            this.props.app.triphubApiCall('GET', BaseUrl + "/routes?includeHidden=true"),
-            this.props.app.triphubApiCall('GET', BaseUrl + "/routesroutearchive"),
-            this.props.app.triphubApiCall('GET', BaseUrl + "/routestripreports"),
-            this.props.app.triphubApiCall('GET', BaseUrl + "/routestriphub")
+            ArchivedRoutesService.getArchivedRoutes(true, true),
+            ArchivedRoutesService.getArchivedRoutesFromRoutesArchive(),
+            ArchivedRoutesService.getArchivedRoutesFromTripReports(),
+            ArchivedRoutesService.getArchivedRoutesFromTripHub()
         ]
         Promise.all(promises)
         .then((routeGroups: IArchivedRoute[][]) => {
@@ -166,7 +169,7 @@ export class ManageRoutes extends Component<{
         const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
             this.setState({ isEditing: false, isSaving: true }); 
             await this.setSelectedRoutes([await this.RecalculateAndSaveRoute(newRoute)]);
-            await this.app.getArchivedRoutes(true, true); // force reload
+            await ArchivedRoutesService.getArchivedRoutes(true, true); // force reload
             this.setState({isSaving: false});
         }
 
@@ -175,10 +178,9 @@ export class ManageRoutes extends Component<{
             return Promise.resolve()
         }
 
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => this.app.getArchivedRoutes(includeHidden, force);
+        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => ArchivedRoutesService.getArchivedRoutes(includeHidden, force);
         const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
-            return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
-                .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
+            return ArchivedRoutesService.getArchivedRoute(archivedRouteId)
         }
 
         const onGetValidationMessage = (): any => {
@@ -213,7 +215,7 @@ export class ManageRoutes extends Component<{
 
 
         return [
-            <Container className={this.props.app.containerClassName} key='manageroutes' fluid={true}>
+            <Container className={ConfigService.containerClassName} key='manageroutes' fluid={true}>
                 <h1 key="title">Manage Routes</h1>
                 {isLoading && <FullWidthLoading />}
                 {!isLoading &&
@@ -380,16 +382,17 @@ export class ManageRoutes extends Component<{
     }
 
     private async getRouteDetails(route: IArchivedRoute): Promise<IArchivedRoute | undefined> {
-        const apiMethod = this.getRouteApiMethod(route);
-        if (apiMethod == null) {
+
+        const detailedRoute = 
+            route?.source === 'Routes' ? await ArchivedRoutesService.getArchivedRoute(route.id) :
+            route?.source === 'CtcRoutes' ? await ArchivedRoutesService.getArchivedRouteFromRoutesArchive(route.ctcRoutesId) :
+            route?.source === 'TripHub' ? await ArchivedRoutesService.getArchivedRouteFromTripHub(route.tripHubId) :
+            route?.source === 'TripReports' ? await ArchivedRoutesService.getArchivedRouteFromTripReports(route.tripReportsId) :
+            null;
+        if (detailedRoute == null) {
             return undefined;
         }
 
-        const response: IArchivedRoute[] = await this.props.app.triphubApiCall('GET', BaseUrl + apiMethod);
-        if (!response?.length) {
-            return undefined;
-        }
-        const detailedRoute = response[0];
         if (!detailedRoute.routes && detailedRoute.gpx) {
             const routesFromGpx = await this.importMultiGpx(detailedRoute.gpx);
             if (routesFromGpx) {
@@ -410,16 +413,6 @@ export class ManageRoutes extends Component<{
         }
         
         return detailedRoute;
-    }
-
-    private getRouteApiMethod(route: IArchivedRoute): string | null {
-        const apiMethod = 
-        route?.source === 'Routes' ? "/routes/" + route.id :
-        route?.source === 'CtcRoutes' ? "/routesroutearchive/" + route.ctcRoutesId :
-        route?.source === 'TripHub' ? "/routestriphub/" + route.tripHubId :
-        route?.source === 'TripReports' ? "/routestripreports/" + route.tripReportsId :
-        null;
-        return apiMethod;
     }
 
     private calculateBounds(routes: Array<Array<[number, number]>>): Array<[number, number]> {
@@ -637,29 +630,26 @@ export class ManageRoutes extends Component<{
     }
 
     private async SaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute> {
-        let response: IArchivedRoute[];
+        let savedRoute: IArchivedRoute;
         newRoute = this.Sanitize(newRoute);
         if (newRoute.id > 0) {
-            response = await this.app.triphubApiCall('PATCH', BaseUrl + '/routes/' + newRoute.id, newRoute );
+            savedRoute = await ArchivedRoutesService.patchArchivedRoute(newRoute.id, newRoute);
         } else {
-            response = await this.app.triphubApiCall('POST', BaseUrl + '/routes', newRoute );
+            savedRoute = await ArchivedRoutesService.postArchivedRoute(newRoute);
         }
-        if (response && response.length > 0) { // should only be one
-            const savedRoute: IArchivedRoute = response[0];
-            savedRoute.source = "Routes";
-            let newRoutes; // new routes array will force table to re-render
-            if (newRoute.id === 0) {
-                newRoutes = [savedRoute].concat(this.state.routes); // add to begining as these are the most recently created
-            } else {
-                newRoutes = this.state.routes.map((route: IArchivedRoute) => route.id === savedRoute.id ? savedRoute : route); // replace edited route
-            }
-            this.setState({
-                routes: newRoutes
-            }, async () => {
-                await this.setSelectedRoutes([savedRoute]);
-            });
+        savedRoute.source = "Routes";
+        let newRoutes; // new routes array will force table to re-render
+        if (newRoute.id === 0) {
+            newRoutes = [savedRoute].concat(this.state.routes); // add to begining as these are the most recently created
+        } else {
+            newRoutes = this.state.routes.map((route: IArchivedRoute) => route.id === savedRoute.id ? savedRoute : route); // replace edited route
         }
-        return Promise.resolve(response[0])
+        this.setState({
+            routes: newRoutes
+        }, async () => {
+            await this.setSelectedRoutes([savedRoute]);
+        });
+        return Promise.resolve(savedRoute)
     }
 
     private Sanitize(route: IArchivedRoute): IArchivedRoute {
@@ -689,7 +679,7 @@ export class ManageRoutes extends Component<{
 
     private async DeleteRoute(routeToDelete: IArchivedRoute): Promise<void> {
         if (routeToDelete.id > 0) {
-            await this.app.triphubApiCall('DELETE', BaseUrl + '/routes/' + routeToDelete.id );
+            await ArchivedRoutesService.deleteArchivedRoute(routeToDelete.id);
             this.setState({
                 routes: this.state.routes.filter(route => route.id !== routeToDelete.id)
             });

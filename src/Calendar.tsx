@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { App } from './App';
-import { BaseUrl } from '.';
 import { ITrip, Role } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile, GetDate } from './Utilities';
 import ButtonGroup from 'reactstrap/lib/ButtonGroup';
@@ -15,6 +14,9 @@ import DropdownItem from 'reactstrap/lib/DropdownItem';
 import Container from 'reactstrap/lib/Container';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { ToolTipIcon } from './ToolTipIcon';
+import { ConfigService } from './Services/ConfigService';
+import { HolidaysService } from './Services/HolidaysService';
+import { TripsService } from './Services/TripsService';
 
 interface ICalendarItem {
     id: number
@@ -37,6 +39,8 @@ export enum LengthFilter { Day, Weekend, Trips, Social, All }
 class CalendarWeek extends Component<{
     week: ICalendarWeek
     calendar: Calendar
+    role: Role
+    setPath(path: string): void
 }, {
 }> {
     constructor(props: any) {
@@ -65,9 +69,9 @@ class CalendarWeek extends Component<{
                     const field = item.field
                     const oldTrip = item.trip as ITrip
                     const newTrip = { ...oldTrip, [field]: GetDateString(date) } as ITrip
-                    const before = this.props.calendar.props.app.validateTrip(oldTrip)
+                    const before = TripsService.validateTrip(oldTrip)
                         .find(i => i.field === field && !i.ok)
-                    const after = this.props.calendar.props.app.validateTrip(newTrip)
+                    const after = TripsService.validateTrip(newTrip)
                         .find(i => i.field === field && !i.ok)
 
                     if (!before && after &&
@@ -79,8 +83,7 @@ class CalendarWeek extends Component<{
 
                     trips[trips.indexOf(oldTrip)] = newTrip
 
-                    this.props.calendar.props.app.triphubApiCall(
-                        'POST', `${BaseUrl}/trips/${oldTrip.id}`, { [field]: newTrip[field] })
+                    TripsService.postTripUpdate(oldTrip.id, { [field]: newTrip[field] })
                     this.props.calendar.setState({ trips })
                 }
 
@@ -95,7 +98,7 @@ class CalendarWeek extends Component<{
 
                     const text = item.text
                     const trip = item.trip as ITrip
-                    const onLink = () => this.props.calendar.props.app.setPath('/trips/' + trip.id)
+                    const onLink = () => this.props.setPath('/trips/' + trip.id)
                     const onSelect = () => this.props.calendar.setState({ selected: trip.id })
                     const onDragStart = (ev: any) => ev.dataTransfer.setData('id', item.id)
                     const isSelected = trip && this.props.calendar.state.selected === trip.id
@@ -103,7 +106,7 @@ class CalendarWeek extends Component<{
                     slots.push(' ')
                     slots.push(
                         <Badge key={item.id} id={'badge' + item.id} onDragStart={onDragStart}
-                            draggable={this.props.calendar.props.app.state.role >= Role.Admin}
+                            draggable={this.props.role >= Role.Admin}
                             className={isSelected ? 'selected' : ''}>
                             <span>
                                 {item.field === 'tripDate' ?
@@ -125,7 +128,7 @@ class CalendarWeek extends Component<{
                 }
 
                 const isToday = GetDateString(date) === GetDateString(new Date())
-                const isWeekend = this.props.calendar.props.app.state.holidayMap.has(GetDateString(date)) ||
+                const isWeekend = HolidaysService.CanterburyHolidaysByDate.has(GetDateString(date)) ||
                     date.getDay() === 0 || date.getDay() === 6
                 const className = [
                     isToday ? 'today' : MonthOfYear[date.getMonth()].toLowerCase(),
@@ -148,7 +151,9 @@ class CalendarWeek extends Component<{
 }
 
 export class Calendar extends Component<{
-    app: App
+    role: Role
+    setPath(path: string): void
+    loadingStatus(state: any): JSX.Element
 }, {
     isLoadingCalendar: boolean
     trips: ITrip[]
@@ -174,7 +179,7 @@ export class Calendar extends Component<{
     }
 
     public dayIndex(date: Date): number {
-        return (date.getDay() - this.props.app.state.config.calendarStartOfWeek + 7) % 7
+        return (date.getDay() - ConfigService.Config.calendarStartOfWeek + 7) % 7
     }
 
     public processTrips() {
@@ -262,7 +267,7 @@ export class Calendar extends Component<{
 
     public requery() {
         this.setState({ isLoadingCalendar: true })
-        this.props.app.triphubApiCall('GET', BaseUrl + '/trips')
+        TripsService.getTrips()
             .then((trips: ITrip[]) => {
                 this.setState({ trips, isLoadingCalendar: false })
             })
@@ -295,10 +300,10 @@ export class Calendar extends Component<{
     public render() {
 
         if (this.state.isLoadingCalendar) {
-            return this.props.app.loadingStatus({ ...this.props.app.state, ...this.state })
+            return this.props.loadingStatus({ ...this.state })
         }
 
-        const config = this.props.app.state.config
+        const config = ConfigService.Config
         const state = this.state
         const toggleShowDropdown = () => this.setState({ showDropdownIsOpen: !this.state.showDropdownIsOpen });
         const StateItem = (props: { field: string, value: any, toggle?: boolean, children: any }) => {
@@ -341,7 +346,7 @@ export class Calendar extends Component<{
                 {filterElement}
             </PriorityNavItem>,
 
-            <Container className={this.props.app.containerClassName} key='calendar' fluid={true}>
+            <Container className={ConfigService.containerClassName} key='calendar' fluid={true}>
                 <Table className='calendar' responsive={true}>
                     <tbody>
                         <tr>
@@ -350,7 +355,11 @@ export class Calendar extends Component<{
                                 {DayOfWeek[(i + config.calendarStartOfWeek) % 7]}
                             </td>)}
                         </tr>
-                        {this.weeks.map(week => <CalendarWeek key={week.date.toISOString().substring(0, 10)} week={week} calendar={this} />)}
+                        {this.weeks.map(week => <CalendarWeek key={week.date.toISOString().substring(0, 10)} 
+                            week={week} 
+                            calendar={this}
+                            role={this.props.role}
+                            setPath={this.props.setPath} />)}
                     </tbody>
                 </Table>
             </Container>

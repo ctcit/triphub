@@ -12,6 +12,8 @@ import { NoticeList } from './NoticeList';
 import { FullWidthLoading, Spinner } from '../Widgets';
 import { Accordian } from '../Accordian';
 import { NewsletterEventsList } from './NewsletterEvents';
+import { ConfigService } from 'src/Services/ConfigService';
+import { NewslettersService } from 'src/Services/NewlettersService';
 
 
 export class Newsletter extends Component<{
@@ -58,14 +60,14 @@ export class Newsletter extends Component<{
     }
 
     public componentDidMount() {
-        this.props.app.triphubApiCall('GET', BaseUrl + "/newsletters/current")
+        NewslettersService.getNewslettersCurrent()
             .then((newsletters: INewsletter[]) => {
                 if (newsletters === null || newsletters.length === 0) {
                     this.startNewNewsletter();
                 }
                 else {
                     if (!newsletters[0].isCurrent) {
-                        this.props.app.triphubApiCall('POST', BaseUrl + '/newsletters/' + newsletters[0].id + '/current/')
+                        NewslettersService.postNewsletterSetCurrent(newsletters[0].id)
                         // don't need to wait for the result here...
                     }
                     this.loadNewsletter(newsletters[0]);
@@ -105,7 +107,7 @@ export class Newsletter extends Component<{
         const onSaveNewNewsletter = () => this.onSaveNewNewsletter();
 
         return [
-            <Container className={this.props.app.containerClassName} key='newsletter' fluid={true}>
+            <Container className={ConfigService.containerClassName} key='newsletter' fluid={true}>
                 <h1 key="title">Manage Newsletter</h1>
                 {isNew && <div><p>No current newsletter, please create a new one..</p></div>}
                 {<Container key='form' fluid={true} className='my-3'>
@@ -181,7 +183,7 @@ export class Newsletter extends Component<{
     private startNewNewsletter() {
         this.setState({ isNew: true })
         // Get the latest newsletter to figure out the next volume/issue number
-        this.props.app.triphubApiCall('GET', BaseUrl + "/newsletters/latest")
+        NewslettersService.getNewslettersLatest()
             .then((newsletters: INewsletter[]) => {
                 const now: Date = new Date()
                 const newsletterDate: Date = new Date(now.getFullYear(), now.getMonth() + 1);
@@ -239,7 +241,7 @@ export class Newsletter extends Component<{
     }
 
     private saveNewsletter(body: any): Promise<any> {
-        return this.app.triphubApiCall('POST', BaseUrl + '/newsletters/' + this.state.newsletter.id, body, false);
+        return NewslettersService.postNewsletter(this.state.newsletter.id, body);
     }
 
     private onSaveNewNewsletter() {
@@ -247,22 +249,15 @@ export class Newsletter extends Component<{
 
         this.setState({ isLoadingNewsletter: true })
 
-        this.app.triphubApiCall('POST', BaseUrl + '/newsletters/', newsletter, false)
-            .then((newsletters: INewsletter[]) => {
-                if (newsletters !== null && newsletters.length > 0) {
-                    const savedNewsletter: INewsletter = newsletters[0]
-                    console.log("Saved newsletter, id=" + savedNewsletter.id)
-                    this.props.app.triphubApiCall('POST', BaseUrl + '/newsletters/' + savedNewsletter.id + '/current/')
-                        .then(() => {
-                            console.log("Succesfully set as current")
-                            this.setState({ isNew: false })
-                            this.loadNewsletter(newsletters[0]);
-                        })
-                }
-                else {
-                    // PENDING - Flag failure somehow
-                    console.log("Failed to save")
-                }
+        NewslettersService.postNewNewsletter(newsletter)
+            .then((savedNewsletter: INewsletter) => {
+                console.log("Saved newsletter, id=" + savedNewsletter.id)
+                NewslettersService.postNewsletterSetCurrent(savedNewsletter.id)
+                    .then(() => {
+                        console.log("Succesfully set as current")
+                        this.setState({ isNew: false })
+                        this.loadNewsletter(savedNewsletter);
+                    })
             })
     }
 

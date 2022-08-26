@@ -1,4 +1,4 @@
-import { IParticipant } from './Interfaces'
+import { IParticipant, IValidation } from './Interfaces'
 import { DateTime } from 'luxon'
 import { BaseOpt } from 'src'
 
@@ -85,6 +85,12 @@ export function SafeJsonParse(json: string, defaultValue: any): any {
     } catch (err) {
         return defaultValue
     }
+}
+
+export function Mandatory(obj: any, fields: string[]): IValidation[] {
+    return fields.map(field => ({
+        field, ok: obj[field] !== '', message: TitleFromId(field) + ' must be entered'
+    }))
 }
 
 export function TitleFromId(id: string | null): string {

@@ -9,6 +9,8 @@ import { CapitaliseFirstLetter } from '../Utilities';
 import Table from 'reactstrap/lib/Table';
 import { SwitchControl } from '../Control';
 import { FullWidthLoading } from 'src/Widgets';
+import { TripReportsService } from 'src/Services/TripReportsService';
+import { NewslettersService } from 'src/Services/NewlettersService';
 
 
 class TripReportBinding
@@ -41,9 +43,9 @@ export class TripReportList extends Component<{
         if (this.props.newsletterId === 0) {
             return
         }
-        this.props.app.triphubApiCall('GET', DbApiURL + "/tripreports?limit=99999")
+        TripReportsService.getTripReports(99999)
         .then((tripReports : ITripReport[]) => {
-            this.props.app.triphubApiCall('GET', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports")
+            NewslettersService.getNewslettersTripReports(this.props.newsletterId)
             .then((newsletterTripReports : INewsletterTripReport[]) => {
                 const tripReportBindings : TripReportBinding[] = []
                 tripReports.forEach(tripReport => {
@@ -61,7 +63,7 @@ export class TripReportList extends Component<{
                    tripReportBindings.push({tripReport, newsLetterTripReport})
                 });
                 this.setState({ tripreports: tripReportBindings, isLoading: false })
-                this.props.app.triphubApiCall('POST', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", newsletterTripReports)
+                NewslettersService.postNewslettersTripReports(this.props.newsletterId, newsletterTripReports)
             })
         })
     }
@@ -109,7 +111,7 @@ export class TripReportList extends Component<{
 
     private setPublishReport(tripReport: INewsletterTripReport, publish: boolean) : Promise<void> {
         tripReport.publish = publish;
-        return this.props.app.triphubApiCall('PATCH', BaseUrl + "/newsletters/" + this.props.newsletterId + "/tripreports", [tripReport,])
+        return NewslettersService.patchNewslettersTripReports(this.props.newsletterId, [tripReport])
     }
 
 

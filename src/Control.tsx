@@ -57,12 +57,14 @@ export class InputControl extends Component<{
     list?: any
     min?: number
     max?: number
+    step?: number
+    placeholder?: any
     helpText?: string
     forceValidation?: boolean
     autoFocus?: boolean
     onGet: (id: string) => any
     onSet: (id: string, value: any) => void
-    onSave: (id: string, value: any) => Promise<void>
+    onSave: (id: string, value: any) => Promise<any>
     onGetValidationMessage: (id: string) => string
 }, {
     oldValue: any
@@ -110,8 +112,9 @@ export class InputControl extends Component<{
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} 
                 helpText={this.state.helpText}>
                 <Input id={id} type={this.props.type} readOnly={this.props.readOnly} 
-                    list={this.props.list} min={this.props.min} max={this.props.max}
-                    value={this.value || ""} onFocus={onFocus} onChange={onChange} onBlur={onBlur}
+                    list={this.props.list} min={this.props.min} max={this.props.max} step={this.props.step}
+                    value={this.value || ""} placeholder={this.props.placeholder}
+                    onFocus={onFocus} onChange={onChange} onBlur={onBlur}
                     autoComplete='nope' autoFocus={this.props.autoFocus} className={className} />
             </ControlWrapper>
         )
@@ -130,7 +133,7 @@ export class TextAreaInputControl extends Component<{
     helpText?: string,
     forceValidation?: boolean,
     onGet: (id: string) => any,
-    onSave: (id: string, value: any) => Promise<void>,
+    onSave: (id: string, value: any) => Promise<any>,
     onGetValidationMessage: (id: string) => string,
 }, {
     oldValue: any,
@@ -190,7 +193,7 @@ export class SwitchControl extends Component<{
     validationMessage?: string,
     readOnly?: boolean,
     onGet: (id: string) => any,
-    onSave: (id: string, value: any) => Promise<void>,
+    onSave: (id: string, value: any) => Promise<any>,
     onGetValidationMessage: (id: string) => string
 }, {
     saving: boolean
@@ -230,7 +233,7 @@ export class SwitchesControl extends Component<{
     validationMessage?: string,
     readOnly?: boolean,
     onGet: (id: string) => any,
-    onSave: (id: string, value: any) => Promise<void>,
+    onSave: (id: string, value: any) => Promise<any>,
     onGetValidationMessage: (id: string) => string,
     options: string,
     allOptions: string,
@@ -303,7 +306,7 @@ export class SelectControl extends Component<{
     readOnly?: boolean
     isLoading?: boolean
     onGet: (field: string) => any
-    onSave: (field: string, value: any) => Promise<void>
+    onSave: (field: string, value: any) => Promise<any>
     onGetValidationMessage: (id: string) => string
     options: string[] | { [id: string]: string[] }
     data: string
@@ -364,7 +367,7 @@ export class ComboBoxControl extends Component<{
     readOnly?: boolean,
     isLoading?: boolean,
     onGet: (id: string) => any,
-    onSave: (id: string, value: any) => Promise<void>,
+    onSave: (id: string, value: any) => Promise<any>,
     onGetValidationMessage: (id: string) => string,
     options: string[]
     helpText?: string,

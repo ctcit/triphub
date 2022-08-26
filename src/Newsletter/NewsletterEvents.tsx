@@ -5,6 +5,7 @@ import { BaseUrl } from 'src';
 import * as React from 'react';
 import Table from 'reactstrap/lib/Table';
 import { FullWidthLoading } from 'src/Widgets';
+import { NewslettersService } from 'src/Services/NewlettersService';
 
 export interface INewsletterEventProps {
     app:App,
@@ -37,8 +38,7 @@ export const NewsletterEventsList = ({app, unpublished}:INewsletterEventsListPro
     const [isLoading, updateIsLoading] = useState<boolean>(true)
 
     useEffect( () => {
-        const apiUrl = unpublished ? BaseUrl + "/newsletters/unpublishedEvents" : BaseUrl + "/newsletters/events"
-        app.triphubApiCall('GET', apiUrl)
+        (unpublished ? NewslettersService.getNewslettersUnpublishedEvents() : NewslettersService.getNewslettersEvents())
         .then( (fetchedEvents:INewsletterEvent[]) => {
             updateEvents(fetchedEvents)
             updateIsLoading(false)

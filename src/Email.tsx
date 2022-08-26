@@ -1,16 +1,16 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { InputControl, TextAreaInputControl } from './Control';
-import { App } from './App';
-import { Trip } from './Trip';
-import { IValidation } from './Interfaces';
-import { BindMethods, GetFullDate } from './Utilities';
-import { Badge, Col, FormGroup, Label, Button, Row, Container } from 'reactstrap';
+import { IParticipant, ITrip, IValidation } from './Interfaces';
+import { BindMethods, GetFullDate, Mandatory } from './Utilities';
+import { Col, FormGroup, Label, Button, Row, Container } from 'reactstrap';
 import { Spinner } from './Widgets';
+import { TripsService } from './Services/TripsService';
 
 export class Email extends Component<{
-    owner: Trip
-    app: App
+    trip: ITrip
+    participants: IParticipant[]
+    setTripIsEdited: () => void
 }, {
     recipients?: string
     names?: string
@@ -20,24 +20,22 @@ export class Email extends Component<{
     copying?: undefined | 'names' | 'recipients'
     copied?: undefined | 'names' | 'recipients'
 }>{
-    public app: App
-
     constructor(props: any) {
         super(props)
 
         this.state = {
-            recipients: this.props.owner.state.participants.filter(p => !p.isDeleted).map(p => p.email).join('; '),
-            names: this.props.owner.state.participants.filter(p => !p.isDeleted).map(p => p.name).join(', '),
-            subject: `Re: ${this.props.owner.state.trip.title} on ${GetFullDate(this.props.owner.state.trip.tripDate)}`,
+            recipients: this.props.participants.filter(p => !p.isDeleted).map(p => p.email).join('; '),
+            names: this.props.participants.filter(p => !p.isDeleted).map(p => p.name).join(', '),
+            subject: `Re: ${this.props.trip.title} on ${GetFullDate(this.props.trip.tripDate)}`,
             body: '',
         }
-        this.app = this.props.app
         BindMethods(this)
     }
 
     public onSend() {
         this.setState({ sending: true })
-        this.app.triphubApiCall('POST', this.props.owner.props.href + '/email', this.state, true)
+        this.props.setTripIsEdited()
+        TripsService.postTripEmail(this.props.trip.id, this.state)
             .then(() => this.setState({ sending: false }))
     }
 
@@ -59,7 +57,7 @@ export class Email extends Component<{
  
     public render() {
         const { sending, copying, copied } = this.state;
-        const validations: IValidation[] = this.props.app.mandatory(this.state, ['subject', 'body']);
+        const validations: IValidation[] = Mandatory(this.state, ['subject', 'body']);
         const onGet = (field: string): any => this.state[field]
         const onSet = (field: string, value: any): void => this.setState({ [field]: value })
         const onSave = (_: string, __: any): Promise<void> => Promise.resolve()

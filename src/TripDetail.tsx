@@ -1,27 +1,29 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Form, Col, Row, Container } from 'reactstrap';
-import { App } from './App';
+import { Col, Row, Container } from 'reactstrap';
 import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl, SwitchesControl } from './Control';
 import './index.css';
-import { Trip } from './Trip';
-import { IValidation, IMap, IArchivedRoute, ITrip } from './Interfaces';
+import { IValidation, IMap, IArchivedRoute, ITrip, Role } from './Interfaces';
 import { TripMap } from './TripMap';
-import { BaseUrl } from 'src';
 import { AddDays, GetDateString } from './Utilities';
 import { TripState } from './TripStates';
+import { ConfigService } from './Services/ConfigService'
+import { ArchivedRoutesService } from './Services/ArchivedRoutesService';
+import { TripsService } from './Services/TripsService';
 
 export class TripDetail extends Component<{
-    owner: Trip
-    app: App
-    forceValidation?: boolean
+    trip: ITrip,
+    isNew: boolean,
+    canEditTrip: boolean,
+    forceValidation?: boolean,
+    role: Role,
+    maps: IMap[],
+    setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<ITrip>
 }, {
     editMap: boolean
     editMaps: boolean
 }> {
 
-    public href?: string
-    public app: App
     private nz50MapsBySheet: { [mapSheet: string]: IMap } = {}
     private closeDateIteration: number = 0
 
@@ -31,29 +33,12 @@ export class TripDetail extends Component<{
             editMap: false,
             editMaps: false,
         }
-        this.href = this.props.owner.props.href
-        this.app = this.props.app
 
-        const nz50Maps: IMap[] = this.props.app.maps
+        const nz50Maps: IMap[] = this.props.maps
         this.nz50MapsBySheet = {}
         nz50Maps.forEach((nz50Map: IMap) => {
             this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map
         })
-    }
-
-    public set(field: string, value: any): void {
-        // Use an update function rather than setting the value directly,
-        // as setState is not guaranteed to execute immediately, so passing
-        // the current value of state here leads to data loss if two sets get bunched
-        this.props.owner.setState(state => ({ trip: { ...state.trip, [field]: value } }))
-    }
-
-    public saveTrip(body: any): Promise<void> {
-        if (this.href === undefined) {
-            return Promise.resolve()
-        } else {
-            return this.app.triphubApiCall('POST', this.href as string, body, true)
-        }
     }
 
     public calculateCloseDate(tripDate: string, length: number) {
@@ -64,36 +49,29 @@ export class TripDetail extends Component<{
     }
 
     public render() {
-        const trip: ITrip = this.props.owner.state.trip
-        const validations: IValidation[] = this.app.validateTrip(this.props.owner.state.trip)
+        const trip: ITrip = this.props.trip
+        const validations: IValidation[] = TripsService.validateTrip(trip)
         const approval = TripState[trip.approval || ''] || TripState.Pending
         const isSocial = trip.isSocial
 
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => this.app.getArchivedRoutes(includeHidden, force);
+        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => ArchivedRoutesService.getArchivedRoutes(includeHidden, force);
         const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
-            return this.app.triphubApiCall('GET', BaseUrl + '/routes/' + archivedRouteId )
-                .then((response: IArchivedRoute[]) => response !== null && response.length > 0 ? response[0] : undefined);  
+            return ArchivedRoutesService.getArchivedRoute(archivedRouteId);
         }
 
-        const onGet = (field: string): any => this.props.owner.state.trip[field]
-        const onGetInverted = (field: string): any => !this.props.owner.state.trip[field]
-        const onSet = (field: string, value: any): void => this.set(field, value)
-        const onSave = (field: string, value: any): Promise<void> => {
-            this.set(field, value)
-            return this.saveTrip({ [field]: value })
-        }
-
+        const onGet = (field: string): any => trip[field]
+        const onGetInverted = (field: string): any => !trip[field]
+        const onSet = (field: string, value: any): Promise<ITrip> => this.props.setTripFields({[field]: value}, false, false)
+        const onSave = (field: string, value: any): Promise<ITrip> => this.props.setTripFields({[field]: value}, true, true)
+ 
         const onGetValidationMessage = (field: string): any => {
             const found: IValidation | undefined = validations.find(validation => validation.field === field && !validation.ok)
             return found ? found.message : null
         }
 
-        const onSetInverted = (field: string, value: any): Promise<void> => {
-            this.set(field, !value)
-            return this.saveTrip({ [field]: !value })
-        }
+        const onSetInverted = (field: string, value: any): Promise<ITrip> => this.props.setTripFields({[field]: !value}, true, true)
 
-        const onSetTripDate = (_: string, value: any): Promise<void> => {
+        const onSetTripDate = (_: string, value: any): Promise<ITrip> => {
             const tripDate = value
             let body: any = { tripDate }
 
@@ -101,42 +79,37 @@ export class TripDetail extends Component<{
                 // For socials, the close date is ALWAYS the trip date
                 const closeDate = tripDate
                 body = { ...body, closeDate }
-                this.set('closeDate', closeDate)
             }
-            else if (this.props.owner.props.isNew) {
+            else if (this.props.isNew) {
                 // For NEW events we auto-set the close date to an appropriate date when the
                 // trip date is changed. Once a trip has been saved, we don't automatically
                 // change the close date if the trip date changes as this can be confusing
                 const closeDate = this.calculateCloseDate(tripDate, trip.length)
                 body={...body, closeDate}
-                this.set('closeDate', closeDate);
             }
 
-            this.set('tripDate', tripDate)
             this.closeDateIteration++
 
-            return this.saveTrip(body)
+            return this.props.setTripFields(body, true, true)
         }
 
-        const onSetTripLength = (_: string, value: any): Promise<void> => {
+        const onSetTripLength = (_: string, value: any): Promise<ITrip> => {
             const length = value as number
             let body: any = { length }
 
-            if (this.props.owner.props.isNew) {
+            if (this.props.isNew) {
                 const closeDate = this.calculateCloseDate(trip.tripDate, length)
                 body = { ...body, closeDate }
-                this.set('closeDate', closeDate)
             }
 
-            this.set('length', length)
             this.closeDateIteration++
 
-            return this.saveTrip(body)
+            return this.props.setTripFields(body, true, true)
         }
 
         const common = {
             id: 'trip',
-            readOnly: trip.id !== -1 && !this.props.owner.canEditTrip,
+            readOnly: trip.id !== -1 && !this.props.canEditTrip,
             owner: this,
             forceValidation: this.props.forceValidation,
             onGet, onSet, onSave, onGetValidationMessage
@@ -145,7 +118,7 @@ export class TripDetail extends Component<{
         const commonInverted = { ...common, 'onGet': onGetInverted, 'onSave': onSetInverted }
         const commonTripDate = { ...common, 'onSet': onSetTripDate }
         const commonLength = { ...common, 'onSet': onSetTripLength }
-        const config = this.props.app.state.config
+        const config = ConfigService.Config
 
         const openDateHelp = trip.isSocial ?
             'When the event will be visible on the socials list' :
@@ -253,11 +226,11 @@ export class TripDetail extends Component<{
                 </Row>
 
 
-                <Row hidden={!this.props.owner.canEditTrip}>
+                <Row hidden={!this.props.canEditTrip}>
                     <Col>
                         <TextAreaInputControl field='approvalText' label={approval.label || ''}
                             helpText={`Text that was entered when '${approval.button}' was selected`}
-                            {...common} readOnly={!this.props.app.amAdmin} />
+                            {...common} readOnly={!this.amAdmin} />
                     </Col>
                 </Row>
                 <Row>
@@ -276,5 +249,7 @@ export class TripDetail extends Component<{
             </Container>
         )
     }
+
+    private get amAdmin(): boolean { return this.props.role >= Role.Admin }
 
 }

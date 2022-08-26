@@ -1,8 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Component } from 'react';
 import * as React from 'react';
-import { BaseUrl } from '.';
-import { IMember, IConfig, IMap, ITrip, IValidation, IParticipant, IHoliday, IArchivedRoute, Role } from './Interfaces';
+import { Role } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
@@ -14,6 +13,10 @@ import Container from 'reactstrap/lib/Container';
 import Jumbotron from 'reactstrap/lib/Jumbotron';
 import { INotification, NotificationArea } from './NotificationArea';
 import { ManageRoutes } from './ManageRoutes/ManageRoutes';
+import { ConfigService } from './Services/ConfigService';
+import { MapsService } from './Services/MapsService';
+import { HolidaysService } from './Services/HolidaysService';
+import { MembersService } from './Services/MembersService';
 
 export class App extends Component<{
 }, {
@@ -23,52 +26,20 @@ export class App extends Component<{
     isLoadingMembers: boolean
     isLoadingHolidays: boolean
     role: Role
-    me: IMember
-    members: IMember[]
-    membersById: Map<number, IMember>
-    membersByName: Map<string, IMember>
-    maps: IMap[],
-    holidayMap: Map<string, IHoliday>
-    config: IConfig
     statusId?: any
-    inIFrame: boolean,
     notifications: INotification[]
 }> {
-    public trip: React.RefObject<Trip>
-    public triplist: React.RefObject<TripsList>
-    public calendar: React.RefObject<Calendar>
-    private archivedRoutes: IArchivedRoute[] | undefined = undefined
-    private archivedRoutesPromise: Promise<IArchivedRoute[]> | undefined = undefined;
-    private archivedRoutesIncludeHidden: boolean = false;
-
     constructor(props: any) {
         super(props)
         this.state = {
-            config: {
-                editRefreshInSec: 10,
-                printLines: 25,
-                calendarStartOfWeek: 1,
-                prerequisiteEquipment: 'Ice Axe,Crampons,Helmet,Rope',
-                prerequisiteSkills: 'Snow Skills,River Crossing',
-            },
             path: window.top?.location.hash.replace('#', '') ?? '',
             isLoadingConfig: true,
             isLoadingMaps: true,
             isLoadingMembers: true,
             isLoadingHolidays: true,
             role: Role.NonMember,
-            members: [],
-            me: {} as IMember,
-            membersById: new Map(),
-            membersByName: new Map(),
-            maps: [],
-            holidayMap: new Map(),
-            inIFrame: true, // true if to style/behave for use in iFrame; false to style/behave as standalone app
             notifications: []
         }
-        this.trip = React.createRef()
-        this.triplist = React.createRef()
-        this.calendar = React.createRef()
 
         if (window.top) {
             window.top.onpopstate = this.onPopState.bind(this)
@@ -86,119 +57,15 @@ export class App extends Component<{
         this.changePath(path)
     }
 
-
-    public get amAdmin(): boolean { return this.state.role >= Role.Admin }
-
-    public get amTripLeader(): boolean { return this.state.role >= Role.TripLeader }
-
-    public async triphubApiCall(method: string, url: string, data?: any, isTripEdit?: boolean): Promise<any> {
-        if (isTripEdit && this.trip.current && this.trip.current.state.editHref && !this.trip.current.state.editIsEdited) {
-            this.trip.current.setState({ editIsEdited: true })
-        }
-        return apiCall(method, url, data)
-    }
-
-    public get members(): IMember[] {
-        return this.state.members
-    }
-
-    public get me(): IMember {
-        return this.state.me
-    }
-
-    public getMemberById(id: number): IMember {
-        return this.state.membersById.get(id) || { id, name: 'Anonymous' } as IMember
-    }
-
-    public getMemberByName(name: string): IMember | undefined {
-        return this.state.membersByName.get(name)
-    }
-
-    public get maps(): IMap[] {
-        return this.state.maps
-    }
-
-    public getArchivedRoutes(includeHidden: boolean = false, force: boolean = false): Promise<IArchivedRoute[]> {
-        if (force || !this.archivedRoutesPromise || includeHidden !== this.archivedRoutesIncludeHidden) {
-            this.archivedRoutesIncludeHidden = includeHidden;
-            this.archivedRoutesPromise = new Promise<IArchivedRoute[]>((resolve, reject) => {
-                this.triphubApiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden)
-                    .then((archivedRoutes: IArchivedRoute[]) => {
-                        this.archivedRoutes = archivedRoutes;
-                        resolve(archivedRoutes);
-                    }, () => resolve([]));
-            });
-        }
-        return this.archivedRoutesPromise;
-    }
-
-    public validateTrip(trip: ITrip): IValidation[] {
-        return [
-            { field: 'title', ok: !trip.isDeleted, message: 'This trip has been deleted' },
-            ...this.mandatory(trip, ['title', 'description']),
-            ...this.mandatory(trip, trip.isSocial ? [] : ['cost', 'grade', 'departure_point']),
-            { field: 'length', ok: (trip.length >= 1 && trip.length <= 14) || trip.isNoSignup, message: 'Length should be between 1 and 14 days' },
-            { field: 'openDate', ok: (trip.openDate <= trip.closeDate), message: 'Open date must be on or before Close date' },
-            { field: 'closeDate', ok: (trip.openDate <= trip.closeDate) || trip.isNoSignup, message: 'Open date must be on or before Close date' },
-            { field: 'closeDate', ok: (trip.closeDate <= trip.tripDate) || trip.isNoSignup, message: 'Close date must be on or before Trip date' },
-            { field: 'tripDate', ok: (trip.closeDate <= trip.tripDate) || trip.isNoSignup, message: 'Close date must be on or before Trip date' },
-            { field: 'maxParticipants', ok: trip.maxParticipants >= 0, message: 'Max Participants must not be negative' },
-        ]
-    }
-
-    public validateParticipant(participant: IParticipant, participants: IParticipant[]): IValidation[] {
-        const duplicate = participants.find(p => p.id !== participant.id && p.name === participant.name)
-        return [
-            ...this.mandatory(participant, participant.isVehicleProvider ? ['name', 'rego'] : ['name']),
-            { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` }
-        ]
-    }
-
-    public mandatory(obj: any, fields: string[]): IValidation[] {
-        return fields.map(field => ({
-            field, ok: obj[field] !== '', message: TitleFromId(field) + ' must be entered'
-        }))
-    }
-
-    public requeryMembers(): void {
-        this.triphubApiCall('GET', BaseUrl + '/members')
-            .then((members: IMember[]) => {
-
-                const membersById = new Map<number, IMember>()
-                const membersByName = new Map<string, IMember>()
-                const me = members.find((m: IMember) => m.isMe) || {} as unknown as IMember
-
-                members = members.filter(m => m.name !== '')
-                members.filter(m => m.isMember).forEach(m => membersById.set(m.id, m))
-                members.filter(m => m.isMember).forEach(m => membersByName.set(m.name, m))
-                members = members.filter(m => m.isMember || !membersByName[m.name])
-                members.filter(m => !m.isMember).forEach(m => membersByName.set(m.name, m))
-                members.forEach(m => m.role = Role[m.role as unknown as string])
-
-                this.setState({ role: me.role, me, members, membersById, membersByName, isLoadingMembers: false })
-            })
-    }
-
     public componentDidMount(): void {
-        this.requeryMembers()
-
-        this.triphubApiCall('GET', BaseUrl + '/config')
-            .then(config => this.setState({ config: config[0], isLoadingConfig: false }));
-        this.triphubApiCall('GET', BaseUrl + '/maps')
-            .then(maps => this.setState({ maps, isLoadingMaps: false }));
-        this.triphubApiCall('GET', BaseUrl + '/public_holidays')
-            .then((holidays: IHoliday[]) => {
-                const holidayMap = new Map<string, IHoliday>(
-                    holidays.filter(h => h.type === 'National holiday' || h.name === 'Canterbury Show Day')
-                        .map(h => [h.date, h] as [string, IHoliday])
-                )
-
-                this.setState({ holidayMap, isLoadingHolidays: false })
-            });
-    }
-
-    public get containerClassName() {
-        return this.state.inIFrame ? "outer-container " : ""
+        MembersService.getMembers(true)
+            .then(() => this.setState({ role: MembersService.Me.role, isLoadingMembers: false }));
+        ConfigService.getConfig()
+            .then(() => this.setState({ isLoadingConfig: false }));
+        MapsService.getMaps()
+            .then(() => this.setState({ isLoadingMaps: false }));
+        HolidaysService.getHolidays()
+            .then(() => this.setState({ isLoadingHolidays: false }));
     }
 
     public addNotification(text: string, colour: string) {
@@ -209,11 +76,13 @@ export class App extends Component<{
     public get isLoading(): boolean {
         return this.loadingFields(this.state).some(f => this.state[f])
     }
+
     public loadingFields(state: any): string[] {
         return Object.keys(state).filter(f => /^isLoading[A-Z]/.test(f))
     }
-    public loadingStatus(state: any): JSX.Element {
-        return <Container key='loadingStatus' className={this.containerClassName + "triphub-loading-container"}>
+    public loadingStatus(state: any = {}): JSX.Element {
+        state = { ...this.state, ...state }
+        return <Container key='loadingStatus' className={ConfigService.containerClassName + "triphub-loading-container"}>
             <Jumbotron key='loadingAlert' variant='primary'>
                 {this.loadingFields(state).map(f =>
                     <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substring(2))}</div>)}
@@ -222,23 +91,35 @@ export class App extends Component<{
     }
 
     public render() {
-        const path = this.state.path
-        const rendering = this.isLoading ? 'loading' : `${path}/`.split('/')[1]
+        const pathParts = `${this.state.path}/`.split('/')
+        const rendering = this.isLoading ? 'loading' : pathParts[1]
+        const id = pathParts[2] ? parseInt(pathParts[2], 10) : undefined
+
+        const setPath = (path: string) => this.setPath(path)
+        const addNotification = (text:string, colour: string) => this.addNotification(text, colour)
+        const loadingStatus = (state?: any) => this.loadingStatus(state)
+
+        const common = {
+            role: this.state.role,
+            setPath,
+            addNotification,
+            loadingStatus
+        }
         const renderings = {
-            loading: () => this.loadingStatus(this.state),
-            calendar: () => <Calendar key='calendar' app={this} />,
-            newtrip: () => <Trip key='newTrip' app={this} isNew={true} isNewSocial={false} />,
-            newsocial: () => <Trip key='newSocial' app={this} isNew={true} isNewSocial={true} />,
+            loading: () => this.loadingStatus(),
+            calendar: () => <Calendar key='calendar' {...common} />,
+            newtrip: () => <Trip key='newTrip' isNew={true} isNewSocial={false} {...common} />,
+            newsocial: () => <Trip key='newSocial' isNew={true} isNewSocial={true} {...common} />,
             routes: () => <ManageRoutes key='routes' app={this}/>,
             newsletter: () => <Newsletter key='newsletter' app={this} />,
-            trips: () => <Trip key='trips' app={this} isNew={false} isNewSocial={true} href={BaseUrl + path} />,
-            default: () => <TripsList key='default' app={this} />,
+            trips: () => <Trip key='trips' isNew={false} isNewSocial={true} id={id} {...common} />,
+            default: () => <TripsList key='default' {...common}/>,
         }
 
         return [
             <TriphubNavbar key='triphubNavbar' app={this} />,
             <NotificationArea notifications={this.state.notifications} key='notificationArea'
-                containerClassName={this.containerClassName} />,
+                containerClassName={ConfigService.containerClassName} />,
             (renderings[rendering] || renderings.default)()
         ]
     }

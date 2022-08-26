@@ -14,6 +14,7 @@ import DropdownMenu from 'reactstrap/lib/DropdownMenu'
 import DropdownItem from 'reactstrap/lib/DropdownItem'
 import Dropdown from 'reactstrap/lib/Dropdown'
 import * as ReactDOM from 'react-dom'
+import { ConfigService } from './Services/ConfigService'
 
 export const PriorityNavItem = (props: any) => {  
     const el: HTMLElement|null = document.getElementById('priority-nav-items') 
@@ -61,7 +62,7 @@ export class TriphubNavbar extends Component<{
 
         const navItems: JSX.Element[] = []
 
-        if (this.props.app.state.inIFrame && this.props.app.state.path !== '' && this.props.app.state.path !== '/') {
+        if (ConfigService.inIFrame && this.props.app.state.path !== '' && this.props.app.state.path !== '/') {
             navItems.push(
             <NavItem key='alltrips'>
                 <NavLink onClick={alltrips} disabled={this.props.app.isLoading}>
@@ -159,20 +160,20 @@ export class TriphubNavbar extends Component<{
         const bannerAndToggleApproxWidth = 230
         const navItemAprroxWidth = 170 // 120 - 200px
         const nonCollapsedCount = Math.min(navItems.length, Math.floor(Math.max(0, this.state.windowWidth - bannerAndToggleApproxWidth) / navItemAprroxWidth))
-        const nonCollapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? navItems : navItems.slice(0, nonCollapsedCount)
-        const collapsableNavItems: JSX.Element[] = this.props.app.state.inIFrame ? [] : navItems.slice(nonCollapsedCount)
+        const nonCollapsableNavItems: JSX.Element[] = ConfigService.inIFrame ? navItems : navItems.slice(0, nonCollapsedCount)
+        const collapsableNavItems: JSX.Element[] = ConfigService.inIFrame ? [] : navItems.slice(nonCollapsedCount)
     
         return (
             <Navbar color='primary' expand={false}>
-                <NavbarBrand className='triphub-navbar' href="#home" hidden={this.props.app.state.inIFrame}>
+                <NavbarBrand className='triphub-navbar' href="#home" hidden={ConfigService.inIFrame}>
                     <img src="CTCLogo.png" width="40" height="40" className="d-inline-block" />
                     <b>Trips</b>
                 </NavbarBrand>
                 <Nav className="mr-auto" justified={false} fill={false} >
                     {nonCollapsableNavItems}
                 </Nav>
-                <NavbarToggler onClick={toggle} hidden={this.props.app.state.inIFrame || collapsableNavItems.length === 0}/>
-                <Collapse  isOpen={this.state.isOpen} navbar={true} hidden={this.props.app.state.inIFrame}>
+                <NavbarToggler onClick={toggle} hidden={ConfigService.inIFrame || collapsableNavItems.length === 0}/>
+                <Collapse  isOpen={this.state.isOpen} navbar={true} hidden={ConfigService.inIFrame}>
                     <Nav className="mr-auto" justified={false} fill={false} >
                         {collapsableNavItems}
                     </Nav>

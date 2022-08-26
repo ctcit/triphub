@@ -21,7 +21,7 @@ export interface IValidation {
     message: string
 }
 
-export interface ITrip {
+export interface ITrip extends ITripCosts {
     id: number
     title: string
     role?: string
@@ -48,9 +48,16 @@ export interface ITrip {
     prerequisites?: string
     leaders?: string
     state: string
+
 }
 
-export interface IParticipant {
+export interface ITripCosts {
+    distanceOneWay: number
+    participantsCount: number | null // to override number of participants
+    vehicleFee: number | null // to override calculated value
+}
+
+export interface IParticipant extends IParticipantCosts {
     id: number
     memberId: number
     name: string
@@ -65,7 +72,54 @@ export interface IParticipant {
     logisticInfo: string
     vehicleRego: string
     displayPriority?: number
-    showMenu?: boolean
+    engineSize: number
+
+}
+
+export interface IParticipantCosts {
+    // vehicle providers
+    broughtVehicle: boolean
+    totalDistance: number | null
+    ratePerKm: number | null
+    vehicleCost: number | null
+    vehicleExcess: number | null
+    
+    // all
+    vehicleFee: number | null // negative if reimbursed
+    nonMemberFee: number | null
+    otherFees: number | null // e.g. hut, gear hire fees
+
+    toPay: number | null // negative if reimbursed
+    paid: number | null // negative if reimbursed
+}
+
+export interface ITripCostCalculations {
+    distanceOneWay: number
+    participantsCount: number
+    totalVehicleCost: number
+    companyVehicleCount: number
+    payingParticipantsCount: number // paying vehicle fee
+    calculatedVehicleFee: number
+    roundedCalculatedVehicleFee: number
+    vehicleFee: number
+    totalVehicleFeeToCollect: number
+    totalNonMemberFeeToCollect: number
+    totalOtherFeesToCollect: number
+
+    participants: {[id: string]: IParticipantCosts}
+}
+
+export interface IHistoryItem {
+    id: number
+    timestamp: string
+    action: string
+    table: string
+    userId: number
+    tripId: number
+    participantId?: number
+    column?: string
+    before?: string | object
+    after?: string | object
 }
 
 export interface IMember {

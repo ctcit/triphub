@@ -1,110 +1,84 @@
 import * as React from 'react'
 import { Form, Row, Col, Container, ButtonGroup } from 'reactstrap'
 import { Component } from 'react'
-import { IMember, IParticipant, IValidation, IParticipantsInfo, Role } from './Interfaces'
+import { IParticipant, IValidation, IParticipantsInfo, Role, ITrip } from './Interfaces'
 import { Spinner } from './Widgets'
-import { Trip } from './Trip'
-import { App } from './App'
 import { InputControl, SelectControl, SwitchControl, TextAreaInputControl } from './Control'
 import { ToolTipIcon } from './ToolTipIcon'
-import { TripParticipants } from './TripParticipants'
 import { Accordian } from './Accordian'
 import { BindMethods } from './Utilities'
 import { ButtonWithTooltip } from './ButtonWithTooltip'
+import { MembersService } from './Services/MembersService'
+import { TripsService } from './Services/TripsService'
+import { ConfigService } from './Services/ConfigService'
 
 export class TripParticipant extends Component<{
-    participantId: number
-    trip: Trip
-    owner: TripParticipants
-    app: App
+    participant: IParticipant
+    trip: ITrip
+    role: Role,
+    canEditTrip: boolean,
     canWaitList?: boolean
     canUnwaitList?: boolean
-    info: IParticipantsInfo
-    data: string
+    participants: IParticipant[]
+    participantsInfo: IParticipantsInfo
+    setParticipant(id: number, data: { [id: string]: any }, save: boolean): Promise<IParticipant>
+    setPosition(id: number, target?: IParticipant): Promise<any>
 }, {
     id?: string
     isSaveOp?: boolean
     isWaitlistOp?: boolean
     isMemberOp?: boolean
-    showMenu: boolean
     newTramper: string
 }> {
-
-    public href?: string
-    public app: App
 
     constructor(props: any) {
         super(props)
 
-        this.href = `${this.props.trip.props.href}/participants/${this.props.participantId}`
-        this.app = this.props.app
-        this.state = { showMenu: false, newTramper: '' }
+        this.state = { newTramper: '' }
         BindMethods(this)
-    }
-
-    get participant() {
-        const participants = this.props.trip.state.participants
-        return participants.find((p: IParticipant) => p.id === this.props.participantId) as IParticipant
-    }
-
-
-    public set(data: { [id: string]: any }): any {
-        const participants = [...this.props.trip.state.participants]
-        const index = participants.findIndex(p => p.id === this.props.participantId)
-        const participant = { ...participants[index], ...data }
-
-        participants[index] = participant
-
-        this.props.trip.setState({ participants })
-    }
-
-    public save(body: { [id: string]: any }): Promise<void> {
-        return this.app.triphubApiCall('POST', this.href as string, body, true)
     }
 
     public onDeleted() {
         this.setState({ isSaveOp: true })
-        this.props.owner.onSetParticipant(this.props.participantId, { isDeleted: !this.participant.isDeleted })
+        this.props.setParticipant(this.props.participant.id, { isDeleted: !this.props.participant.isDeleted }, true)
             .then(() => this.setState({ isSaveOp: false }))
     }
 
     public onToggleWaitlist() {
         this.setState({ isMemberOp: true })
-        this.props.owner.onSetPosition(this.props.participantId)
+        this.props.setPosition(this.props.participant.id)
             .then(() => this.setState({ isMemberOp: false }))
     }
 
     public onSetMember() {
-        const participant = this.participant
-        const member = this.props.app.getMemberById(participant.memberId)
+        const participant = this.props.participant
+        const member = MembersService.getMemberById(participant.memberId)
         const emergencyContactName = participant.emergencyContactName
         const emergencyContactPhone = participant.emergencyContactPhone
 
         if (confirm(`Are you sure you want to update the contact details for ${member.name} ?`)) {
             this.setState({ isMemberOp: true })
-            this.props.app.triphubApiCall('POST',
-                `${this.props.trip.props.href}/members/${member.id}`,
-                { emergencyContactName, emergencyContactPhone }, false)
+            MembersService.postMemberUpdate(member.id, { emergencyContactName, emergencyContactPhone })
                 .then(() => {
-                    this.props.app.requeryMembers()
+                    MembersService.getMembers(true)
                     this.setState({ isMemberOp: false })
                 })
         }
     }
 
     public render() {
-        const participant = this.participant
-        const participants = this.props.trip.state.participants
+        const participant = this.props.participant
+        const participants = this.props.participants
         const participantActual = { ...participant, name: participant.name || this.state.newTramper }
-        const validations: IValidation[] = this.app.validateParticipant(participantActual, participants)
-        const canEdit = this.props.trip.canEditTrip || this.props.app.me.id === participant.memberId
-        const canEditAsLeader = this.props.app.state.role >= Role.TripLeader
-        const member = this.props.app.getMemberById(participant.memberId)
-        const isMemberDiff = participant.memberId === this.props.app.me.id && participant.memberId && (
+        const validations: IValidation[] = TripsService.validateParticipant(participantActual, participants)
+        const canEdit = this.props.canEditTrip || MembersService.Me.id === participant.memberId
+        const canEditAsLeader = this.props.role >= Role.TripLeader
+        const member = MembersService.getMemberById(participant.memberId)
+        const isMemberDiff = participant.memberId === MembersService.Me.id && participant.memberId && (
             participant.emergencyContactName !== member.emergencyContactName ||
             participant.emergencyContactPhone !== member.emergencyContactPhone)
         const existing = new Set(participants.filter(p => p.id !== participant.id).map(p => p.name))
-        const members = this.props.app.members.filter(m => !existing.has(m.name) || m.name === participant.name)
+        const members = MembersService.Members.filter(m => !existing.has(m.name) || m.name === participant.name)
         const nameOptions = {
             'New Tramper': ['New Tramper'],
             'Members': members.filter(m => m.isMember).map(m => m.name),
@@ -112,17 +86,14 @@ export class TripParticipant extends Component<{
         }
 
         const onGet = (field: string): any => participant[field]
-        const onGetName = (_: string): any =>
-            this.props.app.getMemberByName(participant.name) ? participant.name : 'New Tramper'
+        const onGetName = (_: string): any => MembersService.getMemberByName(participant.name) ? participant.name : 'New Tramper'
         const onGetNewTramper = (_: string): any => this.state.newTramper
-        const onSet = (field: string, value: any) => this.set({ [field]: value })
+        const onSet = (field: string, value: any): Promise<IParticipant> => this.props.setParticipant(participant.id, { [field]: value }, false)
         const onSetNewTramper = (_: string, value: any) => this.setState({ newTramper: value })
-        const onSave = (field: string, value: any): Promise<void> => {
-            this.set({ [field]: value })
-            return this.save({ [field]: value })
-        }
-        const onSaveName = (_: string, value: any): Promise<void> => {
-            const lookup: any = this.props.app.getMemberByName(value) || {}
+        const onSave = (field: string, value: any): Promise<IParticipant> => this.props.setParticipant(participant.id, { [field]: value }, true)
+        
+        const onSaveName = (_: string, value: any): Promise<IParticipant> => {
+            const lookup: any = MembersService.getMemberByName(value) || {}
             const body = {
                 name: value === 'New Tramper' ? '' : value,
                 memberId: lookup.id || 0,
@@ -131,12 +102,10 @@ export class TripParticipant extends Component<{
                 emergencyContactName: lookup.emergencyContactName || '',
                 emergencyContactPhone: lookup.emergencyContactPhone || '',
             }
-
-            this.set(body)
-            return this.save(body)
+            return this.props.setParticipant(participant.id, body, true)
         }
-        const onSaveNewTramper = (_: string, value: any): Promise<void> => {
-            return (this.props.app.getMemberByName(value) ? onSaveName : onSave)('name', value)
+        const onSaveNewTramper = (_: string, value: any): Promise<IParticipant> => {
+            return (MembersService.getMemberByName(value) ? onSaveName : onSave)('name', value)
         }
         const onGetValidationMessage = (field: string): any => {
             return (validations.find(v => v.field === field && !v.ok) || {} as any).message
@@ -155,15 +124,15 @@ export class TripParticipant extends Component<{
 
         const iconid = `${participant.id || 'new'}`
         const logisticInfo = (participant.logisticInfo || '').trim()
-        const moveableIndex = this.props.info.moveable.map(m => m.id).indexOf(participant.id)
+        const moveableIndex = this.props.participantsInfo.moveable.map(m => m.id).indexOf(participant.id)
         const canMoveUp = moveableIndex > 0
-        const canMoveDown = moveableIndex >= 0 && moveableIndex + 1 < this.props.info.moveable.length
+        const canMoveDown = moveableIndex >= 0 && moveableIndex + 1 < this.props.participantsInfo.moveable.length
         const onDragStart = (ev: any) => ev.dataTransfer.setData('id', participant.id)
         const onDragOver = (ev: any) => ev.preventDefault()
-        const onDrop = (ev: any) => this.props.owner.onSetPosition(parseInt(ev.dataTransfer.getData('id'), 10), participant)
-        const onMoveUp = () => this.props.owner.onSetPosition(participant.id, this.props.info.moveable[moveableIndex - 1], true)
-        const onMoveDown = () => this.props.owner.onSetPosition(participant.id, this.props.info.moveable[moveableIndex + 1], true)
-
+        const onDrop = (ev: any) => this.props.setPosition(parseInt(ev.dataTransfer.getData('id'), 10), participant)
+        const onDropOnDeleted = (ev: any) => this.props.setParticipant(parseInt(ev.dataTransfer.getData('id'), 10), { isDeleted: true }, true)
+        const onMoveUp = () => this.props.setPosition(participant.id, this.props.participantsInfo.moveable[moveableIndex - 1])
+        const onMoveDown = () => this.props.setPosition(participant.id, this.props.participantsInfo.moveable[moveableIndex + 1])
         const onDeleted = () => this.onDeleted();
         const onToggleWaitlist = () => this.onToggleWaitlist();
         const onSetMember = () => this.onSetMember();
@@ -202,12 +171,12 @@ export class TripParticipant extends Component<{
                 <span className='fa fa-sm fa-pen' />
                 {this.state.isSaveOp ? ['Signing up ', Spinner] : ''}
             </ButtonWithTooltip>,
-            this.props.canWaitList && this.props.trip.canEditTrip &&
+            this.props.canWaitList && this.props.canEditTrip &&
             <ButtonWithTooltip key='waitlist' id={'waitlist' + participant.id} onClick={onToggleWaitlist} tooltipText="Add to wait list">
                 <span className='fa fa-sm fa-user-plus' />
                 {this.state.isWaitlistOp ? ['Adding ', Spinner] : ''}
             </ButtonWithTooltip>,
-            this.props.canUnwaitList && this.props.trip.canEditTrip &&
+            this.props.canUnwaitList && this.props.canEditTrip &&
             <ButtonWithTooltip key='unwaitlist' id={'unwaitlist' + participant.id} onClick={onToggleWaitlist} tooltipText="Remove from wait list">
                 <span className='fa fa-sm fa-user-times' />
                 {this.state.isWaitlistOp ? ['Removing ', Spinner] : ''}
@@ -221,14 +190,14 @@ export class TripParticipant extends Component<{
         const buttonGroup = <ButtonGroup className='participant-buttons'>{buttons}</ButtonGroup>
 
         return (
-            <div onDrop={participant.isDeleted ? this.props.owner.onDropOnDeleted : onDrop}
+            <div onDrop={participant.isDeleted ? onDropOnDeleted : onDrop}
                 onDragOver={onDragOver} onDragStart={onDragStart} draggable={!participant.isLeader}>
 
                 <Accordian id={`${participant.id}`} className='participant'
                     headerClassName='participant-header' expanded={participant.id === -1}
                     title={<span>{title}{buttonGroup}</span>}>
                     <Form key='form' className='indentedparticipants form'>
-                        <Container key='container' className={this.props.app.containerClassName} fluid={true}>
+                        <Container key='container' className={ConfigService.containerClassName} fluid={true}>
                             <Row key='1'>
                                 <Col sm={4}>
                                     <SelectControl field='name' label='Name' options={nameOptions}
@@ -243,7 +212,7 @@ export class TripParticipant extends Component<{
                             </Row>
 
                             {
-                                this.props.app.getMemberByName(participant.name) ? null :
+                                MembersService.getMemberByName(participant.name) ? null :
                                     <Row key='2'>
                                         <Col sm={4}>
                                             <InputControl autoFocus={true} field='New Tramper' label="New Tramper's Name" type='text'

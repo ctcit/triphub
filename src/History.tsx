@@ -1,27 +1,14 @@
 import { Component } from 'react'
 import * as React from 'react'
-import { App } from './App'
-import { Trip } from './Trip'
-import { IParticipant } from './Interfaces'
+import { IHistoryItem, IParticipant, ITrip } from './Interfaces'
 import { Accordian } from './Accordian'
 import { Spinner } from './Widgets'
 import ListGroup from 'reactstrap/lib/ListGroup'
 import ListGroupItem from 'reactstrap/lib/ListGroupItem'
 import { BindMethods, FormatDate } from './Utilities'
-import { GiThorFist } from 'react-icons/gi'
+import { MembersService } from './Services/MembersService'
+import { TripsService } from './Services/TripsService'
 
-interface IHistoryItem {
-    id: number
-    timestamp: string
-    action: string
-    table: string
-    userId: number
-    tripId: number
-    participantId?: number
-    column?: string
-    before?: string | object
-    after?: string | object
-}
 
 function GetDate(item: IHistoryItem): string {
     return FormatDate(new Date(`${item.timestamp}Z`), 'YYYY-MM-DD')
@@ -43,7 +30,6 @@ function GetColumn(column: string): string {
 
 class HistoryItem extends Component<{
     item: IHistoryItem
-    app: App
     history: History
 }, {}>{
     constructor(props: any) {
@@ -109,7 +95,7 @@ class HistoryItem extends Component<{
         }
 
         if (item.userId) {
-            title = title.concat([<b key={i++}> by </b>, this.props.app.getMemberById(item.userId).name])
+            title = title.concat([<b key={i++}> by </b>, MembersService.getMemberById(item.userId).name])
         }
 
         return (
@@ -122,7 +108,6 @@ class HistoryItem extends Component<{
 class HistoryDay extends Component<{
     items: IHistoryItem[]
     history: History
-    app: App
 }, {
 }>
 {
@@ -134,14 +119,14 @@ class HistoryDay extends Component<{
 
     public onDetail(): JSX.Element[] {
         return this.props.items.map(i =>
-                <HistoryItem key={i.id} item={i} app={this.props.app} history={this.props.history} />)
+                <HistoryItem key={i.id} item={i} history={this.props.history} />)
     }
 
     public render() {
         const stamp = GetDate(this.props.items[0])
         const id = 'historyday' + this.props.items[0].id
         const members = new Set(this.props.items
-            .filter(i => i.userId).map(i => this.props.app.getMemberById(i.userId).name))
+            .filter(i => i.userId).map(i => MembersService.getMemberById(i.userId).name))
         const onDetail = () => this.onDetail();
 
         return <Accordian key={id} id={id} headerClassName='history-day'
@@ -151,8 +136,8 @@ class HistoryDay extends Component<{
 }
 
 export class History extends Component<{
-    owner: Trip
-    app: App
+    trip: ITrip
+    participants: IParticipant[]
 }, {
     history?: IHistoryItem[]
 }>
@@ -170,10 +155,10 @@ export class History extends Component<{
         }
 
         if (at.participantId === null) {
-            return this.props.owner.state.trip[column]
+            return this.props.trip[column]
         }
 
-        const participant = this.props.owner.state.participants.find((p: IParticipant) => p.id === at.participantId)
+        const participant = this.props.participants.find((p: IParticipant) => p.id === at.participantId)
 
         if (participant !== undefined) {
             return participant[column]
@@ -183,7 +168,7 @@ export class History extends Component<{
     }
 
     public componentDidMount() {
-        this.props.app.triphubApiCall('GET', this.props.owner.props.href + '/history')
+        TripsService.getTripHistory(this.props.trip.id)
             .then((history: IHistoryItem[]) => {
                 this.setState({ history })
             })
@@ -206,7 +191,7 @@ export class History extends Component<{
                 <ListGroupItem>
                     {history
                         ? days.map(day =>
-                            <HistoryDay key={day[0].id} items={day} app={this.props.app} history={this} />)
+                            <HistoryDay key={day[0].id} items={day} history={this} />)
                         : <Accordian id='historyspinner' headerClassName='history-day'
                             title={[Spinner, ' Loading History']} />
                     }

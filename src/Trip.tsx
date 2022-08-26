@@ -1,15 +1,14 @@
 import * as React from 'react'
 import { Component } from 'react'
 import { Button } from 'reactstrap'
-import { BaseUrl } from '.'
-import { App } from './App'
 import { AdminHint as TripHubAlert } from './Widgets'
-import { IEdit, IParticipant, ITrip, IParticipantsInfo, IState } from './Interfaces'
+import { IEdit, IParticipant, ITrip, IParticipantsInfo, IState, Role } from './Interfaces'
 import { GetDateString, AddDays, GetDisplayPriority, BindMethods } from './Utilities'
 import { TripDetail } from './TripDetail'
 import { TripParticipants } from './TripParticipants'
 import { History } from './History'
 import { Email } from './Email'
+import { TripCosts } from './TripCosts'
 import { TripPrint } from './TripPrint'
 import { Pill } from './Widgets'
 import './index.css'
@@ -21,25 +20,29 @@ import { TextAreaInputControl } from './Control'
 import Row from 'reactstrap/lib/Row'
 import Col from 'reactstrap/lib/Col'
 import { TripState } from './TripStates'
+import { ConfigService } from './Services/ConfigService'
+import { MembersService } from './Services/MembersService'
+import { MapsService } from './Services/MapsService'
+import { TripsService } from './Services/TripsService'
 
 
 export class Trip extends Component<{
     isNew: boolean,
     isNewSocial: boolean,
-    href?: string,
-    app: App
+    id?: number,
+    role: Role,
+    setPath(path: string): void,
+    addNotification(text: string, colour: string): void,
+    loadingStatus(state: any): JSX.Element
 }, {
     trip: ITrip,
     editId: number,
-    editHref: string,
     editIsEdited: boolean,
     editList: IEdit[],
     editHeartbeatId?: any,
     participants: IParticipant[],
-    isSaving: boolean,
     isLoadingTrip: boolean,
     showValidationMessage: boolean,
-    showLegend: boolean,
     approval?: IState | null
 }> {
 
@@ -49,15 +52,12 @@ export class Trip extends Component<{
         super(props)
         this.state = {
             editId: 0,
-            editHref: '',
             editIsEdited: false,
             editList: [],
             participants: [],
             trip: { id: 0 } as ITrip,
-            isSaving: true,
             isLoadingTrip: true,
             showValidationMessage: false,
-            showLegend: false,
         }
 
         BindMethods(this)
@@ -69,26 +69,25 @@ export class Trip extends Component<{
             this.onStartNewEvent()
         } else {
             this.setState({ isLoadingTrip: true })
-            this.props.app.triphubApiCall('POST', this.props.href + '/edit', { stamp: new Date().toISOString() })
+            TripsService.postTripEditHeartbeatInit(this.props.id as number, { stamp: new Date().toISOString() })
                 .then((editList: IEdit[]) => {
                     if (editList) {
                         this.setState({
                             editList,
                             editId: editList[0].id,
-                            editHref: `${this.props.href}/edit/${editList[0].id}`,
                             editIsEdited: false,
-                            editHeartbeatId: setInterval(() => this.onEditHeartbeat(), this.props.app.state.config.editRefreshInSec * 1000)
+                            editHeartbeatId: setInterval(() => this.onEditHeartbeat(), ConfigService.Config.editRefreshInSec * 1000)
                         })
                     }
                 })
 
-            this.props.app.triphubApiCall('GET', this.props.href as string)
-                .then((trip: ITrip[]) => {
+            TripsService.getTrip(this.props.id as number)
+                .then((trip: ITrip) => {
                     this.setState({ isLoadingTrip: false })
-                    this.setState({ trip: trip[0] })
+                    this.setState({ trip })
                 })
 
-            this.onRequeryParticipants()
+            this.requeryParticipants()
         }
     }
 
@@ -97,46 +96,65 @@ export class Trip extends Component<{
             clearInterval(this.state.editHeartbeatId)
         }
 
-        if (this.state.editHref) {
-            this.props.app.triphubApiCall('DELETE', this.state.editHref, {})
+        if (this.state.editId) {
+            TripsService.deleteTripEditHeartbeat(this.state.trip.id, this.state.editId)
         }
     }
 
-    public onRequeryParticipants() {
-        this.props.app.triphubApiCall('GET', this.props.href + '/participants')
+    public setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<ITrip>
+    {
+        return new Promise((resolve) => {
+            this.setState(state => ({ trip: { ...state.trip, ...fields } }), () => {
+                if (setEdited && !this.state.editIsEdited) {
+                    this.setState({ editIsEdited: true })
+                }
+                resolve(save && this.state.trip.id ?
+                    TripsService.postTripUpdate(this.state.trip.id as number, fields) :
+                    this.state.trip)
+            })
+        })
+    }
+
+    public setTripIsEdited(): void {
+        if (!this.state.editIsEdited) {
+            this.setState({ editIsEdited: true })
+        }
+    }
+
+    public setTripParticipants(participants: IParticipant[], setEdited: boolean): void {
+        this.setState({participants}, () => {
+            if (setEdited && !this.state.editIsEdited) {
+                this.setState({ editIsEdited: true })
+            }
+    })
+    }
+
+    public saveNewTripParticipant(participant: IParticipant): Promise<IParticipant[]> {
+        this.setTripIsEdited()
+        return TripsService.postTripParticipant(this.state.trip.id, participant)
+            .then(() => this.requeryParticipants())
+    }
+
+    public requeryParticipants(): Promise<IParticipant[]> {
+        return TripsService.getTripParticipants(this.props.id as number)
             .then((participants: IParticipant[]) => {
                 participants = participants || []
-                this.setState({ participants, isSaving: false })
+                this.setState({ participants })
+                return participants
             })
     }
 
     public get canEditTrip() {
-        const me = this.props.app.me
-        return this.props.app.amAdmin ||
+        const me = MembersService.Me
+        return this.amAdmin ||
             this.state.participants.some((p: IParticipant) => me.id === p.memberId && p.isLeader)
-    }
-
-    public get blankTramper(): IParticipant {
-        return {
-            id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false,
-            logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '',
-            emergencyContactName: '', emergencyContactPhone: ''
-        }
-    }
-
-    public get signMeUpTramper(): IParticipant {
-        const me = this.props.app.me
-        return {
-            ...this.blankTramper,
-            memberId: me.id, name: me.name, email: me.email, phone: me.phone,
-            emergencyContactName: me.emergencyContactName, emergencyContactPhone: me.emergencyContactPhone
-        }
     }
 
     public async onDeleteTrip() {
         if (this.state.trip.isDeleted || confirm('Are you sure you want to delete this trip?')) {
-            await this.props.app.triphubApiCall('POST', this.props.href as string, { isDeleted: !this.state.trip.isDeleted }, true)
-            this.props.app.setPath('/')
+            this.setTripIsEdited()
+            await TripsService.postTripUpdate(this.props.id as number, { isDeleted: !this.state.trip.isDeleted })
+            this.props.setPath('/')
         }
     }
 
@@ -171,13 +189,17 @@ export class Trip extends Component<{
                 isLimited: false,
                 maxParticipants: 0,
                 isDeleted: false,
-                approval: this.props.isNewSocial || this.props.app.amAdmin ? TripState.Approved.id : TripState.Pending.id,
+                approval: this.props.isNewSocial || this.amAdmin ? TripState.Approved.id : TripState.Pending.id,
                 approvalText: '',
                 title: '',
-                state: this.props.isNewSocial ? 'Open' : 'Suggested'
+                state: this.props.isNewSocial ? 'Open' : 'Suggested',
+
+                distanceOneWay: 0,
+                participantsCount: null,
+                vehicleFee: null
             },
             participants: [
-                { ...this.signMeUpTramper, isLeader: true }
+                { ...TripParticipants.signMeUpTramper, isLeader: true }
             ],
         }
         this.setState(this.suggestedTrip)
@@ -186,23 +208,22 @@ export class Trip extends Component<{
     public onSaveSuggestedTrip() {
         const trip = this.state.trip
         const participants = this.state.participants
-        const tripWarnings = this.props.app.validateTrip(this.state.trip).filter(i => !i.ok)
+        const tripWarnings = TripsService.validateTrip(this.state.trip).filter(i => !i.ok)
 
         if (tripWarnings.length > 0) {
             this.setState({ showValidationMessage: true })
         }
         else {
-            this.props.app.triphubApiCall('POST', BaseUrl + '/trips', trip)
+            TripsService.postTripNew(trip)
                 .then(data => {
                     const newTrip = data[0] as ITrip
-                    const url = BaseUrl + '/trips/' + newTrip.id + '/participants'
-                    this.props.app.triphubApiCall('POST', url, participants[0])
+                    TripsService.postTripParticipantNew(newTrip.id, participants[0])
                         .then(() => {
-                            this.props.app.setPath('/')
+                            this.props.setPath('/')
                             const notificationText = trip.approval === TripState.Pending.id ?
                                 "Thanks for submitting a trip. It will be checked by the trip-coordinators and you will receive an email when it is approved." :
                                 "Trip has been added and auto-approved."
-                            this.props.app.addNotification(notificationText, 'success')
+                            this.props.addNotification(notificationText, 'success')
                         })
                 })
         }
@@ -214,16 +235,22 @@ export class Trip extends Component<{
 
         if (JSON.stringify({ trip, participants }) === JSON.stringify(this.suggestedTrip) ||
             window.confirm('You have made changes, are you sure you want to cancel?')) {
-            this.props.app.setPath('/')
+            this.props.setPath('/')
         }
     }
 
     public onEmail(): JSX.Element {
-        return <Email owner={this} app={this.props.app} />
+        const setTripIsEdited = () => this.setTripIsEdited()
+        return <Email 
+            trip={this.state.trip} 
+            participants={this.state.participants}
+            setTripIsEdited={setTripIsEdited}/>
     }
 
     public onHistory(): JSX.Element {
-        return <History key={'History' + this.state.trip.id} owner={this} app={this.props.app} />
+        return <History key={'History' + this.state.trip.id} 
+            trip={this.state.trip} 
+            participants={this.state.participants} />
     }
 
     public get participantsInfo(): IParticipantsInfo {
@@ -243,8 +270,9 @@ export class Trip extends Component<{
 
     public onApprovalSubmit(approval: IState) {
         const body = { approval: approval.id, approvalText: this.state.trip.approvalText }
-        this.props.app.triphubApiCall('POST', this.props.href as string, body, true)
-            .then(() => this.props.app.setPath('/'))
+        this.setTripIsEdited()
+        TripsService.postTripUpdate(this.props.id as number, body)
+            .then(() => this.props.setPath('/'))
 
     }
     public onApprovalCancel() {
@@ -255,7 +283,7 @@ export class Trip extends Component<{
         const onApproval = () => onClick(approval)
         const visible =
             !this.props.isNew &&
-            this.props.app.state.role >= approval.roleToChange &&
+            MembersService.Me.role >= approval.roleToChange &&
             !this.state.trip.isDeleted &&
             TripState[this.state.trip.approval || TripState.Pending.id].nextStates.indexOf(approval.id) >= 0
 
@@ -298,7 +326,7 @@ export class Trip extends Component<{
 
     public render() {
         if (this.state.isLoadingTrip) {
-            return this.props.app.loadingStatus({ ...this.props.app.state, ...this.state })
+            return this.props.loadingStatus({ isLoadingTrip: this.state.isLoadingTrip })
         }
 
         if (this.state.approval) {
@@ -306,18 +334,17 @@ export class Trip extends Component<{
         }
 
         const trip = this.state.trip
-        const app = this.props.app
         const isNew = this.props.isNew
         const info = this.participantsInfo
-        const tripWarnings = this.props.app.validateTrip(this.state.trip).filter(i => !i.ok)
-        const participantWarnings = info.current.flatMap(p => app.validateParticipant(p, info.all).filter(i => !i.ok))
+        const tripWarnings = TripsService.validateTrip(this.state.trip).filter(i => !i.ok)
+        const participantWarnings = info.current.flatMap(p => TripsService.validateParticipant(p, info.all).filter(i => !i.ok))
         const participantWarning = !!participantWarnings.length
             ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0].message} className='fw warning-icon' />
             : null
         const participantCount = <span key='count' className='TripCount'>
             {` (${info.leaders.length + info.early.length}${info.late.length ? '+' + info.late.length : ''})`}
         </span>
-        const amAdmin = this.props.app.amAdmin
+        const amAdmin = this.amAdmin
         const approval = TripState[this.state.trip.approval || TripState.Pending.id]
         // Note - approved trips can't be rejected (unless user is admin), but they can be deleted
         const approvalButtons = Object.keys(TripState).map(a =>
@@ -327,6 +354,9 @@ export class Trip extends Component<{
         const onCancelSuggestedTrip = () => this.onCancelSuggestedTrip();
         const onEmail = () => this.onEmail();
         const onHistory = () => this.onHistory();
+        const setTripFields = (fields: any, setEdited: boolean, save: boolean) => this.setTripFields(fields, setEdited, save)
+        const setTripParticipants = (participants: IParticipant[], setEdited: boolean) => this.setTripParticipants(participants, setEdited)
+        const saveNewTripParticipant = (participant: IParticipant) => this.saveNewTripParticipant(participant)
 
         let status: JSX.Element | null = null
         if (trip.id <= 0) {
@@ -362,14 +392,14 @@ export class Trip extends Component<{
         }
 
         return (
-            <Container className={this.props.app.containerClassName} key="triphubtripdetail" fluid={true}>
+            <Container className={ConfigService.containerClassName} key="triphubtripdetail" fluid={true}>
                 <div key='tripstatus' className='py-1'>
                     {(this.state.editList || [])
                         .filter((item: IEdit) => item.id !== this.state.editId)
                         .map((item: IEdit) =>
                             <ToolTipIcon key={'edititem' + item.id} id={'edititem' + item.id} tooltip={`last known time ${item.stamp}`}>
                                 <Badge className='noprint' pill={true}>
-                                    {this.props.app.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
+                                    {MembersService.getMemberById(item.userId).name} is {item.isEdited ? 'editing' : 'viewing'} this trip
                                 </Badge>
                             </ToolTipIcon>)}
                     {status}
@@ -387,8 +417,12 @@ export class Trip extends Component<{
                 <Accordian key='detail' id='detail' className='trip-section' headerClassName='trip-section-header'
                     title={<span title={`Status: ${trip.approval}`}><b><span key='icon' className='fa fa-map-marker fa-fw' />{this.state.trip.title}</b></span>}
                     expanded={true}>
-                    <TripDetail key={'TripDetail' + this.state.trip.id} owner={this} app={this.props.app}
-                        forceValidation={this.state.showValidationMessage} />
+                    <TripDetail key={'TripDetail' + this.state.trip.id}
+                        trip={this.state.trip} isNew={this.props.isNew} canEditTrip={this.canEditTrip}
+                        forceValidation={this.state.showValidationMessage}
+                        role={MembersService.Me.role} maps={MapsService.Maps}
+                        setTripFields={setTripFields}
+                    />
                 </Accordian>
                 <div hidden={!isNew} key='saveCancel' className="py-2">
                     <Button color='primary' onClick={onSaveSuggestedTrip} className="px-2 mx-1">
@@ -405,8 +439,15 @@ export class Trip extends Component<{
                     <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-user fa-fw' />{['Participants', participantWarning, participantCount]}</b></span>}
                         expanded={true}>
-                        <TripParticipants key={'TripParticipants' + this.state.trip.id} trip={this}
-                            app={this.props.app} />
+                        <TripParticipants key={'TripParticipants' + this.state.trip.id} 
+                            participants={this.state.participants}
+                            participantsInfo={this.participantsInfo}
+                            trip={this.state.trip}
+                            setTripParticipants={setTripParticipants}
+                            saveNewTripParticipant={saveNewTripParticipant}
+                            isNew={isNew} 
+                            canEditTrip={this.canEditTrip} 
+                            role={this.props.role} />
                     </Accordian>
                 }
                 {this.props.isNew || !this.canEditTrip ? null :
@@ -417,6 +458,19 @@ export class Trip extends Component<{
                         Email ...
                     </Accordian>
                 }
+                {this.props.isNew || !this.canEditTrip ? null :
+                    <Accordian key={`costs${this.state.trip.id}_${this.state.participants.length}`} id='costs'
+                        className='trip-section' headerClassName='trip-section-header'
+                        title={<span><b><span key='icon' className='fa fa-dollar-sign fa-fw' />Cost Calculator</b></span>}
+                        expanded={false}>
+                        <TripCosts 
+                            trip={this.state.trip} 
+                            currentParticipants={this.participantsInfo.current} 
+                            canEditTrip={this.canEditTrip} 
+                            setTripFields={setTripFields} 
+                            setTripParticipants={setTripParticipants} />
+                    </Accordian>
+                }
                 {(!amAdmin || this.props.isNew) ? null :
                     <Accordian key='history' id='history' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-history fa-fw' />History</b></span>}
@@ -424,17 +478,21 @@ export class Trip extends Component<{
                         History ...
                     </Accordian>
                 }
-                <TripPrint key='tripprint' trip={this} app={this.props.app} />
+                <TripPrint key='tripprint' 
+                    trip={this.state.trip} 
+                    participantsInfo={this.participantsInfo} />
             </Container>
         )
     }
 
     public onEditHeartbeat() {
-        this.props.app.triphubApiCall('POST', this.state.editHref, { stamp: new Date().toISOString(), isEdited: this.state.editIsEdited })
+        TripsService.postTripEditHeartbeat(this.state.trip.id, this.state.editId, { stamp: new Date().toISOString(), isEdited: this.state.editIsEdited })
             .then((editList: IEdit[]) => {
                 if (editList) {
                     this.setState({ editList })
                 }
             })
     }
+
+    private get amAdmin(): boolean { return MembersService.Me.role >= Role.Admin }
 }

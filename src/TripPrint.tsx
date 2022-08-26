@@ -4,10 +4,12 @@ import { App } from './App'
 import { Trip } from './Trip'
 import { GetFullDate, GetLength } from './Utilities'
 import './index.css'
+import { ConfigService } from './Services/ConfigService'
+import { IParticipantsInfo, ITrip } from './Interfaces'
 
 export class TripPrint extends Component<{
-    trip: Trip
-    app: App
+    trip: ITrip
+    participantsInfo: IParticipantsInfo
     canWaitList?: boolean
     canUnwaitList?: boolean
 }, {
@@ -15,16 +17,16 @@ export class TripPrint extends Component<{
 }> {
 
     public render() {
-        const trip = this.props.trip.state.trip
-        const info = this.props.trip.participantsInfo
+        const trip = this.props.trip
+        const participantsInfo = this.props.participantsInfo
         const blanks = []
         const header = (text: string, len: number) => <th>{text + '\u00A0'.repeat(len - text.length)}</th>
-        const logistics = info.current.filter(p => (p.logisticInfo || '') !== '')
-        const vehicles = info.current.filter(p => p.isVehicleProvider)
+        const logistics = participantsInfo.current.filter(p => (p.logisticInfo || '') !== '')
+        const vehicles = participantsInfo.current.filter(p => p.isVehicleProvider)
         const footer = Math.max(logistics.length, vehicles.length)
-        const printLines = this.props.app.state.config.printLines
+        const printLines = ConfigService.Config.printLines
 
-        for (let i = info.current.length; i < Math.min(info.maxParticipants, printLines - footer); i++) {
+        for (let i = participantsInfo.current.length; i < Math.min(participantsInfo.maxParticipants, printLines - footer); i++) {
             blanks.push('blank' + i)
         }
 
@@ -37,7 +39,7 @@ export class TripPrint extends Component<{
                         <tr>
                             <th>Leader:</th>
                             <td>
-                                {info.leaders.map(l => <div key={l.id}>{l.name}</div>)}
+                                {participantsInfo.leaders.map(l => <div key={l.id}>{l.name}</div>)}
                             </td>
                             <th>Date:</th>
                             <td>{GetFullDate(trip.tripDate)}</td>
@@ -58,7 +60,7 @@ export class TripPrint extends Component<{
                         </tr>
                     </thead>
                     <tbody>
-                        {(info.current).map(p =>
+                        {(participantsInfo.current).map(p =>
                             <tr key={p.id}>
                                 <td>{p.name}</td>
                                 <td>{p.email}</td>

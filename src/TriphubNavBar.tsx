@@ -1,20 +1,9 @@
 import { Component } from 'react'
-import * as React from 'react'
 import { App } from './App'
-import Navbar from 'reactstrap/lib/Navbar'
 import { Role } from './Interfaces'
-import Nav from 'reactstrap/lib/Nav'
-import NavbarBrand from 'reactstrap/lib/NavbarBrand'
-import NavbarToggler from 'reactstrap/lib/NavbarToggler'
-import Collapse from 'reactstrap/lib/Collapse'
-import NavLink from 'reactstrap/lib/NavLink'
-import NavItem from 'reactstrap/lib/NavItem'
-import DropdownToggle from 'reactstrap/lib/DropdownToggle'
-import DropdownMenu from 'reactstrap/lib/DropdownMenu'
-import DropdownItem from 'reactstrap/lib/DropdownItem'
-import Dropdown from 'reactstrap/lib/Dropdown'
-import * as ReactDOM from 'react-dom'
 import { ConfigService } from './Services/ConfigService'
+import { NavItem, NavLink, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Navbar, NavbarBrand, Nav, NavbarToggler, Collapse } from 'reactstrap'
+import ReactDOM from 'react-dom'
 
 export const PriorityNavItem = (props: any) => {  
     const el: HTMLElement|null = document.getElementById('priority-nav-items') 
@@ -22,7 +11,8 @@ export const PriorityNavItem = (props: any) => {
 }
 
 export class TriphubNavbar extends Component<{
-    app: App
+    app: App,
+    children?: React.ReactNode
     },{
         isOpen: boolean,
         priviledgesDropdownIsOpen: boolean,

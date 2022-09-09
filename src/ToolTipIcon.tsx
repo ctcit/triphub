@@ -1,12 +1,13 @@
 import { Component } from 'react'
 import * as React from 'react'
-import Tooltip from 'reactstrap/lib/Tooltip'
+import { Tooltip } from 'reactstrap'
 
 export class ToolTipIcon extends Component<{
     tooltip: any 
     id: string
     icon?: string 
     className? : string
+    children?: React.ReactNode
 },{
     isOpen:boolean
 }>{

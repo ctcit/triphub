@@ -1,9 +1,7 @@
 import * as L from 'leaflet';
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
-import * as React from 'react';
-import Col from 'reactstrap/lib/Col';
-import { Button, TabPane, ButtonGroup, Row, FormText } from 'reactstrap';
+import { Button, TabPane, ButtonGroup, Row, FormText, Col } from 'reactstrap';
 import { IArchivedRoute, IMap } from '../Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import { MdInfo, MdUndo, MdZoomOutMap} from 'react-icons/md';
@@ -37,9 +35,9 @@ export class RoutesArchiveTab extends Component<{
     archivedRouteSuggestions: Tag[],
     busy: boolean
 }>{
-    protected archivedRoutesLayerGroup: L.LayerGroup<ArchivedRoutePolygon[]>;
+    protected archivedRoutesLayerGroup: L.LayerGroup<ArchivedRoutePolygon[]> = L.layerGroup();
     private mapIsSetup: boolean = false;
-    private infoControl: L.Control;
+    private infoControl: L.Control = new L.Control();
 
     private memoizedGetArchivedRoutes = memoizeOne((includeHidden: boolean, force: boolean, isActiveTab: boolean) => {
         if (isActiveTab) {
@@ -216,9 +214,9 @@ export class RoutesArchiveTab extends Component<{
         this.setState({ busy: true });
         const mapComponent = (this.props.mapComponent as MapComponent);
         this.props.getArchivedRoute(archivedRouteId)
-            .then(async (archivedRoute: IArchivedRoute) => {
+            .then(async (archivedRoute?: IArchivedRoute) => {
                 let routesAsLatLngs: Array<Array<[number, number]>> = mapComponent.getRoutesAsLatLngs();
-                routesAsLatLngs = routesAsLatLngs.concat(archivedRoute.routes);
+                routesAsLatLngs = archivedRoute ? routesAsLatLngs.concat(archivedRoute.routes) : routesAsLatLngs;
                 mapComponent.setRoutesFromLatLngs(routesAsLatLngs);
                 mapComponent.fitBounds();
                 await this.saveRouteChange(true, true);

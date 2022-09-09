@@ -100,7 +100,7 @@ export class TripsService {
     public static validateParticipant(participant: IParticipant, participants: IParticipant[]): IValidation[] {
         const duplicate = participants.find(p => p.id !== participant.id && p.name === participant.name)
         return [
-            ...Mandatory(participant, participant.isVehicleProvider ? ['name', 'rego'] : ['name']),
+            ...Mandatory(participant, participant.isVehicleProvider ? ['name', 'vehicleRego'] : ['name']),
             { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` }
         ]
     }

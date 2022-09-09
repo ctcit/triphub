@@ -1,9 +1,7 @@
 import * as L from 'leaflet';
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
-import * as React from 'react';
-import Col from 'reactstrap/lib/Col';
-import { Button, CustomInput, ButtonGroup, Row, FormText, TabPane } from 'reactstrap';
+import { Button, ButtonGroup, Row, FormText, TabPane, Col, Input } from 'reactstrap';
 import { MdInfo, MdAddCircle, MdClear, MdUndo, MdTimeline, MdNavigateNext, MdNavigateBefore, MdClearAll, MdContentCut, MdZoomOutMap} from 'react-icons/md';
 import { GiJoint } from 'react-icons/gi';
 import { IoMdSwap } from 'react-icons/io';
@@ -32,7 +30,7 @@ export class EditRoutesTab extends Component<{
 }>{
 
     private mapIsSetup: boolean = false;
-    private infoControl: L.Control;
+    private infoControl: L.Control = new L.Control();
 
     private vertexIsDragging: boolean = false;
 
@@ -227,7 +225,7 @@ export class EditRoutesTab extends Component<{
                     </Col>
                     <Col sm={6}>
                         <ButtonGroup>
-                            <CustomInput
+                            <Input
                                 type="file" id="GpxFileInput" name="customFile"
                                 label={this.state.gpxFile ? this.state.gpxFile.name : 'Import from GPX'}
                                 onChange={importGpx}

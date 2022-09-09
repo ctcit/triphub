@@ -1,10 +1,8 @@
-import * as L from 'leaflet';
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
-import * as React from 'react';
 import { Component } from 'react';
 import { Button, Tooltip } from 'reactstrap';
-import * as Popper from 'popper.js';
+import type { Placement } from '@popperjs/core';
 
 export class ButtonWithTooltip extends Component<{
     id: string,
@@ -12,7 +10,8 @@ export class ButtonWithTooltip extends Component<{
     disabled?: boolean,
     onClick: () => void,
     tooltipText: string,
-    placement?: Popper.Placement
+    placement?: Placement,
+    children?: React.ReactNode
 },{
     tooltipOpen: boolean ,
 }>{

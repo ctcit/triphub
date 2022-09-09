@@ -3,11 +3,10 @@ import * as React from 'react'
 import { IHistoryItem, IParticipant, ITrip } from './Interfaces'
 import { Accordian } from './Accordian'
 import { Spinner } from './Widgets'
-import ListGroup from 'reactstrap/lib/ListGroup'
-import ListGroupItem from 'reactstrap/lib/ListGroupItem'
 import { BindMethods, FormatDate } from './Utilities'
 import { MembersService } from './Services/MembersService'
 import { TripsService } from './Services/TripsService'
+import { ListGroup, ListGroupItem } from 'reactstrap'
 
 
 function GetDate(item: IHistoryItem): string {

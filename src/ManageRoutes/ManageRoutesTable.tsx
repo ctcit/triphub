@@ -64,8 +64,8 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
                 </div>
               )
           },
-          canSort: true,
-          sortType: (rowA: any, rowB: any, columnId: string, desc: boolean): number => {
+          // canSort: true,
+          sortType: (rowA: any, rowB: any, columnId?: string, desc?: boolean): number => {
             const a = rowA.isSelected;
             const b = rowB.isSelected;
             return a > b ? 1 : b > a ? -1 : 0;
@@ -77,7 +77,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
           accessor: 'date',
           filter: 'includesText',
           style: { width: '100px' }
-        },
+        } as any as Column<IArchivedRoute>,
         {
           id: 'title',
           Header: 'Title',
@@ -93,7 +93,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
           Filter: SelectColumnFilter,
           filter: 'equals',
           style: { width: '100px' }
-        },
+        } as any as Column<IArchivedRoute>,
         {
           id: 'status',
           Header: 'Status',
@@ -109,7 +109,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
           Filter: SelectColumnFilter,
           filter: 'equals',
           style: { width: '100px' }
-        },
+        } as any as Column<IArchivedRoute>,
         {
           id: 'distance',
           Header: 'Distance',
@@ -127,7 +127,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
           Filter: SliderColumnFilter,
           filter: 'lessThanOrEqualToNumber',
           // useMemo gives an error on sortYpe - don't know why
-          sortType: (rowA: any, rowB: any, columnId: string, desc: boolean): number => {
+          sortType: (rowA: any, rowB: any, columnId: string, desc?: boolean): number => {
             const a = rowA.values[columnId]
             const b = rowB.values[columnId]
             return a > b ? 1 : b > a ? -1 : 0;
@@ -518,14 +518,14 @@ const StyledTrack = styled.div`
 const Track = (props: any, state: any) => <StyledTrack {...props} index={state.index} />;
 
 function SliderColumnFilter({column} : {column: any}): any {
-  const onChange = (value: number) => {
+  const onChange = (value: number | readonly number[]) => {
     column.setFilter(value);
   };
 
   const slider = React.useMemo(() => {
   return (
     <StyledSlider
-        defaultValue={maxFilterDistanceKm}
+        // defaultValue={maxFilterDistanceKm}
         disabled={false}
         renderTrack={Track}
         renderThumb={Thumb}

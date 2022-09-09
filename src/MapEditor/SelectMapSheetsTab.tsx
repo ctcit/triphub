@@ -1,9 +1,7 @@
 import * as L from 'leaflet';
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
-import * as React from 'react';
-import Col from 'reactstrap/lib/Col';
-import { TabPane, ButtonGroup, Row, FormText } from 'reactstrap';
+import { TabPane, ButtonGroup, Row, FormText, Col } from 'reactstrap';
 import { IMap } from '../Interfaces';
 import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import { MdInfo, MdClear, MdGridOff, MdZoomOutMap} from 'react-icons/md';

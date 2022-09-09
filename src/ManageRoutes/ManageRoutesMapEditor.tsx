@@ -1,8 +1,6 @@
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
-import * as React from 'react';
-import FormGroup from 'reactstrap/lib/FormGroup';
-import { TabContent, Nav, NavItem, NavLink } from 'reactstrap';
+import { TabContent, Nav, NavItem, NavLink, FormGroup } from 'reactstrap';
 import { IArchivedRoute, IMap } from '../Interfaces';
 import classnames from 'classnames';
 import ReactResizeDetector from 'react-resize-detector';
@@ -55,15 +53,17 @@ export class ManageRoutesMapEditor extends Component<{
 
     public render() {
         
-        const onResizeModal = (width: number, height: number) => {
+        const onResizeModal = (width?: number, height?: number) => {
             // event fired by ReactResizeDetector
             // limit the resizable maximum width for the map when the modal width changes
-            this.setState({maxMapWidth: width});
-            // resize the ResizableBox containing the map
-            const layerControl: HTMLStyleElement = document.getElementsByClassName('resizableMap')[0] as HTMLStyleElement;
-            layerControl.style.width = Math.floor(width).toString() + 'px';
-            // resize the map
-            this.state.mapComponent?.resizeMap(undefined, width);
+            if (width) {
+                this.setState({maxMapWidth: width});
+                // resize the ResizableBox containing the map
+                const layerControl: HTMLStyleElement = document.getElementsByClassName('resizableMap')[0] as HTMLStyleElement;
+                layerControl.style.width = Math.floor(width).toString() + 'px';
+                // resize the map
+                this.state.mapComponent?.resizeMap(undefined, width);
+            }
         }
 
         const setDetailsTab = () => {
@@ -88,7 +88,7 @@ export class ManageRoutesMapEditor extends Component<{
         const saveDetailsChange = async (routeDetails: RouteDetails) => {
             await this.props.onDetailsChanged(routeDetails);
         }
-        const saveRouteChange = async (routesAsLatLngs: Array<Array<[number, number]>>, currentRouteIndex: number) => {
+        const saveRouteChange = async (routesAsLatLngs?: Array<Array<[number, number]>>, currentRouteIndex?: number) => {
             await this.saveRouteChange(routesAsLatLngs, currentRouteIndex);
         }
         const undoLastRouteEdit = async () => {
@@ -173,10 +173,12 @@ export class ManageRoutesMapEditor extends Component<{
     // Route undo
     // -------------------------------------------------------
 
-    private async saveRouteChange(routesAsLatLngs: Array<Array<[number, number]>>, currentRouteIndex?: number): Promise<void> {
+    private async saveRouteChange(routesAsLatLngs?: Array<Array<[number, number]>>, currentRouteIndex?: number): Promise<void> {
         await this.setStateAsync({ routesAsLatLngs, currentRouteIndex });
         await this.recordLastRouteEdit();
-        await this.props.onRoutesChanged(routesAsLatLngs);
+        if (routesAsLatLngs) {
+            await this.props.onRoutesChanged(routesAsLatLngs);
+        }
     }
 
     private async recordLastRouteEdit(): Promise<void> {

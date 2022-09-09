@@ -4,10 +4,10 @@ import { App } from './App';
 import { PublicTripList } from './PublicTripList';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.css';
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import './index.css';
-import registerServiceWorker from './registerServiceWorker';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 
 // use this chrome plugin to get this working if running locally using "npm start"
 // https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en
@@ -36,11 +36,12 @@ export const NewsletterGenerateUrl = '/db/generate.php?expand=newsletter.odt'
 // This is intentionally *not* the top window hash as when running
 // in an iframe we want to get the path the iframe references
 const path = window.location.hash.replace('#','')
-
+const container = document.getElementById('root')
+const root = createRoot(container!)
 if (path.startsWith('/public')) {
-    ReactDOM.render(<PublicTripList path={path.replace('/public','')}/>, document.getElementById('root'))
+    root.render(<PublicTripList path={path.replace('/public','')}/>)
 } else {
-    ReactDOM.render(<App/>, document.getElementById('root'))
+    root.render(<App/>)
 }
 
-registerServiceWorker();
+serviceWorkerRegistration.register();

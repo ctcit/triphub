@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { Modal, ModalHeader, ModalBody, ModalFooter, Col, Row, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu } from 'reactstrap';
-import Button from 'reactstrap/lib/Button';
+import { Modal, ModalHeader, ModalBody, ModalFooter, Col, Row, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Button } from 'reactstrap';
 import { IMap, IArchivedRoute } from '../Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { MapCommon } from '../MapCommon';
@@ -10,9 +9,9 @@ import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 export class RouteDetails {
-    public title: string;
-    public date: string;
-    public description : string;
+    public title: string = "";
+    public date: string = "";
+    public description : string = "";
 }
 
 export enum MapOperation { None, MoveMarker, ZoomExtents }
@@ -34,10 +33,10 @@ export class ManageRoutesMap extends MapCommon<{
     isSaving : boolean,
     cancelDropdownOpen: boolean
 }>{
-    private pendingRouteDetails: RouteDetails; // changed details before being saved
-    private pendingRoutesLatLngs: Array<Array<[number, number]>>;  // changed routes before being saved
+    private pendingRouteDetails: RouteDetails = new RouteDetails(); // changed details before being saved
+    private pendingRoutesLatLngs: Array<Array<[number, number]>> = [];  // changed routes before being saved
 
-    private mapMarker: L.Marker<any>;
+    private mapMarker: L.Marker<any> | undefined;
 
     constructor(props:any) {
         super(props);
@@ -102,7 +101,9 @@ export class ManageRoutesMap extends MapCommon<{
 
         switch (this.props.mapOperation) {
             case MapOperation.MoveMarker:
-                this.mapMarker.setLatLng(this.map.getCenter());
+                if (this.mapMarker) {
+                    this.mapMarker.setLatLng(this.map.getCenter());
+                }
                 break;
             case MapOperation.ZoomExtents:
                 this.fitBounds();

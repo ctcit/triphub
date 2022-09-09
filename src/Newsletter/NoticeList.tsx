@@ -1,20 +1,17 @@
-import * as React from 'react';
-import * as ReactModal from 'react-modal';
 import { Component } from 'react';
 import { App } from '../App';
 import { INotice, IValidation } from '../Interfaces';
 import '../index.css';
-import Table from 'reactstrap/lib/Table';
-import { BaseUrl } from '..';
 import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from '../Control';
-import Button from 'reactstrap/lib/Button';
 import { IsValidDateString, GetDateString, GetStartOfNextMonth, BindMethods } from '../Utilities';
 import { Accordian } from '../Accordian';
 import { NoticesService } from 'src/Services/NoticesService';
+import ReactModal from 'react-modal';
+import { Button, Table } from 'reactstrap';
 
 class Section {
-    public name: string
-    public title: string
+    public name: string = ''
+    public title: string = ''
 }
 
 

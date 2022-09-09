@@ -71,6 +71,7 @@ export class TripParticipant extends Component<{
         const participants = this.props.participants
         const participantActual = { ...participant, name: participant.name || this.state.newTramper }
         const validations: IValidation[] = TripsService.validateParticipant(participantActual, participants)
+        const warnings = validations.filter(i => !i.ok)
         const canEdit = this.props.canEditTrip || MembersService.Me.id === participant.memberId
         const canEditAsLeader = this.props.role >= Role.TripLeader
         const member = MembersService.getMemberById(participant.memberId)
@@ -139,8 +140,8 @@ export class TripParticipant extends Component<{
 
         const title = [
             <span key='title'>{[participant.name, this.state.newTramper, 'New Tramper'].find(n => n !== '')} </span>,
-            validations.length &&
-            <ToolTipIcon key='warning' icon='warning' tooltip={validations.map(v => v.message).join(', ')} className='warning-icon' id={iconid} />,
+            warnings.length &&
+            <ToolTipIcon key='warning' icon='warning' tooltip={warnings.map(v => v.message).join(', ')} className='warning-icon' id={iconid} />,
             participant.isLeader &&
             <ToolTipIcon key='leader' icon='star' tooltip={`${participant.name} is the leader`} id={iconid} />,
             participant.isPlbProvider &&

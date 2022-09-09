@@ -1,12 +1,8 @@
 import { Component } from 'react';
 import { ITrip } from './Interfaces';
-import ListGroup from 'reactstrap/lib/ListGroup';
-import ListGroupItem from 'reactstrap/lib/ListGroupItem';
-import * as React from 'react';
-import Alert from 'reactstrap/lib/Alert';
-import Container from 'reactstrap/lib/Container';
 import { TripState } from './TripStates';
 import { ConfigService } from './Services/ConfigService';
+import { Container, Alert, ListGroup, ListGroupItem } from 'reactstrap';
 
 export class TripCoordinatorDashboard extends Component<{
     trips: ITrip[]

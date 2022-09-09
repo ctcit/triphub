@@ -1,29 +1,27 @@
 
-import * as React from 'react';
 import { Component } from 'react';
-import { DbApiURL, BaseUrl  } from '..';
 import { App } from '../App';
 import { ITripReport, INewsletterTripReport } from '../Interfaces';
 import '../index.css';
 import { CapitaliseFirstLetter } from '../Utilities';
-import Table from 'reactstrap/lib/Table';
 import { SwitchControl } from '../Control';
 import { FullWidthLoading } from 'src/Widgets';
 import { TripReportsService } from 'src/Services/TripReportsService';
 import { NewslettersService } from 'src/Services/NewlettersService';
+import { Table } from 'reactstrap';
 
 
-class TripReportBinding
+interface ITripReportBinding
 {
-    public newsLetterTripReport: INewsletterTripReport
-    public tripReport: ITripReport
+    newsLetterTripReport: INewsletterTripReport
+    tripReport: ITripReport
 }
 
 export class TripReportList extends Component<{
     app: App,
     newsletterId: number
     }, {
-    tripreports: TripReportBinding[]
+    tripreports: ITripReportBinding[]
     isLoading: boolean
     }> {
 
@@ -47,7 +45,7 @@ export class TripReportList extends Component<{
         .then((tripReports : ITripReport[]) => {
             NewslettersService.getNewslettersTripReports(this.props.newsletterId)
             .then((newsletterTripReports : INewsletterTripReport[]) => {
-                const tripReportBindings : TripReportBinding[] = []
+                const tripReportBindings : ITripReportBinding[] = []
                 tripReports.forEach(tripReport => {
                    let newsLetterTripReport : INewsletterTripReport | undefined = newsletterTripReports.find( r => r.tripreport === tripReport.id) 
                    if ( newsLetterTripReport === undefined )
@@ -85,7 +83,7 @@ export class TripReportList extends Component<{
                 </thead>
                 <tbody>
                     {this.state.tripreports.map(
-                        (binding:TripReportBinding) =>  {
+                        (binding:ITripReportBinding) =>  {
                             const onGet = (id: string ) : any => {
                                 return binding.newsLetterTripReport.publish
                             }

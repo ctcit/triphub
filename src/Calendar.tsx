@@ -3,20 +3,13 @@ import { Component } from 'react';
 import { App } from './App';
 import { ITrip, Role } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile, GetDate } from './Utilities';
-import ButtonGroup from 'reactstrap/lib/ButtonGroup';
-import Table from 'reactstrap/lib/Table';
 import { PriorityNavItem } from './TriphubNavBar';
-import Badge from 'reactstrap/lib/Badge';
-import Dropdown from 'reactstrap/lib/Dropdown';
-import DropdownToggle from 'reactstrap/lib/DropdownToggle';
-import DropdownMenu from 'reactstrap/lib/DropdownMenu';
-import DropdownItem from 'reactstrap/lib/DropdownItem';
-import Container from 'reactstrap/lib/Container';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { ToolTipIcon } from './ToolTipIcon';
 import { ConfigService } from './Services/ConfigService';
 import { HolidaysService } from './Services/HolidaysService';
 import { TripsService } from './Services/TripsService';
+import { Badge, ButtonGroup, DropdownItem, Dropdown, DropdownToggle, DropdownMenu, Container, Table } from 'reactstrap';
 
 interface ICalendarItem {
     id: number
@@ -105,7 +98,7 @@ class CalendarWeek extends Component<{
 
                     slots.push(' ')
                     slots.push(
-                        <Badge key={item.id} id={'badge' + item.id} onDragStart={onDragStart}
+                        <Badge key={item.id} id={'badge' + item.id} onDragStart={onDragStart} color='green'
                             draggable={this.props.role >= Role.Admin}
                             className={isSelected ? 'selected' : ''}>
                             <span>
@@ -163,8 +156,8 @@ export class Calendar extends Component<{
     length: LengthFilter
     selected: number
 }>{
-    public weeks: ICalendarWeek[]
-    public items: ICalendarItem[]
+    public weeks: ICalendarWeek[] = []
+    public items: ICalendarItem[] = []
 
     constructor(props: any) {
         super(props)

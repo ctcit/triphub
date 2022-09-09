@@ -166,11 +166,13 @@ export class ManageRoutes extends Component<{
             this.setState({ tableState: { filters: [], sortBy: [], pageIndex: 0 } })
         }
 
-        const onSave = async (newRoute: IArchivedRoute): Promise<any> => {
-            this.setState({ isEditing: false, isSaving: true }); 
-            await this.setSelectedRoutes([await this.RecalculateAndSaveRoute(newRoute)]);
-            await ArchivedRoutesService.getArchivedRoutes(true, true); // force reload
-            this.setState({isSaving: false});
+        const onSave = async (newRoute: IArchivedRoute | undefined): Promise<any> => {
+            if (newRoute) {
+                this.setState({ isEditing: false, isSaving: true }); 
+                await this.setSelectedRoutes([await this.RecalculateAndSaveRoute(newRoute)]);
+                await ArchivedRoutesService.getArchivedRoutes(true, true); // force reload
+                this.setState({isSaving: false});
+            }
         }
 
         const onCancel = (): Promise<void> => {
@@ -376,8 +378,10 @@ export class ManageRoutes extends Component<{
             return Promise.resolve();
         }
         return this.getRouteDetails(route)
-            .then((detailedRoute: IArchivedRoute) => {
-                Object.assign(route, detailedRoute); // copy detailed route properties to route
+            .then((detailedRoute: IArchivedRoute | undefined) => {
+                if (detailedRoute) {
+                    Object.assign(route, detailedRoute); // copy detailed route properties to route
+                }
             });
     }
 
@@ -438,7 +442,8 @@ export class ManageRoutes extends Component<{
         const gpxs = multiGpx.split("<GpxSeparator/>").filter((gpx: string) => gpx.length > 0);
         return Promise.all(gpxs.map((gpx: string) => this.importGpx(gpx))).then(results => 
             results.reduce(
-                (allRoutes: Array<Array<[number, number]>>, newRoutes: Array<Array<[number, number]>>) => allRoutes.concat(newRoutes), []));
+                (allRoutes: Array<Array<[number, number]>>, newRoutes: Array<Array<[number, number]>> | undefined) => 
+                    newRoutes ? allRoutes.concat(newRoutes) : allRoutes, []));
     }
 
     private importGpx(gpx: string): Promise<Array<Array<[number, number]>> | undefined> {
@@ -581,8 +586,8 @@ export class ManageRoutes extends Component<{
 
     private concatArrays( a: any[][]): any[] {
         return a.reduce((p: any[], c: any[]) => (
-                p === [] ? c :
-                c === [] ? p :
+                p.length === 0 ? c :
+                c.length === 0 ? p :
                 p.concat(c)
             ), []
         );

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Component } from 'react'
-import { Button } from 'reactstrap'
+import { Badge, Button, Col, Container, Row } from 'reactstrap'
 import { AdminHint as TripHubAlert } from './Widgets'
 import { IEdit, IParticipant, ITrip, IParticipantsInfo, IState, Role } from './Interfaces'
 import { GetDateString, AddDays, GetDisplayPriority, BindMethods } from './Utilities'
@@ -14,11 +14,7 @@ import { Pill } from './Widgets'
 import './index.css'
 import { ToolTipIcon } from './ToolTipIcon'
 import { Accordian } from './Accordian'
-import Container from 'reactstrap/lib/Container'
-import Badge from 'reactstrap/lib/Badge'
 import { TextAreaInputControl } from './Control'
-import Row from 'reactstrap/lib/Row'
-import Col from 'reactstrap/lib/Col'
 import { TripState } from './TripStates'
 import { ConfigService } from './Services/ConfigService'
 import { MembersService } from './Services/MembersService'
@@ -46,7 +42,7 @@ export class Trip extends Component<{
     approval?: IState | null
 }> {
 
-    public suggestedTrip: { trip: ITrip, participants: IParticipant[] }
+    public suggestedTrip?: { trip: ITrip, participants: IParticipant[] }
 
     constructor(props: any) {
         super(props)
@@ -208,7 +204,7 @@ export class Trip extends Component<{
     public onSaveSuggestedTrip() {
         const trip = this.state.trip
         const participants = this.state.participants
-        const tripWarnings = TripsService.validateTrip(this.state.trip).filter(i => !i.ok)
+        const tripWarnings = [] // TripsService.validateTrip(this.state.trip).filter(i => !i.ok)
 
         if (tripWarnings.length > 0) {
             this.setState({ showValidationMessage: true })
@@ -465,6 +461,7 @@ export class Trip extends Component<{
                         expanded={false}>
                         <TripCosts 
                             trip={this.state.trip} 
+                            participants={this.state.participants} 
                             currentParticipants={this.participantsInfo.current} 
                             canEditTrip={this.canEditTrip} 
                             setTripFields={setTripFields} 

@@ -4,7 +4,7 @@ import 'leaflet-arrowheads';
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
 import { Component } from 'react';
-import { IMap, IArchivedRoute } from './Interfaces';
+import { IMap } from './Interfaces';
 
 export type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
 export type ArchivedRoutePolygon = L.Polygon & {archivedRoute: { id: string }};
@@ -15,7 +15,7 @@ export class MapCommon<P extends {
     nz50MapsBySheet: { [mapSheet: string] : IMap },
 }, S, SS = any> extends Component<P, S, SS> {
     // the leaflet map
-    public map: L.Map;
+    public map: L.Map = undefined as any as L.Map; // we know this gets set before it is used
 
     // selected map sheets
     public mapSheets: string[] = [];
@@ -26,8 +26,8 @@ export class MapCommon<P extends {
 
     // NZ50 map sheets grid
     public nz50MapPolygonsBySheet: { [mapSheet: string] : NZ50MapPolygon } = {};
-    public nz50LayerGroup: L.LayerGroup<NZ50MapPolygon[]>;
-    public nz50MarkerLayerGroup: L.LayerGroup<L.Marker[]>;
+    public nz50LayerGroup: L.LayerGroup<NZ50MapPolygon[]> = undefined as any as L.LayerGroup<NZ50MapPolygon[]>; // we know this gets set before it is used
+    public nz50MarkerLayerGroup: L.LayerGroup<L.Marker[]> = undefined as any as L.LayerGroup<L.Marker[]>; // we know this gets set before it is used
 
 
 
@@ -197,7 +197,7 @@ export class MapCommon<P extends {
                     this.currentRouteIndex = this.routes.length - 1;
                     this.adjustRoutePositionIndicators();
                 }
-            }).on('loaded', (event: Event) => {
+            }).on('loaded', (event: any) => {
                 this.fitBounds();
                 resolve();
             }).on('error', (event: any) => {

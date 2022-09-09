@@ -11,6 +11,7 @@ export class Accordian extends Component<{
     title?: any
     className?: string
     headerClassName?: string
+    children?: React.ReactNode
     onDemand?: () => JSX.Element | JSX.Element[]
 }, {
     expanded: boolean

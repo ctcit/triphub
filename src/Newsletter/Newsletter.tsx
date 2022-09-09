@@ -25,7 +25,7 @@ export class Newsletter extends Component<{
     isNew: boolean
 }> {
 
-    public newNewsletter: INewsletter
+    public newNewsletter: INewsletter = { id: 0 } as INewsletter
     public app: App
 
     constructor(props: any) {

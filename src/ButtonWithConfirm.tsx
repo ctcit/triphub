@@ -2,8 +2,8 @@ import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
 import * as React from 'react';
 import { Component } from 'react';
-import { Button, ButtonDropdown, DropdownItem, DropdownMenu, DropdownToggle, Tooltip } from 'reactstrap';
-import * as Popper from 'popper.js';
+import { ButtonDropdown, DropdownItem, DropdownMenu, DropdownToggle, Tooltip } from 'reactstrap';
+import type { Placement } from '@popperjs/core';
 
 export class ButtonWithConfirm extends Component<{
     id: string,
@@ -11,8 +11,9 @@ export class ButtonWithConfirm extends Component<{
     disabled?: boolean,
     onClick: () => void,
     tooltipText: string,
-    placement?: Popper.Placement,
-    confirmText: string
+    placement?: Placement,
+    confirmText: string,
+    children?: React.ReactNode;
 },{
     tooltipOpen: boolean,
     cancelDropdownOpen: boolean

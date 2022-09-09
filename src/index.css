@@ -152,6 +152,27 @@ button>span.fa {
 }
 
 /* ---------------------------- */
+/* Payment status */
+/* ---------------------------- */
+.payment-status {
+  float: right;
+  margin-left: 20px;
+  margin-right: 20px;
+  height: 25px;
+}
+
+/* ---------------------------- */
+/* Other */
+/* ---------------------------- */
+
+.others-header {
+  padding: 0.40rem 1.25rem;
+  margin-top: -10px;
+  /* hack */
+  background-color: rgb(245, 245, 245);
+}
+
+/* ---------------------------- */
 /* Accordian control */
 /* ---------------------------- */
 

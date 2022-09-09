@@ -1,13 +1,12 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Component } from 'react';
 import * as React from 'react';
-import { Badge, FormGroup, Input, FormText, Row, DropdownToggle, DropdownMenu, DropdownItem, ButtonDropdown, InputGroup } from 'reactstrap';
+import { Badge, FormGroup, Input, FormText, Row, DropdownToggle, DropdownMenu, DropdownItem, ButtonDropdown, InputGroup, Label } from 'reactstrap';
 import './index.css';
 import { Spinner } from './Widgets';
 import Textarea from 'react-textarea-autosize';
 import Switch from "react-switch";
-import { InputType } from 'reactstrap/lib/Input';
-import Label from 'reactstrap/lib/Label';
+import { InputType } from 'reactstrap/types/lib/Input';
 
 export class ControlWrapper extends Component<{
     id: string,
@@ -19,7 +18,8 @@ export class ControlWrapper extends Component<{
     onGetValidationMessage?: (id: string) => string,
     saving: boolean,
     helpText?: string,
-    labelFor?: string
+    labelFor?: string,
+    children?: React.ReactNode;
 }, {
 }> {
 
@@ -31,7 +31,7 @@ export class ControlWrapper extends Component<{
         const validationMessage = this.props.onGetValidationMessage ? this.props.onGetValidationMessage(this.props.field) : null;
         return (
             <FormGroup hidden={this.props.hidden} disabled={this.props.disabled || this.props.isLoading}>
-                <Row noGutters={true}>
+                <Row>
                     <FormText id={this.props.id + '_formtext'} color='muted'>
                         <label htmlFor={this.props.labelFor}>{this.props.label}</label>
                     </FormText>
@@ -87,7 +87,11 @@ export class InputControl extends Component<{
             this.setState({ oldValue: this.value, helpText: this.props.helpText });
         }
         const onChange = (event: React.ChangeEvent) => {
-            this.props.onSet(this.props.field, (event.target as any).value);
+            const value = 
+                this.props.type === 'number' ? (event.target as any).valueAsNumber :
+                this.props.type === 'date' ? (event.target as any).valueAsDate :
+                (event.target as any).value
+            this.props.onSet(this.props.field, value);
         }
         const onBlur = () => {
             this.setState({ helpText: undefined, showValidation: true })
@@ -425,7 +429,7 @@ export class ComboBoxControl extends Component<{
                         onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='nope' />
                     <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={dropdownToggle} hidden={this.props.readOnly}>
                         <DropdownToggle color='transparent' caret={true} />
-                        <DropdownMenu right={true}>
+                        <DropdownMenu end={true}>
                             {this.props.options.map((value, i) =>
                                 <div key={i} onClick={onClick}><DropdownItem>{value}</DropdownItem></div>
                             )}

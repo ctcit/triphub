@@ -79,13 +79,14 @@ export interface IParticipant extends IParticipantCosts {
 export interface IParticipantCosts {
     // vehicle providers
     broughtVehicle: boolean
+    isCompanyVehicle: boolean
     totalDistance: number | null
     ratePerKm: number | null
     vehicleCost: number | null
-    vehicleExcess: number | null
+    vehicleReimbursement: number | null
     
     // all
-    vehicleFee: number | null // negative if reimbursed
+    vehicleFee: number | null
     nonMemberFee: number | null
     otherFees: number | null // e.g. hut, gear hire fees
 

@@ -1,6 +1,4 @@
-import * as React from 'react'
-import Badge from 'reactstrap/lib/Badge'
-import { Alert, UncontrolledAlert } from 'reactstrap'
+import { Alert, Badge, UncontrolledAlert } from 'reactstrap'
 
 export const Spinner = <span className='fa fa-spinner fa-spin' key='spinner' />
 export const Done = <span className='fa fa-check' key='done' />

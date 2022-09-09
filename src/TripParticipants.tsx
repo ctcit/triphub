@@ -74,7 +74,8 @@ export class TripParticipants extends Component<{
             logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '',
             emergencyContactName: '', emergencyContactPhone: '',
 
-            broughtVehicle: false, engineSize: 0, totalDistance: 0, ratePerKm: 0, vehicleCost: 0, vehicleExcess: 0,
+            broughtVehicle: false, isCompanyVehicle: false,
+            engineSize: 0, totalDistance: 0, ratePerKm: 0, vehicleCost: 0, vehicleReimbursement: 0,
             vehicleFee: 0, 
             nonMemberFee: 0, otherFees: 0, 
             toPay: 0, paid: 0

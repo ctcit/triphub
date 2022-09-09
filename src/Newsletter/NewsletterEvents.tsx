@@ -1,11 +1,9 @@
 import { App } from 'src/App';
 import { INewsletterEvent } from 'src/Interfaces';
 import { useState, useEffect } from 'react';
-import { BaseUrl } from 'src';
-import * as React from 'react';
-import Table from 'reactstrap/lib/Table';
 import { FullWidthLoading } from 'src/Widgets';
 import { NewslettersService } from 'src/Services/NewlettersService';
+import { Table } from 'reactstrap';
 
 export interface INewsletterEventProps {
     app:App,

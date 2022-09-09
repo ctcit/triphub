@@ -1,22 +1,20 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Component } from 'react';
-import * as React from 'react';
 import { Role } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
-import { apiCall, TitleFromId } from './Utilities';
+import { TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
 import { Newsletter } from './Newsletter/Newsletter';
 import { Spinner, Done } from './Widgets';
-import Container from 'reactstrap/lib/Container';
-import Jumbotron from 'reactstrap/lib/Jumbotron';
 import { INotification, NotificationArea } from './NotificationArea';
 import { ManageRoutes } from './ManageRoutes/ManageRoutes';
 import { ConfigService } from './Services/ConfigService';
 import { MapsService } from './Services/MapsService';
 import { HolidaysService } from './Services/HolidaysService';
 import { MembersService } from './Services/MembersService';
+import { Container } from 'reactstrap';
 
 export class App extends Component<{
 }, {
@@ -83,10 +81,10 @@ export class App extends Component<{
     public loadingStatus(state: any = {}): JSX.Element {
         state = { ...this.state, ...state }
         return <Container key='loadingStatus' className={ConfigService.containerClassName + "triphub-loading-container"}>
-            <Jumbotron key='loadingAlert' variant='primary'>
+            <div key='loadingAlert' className="p-5 mb-4 bg-light rounded-3">
                 {this.loadingFields(state).map(f =>
                     <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substring(2))}</div>)}
-            </Jumbotron>
+            </div>
         </Container>
     }
 

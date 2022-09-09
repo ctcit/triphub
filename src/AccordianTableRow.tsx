@@ -9,6 +9,7 @@ export class AccordianTableRow extends Component<{
     expanded? : boolean
     tablerow : JSX.Element[]
     expandClassName? : string
+    children?: React.ReactNode
 },{
     expanded : boolean
 }> {

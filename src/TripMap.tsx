@@ -1,8 +1,7 @@
 import * as L from 'leaflet';
 import * as React from 'react';
-import { ButtonGroup, Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Form, Container } from 'reactstrap';
+import { ButtonGroup, Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Form, Container, Button } from 'reactstrap';
 import { MapEditor } from './MapEditor/MapEditor';
-import Button from 'reactstrap/lib/Button';
 import { IMap, IArchivedRoute, ITrip } from './Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
@@ -332,8 +331,10 @@ export class TripMap extends MapCommon<{
     private selectArchivedRoute(archivedRouteId: number) : void {
         this.setState({ busy: true });
          this.props.getArchivedRoute(archivedRouteId)
-             .then(async (archivedRoute: IArchivedRoute) => {
-                 this.saveSelectedRoute(archivedRoute.routes);
+             .then(async (archivedRoute?: IArchivedRoute) => {
+                 if (archivedRoute) {
+                    this.saveSelectedRoute(archivedRoute.routes);
+                 }
              })
             .finally(() => {
                 this.setState({ busy: false });

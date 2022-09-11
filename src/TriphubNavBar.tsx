@@ -1,5 +1,4 @@
 import { Component } from 'react'
-import { App } from './App'
 import { Role } from './Interfaces'
 import { ConfigService } from './Services/ConfigService'
 import { NavItem, NavLink, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Navbar, NavbarBrand, Nav, NavbarToggler, Collapse } from 'reactstrap'
@@ -11,7 +10,12 @@ export const PriorityNavItem = (props: any) => {
 }
 
 export class TriphubNavbar extends Component<{
-    app: App,
+    role: Role,
+    path: string,
+    isLoading: boolean,
+    isOnline: boolean,
+    setPath: (path: string) => void,
+    setRole: (role: Role) => void,
     children?: React.ReactNode
     },{
         isOpen: boolean,
@@ -37,25 +41,25 @@ export class TriphubNavbar extends Component<{
 
     public render() {
 
-        const alltrips = () => this.props.app.setPath('/')
-        const calendar = () => this.props.app.setPath('/calendar')
-        const newtrip = () => this.props.app.setPath('/newtrip')
-        const newsletter = () => this.props.app.setPath('/newsletter')
-        const newsocial = () => this.props.app.setPath('/newsocial')
-        const routes = () => this.props.app.setPath('/routes')
+        const alltrips = () => this.props.setPath('/')
+        const calendar = () => this.props.setPath('/calendar')
+        const newtrip = () => this.props.setPath('/newtrip')
+        const newsletter = () => this.props.setPath('/newsletter')
+        const newsocial = () => this.props.setPath('/newsocial')
+        const routes = () => this.props.setPath('/routes')
         const toggle = () => this.setState({isOpen: !this.state.isOpen});
         const togglePriviledgesDropdown = () => this.setState({priviledgesDropdownIsOpen: !this.state.priviledgesDropdownIsOpen});
-        const setAdminPrivileges = () => this.props.app.setState({role:Role.Admin})
-        const setTripLeaderPrivileges = () => this.props.app.setState({role:Role.TripLeader})
-        const setMemberPrivileges = () => this.props.app.setState({role:Role.Member})
-        const setNonMemberPrivileges = () => this.props.app.setState({role:Role.NonMember})
+        const setAdminPrivileges = () => this.props.setRole(Role.Admin)
+        const setTripLeaderPrivileges = () => this.props.setRole(Role.TripLeader)
+        const setMemberPrivileges = () => this.props.setRole(Role.Member)
+        const setNonMemberPrivileges = () => this.props.setRole(Role.NonMember)
 
         const navItems: JSX.Element[] = []
 
-        if (ConfigService.inIFrame && this.props.app.state.path !== '' && this.props.app.state.path !== '/') {
+        if (ConfigService.inIFrame && this.props.path !== '' && this.props.path !== '/') {
             navItems.push(
             <NavItem key='alltrips'>
-                <NavLink onClick={alltrips} disabled={this.props.app.isLoading}>
+                <NavLink onClick={alltrips} disabled={this.props.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-bars'/>
                         &nbsp; All trips
@@ -64,10 +68,10 @@ export class TriphubNavbar extends Component<{
             </NavItem>)
         }
 
-        if (this.props.app.state.path !== '/calendar') {
+        if (this.props.path !== '/calendar') {
             navItems.push(
             <NavItem key='calendar'>
-                <NavLink onClick={calendar} disabled={this.props.app.isLoading}>
+                <NavLink onClick={calendar} disabled={this.props.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-calendar'/>
                         &nbsp; Calendar
@@ -78,10 +82,10 @@ export class TriphubNavbar extends Component<{
 
         navItems.push(<div id='priority-nav-items' key='prioritynavitems'/>)
         
-        if (this.props.app.state.role >= Role.TripLeader && this.props.app.state.path !== '/newtrip') {
+        if (this.props.isOnline && this.props.role >= Role.TripLeader && this.props.path !== '/newtrip') {
             navItems.push(
             <NavItem key='newTrip'>
-                <NavLink onClick={newtrip} disabled={this.props.app.isLoading}>
+                <NavLink onClick={newtrip} disabled={this.props.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-lightbulb'/> 
                         &nbsp; New trip
@@ -90,7 +94,7 @@ export class TriphubNavbar extends Component<{
             </NavItem>)
         }
     
-        if (this.props.app.state.role >= Role.Admin && this.props.app.state.path !== '/newsletter') {
+        if (this.props.isOnline && this.props.role >= Role.Admin && this.props.path !== '/newsletter') {
             navItems.push(
             <NavItem key='manageNewsletter'>
                 <NavLink onClick={newsletter}>
@@ -102,10 +106,10 @@ export class TriphubNavbar extends Component<{
             </NavItem>)
         }
 
-        if (this.props.app.state.role >= Role.Admin && this.props.app.state.path !== '/newSocial') {
+        if (this.props.isOnline && this.props.role >= Role.Admin && this.props.path !== '/newSocial') {
             navItems.push(
             <NavItem key='addASocialEvent'>
-                <NavLink onClick={newsocial} disabled={this.props.app.isLoading}>
+                <NavLink onClick={newsocial} disabled={this.props.isLoading}>
                     <span className='triphub-navbar'>
                         <span className='fa fa-users'/> 
                         &nbsp; Add a social event
@@ -114,7 +118,7 @@ export class TriphubNavbar extends Component<{
             </NavItem>)
         }
 
-        if (this.props.app.state.role >= Role.Admin && this.props.app.state.path !== '/routes') {
+        if (this.props.isOnline && this.props.role >= Role.Admin && this.props.path !== '/routes') {
             navItems.push(
             <NavItem key='manageRoutes'>
                 <NavLink onClick={routes}>
@@ -126,7 +130,7 @@ export class TriphubNavbar extends Component<{
             </NavItem>)
         }
 
-        if (this.props.app.state.role >= Role.Webmaster) {
+        if (this.props.role >= Role.Webmaster) {
             navItems.push(
             <Dropdown key='setPrivileges' nav={true} isOpen={this.state.priviledgesDropdownIsOpen} toggle={togglePriviledgesDropdown}>
                 <DropdownToggle className='triphub-navbar' nav={true} caret={true}>

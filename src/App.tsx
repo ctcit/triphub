@@ -28,6 +28,7 @@ export class App extends Component<{
     statusId?: any
     notifications: INotification[]
     isOnline: boolean
+    backgroundSyncPermitted: boolean,
     appUpdateAvailable: boolean
 }> {
 
@@ -43,7 +44,8 @@ export class App extends Component<{
             isLoadingHolidays: true,
             role: Role.NonMember,
             notifications: [],
-            isOnline: true,
+            isOnline: navigator.onLine,
+            backgroundSyncPermitted: false,
             appUpdateAvailable: false
         }
 
@@ -59,6 +61,13 @@ export class App extends Component<{
         window.addEventListener('online', () => {
             this.onOnline()
         });
+
+        navigator.permissions.query({name: 'background-sync'} as unknown as PermissionDescriptor).then((permissionStatus) => {
+            this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
+            permissionStatus.addEventListener('change', (e) => {
+                this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
+              });
+        })
 
         // add handling for application update
         if ('serviceWorker' in navigator) {
@@ -79,13 +88,8 @@ export class App extends Component<{
         
               // When `event.wasWaitingBeforeRegister` is true, a previously
               // updated service worker is still waiting.
-              // You may want to customize the UI prompt accordingly.
-        
               // This code assumes your app has a promptForUpdate() method,
               // which returns true if the user wants to update.
-              // Implementing this is app-specific; some examples are:
-              // https://open-ui.org/components/alert.research or
-              // https://open-ui.org/components/toast.research
               const updateAccepted = await this.promptForUpdate();
         
               if (updateAccepted) {
@@ -164,7 +168,9 @@ export class App extends Component<{
             role: this.state.role,
             setPath,
             addNotification,
-            loadingStatus
+            loadingStatus,
+            isOnline: this.state.isOnline,
+            offlineEditsPermitted: this.state.backgroundSyncPermitted
         }
         const renderings = {
             loading: () => this.loadingStatus(),
@@ -182,6 +188,11 @@ export class App extends Component<{
                 <Alert color='warning'>
                     <span className='fa fa-ban' />
                     &nbsp;<b>No internet connection. Application is working offline. Limited options available.</b>
+                </Alert>,
+            !this.state.backgroundSyncPermitted && !this.state.isOnline && 
+                <Alert color='warning'>
+                    <span className='fa fa-rotate' />
+                    &nbsp;<b>Background sync is disabled or not supported by your browser.  Consider granting permission (browser dependent) to allow limited offline editing options.</b>
                 </Alert>,
             this.state.appUpdateAvailable &&
                 <Alert color='warning'>

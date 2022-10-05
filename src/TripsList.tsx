@@ -14,9 +14,11 @@ import { ButtonWithTooltip } from './ButtonWithTooltip'
 import { MembersService } from './Services/MembersService'
 import { TripsService } from './Services/TripsService'
 import { ConfigService } from './Services/ConfigService'
+import memoizeOne from 'memoize-one'
 
 class TripsLine extends Component<{
     trip: ITrip
+    available: boolean
     setPath(path: string): void
 }, {}> {
     constructor(props: any) {
@@ -43,11 +45,18 @@ class TripsLine extends Component<{
                     tooltip={e.message} className='warning-icon' />)
         }
 
-        const onClick = () => this.onClick();
+        const onClick = () => {
+            if (this.props.available) {
+                this.onClick();
+            }
+        }
+
         const tablerow = [
             <td key={'open' + id}>
                 <ButtonGroup className='trip-list-buttons'>
-                    <ButtonWithTooltip id={`open-${id}`} onClick={onClick} tooltipText="Go to trip">
+                    <ButtonWithTooltip id={`open-${id}`} onClick={onClick} 
+                        tooltipText={this.props.available ? 'Go to trip' : 'This trip is not available while offline'}
+                        disabled={!this.props.available}>
                         <span className={trip.isSocial ? 'fas fa-users' : 'fas fa-hiking'} />
                     </ButtonWithTooltip>
                 </ButtonGroup>
@@ -89,6 +98,7 @@ class TripsLine extends Component<{
 export class TripsGroup extends Component<{
     trips: ITrip[]
     expanded: boolean
+    cachedTripIds: number[] | null
     setPath(path: string): void
 }, {
 }> {
@@ -127,6 +137,7 @@ export class TripsGroup extends Component<{
                             {this.props.trips.map(
                                 (trip: ITrip) => <TripsLine key={'trip' + trip.id} 
                                     trip={trip}
+                                    available={this.props.cachedTripIds == null || this.props.cachedTripIds.includes(trip.id)}
                                     setPath={this.props.setPath}
                                      />)}
                         </tbody>
@@ -138,19 +149,21 @@ export class TripsGroup extends Component<{
 }
 
 export class TripsList extends Component<{
-    role: Role
+    role: Role,
+    isOnline: boolean,
     setPath(path: string): void
     loadingStatus(state: any): JSX.Element
 }, {
     isLoadingTrips: boolean
     groups: ITrip[][],
+    cachedTripIds: number[] | null
 }> {
     constructor(props: any) {
         super(props)
-        this.state = { isLoadingTrips: true, groups: [] }
+        this.state = { isLoadingTrips: true, groups: [], cachedTripIds: null }
     }
 
-    public requery() {
+    private requeryTrips() {
         TripsService.getTrips()
             .then((data: ITrip[]) => {
                 const order = Object.keys(TripState)
@@ -166,11 +179,23 @@ export class TripsList extends Component<{
             })
     }
 
+    private memoizedGetCachedTripIds = memoizeOne((isOnline: boolean) => {
+        if (this.props.isOnline) {
+            this.setState({cachedTripIds: null})
+        } else {
+            TripsService.getCachedTripIds().then((cachedTripIds: number[]) => {
+                this.setState({cachedTripIds})
+            })
+        }
+    });
+
     public componentDidMount() {
-        this.requery()
+        this.requeryTrips()
     }
 
     public render() {
+        this.memoizedGetCachedTripIds(this.props.isOnline)
+
         if (this.state.isLoadingTrips) {
             return this.props.loadingStatus({ ...this.state })
         }
@@ -191,6 +216,7 @@ export class TripsList extends Component<{
                     <TripsGroup key={'group' + i} 
                         trips={group} 
                         expanded={i <= 1} 
+                        cachedTripIds={this.state.cachedTripIds}
                         setPath={this.props.setPath}
                         />)
         ]

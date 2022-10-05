@@ -128,13 +128,18 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
     }
 
     console.log(`${method} ${url}`)
-    const result = await fetch(url, request)
-    const text = await result.text()
-
     try {
-        return JSON.parse(text)
-    } catch (ex) {
-        console.log(text)
+        const result = await fetch(url, request)
+        const text = await result.text()
+    
+        try {
+            return JSON.parse(text)
+        } catch (ex) {
+            console.log(text)
+            return null
+        }
+    } catch(ex) {
+        console.log(`Failed to fetch: ${ex}`)
         return null
     }
 }
@@ -143,4 +148,8 @@ export function BindMethods(obj: any) {
     for (const method of Object.keys(Object.getPrototypeOf(obj)).filter(m => /^on[A-Z]/.test(m))) {
         obj[method] = obj[method].bind(obj)
     }
+}
+
+export function escapeRegex(string: string) {
+    return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }

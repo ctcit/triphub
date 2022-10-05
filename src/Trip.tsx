@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { Component } from 'react'
 import { Badge, Button, Col, Container, Row } from 'reactstrap'
 import { AdminHint as TripHubAlert } from './Widgets'
@@ -27,6 +26,8 @@ export class Trip extends Component<{
     isNewSocial: boolean,
     id?: number,
     role: Role,
+    isOnline: boolean,
+    offlineEditsPermitted: boolean,
     setPath(path: string): void,
     addNotification(text: string, colour: string): void,
     loadingStatus(state: any): JSX.Element
@@ -142,8 +143,9 @@ export class Trip extends Component<{
 
     public get canEditTrip() {
         const me = MembersService.Me
-        return this.amAdmin ||
-            this.state.participants.some((p: IParticipant) => me.id === p.memberId && p.isLeader)
+        return (this.props.isOnline || this.props.offlineEditsPermitted) &&
+            (this.amAdmin ||
+                this.state.participants.some((p: IParticipant) => me.id === p.memberId && p.isLeader))
     }
 
     public async onDeleteTrip() {
@@ -417,6 +419,7 @@ export class Trip extends Component<{
                         trip={this.state.trip} isNew={this.props.isNew} canEditTrip={this.canEditTrip}
                         forceValidation={this.state.showValidationMessage}
                         role={MembersService.Me.role} maps={MapsService.Maps}
+                        isOnline={this.props.isOnline}
                         setTripFields={setTripFields}
                     />
                 </Accordian>

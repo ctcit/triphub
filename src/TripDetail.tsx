@@ -18,6 +18,7 @@ export class TripDetail extends Component<{
     forceValidation?: boolean,
     role: Role,
     maps: IMap[],
+    isOnline: boolean,
     setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<ITrip>
 }, {
     editMap: boolean
@@ -112,6 +113,7 @@ export class TripDetail extends Component<{
             readOnly: trip.id !== -1 && !this.props.canEditTrip,
             owner: this,
             forceValidation: this.props.forceValidation,
+            isOnline: this.props.isOnline,
             onGet, onSet, onSave, onGetValidationMessage
         }
 

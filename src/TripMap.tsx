@@ -28,6 +28,7 @@ export class TripMap extends MapCommon<{
     readOnly? : boolean,
     isLoading?: boolean,
     list? : any,
+    isOnline: boolean,
     onGet: (id: string) => any,
     onSave: (id: string, value: any) => Promise<ITrip>,
     onGetValidationMessage?: (id: string) => string,
@@ -177,7 +178,7 @@ export class TripMap extends MapCommon<{
                                 <div id="tripmap"/>
                             </ResizableBox>
                         }
-                        { !this.props.readOnly &&
+                        { !this.props.readOnly && this.props.isOnline &&
                                 <ButtonGroup>
                                     <ReactTags tags={[]}
                                         autofocus={false}
@@ -233,7 +234,7 @@ export class TripMap extends MapCommon<{
                                             <MdClear/>
                                     </ButtonWithConfirm>
                                 }
-                                { !this.props.readOnly &&
+                                { !this.props.readOnly && this.props.isOnline &&
                                     <a href="https://youtu.be/ybP2xjWb0t0" target="_blank">
                                         <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                                     </a>
@@ -245,7 +246,7 @@ export class TripMap extends MapCommon<{
                 </Row>
                 <Row>
                     <Col>
-                        { !this.props.readOnly &&
+                        { !this.props.readOnly && this.props.isOnline &&
                             <ButtonGroup>
                                 <Button onClick={onEdit}>
                                     <span className='fa fa-map'/>

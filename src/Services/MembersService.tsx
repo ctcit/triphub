@@ -4,6 +4,7 @@ import { apiCall } from '../Utilities';
 
 export class MembersService {
 
+    // offline GET supported
     public static async getMembers(force: boolean = false): Promise<IMember[]> {
         if (force || !this.getMembersPromise) {
             this.getMembersPromise = new Promise<IMember[]>((resolve, reject) => {

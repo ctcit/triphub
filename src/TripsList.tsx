@@ -15,6 +15,7 @@ import { MembersService } from './Services/MembersService'
 import { TripsService } from './Services/TripsService'
 import { ConfigService } from './Services/ConfigService'
 import memoizeOne from 'memoize-one'
+import { TripsCache } from './Services/TripsCache'
 
 class TripsLine extends Component<{
     trip: ITrip
@@ -183,7 +184,7 @@ export class TripsList extends Component<{
         if (this.props.isOnline) {
             this.setState({cachedTripIds: null})
         } else {
-            TripsService.getCachedTripIds().then((cachedTripIds: number[]) => {
+            TripsCache.getCachedTripIds().then((cachedTripIds: number[]) => {
                 this.setState({cachedTripIds})
             })
         }

@@ -14,8 +14,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL, cleanupOutdatedCaches, PrecacheEntry } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { NetworkOnly, NetworkFirst } from 'workbox-strategies';
-import { TripsService } from './Services/TripsService';
-import { TripsCacheUpdaterPlugin } from './TripsCacheUpdaterPlugin';
+import { TripsCache } from './Services/TripsCache';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -95,11 +94,13 @@ registerRoute(
 // -------------------------------------------
 // API caching
 
-// GET trips/{id} and GET trips/{id}/participants/{pid}
+// GET trips
+// GET trips/{id}
+// GET trips/{id}/participants
 registerRoute(
-  /.*\/api\/api.php\/trips\/\d*(\/participants)?/, 
+  /.*\/api\/api.php\/trips(\/\d*(\/participants)?)?/, 
   new NetworkFirst({
-    cacheName: 'trips',
+    cacheName: TripsCache.cacheName,
     plugins: [
       new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 7 * 24 * 60 * 60 }),
     ],
@@ -107,9 +108,12 @@ registerRoute(
   'GET'
 );
 
-// Other selected GETs
+// GET members
+// GET config
+// GET maps
+// GET public_holidays
 registerRoute(
-  /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays)|(trips))/, 
+  /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays))/, 
   new NetworkFirst({
     cacheName: 'gets',
     plugins: [
@@ -120,34 +124,36 @@ registerRoute(
 
 // Any other custom service worker logic can go here.
 const bgSyncPlugin = new BackgroundSyncPlugin('syncs', {
-  maxRetentionTime: 24 * 60 // Retry for max of 24 Hours (specified in minutes)
+  maxRetentionTime: 7 * 24 * 60 // Retry for max of 7 days (specified in minutes)
 });
 
-// class TripsCacheUpdaterPlugin implements WorkboxPlugin {
-//   fetchDidFail: WorkboxPlugin['fetchDidFail'] = async ({request}) => {
-//     await TripsService.updateTripsCache(request);
-//   };
-// }
-// const tripsCacheUpdaterPlugin = new TripsCacheUpdaterPlugin();
+class TripsCacheUpdaterPlugin implements WorkboxPlugin {
+  fetchDidFail: WorkboxPlugin['fetchDidFail'] = async ({request}) => {
+    await TripsCache.updateTripsCache(request);
+  };
+  fetchDidSucceed: WorkboxPlugin['fetchDidSucceed'] = async ({request, response}) => {
+    await TripsCache.updateTripsCache(request);
+    return response;
+  };
+}
+const tripsCacheUpdaterPlugin = new TripsCacheUpdaterPlugin();
 
-// POST members/{id}
+// POST trips/{id}
+// POST trips/{id}/participants/{pid}
 registerRoute(
-  /.*\/api\/api.php\/members\/\d*$/,
+  /.*\/api\/api.php\/trips\/\d*(\/participants\/\d*)?$/,
   new NetworkOnly({
-    plugins: [bgSyncPlugin]
+    plugins: [bgSyncPlugin, tripsCacheUpdaterPlugin]
   }),
   'POST'
 );
 
-// POST trips/{id}
-// POST trips/{id}/participants
-// POST trips/{id}/participants/{pid}
-// POST trips/{id}/email
+// DELETE trips/{id}/edit/{editId}
 registerRoute(
-  /.*\/api\/api.php\/trips\/\d*(\/((participants(\/\d*)?)|(email)))?$/,
+  /.*\/api\/api.php\/trips\/\d*\/edit\/\d*?$/,
   new NetworkOnly({
     plugins: [bgSyncPlugin]
   }),
-  'POST'
+  'DELETE'
 );
 

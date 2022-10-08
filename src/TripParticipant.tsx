@@ -16,6 +16,7 @@ export class TripParticipant extends Component<{
     participant: IParticipant
     trip: ITrip
     role: Role,
+    isOnline: boolean,
     canEditTrip: boolean,
     canWaitList?: boolean
     canUnwaitList?: boolean
@@ -182,7 +183,7 @@ export class TripParticipant extends Component<{
                 <span className='fa fa-sm fa-user-times' />
                 {this.state.isWaitlistOp ? ['Removing ', Spinner] : ''}
             </ButtonWithTooltip>,
-            isMemberDiff &&
+            isMemberDiff && this.props.isOnline &&
             <ButtonWithTooltip key='ecdupdate' id={'ecdupdate' + participant.id} onClick={onSetMember} tooltipText="Update emergency contact details">
                 <span className='fa fa-sm fa-phone' />
                 {this.state.isMemberOp ? ['Updating ', Spinner] : ''}

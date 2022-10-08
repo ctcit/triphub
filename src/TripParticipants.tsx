@@ -14,6 +14,7 @@ export class TripParticipants extends Component<{
     trip: ITrip,
     isNew: boolean,
     role: Role,
+    isOnline: boolean,
     canEditTrip: boolean,
     setTripParticipants: (participants: IParticipant[], setEdited: boolean) => void
     saveNewTripParticipant: (participant: IParticipant) => Promise<IParticipant[]>
@@ -172,13 +173,13 @@ export class TripParticipants extends Component<{
             <Navbar key='navbar' color='light' light={true} expand='md'>
                 {[
                     <Button key={'signmeup' + info.all.length} onClick={onSignMeUp}
-                        hidden={isNewTrip || imOnList || !isOpen}>
+                        hidden={isNewTrip || imOnList || !isOpen || !this.props.isOnline}>
                         <span className='fa fa-pen wiggle' />
                         {this.state.isSaving ? ['Signing up ', Spinner] : 'Sign me up!'}
                         {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
                     <Button key={'signup' + info.all.length} onClick={onSignUpTramper}
-                        hidden={isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged}>
+                        hidden={isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged || !this.props.isOnline}>
                         <span className='fa fa-user-plus' /> Sign up a tramper
                         {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                     </Button>,
@@ -222,6 +223,7 @@ export class TripParticipants extends Component<{
                                 trip={this.props.trip}
                                 canEditTrip={this.props.canEditTrip}
                                 role={this.props.role}
+                                isOnline={this.props.isOnline}
                                 setParticipant={setParticipant}
                                 setPosition={setPosition}
                                 canWaitList={info.late.length !== 0}
@@ -238,6 +240,7 @@ export class TripParticipants extends Component<{
                                 trip={this.props.trip}
                                 canEditTrip={this.props.canEditTrip}
                                 role={this.props.role}
+                                isOnline={this.props.isOnline}
                                 setParticipant={setParticipant}
                                 setPosition={setPosition}
                                 canUnwaitList={true} 
@@ -255,6 +258,7 @@ export class TripParticipants extends Component<{
                                 trip={this.props.trip}
                                 canEditTrip={this.props.canEditTrip}
                                 role={this.props.role}
+                                isOnline={this.props.isOnline}
                                 setParticipant={setParticipant}
                                 setPosition={setPosition}
                                 participants={this.props.participants}

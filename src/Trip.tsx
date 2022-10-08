@@ -19,7 +19,7 @@ import { ConfigService } from './Services/ConfigService'
 import { MembersService } from './Services/MembersService'
 import { MapsService } from './Services/MapsService'
 import { TripsService } from './Services/TripsService'
-
+import memoizeOne from 'memoize-one'
 
 export class Trip extends Component<{
     isNew: boolean,
@@ -66,17 +66,6 @@ export class Trip extends Component<{
             this.onStartNewEvent()
         } else {
             this.setState({ isLoadingTrip: true })
-            TripsService.postTripEditHeartbeatInit(this.props.id as number, { stamp: new Date().toISOString() })
-                .then((editList: IEdit[]) => {
-                    if (editList) {
-                        this.setState({
-                            editList,
-                            editId: editList[0].id,
-                            editIsEdited: false,
-                            editHeartbeatId: setInterval(() => this.onEditHeartbeat(), ConfigService.Config.editRefreshInSec * 1000)
-                        })
-                    }
-                })
 
             TripsService.getTrip(this.props.id as number)
                 .then((trip: ITrip) => {
@@ -93,9 +82,7 @@ export class Trip extends Component<{
             clearInterval(this.state.editHeartbeatId)
         }
 
-        if (this.state.editId) {
-            TripsService.deleteTripEditHeartbeat(this.state.trip.id, this.state.editId)
-        }
+        this.stopEditHeartbeat()
     }
 
     public setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<ITrip>
@@ -128,7 +115,7 @@ export class Trip extends Component<{
 
     public saveNewTripParticipant(participant: IParticipant): Promise<IParticipant[]> {
         this.setTripIsEdited()
-        return TripsService.postTripParticipant(this.state.trip.id, participant)
+        return TripsService.postTripParticipantNew(this.state.trip.id, participant)
             .then(() => this.requeryParticipants())
     }
 
@@ -323,6 +310,8 @@ export class Trip extends Component<{
     }
 
     public render() {
+        this.memoizedStartEditHeatbeat(this.props.isOnline)
+
         if (this.state.isLoadingTrip) {
             return this.props.loadingStatus({ isLoadingTrip: this.state.isLoadingTrip })
         }
@@ -446,7 +435,8 @@ export class Trip extends Component<{
                             saveNewTripParticipant={saveNewTripParticipant}
                             isNew={isNew} 
                             canEditTrip={this.canEditTrip} 
-                            role={this.props.role} />
+                            role={this.props.role}
+                            isOnline={this.props.isOnline} />
                     </Accordian>
                 }
                 {this.props.isNew || !this.canEditTrip ? null :
@@ -485,13 +475,42 @@ export class Trip extends Component<{
         )
     }
 
+    private memoizedStartEditHeatbeat = memoizeOne((isOnline: boolean) => {
+        this.startEditHeatbeat()
+    });
+
+    public startEditHeatbeat() {
+        if (this.props.isOnline && !this.state.editId) {
+            TripsService.postTripEditHeartbeatInit(this.props.id as number, { stamp: new Date().toISOString() })
+            .then((editList: IEdit[]) => {
+                if (editList) {
+                    this.setState({
+                        editList,
+                        editId: editList[0].id,
+                        editIsEdited: false,
+                        editHeartbeatId: setInterval(() => this.onEditHeartbeat(), ConfigService.Config.editRefreshInSec * 1000)
+                    })
+                }
+            })
+        }
+    }
+
     public onEditHeartbeat() {
-        TripsService.postTripEditHeartbeat(this.state.trip.id, this.state.editId, { stamp: new Date().toISOString(), isEdited: this.state.editIsEdited })
+        if (this.props.isOnline && !this.state.editId) {
+            TripsService.postTripEditHeartbeat(this.state.trip.id, this.state.editId, { stamp: new Date().toISOString(), isEdited: this.state.editIsEdited })
             .then((editList: IEdit[]) => {
                 if (editList) {
                     this.setState({ editList })
                 }
             })
+        }
+    }
+
+    // only called from componentWillUnmount
+    public stopEditHeartbeat() {
+        if (this.state.editId) {
+            TripsService.deleteTripEditHeartbeat(this.state.trip.id, this.state.editId)
+        }
     }
 
     private get amAdmin(): boolean { return MembersService.Me.role >= Role.Admin }

@@ -3,6 +3,8 @@ import { IHoliday } from '../Interfaces';
 import { apiCall } from '../Utilities';
 
 export class HolidaysService {
+
+    // offline GET supported
     public static async getHolidays(force: boolean = false): Promise<IHoliday[]> {
         if (force || !this.getHolidaysPromise) {
             this.getHolidaysPromise = new Promise<IHoliday[]>((resolve, reject) => {

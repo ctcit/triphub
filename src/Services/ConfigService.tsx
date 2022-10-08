@@ -4,6 +4,7 @@ import { apiCall } from '../Utilities';
 
 export class ConfigService {
 
+    // offline GET supported
     public static async getConfig(force: boolean = false): Promise<IConfig> {
         if (force || !this.getConfigPromise) {
             this.getConfigPromise = new Promise<IConfig>((resolve, reject) => {

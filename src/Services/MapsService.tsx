@@ -3,6 +3,8 @@ import { IMap } from '../Interfaces';
 import { apiCall } from '../Utilities';
 
 export class MapsService {
+
+    // offline GET supported
     public static async getMaps(force: boolean = false): Promise<IMap[]> {
         if (force || !this.getMapsPromise) {
             this.getMapsPromise = new Promise<IMap[]>((resolve, reject) => {

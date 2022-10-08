@@ -3,6 +3,8 @@ import { IEdit, IHistoryItem, IParticipant, ITrip, IValidation } from '../Interf
 import { apiCall, Mandatory } from '../Utilities';
 
 export class TripsService {
+
+    // offline GET supported
     public static async getTrips(force: boolean = false): Promise<ITrip[]> {
         if (force || !this.getTripsPromise) {
             this.getTripsPromise = new Promise<ITrip[]>((resolve, reject) => {
@@ -24,11 +26,10 @@ export class TripsService {
         return this.trips
     }
 
-    // supports offline usage
+    // offline GET supported
     public static async getTrip(id: number): Promise<ITrip> {
         return apiCall('GET', BaseUrl + '/trips/' + id)
             .then((trips: ITrip[]) => {
-                // return this.applyPendingTripSyncChanges(trips[0])
                 return trips[0]
             })
     }
@@ -38,15 +39,15 @@ export class TripsService {
             .then((trips: ITrip[]) => trips[0])
     }
 
-    // supports offline usage
+    // offline background sync supported
     public static async postTripUpdate(id: number, data: any): Promise<ITrip> {
         return apiCall('POST', BaseUrl + '/trips/' + id, data)
-            .then((trips: ITrip[]) => {
-                // return this.applyPendingTripSyncChanges(trips[0])
-                return trips[0]
+            .then(async (trips: ITrip[]) => {
+                return trips? trips[0] : await this.getTrip(id)
             })
     }
 
+    // offline GET supported
     public static async getTripParticipants(id: number): Promise<IParticipant[]> {
         return apiCall('GET', BaseUrl + '/trips/' + id + '/participants')
     }
@@ -56,14 +57,14 @@ export class TripsService {
             .then((participants: IParticipant[]) => participants[0])
     }
 
-    public static async postTripParticipant(id: number, participant: IParticipant): Promise<IParticipant> {
-        return apiCall('POST', BaseUrl + '/trips/' + id + '/participants', participant)
-            .then((participants: IParticipant[]) => participants[0])
-    }
-
+    // offline background sync supported
     public static async postTripParticipantUpdate(id: number, participantId: number, data: any): Promise<IParticipant> {
         return apiCall('POST', BaseUrl + '/trips/' + id + '/participants/' + participantId, data)
-            .then((participants: IParticipant[]) => participants[0])
+            .then(async (participants: IParticipant[]) => {
+                return participants ? 
+                    participants[0] : 
+                    (await this.getTripParticipants(id)).filter(p => p.id === participantId)[0]
+            })
     }
 
     public static async postTripEmail(id: number, data: any): Promise<any> {
@@ -82,6 +83,7 @@ export class TripsService {
         return apiCall('POST', BaseUrl + '/trips/' + id + '/edit/' + editId, data);
     }
 
+    // offline background sync supported
     public static async deleteTripEditHeartbeat(id: number, editId: number): Promise<any> {
         return apiCall('DELETE', BaseUrl + '/trips/' + id + '/edit/' + editId, {});
     }
@@ -107,72 +109,6 @@ export class TripsService {
             { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` }
         ]
     }
-
-    // get the ids of trips that are in the trips cache (must have both details and participants)
-    public static async getCachedTripIds(): Promise<number[]> {
-        const tripRegex = /.*\/api\/api.php\/trips\/(\d*)/
-        const participantsRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants/
-        return caches.open('trips').then((cache: Cache) => {
-            return cache.keys().then((requests: readonly Request[]) => {
-                const tripIds: number[] = []
-                const participantsTripIds: number[] = []
-                requests.map((request: Request) => {
-                    const tripMatch = request.url.match(tripRegex)
-                    const participantsMatch = request.url.match(participantsRegex)
-                    if (tripMatch) {
-                        tripIds.push(parseInt(tripMatch[1], 10))
-                    }
-                    if (participantsMatch) {
-                        participantsTripIds.push(parseInt(participantsMatch[1], 10))
-                    }
-                })
-                return tripIds.filter(id => participantsTripIds.includes(id))
-            })
-        })
-    }
-
-    public static async updateTripsCache(request: Request): Promise<void> {
-        caches.open('trips');
-    }
-
-    // // apply any pending trip changes in the sync cache
-    // public static applyPendingTripSyncChanges(trip: ITrip): Promise<ITrip> {
-    //     const tripRegex = /.*\/api\/api.php\/trips\/(\d*)/
-    //     return caches.open('syncs').then((cache: Cache) => {
-    //         return cache.keys().then((requests: readonly Request[]) => {
-    //             requests.map(async (request: Request) => {
-    //                 const tripMatch = request.url.match(tripRegex)
-    //                 if (tripMatch && parseInt(tripMatch[1]) === trip.id) {
-    //                     const change = await request.json()
-    //                     trip = {...trip, ...change}
-    //                 }
-    //             })
-    //             return trip
-    //         })
-    //     })
-    // }
-
-    // // apply any pending participant changes in the sync cache
-    // public static applyPendingParticipantSyncChanges(tripId: number, participants: IParticipant[]): Promise<IParticipant[]> {
-    //     const participantsRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants\/(\d*)/
-    //     return caches.open('syncs').then((cache: Cache) => {
-    //         return cache.keys().then((requests: readonly Request[]) => {
-    //             requests.map((request: Request) => {
-    //                 const participantsMatch = request.url.match(participantsRegex)
-    //                 if (participantsMatch && parseInt(participantsMatch[1]) == tripId) {
-    //                     const participantId = parseInt(participantsMatch[2])
-    //                     participants.map(async (participant: IParticipant) => {
-    //                         if (participantId == participant.id) {
-    //                             const change = await request.json()
-    //                             participant = {...participant, ...change}
-    //                         }
-    //                     })
-    //                 }
-    //             })
-    //             return participants
-    //         })
-    //     })
-    // }
 
     private static getTripsPromise: Promise<ITrip[]> | undefined = undefined
 

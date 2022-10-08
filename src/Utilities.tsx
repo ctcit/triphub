@@ -135,7 +135,7 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
         try {
             return JSON.parse(text)
         } catch (ex) {
-            console.log(text)
+            console.log(`Failed to parse response: error=${ex} response=${text}`)
             return null
         }
     } catch(ex) {

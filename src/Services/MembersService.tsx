@@ -14,7 +14,7 @@ export class MembersService {
 
                         this.membersById = new Map<number, IMember>()
                         this.membersByName = new Map<string, IMember>()
-                        this.me = members.find((m: IMember) => m.isMe) || {} as unknown as IMember
+                        this.me = members.find((m: IMember) => m.isMe) || this.defaultMe
         
                         members = members.filter(m => m.name !== '')
                         members.filter(m => m.isMember).forEach(m => this.membersById.set(m.id, m))
@@ -85,6 +85,7 @@ export class MembersService {
     private static members: IMember[] = []
     private static membersById: Map<number, IMember> = new Map<number, IMember>()
     private static membersByName: Map<string, IMember> = new Map<string, IMember>()
-    private static me: IMember = {} as IMember
+    private static defaultMe: IMember = { role: Role.NonMember } as IMember
+    private static me: IMember = this.defaultMe
 
 }

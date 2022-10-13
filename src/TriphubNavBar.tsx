@@ -17,7 +17,8 @@ export class TriphubNavbar extends Component<{
     path: string,
     isLoading: boolean,
     isOnline: boolean,
-    cachedTrips: ITrip[]
+    cachedTrips: ITrip[],
+    beforeInstallPrompt: any,
     setPath: (path: string) => void,
     setRole: (role: Role) => void,
     children?: React.ReactNode
@@ -25,7 +26,8 @@ export class TriphubNavbar extends Component<{
         isOpen: boolean,
         priviledgesDropdownIsOpen: boolean,
         workOfflineDropdownIsOpen: boolean,
-        windowWidth: number
+        windowWidth: number,
+        installAppPrompted: boolean
     }> {
     constructor(props: any){
         super(props)
@@ -33,7 +35,8 @@ export class TriphubNavbar extends Component<{
             isOpen: false,
             priviledgesDropdownIsOpen: false,
             workOfflineDropdownIsOpen: false,
-            windowWidth: window.innerWidth
+            windowWidth: window.innerWidth,
+            installAppPrompted: false
         }
     }
 
@@ -62,6 +65,7 @@ export class TriphubNavbar extends Component<{
         const setNonMemberPrivileges = () => this.props.setRole(Role.NonMember)
 
         const toggleWorkOfflineDropdown = () => this.setState({workOfflineDropdownIsOpen: !this.state.workOfflineDropdownIsOpen});
+        const installApp = () => this.installApp()
         const startCachingTrips = () => this.startCachingTrips()
         const clearCachedTrips = () => this.clearCachedTrips()
         const onCachedTripClick = (e: any) => this.onCachedTripClick(e.currentTarget.value)
@@ -158,7 +162,7 @@ export class TriphubNavbar extends Component<{
             </Dropdown>)
         }
 
-        if (this.props.role >= Role.Member && (this.props.path === '/' || this.props.path === '/calendar')) {
+        if (this.props.role >= Role.Member && (this.props.path === '' || this.props.path === '/' || this.props.path === '/calendar')) {
             navItems.push(
             <Dropdown key='workOffline' nav={true} isOpen={this.state.workOfflineDropdownIsOpen} toggle={toggleWorkOfflineDropdown}>
                 <DropdownToggle className='triphub-navbar' nav={true} caret={true}>
@@ -166,7 +170,8 @@ export class TriphubNavbar extends Component<{
                     &nbsp; Work Offline{this.props.cachedTrips.length ? (' (' + this.props.cachedTrips.length + ')') : ''}
                 </DropdownToggle>
                 <DropdownMenu color='primary'>
-                    <DropdownItem onClick={startCachingTrips}>Install</DropdownItem>
+                    <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 
+                        onClick={installApp}>Install app for standalone/offline use...</DropdownItem>
                     <DropdownItem onClick={startCachingTrips}>Start caching trips</DropdownItem>
                     <DropdownItem onClick={clearCachedTrips}>Clear all cached trips</DropdownItem>
                     {this.props.cachedTrips.length > 0 && <DropdownItem divider></DropdownItem>}
@@ -208,6 +213,13 @@ export class TriphubNavbar extends Component<{
     }
 
     private setWidth = () => this.setState({windowWidth: window.innerWidth})
+
+    private installApp() {
+        if (this.props.beforeInstallPrompt !== null) {
+            this.props.beforeInstallPrompt.prompt()
+            this.setState({ installAppPrompted: true })
+        }
+    }
 
     private startCachingTrips() {
         // TODO

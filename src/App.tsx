@@ -34,6 +34,7 @@ export class App extends Component<{
 }> {
 
     private onDoAppUpdate = () => {}
+    private beforeInstallPrompt: any = null;
 
     constructor(props: any) {
         super(props)
@@ -57,12 +58,21 @@ export class App extends Component<{
 
         // add event handlers to store online/offline status 
         window.addEventListener('offline', () => {
-            this.onOffline()
-        });
+                this.onOffline()
+            }
+        );
           
         window.addEventListener('online', () => {
-            this.onOnline()
-        });
+                this.onOnline()
+            }
+        );
+
+        window.addEventListener('beforeinstallprompt', (event: any) => { 
+                event.preventDefault()
+                this.beforeInstallPrompt = event
+                console.log('got beforeinstallprompt event')
+             }
+        );
 
         navigator.permissions.query({name: 'background-sync'} as unknown as PermissionDescriptor).then((permissionStatus) => {
             this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
@@ -210,6 +220,7 @@ export class App extends Component<{
                 isLoading={this.isLoading}
                 isOnline={this.state.isOnline}
                 cachedTrips={this.state.cachedTrips}
+                beforeInstallPrompt={this.beforeInstallPrompt}
                 setPath={setPath}
                 setRole={setRole}
             />,

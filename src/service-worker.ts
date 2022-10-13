@@ -102,7 +102,7 @@ registerRoute(
   new NetworkFirst({
     cacheName: TripsCache.cacheName,
     plugins: [
-      new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 7 * 24 * 60 * 60 }),
+      new ExpirationPlugin({ maxEntries: 21, maxAgeSeconds: 7 * 24 * 60 * 60 }),
     ],
   }),
   'GET'

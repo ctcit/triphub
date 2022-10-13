@@ -99,7 +99,8 @@ class TripsLine extends Component<{
 export class TripsGroup extends Component<{
     trips: ITrip[]
     expanded: boolean
-    cachedTripIds: number[] | null
+    isOnline: boolean,
+    cachedTripIds: number[]
     setPath(path: string): void
 }, {
 }> {
@@ -138,7 +139,7 @@ export class TripsGroup extends Component<{
                             {this.props.trips.map(
                                 (trip: ITrip) => <TripsLine key={'trip' + trip.id} 
                                     trip={trip}
-                                    available={this.props.cachedTripIds == null || this.props.cachedTripIds.includes(trip.id)}
+                                    available={this.props.isOnline || this.props.cachedTripIds.includes(trip.id)}
                                     setPath={this.props.setPath}
                                      />)}
                         </tbody>
@@ -154,49 +155,47 @@ export class TripsList extends Component<{
     isOnline: boolean,
     setPath(path: string): void
     loadingStatus(state: any): JSX.Element
+    setCachedTrips(cachedTrips: ITrip[]): void
 }, {
     isLoadingTrips: boolean
     groups: ITrip[][],
-    cachedTripIds: number[] | null
+    cachedTripIds: number[]
 }> {
     constructor(props: any) {
         super(props)
-        this.state = { isLoadingTrips: true, groups: [], cachedTripIds: null }
+        this.state = { 
+            isLoadingTrips: true, 
+            groups: [], 
+            cachedTripIds: [] 
+        }
     }
 
     private requeryTrips() {
-        TripsService.getTrips()
-            .then((data: ITrip[]) => {
+        Promise.all([
+            TripsService.getTrips(),
+            TripsCache.getCachedTripIds()
+            ]).then(values => {
+                const trips: ITrip[] = values[0]
+                const cachedTripIds: number[] = values[1]
+
                 const order = Object.keys(TripState)
                 const groups = new Map<string, ITrip[]>(
-                    data.sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state))
+                    trips.sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state))
                         .map(t => [t.state, []] as [string, ITrip[]]))
-
-                for (const item of data) {
+                for (const item of trips) {
                     (groups.get(item.state) as ITrip[]).push(item)
                 }
 
-                this.setState({ isLoadingTrips: false, groups: [...groups.values()] })
+                this.setState({ groups: [...groups.values()], cachedTripIds, isLoadingTrips: false })
+                this.props.setCachedTrips(trips.filter(trip => cachedTripIds.includes(trip.id)))
             })
     }
-
-    private memoizedGetCachedTripIds = memoizeOne((isOnline: boolean) => {
-        if (this.props.isOnline) {
-            this.setState({cachedTripIds: null})
-        } else {
-            TripsCache.getCachedTripIds().then((cachedTripIds: number[]) => {
-                this.setState({cachedTripIds})
-            })
-        }
-    });
 
     public componentDidMount() {
         this.requeryTrips()
     }
 
     public render() {
-        this.memoizedGetCachedTripIds(this.props.isOnline)
-
         if (this.state.isLoadingTrips) {
             return this.props.loadingStatus({ ...this.state })
         }
@@ -217,6 +216,7 @@ export class TripsList extends Component<{
                     <TripsGroup key={'group' + i} 
                         trips={group} 
                         expanded={i <= 1} 
+                        isOnline={this.props.isOnline}
                         cachedTripIds={this.state.cachedTripIds}
                         setPath={this.props.setPath}
                         />)

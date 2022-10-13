@@ -10,6 +10,8 @@ import { ConfigService } from './Services/ConfigService';
 import { HolidaysService } from './Services/HolidaysService';
 import { TripsService } from './Services/TripsService';
 import { Badge, ButtonGroup, DropdownItem, Dropdown, DropdownToggle, DropdownMenu, Container, Table } from 'reactstrap';
+import { TripsCache } from './Services/TripsCache';
+import memoizeOne from 'memoize-one';
 
 interface ICalendarItem {
     id: number
@@ -33,6 +35,8 @@ class CalendarWeek extends Component<{
     week: ICalendarWeek
     calendar: Calendar
     role: Role
+    isOnline: boolean,
+    cachedTripIds: number[]
     setPath(path: string): void
 }, {
 }> {
@@ -95,6 +99,7 @@ class CalendarWeek extends Component<{
                     const onSelect = () => this.props.calendar.setState({ selected: trip.id })
                     const onDragStart = (ev: any) => ev.dataTransfer.setData('id', item.id)
                     const isSelected = trip && this.props.calendar.state.selected === trip.id
+                    const available = this.props.isOnline || this.props.cachedTripIds.includes(trip.id)
 
                     slots.push(' ')
                     slots.push(
@@ -105,8 +110,10 @@ class CalendarWeek extends Component<{
                                 {item.field === 'tripDate' ?
                                     <ButtonGroup className='calendar-trip-buttons'>
                                         <ButtonWithTooltip id={`open-${item.id}`}
-                                            onClick={onLink} tooltipText="Go to trip">
-                                            <span className={trip.isSocial ? 'fas fa-users' : 'fas fa-hiking'} />
+                                            onClick={onLink} 
+                                            tooltipText={available ? 'Go to trip' : 'This trip is not available while offline'}
+                                        >
+                                        <span className={trip.isSocial ? 'fas fa-users' : 'fas fa-hiking'} />
                                         </ButtonWithTooltip>
                                         <div className='calendar-trip-name'>
                                             <ButtonWithTooltip id={`select-${item.id}`} color='transparent'
@@ -145,11 +152,14 @@ class CalendarWeek extends Component<{
 
 export class Calendar extends Component<{
     role: Role
+    isOnline: boolean,
     setPath(path: string): void
     loadingStatus(state: any): JSX.Element
+    setCachedTrips(cachedTrips: ITrip[]): void
 }, {
     isLoadingCalendar: boolean
     trips: ITrip[]
+    cachedTripIds: number[]
     showDropdownIsOpen: boolean
     openClose: boolean
     state: StateFilter
@@ -167,7 +177,9 @@ export class Calendar extends Component<{
             openClose: false,
             length: LengthFilter.All,
             state: StateFilter.All,
-            selected: 0, trips: [],
+            selected: 0, 
+            trips: [],
+            cachedTripIds: [] 
         }
     }
 
@@ -260,10 +272,16 @@ export class Calendar extends Component<{
 
     public requery() {
         this.setState({ isLoadingCalendar: true })
-        TripsService.getTrips()
-            .then((trips: ITrip[]) => {
-                this.setState({ trips, isLoadingCalendar: false })
-            })
+        Promise.all([
+            TripsService.getTrips(),
+            TripsCache.getCachedTripIds()
+        ]).then(values => {
+            const trips: ITrip[] = values[0]
+            const cachedTripIds: number[] = values[1]
+
+            this.setState({ trips, cachedTripIds, isLoadingCalendar: false })
+            this.props.setCachedTrips(trips.filter(trip => cachedTripIds.includes(trip.id)))
+        })
     }
 
     public componentDidMount() {
@@ -352,6 +370,8 @@ export class Calendar extends Component<{
                             week={week} 
                             calendar={this}
                             role={this.props.role}
+                            isOnline={this.props.isOnline}
+                            cachedTripIds={this.state.cachedTripIds}
                             setPath={this.props.setPath} />)}
                     </tbody>
                 </Table>

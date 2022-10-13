@@ -1,8 +1,11 @@
 import { Component } from 'react'
-import { Role } from './Interfaces'
+import { ITrip, Role } from './Interfaces'
 import { ConfigService } from './Services/ConfigService'
 import { NavItem, NavLink, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Navbar, NavbarBrand, Nav, NavbarToggler, Collapse } from 'reactstrap'
 import ReactDOM from 'react-dom'
+import { TripsCache } from './Services/TripsCache'
+import { cachedDataVersionTag } from 'v8'
+import { Trip } from '@styled-icons/boxicons-regular'
 
 export const PriorityNavItem = (props: any) => {  
     const el: HTMLElement|null = document.getElementById('priority-nav-items') 
@@ -14,12 +17,14 @@ export class TriphubNavbar extends Component<{
     path: string,
     isLoading: boolean,
     isOnline: boolean,
+    cachedTrips: ITrip[]
     setPath: (path: string) => void,
     setRole: (role: Role) => void,
     children?: React.ReactNode
     },{
         isOpen: boolean,
         priviledgesDropdownIsOpen: boolean,
+        workOfflineDropdownIsOpen: boolean,
         windowWidth: number
     }> {
     constructor(props: any){
@@ -27,6 +32,7 @@ export class TriphubNavbar extends Component<{
         this.state = {
             isOpen: false,
             priviledgesDropdownIsOpen: false,
+            workOfflineDropdownIsOpen: false,
             windowWidth: window.innerWidth
         }
     }
@@ -48,11 +54,17 @@ export class TriphubNavbar extends Component<{
         const newsocial = () => this.props.setPath('/newsocial')
         const routes = () => this.props.setPath('/routes')
         const toggle = () => this.setState({isOpen: !this.state.isOpen});
+
         const togglePriviledgesDropdown = () => this.setState({priviledgesDropdownIsOpen: !this.state.priviledgesDropdownIsOpen});
         const setAdminPrivileges = () => this.props.setRole(Role.Admin)
         const setTripLeaderPrivileges = () => this.props.setRole(Role.TripLeader)
         const setMemberPrivileges = () => this.props.setRole(Role.Member)
         const setNonMemberPrivileges = () => this.props.setRole(Role.NonMember)
+
+        const toggleWorkOfflineDropdown = () => this.setState({workOfflineDropdownIsOpen: !this.state.workOfflineDropdownIsOpen});
+        const startCachingTrips = () => this.startCachingTrips()
+        const clearCachedTrips = () => this.clearCachedTrips()
+        const onCachedTripClick = (e: any) => this.onCachedTripClick(e.currentTarget.value)
 
         const navItems: JSX.Element[] = []
 
@@ -146,6 +158,25 @@ export class TriphubNavbar extends Component<{
             </Dropdown>)
         }
 
+        if (this.props.role >= Role.Member && (this.props.path === '/' || this.props.path === '/calendar')) {
+            navItems.push(
+            <Dropdown key='workOffline' nav={true} isOpen={this.state.workOfflineDropdownIsOpen} toggle={toggleWorkOfflineDropdown}>
+                <DropdownToggle className='triphub-navbar' nav={true} caret={true}>
+                    <span className='fa fa-cloud'/> 
+                    &nbsp; Work Offline{this.props.cachedTrips.length ? (' (' + this.props.cachedTrips.length + ')') : ''}
+                </DropdownToggle>
+                <DropdownMenu color='primary'>
+                    <DropdownItem onClick={startCachingTrips}>Install</DropdownItem>
+                    <DropdownItem onClick={startCachingTrips}>Start caching trips</DropdownItem>
+                    <DropdownItem onClick={clearCachedTrips}>Clear all cached trips</DropdownItem>
+                    {this.props.cachedTrips.length > 0 && <DropdownItem divider></DropdownItem>}
+                    {this.props.cachedTrips.map((trip: ITrip) => { 
+                        return <DropdownItem value={trip.id} onClick={onCachedTripClick}>{trip.title}</DropdownItem> 
+                    })}
+                </DropdownMenu>
+            </Dropdown>)
+        }
+
         if (this.props.children as JSX.Element[]) {
             navItems.push(...this.props.children as JSX.Element[])
         }
@@ -177,4 +208,19 @@ export class TriphubNavbar extends Component<{
     }
 
     private setWidth = () => this.setState({windowWidth: window.innerWidth})
+
+    private startCachingTrips() {
+        // TODO
+        window.location.reload();
+    }
+
+    private clearCachedTrips() {
+        caches.delete(TripsCache.cacheName)
+        // caches.delete('gets')
+        window.location.reload();
+    }
+
+    public onCachedTripClick(tripId: any) {
+        this.props.setPath('/trips/' + tripId)
+    }
 }

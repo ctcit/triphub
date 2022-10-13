@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Component } from 'react';
-import { Role } from './Interfaces';
+import { Role, ITrip } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
@@ -29,7 +29,8 @@ export class App extends Component<{
     notifications: INotification[]
     isOnline: boolean
     backgroundSyncPermitted: boolean,
-    appUpdateAvailable: boolean
+    appUpdateAvailable: boolean,
+    cachedTrips: ITrip[]
 }> {
 
     private onDoAppUpdate = () => {}
@@ -46,7 +47,8 @@ export class App extends Component<{
             notifications: [],
             isOnline: navigator.onLine,
             backgroundSyncPermitted: false,
-            appUpdateAvailable: false
+            appUpdateAvailable: false,
+            cachedTrips: []
         }
 
         if (window.top) {
@@ -160,6 +162,7 @@ export class App extends Component<{
 
         const setPath = (path: string) => this.setPath(path)
         const setRole = (role: Role) => this.setState({role})
+        const setCachedTrips = (cachedTrips: ITrip[]) => this.setState({cachedTrips})
         const addNotification = (text:string, colour: string) => this.addNotification(text, colour)
         const loadingStatus = (state?: any) => this.loadingStatus(state)
         const onDoAppUpdate = () => this.onDoAppUpdate()
@@ -170,7 +173,8 @@ export class App extends Component<{
             addNotification,
             loadingStatus,
             isOnline: this.state.isOnline,
-            offlineEditsPermitted: this.state.backgroundSyncPermitted
+            offlineEditsPermitted: this.state.backgroundSyncPermitted,
+            setCachedTrips
         }
         const renderings = {
             loading: () => this.loadingStatus(),
@@ -186,7 +190,7 @@ export class App extends Component<{
         return [
             !this.state.isOnline && 
                 <Alert color='warning'>
-                    <span className='fa fa-ban' />
+                    <span className='fa fa-cloud' />
                     &nbsp;<b>No internet connection. Application is working offline. Limited options available.</b>
                 </Alert>,
             !this.state.backgroundSyncPermitted && !this.state.isOnline && 
@@ -205,6 +209,7 @@ export class App extends Component<{
                 path={this.state.path}
                 isLoading={this.isLoading}
                 isOnline={this.state.isOnline}
+                cachedTrips={this.state.cachedTrips}
                 setPath={setPath}
                 setRole={setRole}
             />,

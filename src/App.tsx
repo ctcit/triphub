@@ -35,6 +35,7 @@ export class App extends Component<{
 
     private onDoAppUpdate = () => {}
     private beforeInstallPrompt: any = null;
+    private onCacheTripsChanged = async (): Promise<any> => {}
 
     constructor(props: any) {
         super(props)
@@ -117,7 +118,17 @@ export class App extends Component<{
         
             wb.register();
           }
-          
+
+          // add handling to notify service worker when the cacheTrips setting has changed in the IndexedDB
+          if ('serviceWorker' in navigator) {
+            this.onCacheTripsChanged = () => {
+                return navigator.serviceWorker.ready.then((registration) => {
+                    if (registration.active) {
+                        registration.active.postMessage({ type: 'UPDATE_CACHE_TRIP_SETTING'});
+                    }
+                });
+            }
+          }          
     }
 
     public onPopState(event: PopStateEvent) {
@@ -176,6 +187,7 @@ export class App extends Component<{
         const addNotification = (text:string, colour: string) => this.addNotification(text, colour)
         const loadingStatus = (state?: any) => this.loadingStatus(state)
         const onDoAppUpdate = () => this.onDoAppUpdate()
+        const onCacheTripsChanged = () => this.onCacheTripsChanged()
 
         const common = {
             role: this.state.role,
@@ -223,6 +235,7 @@ export class App extends Component<{
                 beforeInstallPrompt={this.beforeInstallPrompt}
                 setPath={setPath}
                 setRole={setRole}
+                onCacheTripsChanged={onCacheTripsChanged}
             />,
             <NotificationArea notifications={this.state.notifications} key='notificationArea'
                 containerClassName={ConfigService.containerClassName} 

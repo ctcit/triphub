@@ -2,13 +2,24 @@ import { IParticipant, ITrip } from "src/Interfaces"
 
 export class TripsCache {
 
-    public static cacheName = 'trips'
+    // cache to store:
+    // GET members
+    // GET config
+    // GET maps
+    // GET public_holidays
+    public static getsCacheName = 'gets'
+
+    // cache to store:
+    // GET trips
+    // GET trips/{id}
+    // GET trips/{id}/participants
+    public static tripsCacheName = 'trips'
 
     // get the ids of trips that are in the trips cache (must have both details and participants)
     public static async getCachedTripIds(): Promise<number[]> {
         const getTripRegex = /.*\/api\/api.php\/trips\/(\d*)/
         const getParticipantsRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants/
-        return caches.open(this.cacheName).then((cache: Cache) => {
+        return caches.open(this.tripsCacheName).then((cache: Cache) => {
             return cache.keys().then((requests: readonly Request[]) => {
                 const tripIds: number[] = []
                 const participantsTripIds: number[] = []
@@ -51,7 +62,7 @@ export class TripsCache {
         const getTripRegex = /.*\/api\/api.php\/trips\/(\d*)$/
         const getParticipantsRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants$/
         
-        const cache = await caches.open(this.cacheName)
+        const cache = await caches.open(this.tripsCacheName)
         const getRequests = await cache.keys()
         getRequests.map(async (getRequest: Request) => {
             const getTripsMatch = getRequest.url.match(getTripsRegex)
@@ -96,6 +107,11 @@ export class TripsCache {
                 }
             }
         })
+    }
+
+    public static clear() {
+        caches.delete(this.tripsCacheName)
+        caches.delete(this.getsCacheName)
     }
 
 }

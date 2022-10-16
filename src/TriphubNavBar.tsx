@@ -4,8 +4,7 @@ import { ConfigService } from './Services/ConfigService'
 import { NavItem, NavLink, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Navbar, NavbarBrand, Nav, NavbarToggler, Collapse } from 'reactstrap'
 import ReactDOM from 'react-dom'
 import { TripsCache } from './Services/TripsCache'
-import { cachedDataVersionTag } from 'v8'
-import { Trip } from '@styled-icons/boxicons-regular'
+import { UserSettings } from './Services/UserSettings'
 
 export const PriorityNavItem = (props: any) => {  
     const el: HTMLElement|null = document.getElementById('priority-nav-items') 
@@ -21,14 +20,17 @@ export class TriphubNavbar extends Component<{
     beforeInstallPrompt: any,
     setPath: (path: string) => void,
     setRole: (role: Role) => void,
+    onCacheTripsChanged: () => Promise<any>,
     children?: React.ReactNode
     },{
         isOpen: boolean,
         priviledgesDropdownIsOpen: boolean,
         workOfflineDropdownIsOpen: boolean,
         windowWidth: number,
-        installAppPrompted: boolean
+        installAppPrompted: boolean,
+        cacheTrips: boolean
     }> {
+
     constructor(props: any){
         super(props)
         this.state = {
@@ -36,8 +38,13 @@ export class TriphubNavbar extends Component<{
             priviledgesDropdownIsOpen: false,
             workOfflineDropdownIsOpen: false,
             windowWidth: window.innerWidth,
-            installAppPrompted: false
+            installAppPrompted: false,
+            cacheTrips: false
         }
+
+        UserSettings.getCacheTrips().then((value: boolean) => {
+            this.setState({ cacheTrips: value })
+        })
     }
 
     public componentDidMount() {
@@ -67,7 +74,7 @@ export class TriphubNavbar extends Component<{
         const toggleWorkOfflineDropdown = () => this.setState({workOfflineDropdownIsOpen: !this.state.workOfflineDropdownIsOpen});
         const installApp = () => this.installApp()
         const startCachingTrips = () => this.startCachingTrips()
-        const clearCachedTrips = () => this.clearCachedTrips()
+        const stopCachingTrips = () => this.stopCachingTrips()
         const onCachedTripClick = (e: any) => this.onCachedTripClick(e.currentTarget.value)
 
         const navItems: JSX.Element[] = []
@@ -172,8 +179,8 @@ export class TriphubNavbar extends Component<{
                 <DropdownMenu color='primary'>
                     <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 
                         onClick={installApp}>Install app for standalone/offline use...</DropdownItem>
-                    <DropdownItem onClick={startCachingTrips}>Start caching trips</DropdownItem>
-                    <DropdownItem onClick={clearCachedTrips}>Clear all cached trips</DropdownItem>
+                    <DropdownItem disabled={this.state.cacheTrips} onClick={startCachingTrips}>Start caching trips</DropdownItem>
+                    <DropdownItem disabled={!this.state.cacheTrips} onClick={stopCachingTrips}>Stop caching trips</DropdownItem>
                     {this.props.cachedTrips.length > 0 && <DropdownItem divider></DropdownItem>}
                     {this.props.cachedTrips.map((trip: ITrip) => { 
                         return <DropdownItem value={trip.id} onClick={onCachedTripClick}>{trip.title}</DropdownItem> 
@@ -222,14 +229,20 @@ export class TriphubNavbar extends Component<{
     }
 
     private startCachingTrips() {
-        // TODO
-        window.location.reload();
+        UserSettings.setCacheTrips(true).then(() => {
+            this.props.onCacheTripsChanged().then(() => {
+                window.location.reload();
+            })
+        })
     }
 
-    private clearCachedTrips() {
-        caches.delete(TripsCache.cacheName)
-        // caches.delete('gets')
-        window.location.reload();
+    private stopCachingTrips() {
+        UserSettings.setCacheTrips(false).then(() => {
+            this.props.onCacheTripsChanged().then(() => {
+                TripsCache.clear()
+                window.location.reload();
+            })
+        })
     }
 
     public onCachedTripClick(tripId: any) {

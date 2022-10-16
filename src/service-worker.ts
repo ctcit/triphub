@@ -15,14 +15,29 @@ import { precacheAndRoute, createHandlerBoundToURL, cleanupOutdatedCaches, Preca
 import { registerRoute } from 'workbox-routing';
 import { NetworkOnly, NetworkFirst } from 'workbox-strategies';
 import { TripsCache } from './Services/TripsCache';
+import { UserSettings } from './Services/UserSettings';
 
 declare const self: ServiceWorkerGlobalScope;
 
-// This allows the web app to trigger skipWaiting via
-// registration.waiting.postMessage({type: 'SKIP_WAITING'})
+// dynamically enable/disable trip caching via this variable based on IndexedDB setting
+let cacheTrips: boolean = false
+const UpdateCacheTripsSetting = (): void => {
+  UserSettings.getCacheTrips().then((value: boolean) => {
+    cacheTrips = value
+    console.log('serviceWorker: CacheTrips setting is ' + value)
+  });
+}
+UpdateCacheTripsSetting()
+
+
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
+    // This allows the web app to trigger skipWaiting via
+    // registration.waiting.postMessage({type: 'SKIP_WAITING'})
     self.skipWaiting();
+
+  } else if (event.data && event.data.type === 'UPDATE_CACHE_TRIP_SETTING') {
+    UpdateCacheTripsSetting();
   }
 });
 
@@ -92,15 +107,20 @@ registerRoute(
 );
 
 // -------------------------------------------
-// API caching
+// API GET caching
 
 // GET trips
 // GET trips/{id}
 // GET trips/{id}/participants
+
+const tripsMatchRegex = /.*\/api\/api.php\/trips(\/\d*(\/participants)?)?/
+const tripsMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
+  return cacheTrips && tripsMatchRegex.test(url.toString());
+};
 registerRoute(
-  /.*\/api\/api.php\/trips(\/\d*(\/participants)?)?/, 
+  tripsMatchCallback, 
   new NetworkFirst({
-    cacheName: TripsCache.cacheName,
+    cacheName: TripsCache.tripsCacheName,
     plugins: [
       new ExpirationPlugin({ maxEntries: 21, maxAgeSeconds: 7 * 24 * 60 * 60 }),
     ],
@@ -112,17 +132,23 @@ registerRoute(
 // GET config
 // GET maps
 // GET public_holidays
+const getsMatchRegex = /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays))/
+const getsMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
+  return cacheTrips && getsMatchRegex.test(url.toString());
+};
 registerRoute(
-  /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays))/, 
+  getsMatchCallback, 
   new NetworkFirst({
-    cacheName: 'gets',
+    cacheName: TripsCache.getsCacheName,
     plugins: [
       new ExpirationPlugin({ maxAgeSeconds: 7 * 24 * 60 * 60 }),
     ],
   })
 );
 
-// Any other custom service worker logic can go here.
+// -------------------------------------------
+// API POST/PUT/DELETE background sync caching
+
 const bgSyncPlugin = new BackgroundSyncPlugin('syncs', {
   maxRetentionTime: 7 * 24 * 60 // Retry for max of 7 days (specified in minutes)
 });

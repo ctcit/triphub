@@ -153,22 +153,6 @@ export class TriphubNavbar extends Component<{
             </NavItem>)
         }
 
-        if (this.props.role >= Role.Webmaster) {
-            navItems.push(
-            <Dropdown key='setPrivileges' nav={true} isOpen={this.state.priviledgesDropdownIsOpen} toggle={togglePriviledgesDropdown}>
-                <DropdownToggle className='triphub-navbar' nav={true} caret={true}>
-                    <span className='fa fa-ban'/> 
-                    &nbsp; Set Privileges
-                </DropdownToggle>
-                <DropdownMenu color='primary'>
-                    <DropdownItem onClick={setAdminPrivileges}>Admin</DropdownItem>
-                    <DropdownItem onClick={setTripLeaderPrivileges}>TripLeader</DropdownItem>
-                    <DropdownItem onClick={setMemberPrivileges}>Member</DropdownItem>
-                    <DropdownItem onClick={setNonMemberPrivileges}>NonMember</DropdownItem>
-                </DropdownMenu>
-            </Dropdown>)
-        }
-
         if (this.props.role >= Role.Member && (this.props.path === '' || this.props.path === '/' || this.props.path === '/calendar')) {
             navItems.push(
             <Dropdown key='workOffline' nav={true} isOpen={this.state.workOfflineDropdownIsOpen} toggle={toggleWorkOfflineDropdown}>
@@ -185,6 +169,22 @@ export class TriphubNavbar extends Component<{
                     {this.props.cachedTrips.map((trip: ITrip) => { 
                         return <DropdownItem value={trip.id} onClick={onCachedTripClick}>{trip.title}</DropdownItem> 
                     })}
+                </DropdownMenu>
+            </Dropdown>)
+        }
+        
+        if (this.props.role >= Role.Webmaster) {
+            navItems.push(
+            <Dropdown key='setPrivileges' nav={true} isOpen={this.state.priviledgesDropdownIsOpen} toggle={togglePriviledgesDropdown}>
+                <DropdownToggle className='triphub-navbar' nav={true} caret={true}>
+                    <span className='fa fa-ban'/> 
+                    &nbsp; Set Privileges
+                </DropdownToggle>
+                <DropdownMenu color='primary'>
+                    <DropdownItem onClick={setAdminPrivileges}>Admin</DropdownItem>
+                    <DropdownItem onClick={setTripLeaderPrivileges}>TripLeader</DropdownItem>
+                    <DropdownItem onClick={setMemberPrivileges}>Member</DropdownItem>
+                    <DropdownItem onClick={setNonMemberPrivileges}>NonMember</DropdownItem>
                 </DropdownMenu>
             </Dropdown>)
         }

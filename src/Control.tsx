@@ -1,5 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Component } from 'react';
+import { Component, ReactNode } from 'react';
 import * as React from 'react';
 import { Badge, FormGroup, Input, FormText, Row, DropdownToggle, DropdownMenu, DropdownItem, ButtonDropdown, InputGroup, Label } from 'reactstrap';
 import './index.css';
@@ -7,6 +7,8 @@ import { Spinner } from './Widgets';
 import Textarea from 'react-textarea-autosize';
 import Switch from "react-switch";
 import { InputType } from 'reactstrap/types/lib/Input';
+import Select, { ActionMeta, GroupBase, OptionsOrGroups } from 'react-select'
+import { Group } from '@styled-icons/boxicons-regular';
 
 export class ControlWrapper extends Component<{
     id: string,
@@ -440,3 +442,123 @@ export class ComboBoxControl extends Component<{
         )
     }
 }
+
+
+export class InputWithSelectControl extends Component<{
+    id: string
+    field: string
+    label: string
+    hidden?: boolean
+    readOnly?: boolean
+    isLoading?: boolean
+    validationMessage?: string
+    type: InputType
+    min?: number
+    max?: number
+    step?: number
+    options: OptionsOrGroups<any, GroupBase<any>>
+    placeholder?: any
+    helpText?: string
+    forceValidation?: boolean
+    autoFocus?: boolean
+    onGet: (id: string) => any
+    onSet: (id: string, value: any) => void
+    onSave: (id: string, value: any) => Promise<any>
+    onGetValidationMessage: (id: string) => string
+}, {
+    oldValue: any
+    saving: boolean
+    helpText?: string
+    showValidation: boolean
+}> {
+
+    // the following Input control replaces ValueContainer in the ReactSelect control
+    private newValueContainer;
+
+    constructor(props: any) {
+        super(props);
+        this.state = { oldValue: this.value, saving: false, showValidation: false }
+
+        const onFocus = (): void => {
+            this.setState({ oldValue: this.value, helpText: this.props.helpText });
+        }
+        const onChange = (event: React.ChangeEvent) => {
+            const value = 
+                this.props.type === 'number' ? (event.target as any).valueAsNumber :
+                this.props.type === 'date' ? (event.target as any).valueAsDate :
+                (event.target as any).value
+            this.props.onSet(this.props.field, value);
+        }
+        const onBlur = () => {
+            this.setState({ helpText: undefined, showValidation: true })
+            if (this.state.oldValue !== this.value) {
+                this.setState({ saving: true });
+                this.props.onSave(this.props.field, this.value)
+                    .then(() => this.setState({ saving: false }));
+            }
+        }
+        this.newValueContainer = ({ children, ...props }: {children?: ReactNode}) => (
+            <Input style={{ border: 'none' }} 
+                type={this.props.type}
+                min={this.props.min} 
+                max={this.props.max}
+                step={this.props.step}
+                hidden={this.props.hidden}
+                readOnly={this.props.readOnly}
+                value={this.props.onGet(this.props.field) || ""}
+                onFocus={onFocus} 
+                onChange={onChange} 
+                onBlur={onBlur}
+                autoComplete='nope'
+            />
+        )
+    }
+
+    get value(): any {
+        return this.props.onGet(this.props.field)
+    }
+
+    public render() {
+        const onChange = (newValue: any, actionMeta: ActionMeta<any>) => {
+            this.props.onSet(this.props.field, newValue.value);
+        }
+
+        const val = `${this.props.onGet(this.props.field)}`.replace(/\W/g, v => `${v.charCodeAt(0)}`)
+        const id = this.props.id + '_' + this.props.field
+
+        const customStyles = {
+            control: (provided: any, state: any) => ({
+                ...provided,
+                flexWrap: 'nowrap'
+            }),
+            groupHeading: (provided: any, state: any) => ({
+                ...provided, 
+                backgroundColor: '#eeeeee',
+                color: 'black',
+                fontWeight: 'bold'
+            })
+        }
+
+        return (
+            <ControlWrapper id={id + '_' + val} 
+                field={this.props.field} 
+                label={this.props.label} labelFor={id} 
+                hidden={this.props.hidden}
+                isLoading={this.props.isLoading} 
+                onGetValidationMessage={this.props.onGetValidationMessage}
+                saving={this.state.saving}
+                helpText={this.state.helpText}>
+                <Select id={id} 
+                    styles={customStyles}
+                    isDisabled={this.props.readOnly}
+                    onChange={onChange}
+                    options={this.props.options}
+                    isSearchable={true}
+                    components={{ ValueContainer: this.newValueContainer }}
+                />
+            </ControlWrapper>
+        )
+    }
+}
+
+

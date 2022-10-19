@@ -1,13 +1,13 @@
-import * as React from 'react';
-import { ListGroup, ListGroupItem, Container, Row, Col, Form } from 'reactstrap';
-import { Component } from 'react';
+import { ListGroup, ListGroupItem, Container, Row, Col, Form, Input } from 'reactstrap';
+import { Component, ReactNode } from 'react';
 import { IParticipant, ITrip, ITripCostCalculations, IValidation } from './Interfaces';
 import { BindMethods } from './Utilities';
-import { InputControl } from './Control';
+import { InputControl, InputWithSelectControl } from './Control';
 import { TripCostsParticipant } from './TripCostsParticipant';
 import { MembersService } from './Services/MembersService';
 import { TripsService } from './Services/TripsService';
 import { Accordian } from './Accordian';
+import { CommonDestinationsService } from './Services/CommonDestinationsService'
 
 export class TripCosts extends Component<{
     trip: ITrip
@@ -218,12 +218,28 @@ export class TripCosts extends Component<{
         const actualVehicleProviders = currentParticipants.filter(p => this.calculations.participants[p.id].broughtVehicle);
         const others = currentParticipants.filter(p => !this.calculations.participants[p.id].broughtVehicle);
 
+        const groupedCommonDistances = Object.entries(CommonDestinationsService.getByGroups()).map(([area, toValues]) => {
+            return {
+                label: area,
+                options: Object.entries(toValues).flatMap(([to, fromValues]) => {
+                    return Object.entries(fromValues).map(([from, distance]) => {
+                        return {
+                            value: distance,
+                            label: to + ' from ' + from + ' (' + distance + 'km)'
+                        }
+                    })
+                })
+            }
+        })
+
         return [
             <Container key='parameters-initial' fluid={true}>
                 <Row>
-                    <Col sm={5} md={4}>
-                        <InputControl field='distanceOneWay' label='Distance one way (km)'
-                            type='number' min={0} step={10} hidden={false} {...common} />
+                    <Col sm={6} md={6}>
+                        <InputWithSelectControl field='distanceOneWay' label='Distance one way (km)'
+                            type='number' min={0} step={10} hidden={false} 
+                            options={groupedCommonDistances}
+                            {...common} />
                     </Col>
                 </Row>
 

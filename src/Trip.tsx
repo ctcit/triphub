@@ -268,7 +268,7 @@ export class Trip extends Component<{
         const onApproval = () => onClick(approval)
         const visible =
             !this.props.isNew &&
-            MembersService.Me.role >= approval.roleToChange &&
+            this.props.role >= approval.roleToChange &&
             !this.state.trip.isDeleted &&
             TripState[this.state.trip.approval || TripState.Pending.id].nextStates.indexOf(approval.id) >= 0
 
@@ -407,7 +407,7 @@ export class Trip extends Component<{
                     <TripDetail key={'TripDetail' + this.state.trip.id}
                         trip={this.state.trip} isNew={this.props.isNew} canEditTrip={this.canEditTrip}
                         forceValidation={this.state.showValidationMessage}
-                        role={MembersService.Me.role} maps={MapsService.Maps}
+                        role={this.props.role} maps={MapsService.Maps}
                         isOnline={this.props.isOnline}
                         setTripFields={setTripFields}
                     />
@@ -513,5 +513,5 @@ export class Trip extends Component<{
         }
     }
 
-    private get amAdmin(): boolean { return MembersService.Me.role >= Role.Admin }
+    private get amAdmin(): boolean { return this.props.role >= Role.Admin }
 }

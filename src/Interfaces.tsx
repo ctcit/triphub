@@ -73,6 +73,7 @@ export interface IParticipant extends IParticipantCosts {
     vehicleRego: string
     displayPriority?: number
     engineSize: number
+    seats: number
 
 }
 

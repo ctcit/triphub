@@ -3,7 +3,7 @@ import { Form, Row, Col, Container, ButtonGroup } from 'reactstrap'
 import { Component } from 'react'
 import { IParticipant, IValidation, IParticipantsInfo, Role, ITrip } from './Interfaces'
 import { Spinner } from './Widgets'
-import { InputControl, SelectControl, SwitchControl, TextAreaInputControl } from './Control'
+import { InputControl, InputWithSelectControl, SelectControl, SwitchControl, TextAreaInputControl } from './Control'
 import { ToolTipIcon } from './ToolTipIcon'
 import { Accordian } from './Accordian'
 import { BindMethods } from './Utilities'
@@ -243,10 +243,39 @@ export class TripParticipant extends Component<{
                                 <Col sm={3}>
                                     <SwitchControl field='isVehicleProvider' label='Bringing Car' {...common} />
                                 </Col>
-                                <Col sm={3}>
-                                    <InputControl field='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} {...common} />
-                                </Col>
                             </Row>
+
+                            {
+                                participant.isVehicleProvider &&
+                                <Row>
+                                    <Col sm={3}>
+                                        <InputControl field='vehicleRego' label='Rego' type='text' hidden={!participant.isVehicleProvider} {...common} />
+                                    </Col>
+                                    <Col sm={3}>
+                                        <InputControl field='seats' label='Seats (including driver)' 
+                                        type="number" min={0} max={50} step={1}
+                                        {...common} />
+                                    </Col>
+                                    <Col sm={2} md={3}>
+                                        <SwitchControl field='isCompanyVehicle' label='Company vehicle (fixed cost)' {...common} />
+                                    </Col>
+                                    {
+                                        !participant.isCompanyVehicle &&
+                                        <Col sm={3}>
+                                            <InputWithSelectControl field='engineSize' label='Engine Size (cc), EV=0' 
+                                            type="number" min={0} max={10000} step={100}
+                                            options={[0,1300,1500,1600,1800,2000,2500,3000]} {...common} />
+                                        </Col>
+                                    }
+                                    {
+                                        participant.isCompanyVehicle &&
+                                        <Col sm={3}>
+                                            <InputControl field='vehicleCost' label='Vehicle Cost ($)' 
+                                            type='number' {...common} />
+                                        </Col>
+                                    }
+                                </Row>
+                            }
 
                             <Row key='5'>
                                 <Col>

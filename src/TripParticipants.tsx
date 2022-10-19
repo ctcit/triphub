@@ -72,7 +72,7 @@ export class TripParticipants extends Component<{
     public static get blankTramper(): IParticipant {
         return {
             id: -1, isLeader: false, isPlbProvider: false, isDeleted: false, isVehicleProvider: false,
-            logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '',
+            logisticInfo: '', email: '', memberId: 0, name: '', phone: '', vehicleRego: '', seats: 0,
             emergencyContactName: '', emergencyContactPhone: '',
 
             broughtVehicle: false, isCompanyVehicle: false,

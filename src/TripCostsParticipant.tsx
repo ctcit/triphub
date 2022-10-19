@@ -1,14 +1,12 @@
-import * as React from 'react'
-import { Form, Row, Col, Container, ButtonGroup, Spinner, Badge } from 'reactstrap'
+import { Form, Row, Col, Container, ButtonGroup, Spinner } from 'reactstrap'
 import { Component } from 'react'
 import { IParticipant, IParticipantCosts, IValidation } from './Interfaces'
-import { ComboBoxControl, InputControl, SwitchControl } from './Control'
+import { InputControl, InputWithSelectControl, SwitchControl } from './Control'
 import { ToolTipIcon } from './ToolTipIcon'
 import { Accordian } from './Accordian'
 import { BindMethods } from './Utilities'
 import { ButtonWithTooltip } from './ButtonWithTooltip'
 import { ConfigService } from './Services/ConfigService'
-import { TripsService } from './Services/TripsService'
 
 export class TripCostsParticipant extends Component<{
     participant: IParticipant,
@@ -146,8 +144,9 @@ export class TripCostsParticipant extends Component<{
                                 participantCosts.broughtVehicle && !participant.isCompanyVehicle &&
                                 <Row>
                                     <Col sm={4}>
-                                        <ComboBoxControl field='engineSize' label='Engine Size (cc), EV=0' 
-                                        options={['0','1300','1500','1600','1800','2000','2500','3000']} {...common} />
+                                        <InputWithSelectControl field='engineSize' label='Engine Size (cc), EV=0' 
+                                        type="number" min={0} max={10000} step={100}
+                                        options={[0,1300,1500,1600,1800,2000,2500,3000]} {...common} />
                                     </Col>
                                     <Col sm={4}>
                                         <InputControl field='ratePerKm' label='Rate ($/km)' 

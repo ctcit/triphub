@@ -1,5 +1,5 @@
-import { ListGroup, ListGroupItem, Container, Row, Col, Form, Input } from 'reactstrap';
-import { Component, ReactNode } from 'react';
+import { ListGroup, ListGroupItem, Container, Row, Col, Form } from 'reactstrap';
+import { Component } from 'react';
 import { IParticipant, ITrip, ITripCostCalculations, IValidation } from './Interfaces';
 import { BindMethods } from './Utilities';
 import { InputControl, InputWithSelectControl } from './Control';

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { Col, Row, Container } from 'reactstrap';
-import { SwitchControl, TextAreaInputControl, InputControl, ComboBoxControl, SwitchesControl } from './Control';
+import { SwitchControl, TextAreaInputControl, InputControl, SwitchesControl, InputWithSelectControl } from './Control';
 import './index.css';
 import { IValidation, IMap, IArchivedRoute, ITrip, Role } from './Interfaces';
 import { TripMap } from './TripMap';
@@ -159,18 +159,20 @@ export class TripDetail extends Component<{
 
                 <Row>
                     <Col>
-                        <ComboBoxControl field='departurePoint'
+                        <InputWithSelectControl field='departurePoint'
                             label={isSocial ? 'Location' : 'Departure Point'}
+                            type='text'
                             options={isSocial ? ['Club Rooms (110 Waltham Road)'] : ['Z Papanui', 'Z (formerly Caltex) Russley']}
-                            {...common} />
+                            {...common} />                    
                     </Col>
                 </Row>
 
                 <Row>
                     <Col>
                         {isSocial ?
-                            <ComboBoxControl field='departureDetails' label='Time'
+                            <InputWithSelectControl field='departureDetails' label='Time'
                                 helpText='Time, any special arrangements'
+                                type='text'
                                 options={['7:30 pm (talks start at 8 pm)']}  {...common} /> :
                             <InputControl field='departureDetails' label='Departure Details'
                                 helpText='Time, any special arrangements' type='text' {...common} />
@@ -186,7 +188,9 @@ export class TripDetail extends Component<{
                             {...common} />
                     </Col>
                     <Col sm={8}>
-                        <ComboBoxControl field='grade' label='Grade' options={['Easy', 'Easy/Moderate', 'Moderate', 'Moderate/Hard', 'Hard']}  {...common} />
+                        <InputWithSelectControl field='grade' label='Grade' 
+                            type='text' options={['Easy', 'Easy/Moderate', 'Moderate', 'Moderate/Hard', 'Hard']}  
+                            {...common} />
                     </Col>
                 </Row>
 

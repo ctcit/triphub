@@ -365,85 +365,6 @@ export class SelectControl extends Component<{
     }
 }
 
-export class ComboBoxControl extends Component<{
-    id: string,
-    field: string
-    label: string,
-    hidden?: boolean,
-    readOnly?: boolean,
-    isLoading?: boolean,
-    onGet: (id: string) => any,
-    onSave: (id: string, value: any) => Promise<any>,
-    onGetValidationMessage: (id: string) => string,
-    options: string[]
-    helpText?: string,
-}, {
-    dropdownOpen: boolean,
-    oldValue: any,
-    value: any,
-    saving: boolean
-    helpText?: string,
-}> {
-
-    constructor(props: any) {
-        super(props);
-        const oldValue = this.props.onGet(this.props.field);
-        this.state = { dropdownOpen: false, oldValue, value: oldValue, saving: false }
-    }
-
-    public render() {
-        const id = this.props.id + '_' + this.props.field
-        const dropdownToggle = (): void => {
-            this.setState({ dropdownOpen: !this.state.dropdownOpen });
-        }
-        const onFocus = (): void => {
-            const oldValue = this.props.onGet(this.props.field);
-            this.setState({ oldValue, value: oldValue, helpText: this.props.helpText });
-            setTimeout(() => this.setState({ dropdownOpen: true }), 300); // Hack to ensure dropdown stays open
-        }
-        const onChange = (event: React.ChangeEvent) => {
-            const newValue = (event.target as any).value;
-            this.setState({ value: newValue });
-        }
-        const onBlur = () => {
-            if (this.state.oldValue !== this.state.value) {
-                this.setState({ saving: true, helpText: undefined });
-                this.props.onSave(this.props.field, this.state.value)
-                    .then(() => this.setState({ saving: false }));
-            }
-        }
-        const onClick = (event: any) => {
-            const newValue = event.currentTarget.textContent;
-            if (this.state.oldValue !== newValue) {
-                this.setState({ value: newValue, saving: true });
-                this.props.onSave(this.props.field, newValue)
-                    .then(() => this.setState({ saving: false }));
-            }
-        }
-
-        return (
-            <ControlWrapper id={id} field={this.props.field} 
-                label={this.props.label} labelFor={id} hidden={this.props.hidden}
-                isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage}
-                saving={this.state.saving} helpText={this.state.helpText} >
-                <InputGroup>
-                    <Input id={id} type="text" readOnly={this.props.readOnly} value={this.state.value}
-                        onFocus={onFocus} onChange={onChange} onBlur={onBlur} autoComplete='nope' />
-                    <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={dropdownToggle} hidden={this.props.readOnly}>
-                        <DropdownToggle color='transparent' caret={true} />
-                        <DropdownMenu end={true}>
-                            {this.props.options.map((value, i) =>
-                                <div key={i} onClick={onClick}><DropdownItem>{value}</DropdownItem></div>
-                            )}
-                        </DropdownMenu>
-                    </ButtonDropdown>
-                </InputGroup>
-            </ControlWrapper>
-        )
-    }
-}
-
-
 export class InputWithSelectControl extends Component<{
     id: string
     field: string
@@ -456,7 +377,7 @@ export class InputWithSelectControl extends Component<{
     min?: number
     max?: number
     step?: number
-    options: OptionsOrGroups<any, GroupBase<any>>
+    options: string[] | number[] | { [id: string]: any[] } | OptionsOrGroups<any, GroupBase<any>>
     placeholder?: any
     helpText?: string
     forceValidation?: boolean
@@ -474,10 +395,29 @@ export class InputWithSelectControl extends Component<{
 
     // the following Input control replaces ValueContainer in the ReactSelect control
     private newValueContainer;
+    private options: OptionsOrGroups<any, GroupBase<any>>
 
     constructor(props: any) {
         super(props);
         this.state = { oldValue: this.value, saving: false, showValidation: false }
+
+        // convert options to standardized format
+        this.options = 
+            (Array.isArray(this.props.options)) ?
+                this.props.options.map(option => 
+                    // string[]
+                    typeof option === 'string' ? { label: option, value: option} : 
+                    // number[]
+                    typeof option === 'number' ? { label: option.toString(), value: option} : 
+                    // OptionsOrGroups<any, GroupBase<any>>
+                    option
+                ) :
+            // { [id: string]: any[] }
+            (typeof this.props.options == 'object') ? 
+                Object.entries(this.props.options).map(([id, value]) => ({ label: id, value: value })) :
+            // Bad options
+            []
+            
 
         const onFocus = (): void => {
             this.setState({ oldValue: this.value, helpText: this.props.helpText });
@@ -552,7 +492,7 @@ export class InputWithSelectControl extends Component<{
                     styles={customStyles}
                     isDisabled={this.props.readOnly}
                     onChange={onChange}
-                    options={this.props.options}
+                    options={this.options}
                     isSearchable={true}
                     components={{ ValueContainer: this.newValueContainer }}
                 />

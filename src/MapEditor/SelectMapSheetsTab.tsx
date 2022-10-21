@@ -3,20 +3,13 @@ import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
 import { TabPane, ButtonGroup, Row, FormText, Col } from 'reactstrap';
 import { IMap } from '../Interfaces';
-import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import { MdInfo, MdClear, MdGridOff, MdZoomOutMap} from 'react-icons/md';
 import { NZ50MapPolygon } from '../MapCommon';
 import { ButtonWithTooltip } from '../ButtonWithTooltip';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
 import memoizeOne from 'memoize-one';
-
-const KeyCodes = {
-    comma: 188,
-    enter: 13,
-  };
-   
-const delimiters = [KeyCodes.comma, KeyCodes.enter];
+import Select, { ActionMeta } from 'react-select'
 
 export class SelectMapSheetsTab extends Component<{
     isActiveTab: boolean,
@@ -27,7 +20,7 @@ export class SelectMapSheetsTab extends Component<{
     saveMapsheetsChange: (mapSheets: string[]) => Promise<void>
 },{
     activated: boolean,
-    mapSheetSuggestions: Tag[],
+    mapSheetSuggestions: { value: any, label: string }[],
     busy: boolean
 }>{
     private mapIsSetup: boolean = false;
@@ -60,7 +53,7 @@ export class SelectMapSheetsTab extends Component<{
             activated: false,
             mapSheetSuggestions: Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
                 const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
-                return { id: nz50Map.sheetCode, text: nz50Map.sheetCode + ' ' + nz50Map.name };
+                return { value: nz50Map.sheetCode, label: nz50Map.sheetCode + ' ' + nz50Map.name };
             }),
 
             busy: false
@@ -71,10 +64,21 @@ export class SelectMapSheetsTab extends Component<{
         this.memoizedSetUpMap(this.props.mapComponent);
         this.memoizedHighlightOrUnhighlightSelectedMaps(this.mapIsSetup, this.props.isActiveTab);
 
-        const handleMapDelete = (pos: number) => this.deleteSelectedMaps(pos);
-        const handleMapAddition = (tag: Tag) => this.addSelectedMaps([tag.id]);
-        const handleMapDrag = (tag: Tag, currPos: number, newPos: number) => this.dragSelectedMaps(tag, currPos, newPos);
-
+        const onChange = (newMapsValue: any, actionMeta: ActionMeta<any>) => {
+            if (actionMeta.action === 'select-option') {
+                const addedMapSheets = newMapsValue
+                    .map((m: {value: string, label: string}) => m.value)
+                    .filter((id: string) => !this.props.mapSheets.includes(id))
+                this.addSelectedMaps(addedMapSheets);
+            } else if (actionMeta.action === 'remove-value') {
+                const newSelectedMapSheets = newMapsValue.map((m: {value: string, label: string}) => m.value)
+                const deleteMapPos = this.props.mapSheets
+                    .findIndex((oldSelectMapSheet: string) => !newSelectedMapSheets.includes(oldSelectMapSheet))
+                this.deleteSelectedMaps(deleteMapPos)
+            } else if (actionMeta.action === 'clear') {
+                this.clearSelectedMaps();
+            }
+        }
         const selectRouteMaps = () => this.selectRouteMaps();
         const clearSelectedMaps = () => this.clearSelectedMaps();
 
@@ -111,13 +115,24 @@ export class SelectMapSheetsTab extends Component<{
                         </ButtonGroup>
                     </Col>
                     <Col sm={6}>
-                        <ReactTags tags={this.getTags()}
-                            suggestions={this.state.mapSheetSuggestions}
-                            handleDelete={handleMapDelete}
-                            handleAddition={handleMapAddition}
-                            handleDrag={handleMapDrag}
-                            delimiters={delimiters}
-                            placeholder={'Start typing to add a map sheet by name'} />
+                       <Select
+                            autoFocus={false}
+                            value={this.getTags()}
+                            isMulti={true}
+                            isSearchable={true}
+                            options={this.state.mapSheetSuggestions}
+                            onChange={onChange}
+                            delimiter=','
+                            placeholder={'Start typing to add a map sheet by name'}
+                            isDisabled={false}
+                            styles={{ control: (provided: any, state: any) => ({
+                                ...provided,
+                                minWidth: '300px'
+                                }), container: (provided: any, state: any) => ({
+                                ...provided,
+                                zIndex: '999'
+                            })}}
+                        />
                     </Col>
                 </Row>
             </TabPane>
@@ -225,23 +240,14 @@ export class SelectMapSheetsTab extends Component<{
     }
 
     private deleteSelectedMaps(pos: number): void {
-        const tag: Tag = this.getTags()[pos];
+        const tag: { value: any, label: string } = this.getTags()[pos];
         if (tag) {
-            this.unhighlightMapSheet(tag.id);
-            const newMapSheets = this.props.mapSheets.filter((mapSheet: string) => mapSheet !== tag.id);
+            this.unhighlightMapSheet(tag.value);
+            const newMapSheets = this.props.mapSheets.filter((mapSheet: string) => mapSheet !== tag.value);
             this.saveSelectedMaps(newMapSheets);
         }
     }
  
-    private dragSelectedMaps(tag: Tag, currPos: number, newPos: number): void {
-        const tags = [...this.getTags()];
-        const newTags = tags.slice();
-        newTags.splice(currPos, 1);
-        newTags.splice(newPos, 0, tag);
-        const newMapSheets = newTags.map(newTag => newTag.id);
-        this.saveSelectedMaps(newMapSheets);
-    }
-
     private async saveSelectedMaps(mapSheets: string[]): Promise<void> {
         await this.props.saveMapsheetsChange(mapSheets);
     }
@@ -281,12 +287,12 @@ export class SelectMapSheetsTab extends Component<{
         }
     }
 
-    private getTags(): Tag[] {
+    private getTags(): { value: any, label: string }[] {
         if (!this.props.mapComponent) {
             return [];
         }
         return this.props.mapSheets.map((mapSheet: string) => 
-            ({ id: mapSheet, text: (this.props.mapComponent as MapComponent).mapSheetWithName(mapSheet) }));
+            ({ value: mapSheet, label: (this.props.mapComponent as MapComponent).mapSheetWithName(mapSheet) }));
     }
 
 }

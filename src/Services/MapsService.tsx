@@ -10,7 +10,7 @@ export class MapsService {
             this.getMapsPromise = new Promise<IMap[]>((resolve, reject) => {
                 apiCall('GET', BaseUrl + '/maps')
                     .then((maps: IMap[]) => {
-                        this.maps = maps;
+                        this.maps = maps.sort((a, b) => a.sheetCode.localeCompare(b.sheetCode));;
                         resolve(maps);
                     });
             });

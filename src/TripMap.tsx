@@ -1,23 +1,15 @@
 import * as L from 'leaflet';
 import * as React from 'react';
-import { ButtonGroup, Modal, ModalHeader, ModalBody, ModalFooter, ListGroup, ListGroupItem, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Form, Container, Button } from 'reactstrap';
+import { ButtonGroup, Modal, ModalHeader, ModalBody, ModalFooter, Col, Row, FormText, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Button } from 'reactstrap';
 import { MapEditor } from './MapEditor/MapEditor';
 import { IMap, IArchivedRoute, ITrip } from './Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
-import { ButtonWithConfirm } from './ButtonWithConfirm';
 import { ControlWrapper } from './Control';
 import { MapCommon, NZ50MapPolygon } from './MapCommon';
-import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import memoizeOne from 'memoize-one';
-import { MdClear, MdGridOff, MdInfo /* , MdMap */ } from 'react-icons/md';
-
-const KeyCodes = {
-    comma: 188,
-    enter: 13,
-  };
-   
-const delimiters = [KeyCodes.comma, KeyCodes.enter];
+import { MdGridOff, MdInfo /* , MdMap */ } from 'react-icons/md';
+import Select, { ActionMeta } from 'react-select'
 
 export class TripMap extends MapCommon<{
     routesId : string, 
@@ -44,9 +36,9 @@ export class TripMap extends MapCommon<{
     editsMade: boolean,
     cancelDropdownOpen: boolean,
     archivedRoutes: IArchivedRoute[],
-    archivedRouteSuggestions: Tag[],
+    archivedRouteSuggestions: { value: any, label: string }[],
     busy: boolean, // loading archivedRoutes
-    mapSheetSuggestions: Tag[]
+    mapSheetSuggestions: { value: any, label: string }[]
 }>{
     // selected map sheets
     private pendingMapSheets: string[] = []; // changed mapSheets before being saved
@@ -62,7 +54,7 @@ export class TripMap extends MapCommon<{
                 this.props.getArchivedRoutes(false, false)
                     .then((archivedRoutes: IArchivedRoute[]) => {
                         const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
-                            return { id: archivedRoute.id.toString(), text: archivedRoute.title };
+                            return { value: archivedRoute.id, label: archivedRoute.title };
                         });
                         if (this.mounted) {
                             this.setState({archivedRoutes, archivedRouteSuggestions, busy: false});
@@ -93,7 +85,7 @@ export class TripMap extends MapCommon<{
             busy: true,
             mapSheetSuggestions: Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
                 const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
-                return { id: nz50Map.sheetCode, text: nz50Map.sheetCode + ' ' + nz50Map.name };
+                return { value: nz50Map.sheetCode, label: nz50Map.sheetCode + ' ' + nz50Map.name };
             })
         };
     }
@@ -137,28 +129,23 @@ export class TripMap extends MapCommon<{
         }
 
         // changed in TripMap - save immediate
-        const handleMapDelete = (pos: number) => {
-            this.deleteSelectedMaps(pos);
-        } 
-        const handleMapAddition = (tag: Tag) => {
-            this.addSelectedMaps([tag.id]);
+        const onChange = (newMapsValue: any, actionMeta: ActionMeta<any>) => {
+            this.saveSelectedMaps(newMapsValue.map((m: {value: string, label: string}) => m.value));
         }
-        const handleMapDrag = (tag: Tag, currPos: number, newPos: number) => {
-            this.dragSelectedMaps(tag, currPos, newPos);
-        } 
         const onSelectRouteMaps = () => this.selectRouteMaps();
-        const onClearRouteMaps = () => this.clearRouteMaps();
 
         const onResize = (e: React.SyntheticEvent, data: ResizeCallbackData) => {
             this.resizeMap(data.size.height, data.size.width);
         }
 
         // changed in TripMap - save immediate
-        const handleArchivedRouteDelete = () => null;
-        const handleArchivedRouteAddition = (tag: Tag) => {
-            this.selectArchivedRoute(parseInt(tag.id, 10));
+        const onArchivedRouteChange = (newRouteValue: any, actionMeta: ActionMeta<any>) => {
+            if (actionMeta.action === 'select-option') {
+                this.selectArchivedRoute(newRouteValue.value);
+            } else if (actionMeta.action === 'clear') {
+                this.clearRoute();
+            }
         }
-        const onClearRoute = () => this.clearRoute();
 
         const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
             this.props.getArchivedRoutes(includeHidden, force);
@@ -171,7 +158,7 @@ export class TripMap extends MapCommon<{
                     <Col>
                         <ControlWrapper id={this.props.routesId} field={this.props.routesId} label={this.props.routesLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingRoutes} >
                         { !this.state.mapVisible &&
-                            <FormText color="muted">No routes specified</FormText>
+                            <FormText color="muted">No routes specified&nbsp;&nbsp;</FormText>
                         }
                         { this.state.mapVisible &&
                             <ResizableBox width={this.initialWidth} height={this.initialHeight} minConstraints={[200, 200]} onResize={onResize}>
@@ -180,19 +167,21 @@ export class TripMap extends MapCommon<{
                         }
                         { !this.props.readOnly && this.props.isOnline &&
                                 <ButtonGroup>
-                                    <ReactTags tags={[]}
-                                        autofocus={false}
-                                        suggestions={this.state.archivedRouteSuggestions}
-                                        handleDelete={handleArchivedRouteDelete}
-                                        handleAddition={handleArchivedRouteAddition}
-                                        delimiters={delimiters}
-                                        placeholder={'Start typing to add a route from the archives by name'} />
-                                    <ButtonWithConfirm id="ClearRoutesButton" color='secondary'
-                                        onClick={onClearRoute} disabled={!this.state.mapVisible}  
-                                        placement="top" tooltipText="Clear routes"
-                                        confirmText="Confirm clear routes">
-                                            <MdClear/>
-                                    </ButtonWithConfirm>
+                                    <Select
+                                        autoFocus={false}
+                                        isMulti={false}
+                                        isClearable={true}
+                                        isSearchable={true}
+                                        options={this.state.archivedRouteSuggestions}
+                                        onChange={onArchivedRouteChange}
+                                        delimiter=','
+                                        placeholder={'Start typing to add a route from the archives by name'}
+                                        isDisabled={this.props.readOnly}
+                                        styles={{ control: (provided: any, state: any) => ({
+                                                ...provided,
+                                                minWidth: '300px'
+                                            })}}
+                                    />
                                     <a href="https://youtu.be/77B6EzYLcmo" target="_blank">
                                         <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                                     </a>
@@ -206,33 +195,31 @@ export class TripMap extends MapCommon<{
                         <ControlWrapper id={this.props.mapsId} field={this.props.mapsId} label={this.props.mapsLabel} hidden={this.props.hidden} isLoading={this.props.isLoading} onGetValidationMessage={this.props.onGetValidationMessage} saving={this.state.savingMapSheets} >
                         {
                             this.mapSheets.length === 0 &&
-                                <FormText color="muted">No maps selected</FormText>
+                                <FormText color="muted">No maps selected&nbsp;&nbsp;</FormText>
                         }
                         { ((this.props.readOnly && this.mapSheets.length > 0) || !this.props.readOnly) &&
                             <ButtonGroup>
-                                <ReactTags tags={this.getTags()}
-                                    autofocus={false}
-                                    suggestions={this.state.mapSheetSuggestions}
-                                    handleDelete={handleMapDelete}
-                                    handleAddition={handleMapAddition}
-                                    handleDrag={handleMapDrag}
-                                    delimiters={delimiters}
+                                <Select
+                                    autoFocus={false}
+                                    value={this.getTags()}
+                                    isMulti={true}
+                                    isSearchable={true}
+                                    options={this.state.mapSheetSuggestions}
+                                    onChange={onChange}
+                                    delimiter=','
                                     placeholder={'Start typing to add a map sheet by name'}
-                                    readOnly={this.props.readOnly} />
+                                    isDisabled={this.props.readOnly}
+                                    styles={{ control: (provided: any, state: any) => ({
+                                            ...provided,
+                                            minWidth: '300px'
+                                        })}}
+                                />
                                 { !this.props.readOnly &&
                                     <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
                                         onClick={onSelectRouteMaps} disabled={!this.routes || this.routes.length === 0 }  
                                         placement="top" tooltipText="Select maps overlapping the route">
                                             <MdGridOff/>
                                     </ButtonWithTooltip>
-                                }
-                                { !this.props.readOnly &&
-                                    <ButtonWithConfirm id="ClearMapsButton" color='secondary'
-                                        onClick={onClearRouteMaps} disabled={this.mapSheets.length === 0}  
-                                        placement="top" tooltipText="Clear maps"
-                                        confirmText="Confirm clear maps">
-                                            <MdClear/>
-                                    </ButtonWithConfirm>
                                 }
                                 { !this.props.readOnly && this.props.isOnline &&
                                     <a href="https://youtu.be/ybP2xjWb0t0" target="_blank">
@@ -352,38 +339,12 @@ export class TripMap extends MapCommon<{
 
     // -----------------
 
-    private getTags(): Tag[] {
+    private getTags(): { value: any, label: string }[] {
         if (!this.mapSheets) {
             return [];
         }
         return this.mapSheets.map((mapSheet: string) => 
-            ({ id: mapSheet, text: this.mapSheetWithName(mapSheet) }));
-    }
-
-    private addSelectedMaps(addedMapSheets: string[]): void {
-        this.saveSelectedMaps(this.addSelectedMapsWithoutSave(addedMapSheets));
-    }
-
-    private addSelectedMapsWithoutSave(addedMapSheets: string[]): string[] {
-        const newMapSheets = this.mapSheets.concat(addedMapSheets);
-        return newMapSheets;
-    }
-
-    private deleteSelectedMaps(pos: number): void {
-        const tag: Tag = this.getTags()[pos];
-        if (tag) {
-            const newMapSheets = this.mapSheets.filter((mapSheet: string) => mapSheet !== tag.id);
-            this.saveSelectedMaps(newMapSheets);
-        }
-    }
- 
-    private dragSelectedMaps(tag: Tag, currPos: number, newPos: number): void {
-        const tags = [...this.getTags()];
-        const newTags = tags.slice();
-        newTags.splice(currPos, 1);
-        newTags.splice(newPos, 0, tag);
-        const newMapSheets = newTags.map(newTag => newTag.id);
-        this.saveSelectedMaps(newMapSheets);
+            ({ value: mapSheet, label: this.mapSheetWithName(mapSheet) }));
     }
 
     private selectRouteMaps(): void {

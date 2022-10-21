@@ -9,7 +9,7 @@ export class ArchivedRoutesService {
             this.getArchivedRoutesPromise = new Promise<IArchivedRoute[]>((resolve, reject) => {
                 apiCall('GET', BaseUrl + '/routes?includeHidden=' + includeHidden)
                     .then((archivedRoutes: IArchivedRoute[]) => {
-                        this.archivedRoutes = archivedRoutes;
+                        this.archivedRoutes = archivedRoutes.sort((a, b) => a.title.localeCompare(b.title));
                         resolve(archivedRoutes);
                     }, () => {
                         this.archivedRoutes = [];

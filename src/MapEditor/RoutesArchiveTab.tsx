@@ -3,21 +3,14 @@ import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
 import { Button, TabPane, ButtonGroup, Row, FormText, Col } from 'reactstrap';
 import { IArchivedRoute, IMap } from '../Interfaces';
-import { Tag, WithContext as ReactTags } from 'react-tag-input';
 import { MdInfo, MdUndo, MdZoomOutMap} from 'react-icons/md';
 import { Spinner } from '../Widgets';
-import { ArchivedRoutePolygon, MapCommon } from '../MapCommon';
+import { ArchivedRoutePolygon } from '../MapCommon';
 import { ButtonWithTooltip } from '../ButtonWithTooltip';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
 import memoizeOne from 'memoize-one';
-
-const KeyCodes = {
-    comma: 188,
-    enter: 13,
-  };
-   
-const delimiters = [KeyCodes.comma, KeyCodes.enter];
+import Select, { ActionMeta } from 'react-select'
 
 export class RoutesArchiveTab extends Component<{
     isActiveTab: boolean,
@@ -32,7 +25,7 @@ export class RoutesArchiveTab extends Component<{
     getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     archivedRoutes: IArchivedRoute[],
-    archivedRouteSuggestions: Tag[],
+    archivedRouteSuggestions: { value: any, label: string }[],
     busy: boolean
 }>{
     protected archivedRoutesLayerGroup: L.LayerGroup<ArchivedRoutePolygon[]> = L.layerGroup();
@@ -44,7 +37,7 @@ export class RoutesArchiveTab extends Component<{
             this.props.getArchivedRoutes(includeHidden, force)
             .then((archivedRoutes: IArchivedRoute[]) => {
                 const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
-                    return { id: archivedRoute.id.toString(), text: archivedRoute.title };
+                    return { value: archivedRoute.id, label: archivedRoute.title };
                 });
                 this.setState({archivedRoutes, archivedRouteSuggestions, busy: false});
             });
@@ -93,9 +86,8 @@ export class RoutesArchiveTab extends Component<{
             this.infoControl.addTo(mapComponent.map);
             this.setDefaultInfoControlMessage();
         }
-        const handleArchivedRouteDelete = () => null;
-        const handleArchivedRouteAddition = (tag: Tag) => {
-            this.selectArchivedRoute(parseInt(tag.id, 10));
+        const onArchivedRouteChange = (newRouteValue: any, actionMeta: ActionMeta<any>) => {
+            this.selectArchivedRoute(newRouteValue.value);
         }
 
         return (
@@ -122,12 +114,23 @@ export class RoutesArchiveTab extends Component<{
                         </ButtonGroup>
                     </Col>
                     <Col sm={6}>
-                        <ReactTags tags={[]}
-                            suggestions={this.state.archivedRouteSuggestions}
-                            handleDelete={handleArchivedRouteDelete}
-                            handleAddition={handleArchivedRouteAddition}
-                            delimiters={delimiters}
-                            placeholder={'Start typing to add a route from the archives by name'} />
+                        <Select
+                            autoFocus={false}
+                            isMulti={false}
+                            isSearchable={true}
+                            options={this.state.archivedRouteSuggestions}
+                            onChange={onArchivedRouteChange}
+                            delimiter=','
+                            placeholder={'Start typing to add a route from the archives by name'}
+                            isDisabled={false}
+                            styles={{ control: (provided: any, state: any) => ({
+                                    ...provided,
+                                    minWidth: '300px'
+                                }), container: (provided: any, state: any) => ({
+                                    ...provided,
+                                    zIndex: '999'
+                                })}}
+                        />
                     </Col>
                     <Col sm={1}>
                         <Button hidden={!this.state.busy}>{[ '', Spinner ]}</Button>

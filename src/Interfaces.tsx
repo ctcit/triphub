@@ -72,8 +72,8 @@ export interface IParticipant extends IParticipantCosts {
     logisticInfo: string
     vehicleRego: string
     displayPriority?: number
-    engineSize: number | null
-    seats: number | null
+    engineSize: number
+    seats: number
 
 }
 

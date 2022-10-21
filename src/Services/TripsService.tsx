@@ -106,16 +106,12 @@ export class TripsService {
         const duplicate = participants.find(p => p.id !== participant.id && p.name === participant.name)
         const mandatoryFields = ['name']
         if (participant.isVehicleProvider) {
-            mandatoryFields.push('vehicleRego', 'seats')
-            if (participant.isFixedCostVehicle) {
-                mandatoryFields.push('vehicleCost')
-            } else {
-                mandatoryFields.push('engineSize')
-            }
+            mandatoryFields.push('vehicleRego')
         }
         return [
             ...Mandatory(participant, mandatoryFields),
-            { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` }
+            { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` },
+            { field: 'seats', ok: participant.seats > 0, message: `Seats must be greater than zero` }
         ]
     }
 

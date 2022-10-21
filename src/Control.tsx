@@ -119,7 +119,7 @@ export class InputControl extends Component<{
                 helpText={this.state.helpText}>
                 <Input id={id} type={this.props.type} readOnly={this.props.readOnly} 
                     list={this.props.list} min={this.props.min} max={this.props.max} step={this.props.step}
-                    value={this.value || ""} placeholder={this.props.placeholder}
+                    value={this.value || (this.props.type === 'number' ? 0 : '')} placeholder={this.props.placeholder}
                     onFocus={onFocus} onChange={onChange} onBlur={onBlur}
                     autoComplete='nope' autoFocus={this.props.autoFocus} className={className} />
             </ControlWrapper>
@@ -445,7 +445,7 @@ export class InputWithSelectControl extends Component<{
                 step={this.props.step}
                 hidden={this.props.hidden}
                 readOnly={this.props.readOnly}
-                value={this.props.onGet(this.props.field) || ""}
+                value={this.props.onGet(this.props.field) || (this.props.type === 'number' ? 0 : '')}
                 onFocus={onFocus} 
                 onChange={onChange} 
                 onBlur={onBlur}
@@ -491,6 +491,7 @@ export class InputWithSelectControl extends Component<{
                 <Select id={id} 
                     styles={customStyles}
                     isDisabled={this.props.readOnly}
+                    backspaceRemovesValue={false} // if true, disables backspace, DEL, and ESC keys
                     onChange={onChange}
                     options={this.options}
                     isSearchable={true}

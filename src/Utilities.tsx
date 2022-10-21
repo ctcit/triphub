@@ -89,7 +89,7 @@ export function SafeJsonParse(json: string, defaultValue: any): any {
 
 export function Mandatory(obj: any, fields: string[]): IValidation[] {
     return fields.map(field => ({
-        field, ok: obj[field] !== '' && obj[field] !== undefined, message: TitleFromId(field) + ' must be entered'
+        field, ok: obj[field] !== '', message: TitleFromId(field) + ' must be entered'
     }))
 }
 

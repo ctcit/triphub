@@ -92,7 +92,7 @@ export class TripCosts extends Component<{
         actualVehicleProviders.forEach(p => {
             const c = this.calculations.participants[p.id]
             c.totalDistance = c.totalDistance != null ? c.totalDistance : defaultTotalDistance
-            c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize || 0)
+            c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize)
             c.vehicleCost = c.vehicleCost != null ? c.vehicleCost : Math.ceil(c.totalDistance * c.ratePerKm)
             this.calculations.totalVehicleCost += c.vehicleCost
         })

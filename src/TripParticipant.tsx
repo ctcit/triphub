@@ -149,6 +149,8 @@ export class TripParticipant extends Component<{
             <ToolTipIcon key='plb' icon='podcast' tooltip={`${participant.name} is bringing a PLB`} id={iconid} />,
             participant.isVehicleProvider &&
             <ToolTipIcon key='car' icon='car' tooltip={`${participant.name} is bringing a Car`} id={iconid} />,
+            participant.isVehicleProvider && participant.seats &&
+            <span key='count' className='TripCount'>{` (${participant.seats} seats)`}</span>,
             logisticInfo &&
             <ToolTipIcon key='logisticInfo' icon='comment' tooltip={logisticInfo} id={iconid} />,
             !participant.memberId &&
@@ -257,10 +259,10 @@ export class TripParticipant extends Component<{
                                         {...common} />
                                     </Col>
                                     <Col sm={2} md={3}>
-                                        <SwitchControl field='isCompanyVehicle' label='Company vehicle (fixed cost)' {...common} />
+                                        <SwitchControl field='isFixedCostVehicle' label='Fixed cost vehicle (e.g. company)' {...common} />
                                     </Col>
                                     {
-                                        !participant.isCompanyVehicle &&
+                                        !participant.isFixedCostVehicle &&
                                         <Col sm={3}>
                                             <InputWithSelectControl field='engineSize' label='Engine Size (cc), EV=0' 
                                             type="number" min={0} max={10000} step={100}
@@ -268,7 +270,7 @@ export class TripParticipant extends Component<{
                                         </Col>
                                     }
                                     {
-                                        participant.isCompanyVehicle &&
+                                        participant.isFixedCostVehicle &&
                                         <Col sm={3}>
                                             <InputControl field='vehicleCost' label='Vehicle Cost ($)' 
                                             type='number' {...common} />

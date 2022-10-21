@@ -136,12 +136,12 @@ export class TripCostsParticipant extends Component<{
                                 participantCosts.broughtVehicle &&
                                 <Row>
                                     <Col sm={2} md={3}>
-                                        <SwitchControl field='isCompanyVehicle' label='Company vehicle (fixed cost)' {...common} />
+                                        <SwitchControl field='isFixedCostVehicle' label='Fixed cost vehicle (e.g. company)' {...common} />
                                     </Col>
                                 </Row>
                             }
                             {
-                                participantCosts.broughtVehicle && !participant.isCompanyVehicle &&
+                                participantCosts.broughtVehicle && !participant.isFixedCostVehicle &&
                                 <Row>
                                     <Col sm={4}>
                                         <InputWithSelectControl field='engineSize' label='Engine Size (cc), EV=0' 
@@ -161,7 +161,7 @@ export class TripCostsParticipant extends Component<{
                                 </Row>
                             }
                             {
-                                participantCosts.broughtVehicle && !participant.isCompanyVehicle &&
+                                participantCosts.broughtVehicle && !participant.isFixedCostVehicle &&
                                 <Row>
                                     <Col sm={4}>
                                         <InputControl field='vehicleCost' label='Vehicle Cost ($)' 
@@ -181,7 +181,7 @@ export class TripCostsParticipant extends Component<{
                                 </Row>
                             }
                             {
-                                participantCosts.broughtVehicle && participant.isCompanyVehicle &&
+                                participantCosts.broughtVehicle && participant.isFixedCostVehicle &&
                                 <Row>
                                     <Col sm={4}>
                                         <InputControl field='vehicleCost' label='Vehicle Cost ($)' 

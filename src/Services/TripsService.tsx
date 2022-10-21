@@ -104,8 +104,17 @@ export class TripsService {
 
     public static validateParticipant(participant: IParticipant, participants: IParticipant[]): IValidation[] {
         const duplicate = participants.find(p => p.id !== participant.id && p.name === participant.name)
+        const mandatoryFields = ['name']
+        if (participant.isVehicleProvider) {
+            mandatoryFields.push('vehicleRego', 'seats')
+            if (participant.isFixedCostVehicle) {
+                mandatoryFields.push('vehicleCost')
+            } else {
+                mandatoryFields.push('engineSize')
+            }
+        }
         return [
-            ...Mandatory(participant, participant.isVehicleProvider ? ['name', 'vehicleRego'] : ['name']),
+            ...Mandatory(participant, mandatoryFields),
             { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` }
         ]
     }

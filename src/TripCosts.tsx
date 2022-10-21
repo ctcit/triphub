@@ -23,7 +23,7 @@ export class TripCosts extends Component<{
         distanceOneWay: 0,
         participantsCount: 0,
         totalVehicleCost: 0,
-        companyVehicleCount: 0,
+        fixedCostVehicleCount: 0,
         payingParticipantsCount: 0, // paying vehicle fee
         calculatedVehicleFee: 0,
         roundedCalculatedVehicleFee: 0,
@@ -55,7 +55,7 @@ export class TripCosts extends Component<{
             distanceOneWay: trip.distanceOneWay,
             participantsCount: trip.participantsCount !== null ? trip.participantsCount : currentParticipants.length,
             totalVehicleCost: 0,
-            companyVehicleCount: 0,
+            fixedCostVehicleCount: 0,
             payingParticipantsCount: 0, // paying vehicle fee
             calculatedVehicleFee: 0,
             roundedCalculatedVehicleFee: 0,
@@ -69,10 +69,10 @@ export class TripCosts extends Component<{
 
             this.calculations.participants[p.id] = {
                 broughtVehicle: p.broughtVehicle ?? p.isVehicleProvider ?? false, // TODO - remove p.isVehicleProvider
-                isCompanyVehicle: p.isCompanyVehicle,
+                isFixedCostVehicle: p.isFixedCostVehicle,
                 totalDistance: p.totalDistance ?? null,
                 ratePerKm: p.ratePerKm ?? null,
-                vehicleCost: !p.isCompanyVehicle ? null : p.vehicleCost ?? null,
+                vehicleCost: !p.isFixedCostVehicle ? null : p.vehicleCost ?? null,
                 vehicleReimbursement: p.vehicleReimbursement ?? null, // vehicle cost less vehicle fee
             
                 // all
@@ -92,14 +92,14 @@ export class TripCosts extends Component<{
         actualVehicleProviders.forEach(p => {
             const c = this.calculations.participants[p.id]
             c.totalDistance = c.totalDistance != null ? c.totalDistance : defaultTotalDistance
-            c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize)
+            c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize || 0)
             c.vehicleCost = c.vehicleCost != null ? c.vehicleCost : Math.ceil(c.totalDistance * c.ratePerKm)
             this.calculations.totalVehicleCost += c.vehicleCost
         })
 
-        // handle company vehicles
-        this.calculations.companyVehicleCount = actualVehicleProviders.filter(p => p.isCompanyVehicle).length
-        this.calculations.payingParticipantsCount = this.calculations.participantsCount - this.calculations.companyVehicleCount
+        // handle fixed cost vehicles
+        this.calculations.fixedCostVehicleCount = actualVehicleProviders.filter(p => p.isFixedCostVehicle).length
+        this.calculations.payingParticipantsCount = this.calculations.participantsCount - this.calculations.fixedCostVehicleCount
 
         // calculate vehicle fee per paying participant
         this.calculations.calculatedVehicleFee = this.calculations.payingParticipantsCount > 0 ? 
@@ -111,7 +111,7 @@ export class TripCosts extends Component<{
         currentParticipants.forEach(p => {
             const c = this.calculations.participants[p.id]
             c.vehicleFee = c.vehicleFee != null ? c.vehicleFee : // manually overridden fee (unused)
-                c.isCompanyVehicle ? 0 : // company vehicle - no fee
+                c.isFixedCostVehicle ? 0 : // fixed cost vehicle - no fee
                 this.calculations.vehicleFee // otherwise, calculated fee
             this.calculations.totalVehicleFeeToCollect += !c.broughtVehicle ? c.vehicleFee : 0
             c.nonMemberFee = c.nonMemberFee != null ? c.nonMemberFee : !p.memberId ? this.nonMemberFee() : 0
@@ -128,12 +128,12 @@ export class TripCosts extends Component<{
                 (c.vehicleCost ?? 0) - (c.vehicleFee ?? 0)
             totalReimbursements += c.vehicleReimbursement
         })
-        // handle excess vehicle funds - distribute to non-company vehicle providers (unless there are none)
+        // handle excess vehicle funds - distribute to non-fixed cost vehicle providers (unless there are none)
         let excessVehicleFunds = this.calculations.totalVehicleFeeToCollect - totalReimbursements
-        const haveNonCompanyVehicleProviders = actualVehicleProviders.length > this.calculations.companyVehicleCount
+        const haveNonFixedCostVehicleProviders = actualVehicleProviders.length > this.calculations.fixedCostVehicleCount
         while (excessVehicleFunds > 0) {
             actualVehicleProviders.forEach(p => {
-                if (excessVehicleFunds > 0 && (!p.isCompanyVehicle || !haveNonCompanyVehicleProviders)) {
+                if (excessVehicleFunds > 0 && (!p.isFixedCostVehicle || !haveNonFixedCostVehicleProviders)) {
                     const c = this.calculations.participants[p.id]
                     const addExcess = Math.min(1, excessVehicleFunds)
                     c.vehicleReimbursement = (c.vehicleReimbursement ?? 0) + addExcess
@@ -173,8 +173,8 @@ export class TripCosts extends Component<{
 
         participants[index] = participant
         
-        // clear any fixed vehicle cost if not company vehicle
-        if (!participant.isCompanyVehicle) { 
+        // clear any fixed vehicle cost if not fixed cost vehicle
+        if (!participant.isFixedCostVehicle) { 
             participant.vehicleCost = null;
         }
 
@@ -255,12 +255,12 @@ export class TripCosts extends Component<{
                                         type='number' min={0} hidden={false} {...common} />
                                 </Col>
                                 <Col sm={5} md={4}>
-                                    <InputControl field='companyVehicleCount' label='Total number of company vehicles'
-                                        placeholder={this.calculations.companyVehicleCount}
+                                    <InputControl field='fixedCostVehicleCount' label='Total number of fixed cost vehicles'
+                                        placeholder={this.calculations.fixedCostVehicleCount}
                                         type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col>
                                 <Col sm={5} md={4}>
-                                    <InputControl field='payingParticipantsCount' label='Number to pay vehicle costs (number on trip less company vehicle drivers)'
+                                    <InputControl field='payingParticipantsCount' label='Number to pay vehicle costs (number on trip less fixed cost vehicle drivers)'
                                         placeholder={this.calculations.payingParticipantsCount}
                                         type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col>

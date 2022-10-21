@@ -72,15 +72,15 @@ export interface IParticipant extends IParticipantCosts {
     logisticInfo: string
     vehicleRego: string
     displayPriority?: number
-    engineSize: number
-    seats: number
+    engineSize: number | null
+    seats: number | null
 
 }
 
 export interface IParticipantCosts {
     // vehicle providers
     broughtVehicle: boolean
-    isCompanyVehicle: boolean
+    isFixedCostVehicle: boolean
     totalDistance: number | null
     ratePerKm: number | null
     vehicleCost: number | null
@@ -99,7 +99,7 @@ export interface ITripCostCalculations {
     distanceOneWay: number
     participantsCount: number
     totalVehicleCost: number
-    companyVehicleCount: number
+    fixedCostVehicleCount: number
     payingParticipantsCount: number // paying vehicle fee
     calculatedVehicleFee: number
     roundedCalculatedVehicleFee: number

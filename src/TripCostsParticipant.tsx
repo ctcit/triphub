@@ -58,6 +58,13 @@ export class TripCostsParticipant extends Component<{
             onSave('broughtVehicle', !participantCosts.broughtVehicle)
         }
 
+        // 
+        const onNegativeNumberGet = (field: string): any => this.sanitizeNegativeNumber(participant[field])
+        const onNegativeNumberSet = (field: string, value: any): Promise<IParticipant> => 
+            this.props.setParticipant(participant.id, { [field]: this.sanitizeNegativeNumber(value) }, false)
+        const onNegativeNumberSave = (field: string, value: any): Promise<IParticipant> => 
+            this.props.setParticipant(participant.id, { [field]: this.sanitizeNegativeNumber(value) }, true)
+
         const iconid = `${participant.id || 'new'}`
         const title = [
             <span key='title'>{participant.name} </span>,
@@ -149,7 +156,7 @@ export class TripCostsParticipant extends Component<{
                                         options={[0,1300,1500,1600,1800,2000,2500,3000]} {...common} />
                                     </Col>
                                     <Col sm={4}>
-                                        <InputControl field='ratePerKm' label='Rate ($/km)' 
+                                        <InputControl field='ratePerKm' label='Rate ($/ONE-WAY-km)' 
                                         placeholder={participantCosts.ratePerKm}
                                         type='number' {...common} />
                                     </Col>
@@ -227,10 +234,16 @@ export class TripCostsParticipant extends Component<{
                                     <Col sm={4}>
                                         <InputControl field='toPay' label='Total to reimburse ($)' 
                                         placeholder={participantCosts.toPay !== null ? -participantCosts.toPay : null}
-                                        type='number' {...common} readOnly={true} />
+                                        type='number' 
+                                        {...common} 
+                                        readOnly={true} 
+                                        onGet={onNegativeNumberGet}
+                                        onSet={onNegativeNumberSet}
+                                        onSave={onNegativeNumberSave}
+                                        />
                                     </Col>
                                 }
-                                {(participantCosts.paid ?? 0 >= 0) && (participantCosts.toPay ?? 0 >= 0) ? 
+                                {(participantCosts.toPay ?? 0) >= 0 ? 
                                     <Col sm={4}>
                                         <InputControl field='paid' label='Total paid ($)' 
                                         placeholder={participantCosts.paid}
@@ -240,7 +253,12 @@ export class TripCostsParticipant extends Component<{
                                     <Col sm={4}>
                                         <InputControl field='paid' label='Total reimbursed ($)' 
                                         placeholder={participantCosts.paid !== null ? -participantCosts.paid : null}
-                                        type='number' {...common} />
+                                        type='number' 
+                                        {...common} 
+                                        onGet={onNegativeNumberGet}
+                                        onSet={onNegativeNumberSet}
+                                        onSave={onNegativeNumberSave}
+                                        />
                                     </Col>
                                 }   
                         </Row>
@@ -254,5 +272,8 @@ export class TripCostsParticipant extends Component<{
     
     private sanitizeNumber(value: number): number | null {
         return isNaN(value) ? null : value
+    }
+    private sanitizeNegativeNumber(value: number): number | null {
+        return isNaN(value) ? null : value ? -value: value
     }
 }

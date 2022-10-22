@@ -24,7 +24,7 @@ export class ButtonWithTooltip extends Component<{
     }
 
     public render(){
-        const onClick = () => this.props.onClick();
+        const onClick = (event: any) => { event.stopPropagation(); this.props.onClick() };
         const toggle = () => { this.setState( { tooltipOpen: !this.state.tooltipOpen }) };
 
         return <div>

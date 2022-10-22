@@ -93,7 +93,7 @@ export class TripCosts extends Component<{
             const c = this.calculations.participants[p.id]
             c.totalDistance = c.totalDistance != null ? c.totalDistance : defaultTotalDistance
             c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize)
-            c.vehicleCost = c.vehicleCost != null ? c.vehicleCost : Math.ceil(c.totalDistance * c.ratePerKm)
+            c.vehicleCost = c.vehicleCost != null ? c.vehicleCost : Math.ceil(c.totalDistance * c.ratePerKm / 2) // NOTE: ratePerKm is per ONE-WAY-km, so is twice the rate per total return km
             this.calculations.totalVehicleCost += c.vehicleCost
         })
 
@@ -159,6 +159,7 @@ export class TripCosts extends Component<{
     }
 
     public ratePerKm(engineSizeCC: number): number {
+        // Note: These are the $/(ONE-WAY)km
         return engineSizeCC <= 1500 ? 0.82 : engineSizeCC <= 2000 ? 0.93 : 1.14;
     }
 

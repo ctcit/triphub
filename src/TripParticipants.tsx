@@ -76,10 +76,10 @@ export class TripParticipants extends Component<{
             emergencyContactName: '', emergencyContactPhone: '',
 
             broughtVehicle: false, isFixedCostVehicle: false,
-            engineSize: 0, totalDistance: 0, ratePerKm: 0, vehicleCost: 0, vehicleReimbursement: 0,
-            vehicleFee: 0, 
-            nonMemberFee: 0, otherFees: 0, 
-            toPay: 0, paid: 0
+            engineSize: 0, totalDistance: null, ratePerKm: null, vehicleCost: null, vehicleReimbursement: null,
+            vehicleFee: null, 
+            nonMemberFee: null, otherFees: null, 
+            toPay: null, paid: null
         }
     }
 

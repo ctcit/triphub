@@ -111,7 +111,7 @@ export class TripsService {
         return [
             ...Mandatory(participant, mandatoryFields),
             { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` },
-            { field: 'seats', ok: participant.seats > 0, message: `Seats must be greater than zero` }
+            { field: 'seats', ok: !participant.isVehicleProvider || participant.seats > 0, message: `Seats must be greater than zero` }
         ]
     }
 

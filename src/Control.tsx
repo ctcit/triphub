@@ -119,11 +119,16 @@ export class InputControl extends Component<{
                 helpText={this.state.helpText}>
                 <Input id={id} type={this.props.type} readOnly={this.props.readOnly} 
                     list={this.props.list} min={this.props.min} max={this.props.max} step={this.props.step}
-                    value={this.value || (this.props.type === 'number' ? 0 : '')} placeholder={this.props.placeholder}
+                    value={this.sanitizeValue(this.value)} 
+                    placeholder={this.props.placeholder}
                     onFocus={onFocus} onChange={onChange} onBlur={onBlur}
                     autoComplete='nope' autoFocus={this.props.autoFocus} className={className} />
             </ControlWrapper>
         )
+    }
+
+    private sanitizeValue(value: any) {
+        return value || (this.props.type === 'number' ? value : '')
     }
 }
 
@@ -445,7 +450,7 @@ export class InputWithSelectControl extends Component<{
                 step={this.props.step}
                 hidden={this.props.hidden}
                 readOnly={this.props.readOnly}
-                value={this.props.onGet(this.props.field) || (this.props.type === 'number' ? 0 : '')}
+                value={this.sanitizeValue(this.props.onGet(this.props.field))}
                 onFocus={onFocus} 
                 onChange={onChange} 
                 onBlur={onBlur}
@@ -456,6 +461,10 @@ export class InputWithSelectControl extends Component<{
 
     get value(): any {
         return this.props.onGet(this.props.field)
+    }
+
+    private sanitizeValue(value: any) {
+        return value || (this.props.type === 'number' ? value : '')
     }
 
     public render() {

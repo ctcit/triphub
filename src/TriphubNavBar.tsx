@@ -1,10 +1,10 @@
 import { Component } from 'react'
 import { ITrip, Role } from './Interfaces'
-import { ConfigService } from './Services/ConfigService'
 import { NavItem, NavLink, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Navbar, NavbarBrand, Nav, NavbarToggler, Collapse } from 'reactstrap'
 import ReactDOM from 'react-dom'
 import { TripsCache } from './Services/TripsCache'
 import { UserSettings } from './Services/UserSettings'
+import { MembersService } from './Services/MembersService'
 
 export const PriorityNavItem = (props: any) => {  
     const el: HTMLElement|null = document.getElementById('priority-nav-items') 
@@ -16,6 +16,7 @@ export class TriphubNavbar extends Component<{
     path: string,
     isLoading: boolean,
     isOnline: boolean,
+    isStandalone: boolean,
     cachedTrips: ITrip[],
     beforeInstallPrompt: any,
     setPath: (path: string) => void,
@@ -23,9 +24,9 @@ export class TriphubNavbar extends Component<{
     onCacheTripsChanged: () => Promise<any>,
     children?: React.ReactNode
     },{
-        isOpen: boolean,
         priviledgesDropdownIsOpen: boolean,
         workOfflineDropdownIsOpen: boolean,
+        currentUserDropdownIsOpen: boolean,
         windowWidth: number,
         installAppPrompted: boolean,
         cacheTrips: boolean
@@ -34,9 +35,9 @@ export class TriphubNavbar extends Component<{
     constructor(props: any){
         super(props)
         this.state = {
-            isOpen: false,
             priviledgesDropdownIsOpen: false,
             workOfflineDropdownIsOpen: false,
+            currentUserDropdownIsOpen: false,
             windowWidth: window.innerWidth,
             installAppPrompted: false,
             cacheTrips: false
@@ -63,7 +64,14 @@ export class TriphubNavbar extends Component<{
         const newsletter = () => this.props.setPath('/newsletter')
         const newsocial = () => this.props.setPath('/newsocial')
         const routes = () => this.props.setPath('/routes')
-        const toggle = () => this.setState({isOpen: !this.state.isOpen});
+        const login = () => this.props.setPath('/login')
+
+        const onAllTripsPage = this.props.path === '' || this.props.path === '/'
+        const onCalendarPage = this.props.path === '/calendar'
+        const onNewTripPage = this.props.path === '/newtrip'
+        const onManageNewsletterPage = this.props.path === '/newsletter'
+        const onNewSocialPage = this.props.path === '/newSocial'
+        const onManageRoutesPage = this.props.path === '/routes'
 
         const togglePriviledgesDropdown = () => this.setState({priviledgesDropdownIsOpen: !this.state.priviledgesDropdownIsOpen});
         const setAdminPrivileges = () => this.props.setRole(Role.Admin)
@@ -77,144 +85,126 @@ export class TriphubNavbar extends Component<{
         const stopCachingTrips = () => this.stopCachingTrips()
         const onCachedTripClick = (e: any) => this.onCachedTripClick(e.currentTarget.value)
 
-        const navItems: JSX.Element[] = []
+        const toggleCurrentUserDropdown = () => this.setState({currentUserDropdownIsOpen: !this.state.currentUserDropdownIsOpen});
+        const loggedIn = this.props.role > Role.NonMember
+        const currentUser = MembersService.Me
+        const isWebmaster = this.props.role >= Role.Webmaster
 
-        if (ConfigService.inIFrame && this.props.path !== '' && this.props.path !== '/') {
-            navItems.push(
-            <NavItem key='alltrips'>
-                <NavLink onClick={alltrips} disabled={this.props.isLoading}>
-                    <span className='triphub-navbar'>
-                        <span className='fa fa-bars'/>
-                        &nbsp; All trips
-                    </span>
-                </NavLink>
-            </NavItem>)
-        }
-
-        if (this.props.path !== '/calendar') {
-            navItems.push(
-            <NavItem key='calendar'>
-                <NavLink onClick={calendar} disabled={this.props.isLoading}>
-                    <span className='triphub-navbar'>
-                        <span className='fa fa-calendar'/>
-                        &nbsp; Calendar
-                    </span>
-                </NavLink>
-            </NavItem>)
-        }
-
-        navItems.push(<div id='priority-nav-items' key='prioritynavitems'/>)
-        
-        if (this.props.isOnline && this.props.role >= Role.TripLeader && this.props.path !== '/newtrip') {
-            navItems.push(
-            <NavItem key='newTrip'>
-                <NavLink onClick={newtrip} disabled={this.props.isLoading}>
-                    <span className='triphub-navbar'>
-                        <span className='fa fa-lightbulb'/> 
-                        &nbsp; New trip
-                    </span>
-                </NavLink>
-            </NavItem>)
-        }
-    
-        if (this.props.isOnline && this.props.role >= Role.Admin && this.props.path !== '/newsletter') {
-            navItems.push(
-            <NavItem key='manageNewsletter'>
-                <NavLink onClick={newsletter}>
-                    <span className='triphub-navbar'>
-                        <span className='fa fa-newspaper'/> 
-                        &nbsp; Manage Newsletter
-                    </span>
-                </NavLink>
-            </NavItem>)
-        }
-
-        if (this.props.isOnline && this.props.role >= Role.Admin && this.props.path !== '/newSocial') {
-            navItems.push(
-            <NavItem key='addASocialEvent'>
-                <NavLink onClick={newsocial} disabled={this.props.isLoading}>
-                    <span className='triphub-navbar'>
-                        <span className='fa fa-users'/> 
-                        &nbsp; Add a social event
-                    </span>
-                </NavLink>
-            </NavItem>)
-        }
-
-        if (this.props.isOnline && this.props.role >= Role.Admin && this.props.path !== '/routes') {
-            navItems.push(
-            <NavItem key='manageRoutes'>
-                <NavLink onClick={routes}>
-                    <span className='triphub-navbar'>
-                        <span className='fa fa-map'/> 
-                        &nbsp; Manage Routes
-                    </span>
-                </NavLink>
-            </NavItem>)
-        }
-
-        if (this.props.role >= Role.Member && (this.props.path === '' || this.props.path === '/' || this.props.path === '/calendar')) {
-            navItems.push(
-            <Dropdown key='workOffline' nav={true} isOpen={this.state.workOfflineDropdownIsOpen} toggle={toggleWorkOfflineDropdown}>
-                <DropdownToggle className='triphub-navbar' nav={true} caret={true}>
-                    <span className='fa fa-cloud'/> 
-                    &nbsp; Work Offline{this.props.cachedTrips.length ? (' (' + this.props.cachedTrips.length + ')') : ''}
-                </DropdownToggle>
-                <DropdownMenu color='primary'>
-                    <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 
-                        onClick={installApp}>Install app for standalone/offline use...</DropdownItem>
-                    <DropdownItem disabled={this.state.cacheTrips} onClick={startCachingTrips}>Start caching trips</DropdownItem>
-                    <DropdownItem disabled={!this.state.cacheTrips} onClick={stopCachingTrips}>Stop caching trips</DropdownItem>
-                    {this.props.cachedTrips.length > 0 && <DropdownItem divider></DropdownItem>}
-                    {this.props.cachedTrips.map((trip: ITrip) => { 
-                        return <DropdownItem value={trip.id} onClick={onCachedTripClick}>{trip.title}</DropdownItem> 
-                    })}
-                </DropdownMenu>
-            </Dropdown>)
-        }
-        
-        if (this.props.role >= Role.Webmaster) {
-            navItems.push(
-            <Dropdown key='setPrivileges' nav={true} isOpen={this.state.priviledgesDropdownIsOpen} toggle={togglePriviledgesDropdown}>
-                <DropdownToggle className='triphub-navbar' nav={true} caret={true}>
-                    <span className='fa fa-ban'/> 
-                    &nbsp; Set Privileges
-                </DropdownToggle>
-                <DropdownMenu color='primary'>
-                    <DropdownItem onClick={setAdminPrivileges}>Admin</DropdownItem>
-                    <DropdownItem onClick={setTripLeaderPrivileges}>TripLeader</DropdownItem>
-                    <DropdownItem onClick={setMemberPrivileges}>Member</DropdownItem>
-                    <DropdownItem onClick={setNonMemberPrivileges}>NonMember</DropdownItem>
-                </DropdownMenu>
-            </Dropdown>)
-        }
-
-        if (this.props.children as JSX.Element[]) {
-            navItems.push(...this.props.children as JSX.Element[])
-        }
-
-        // rough calculation of nav items that fit onto the navbar
-        const bannerAndToggleApproxWidth = 230
-        const navItemAprroxWidth = 170 // 120 - 200px
-        const nonCollapsedCount = Math.min(navItems.length, Math.floor(Math.max(0, this.state.windowWidth - bannerAndToggleApproxWidth) / navItemAprroxWidth))
-        const nonCollapsableNavItems: JSX.Element[] = ConfigService.inIFrame ? navItems : navItems.slice(0, nonCollapsedCount)
-        const collapsableNavItems: JSX.Element[] = ConfigService.inIFrame ? [] : navItems.slice(nonCollapsedCount)
-    
         return (
             <Navbar color='primary' expand={false}>
-                <NavbarBrand className='triphub-navbar' href="#home" hidden={ConfigService.inIFrame}>
+                {/* <NavbarBrand className='triphub-navbar' href="#home" hidden={!this.props.isStandalone}>
                     <img src="CTCLogo.png" width="40" height="40" className="d-inline-block" />
                     <b>Trips</b>
-                </NavbarBrand>
+                </NavbarBrand> */}
                 <Nav className="mr-auto" justified={false} fill={false} >
-                    {nonCollapsableNavItems}
+                    {
+                        !onAllTripsPage &&
+                        <NavItem key='alltrips'>
+                            <NavLink onClick={alltrips} disabled={this.props.isLoading}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-bars'/>
+                                    &nbsp; All trips
+                                </span>
+                            </NavLink>
+                        </NavItem>
+                    }
+                    {
+                        !onCalendarPage &&
+                        <NavItem key='calendar'>
+                            <NavLink onClick={calendar} disabled={this.props.isLoading}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-calendar'/>
+                                    &nbsp; Calendar
+                                </span>
+                            </NavLink>
+                        </NavItem>
+                    }
+                    {
+                        this.props.isOnline && this.props.role >= Role.TripLeader && !onNewTripPage &&
+                        <NavItem key='newTrip'>
+                            <NavLink onClick={newtrip} disabled={this.props.isLoading}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-lightbulb'/> 
+                                    &nbsp; New trip
+                                </span>
+                            </NavLink>
+                        </NavItem>
+                    }
+                    {
+                        this.props.isOnline && this.props.role >= Role.Admin && !onManageNewsletterPage &&
+                        <NavItem key='manageNewsletter'>
+                            <NavLink onClick={newsletter}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-newspaper'/> 
+                                    &nbsp; Manage Newsletter
+                                </span>
+                            </NavLink>
+                        </NavItem>
+                    }
+                    {
+                        this.props.isOnline && this.props.role >= Role.Admin && !onNewSocialPage &&
+                        <NavItem key='addASocialEvent'>
+                            <NavLink onClick={newsocial} disabled={this.props.isLoading}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-users'/> 
+                                    &nbsp; Add a social event
+                                </span>
+                            </NavLink>
+                        </NavItem>
+                    }
+                    {
+                        this.props.isOnline && this.props.role >= Role.Admin && !onManageRoutesPage &&
+                        <NavItem key='manageRoutes'>
+                            <NavLink onClick={routes}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-map'/> 
+                                    &nbsp; Manage Routes
+                                </span>
+                            </NavLink>
+                        </NavItem>
+                    }
                 </Nav>
-                <NavbarToggler onClick={toggle} hidden={ConfigService.inIFrame || collapsableNavItems.length === 0}/>
-                <Collapse  isOpen={this.state.isOpen} navbar={true} hidden={ConfigService.inIFrame}>
-                    <Nav className="mr-auto" justified={false} fill={false} >
-                        {collapsableNavItems}
-                    </Nav>
-                </Collapse>
+                <Nav className="mr-auto" justified={false} fill={false}>
+                    {
+                        this.props.role >= Role.Member && (onAllTripsPage || onCalendarPage) &&
+                        <Dropdown key='workOffline' nav={true} isOpen={this.state.workOfflineDropdownIsOpen} toggle={toggleWorkOfflineDropdown}>
+                            <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
+                                <span className='fa fa-cloud'/> 
+                                &nbsp;{this.props.cachedTrips.length ? (' (' + this.props.cachedTrips.length + ')') : ''}
+                            </DropdownToggle>
+                            <DropdownMenu color='primary'>
+                                <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 
+                                    onClick={installApp}>Install app for standalone/offline use...</DropdownItem>
+                                <DropdownItem disabled={this.state.cacheTrips} onClick={startCachingTrips}>Start caching trips</DropdownItem>
+                                <DropdownItem disabled={!this.state.cacheTrips} onClick={stopCachingTrips}>Stop caching trips</DropdownItem>
+                                {this.props.cachedTrips.length > 0 && <DropdownItem divider></DropdownItem>}
+                                {this.props.cachedTrips.map((trip: ITrip) => { 
+                                    return <DropdownItem value={trip.id} onClick={onCachedTripClick}>{trip.title}</DropdownItem> 
+                                })}
+                            </DropdownMenu>
+                        </Dropdown>
+                    }
+                    {
+                        (onAllTripsPage || onCalendarPage) &&
+                        <Dropdown key='currentUser' nav={true} isOpen={this.state.currentUserDropdownIsOpen} toggle={toggleCurrentUserDropdown}>
+                            <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
+                                <span className='fa fa-user'/> 
+                            </DropdownToggle>
+                            <DropdownMenu color='primary'>
+                                <DropdownItem >{currentUser?.name} ({this.roleToString(this.props.role)})</DropdownItem>
+                                {
+                                    this.props.isStandalone && this.props.isOnline &&
+                                    <DropdownItem onClick={login}>{!loggedIn ? 'Log in' : 'Log out' }</DropdownItem>
+                                }
+                                { isWebmaster && <DropdownItem divider></DropdownItem> }
+                                { isWebmaster && <DropdownItem onClick={setAdminPrivileges}>Admin</DropdownItem> }
+                                { isWebmaster && <DropdownItem onClick={setTripLeaderPrivileges}>TripLeader</DropdownItem> }
+                                { isWebmaster && <DropdownItem onClick={setMemberPrivileges}>Member</DropdownItem> }
+                                { isWebmaster && <DropdownItem onClick={setNonMemberPrivileges}>NonMember</DropdownItem> }
+                            </DropdownMenu>
+                        </Dropdown>
+                    }
+                </Nav>
             </Navbar>
         )
     }
@@ -247,5 +237,16 @@ export class TriphubNavbar extends Component<{
 
     public onCachedTripClick(tripId: any) {
         this.props.setPath('/trips/' + tripId)
+    }
+
+    private roleToString(role: Role): string {
+        switch (role) {
+            case Role.NonMember: return 'Non-member'
+            case Role.Member: return 'Member'
+            case Role.TripLeader: return 'Trip leader'
+            case Role.Admin: return 'Administrator'
+            case Role.Webmaster: return 'Web master'
+            default: return ''
+        }
     }
 }

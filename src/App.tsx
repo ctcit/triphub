@@ -16,6 +16,7 @@ import { HolidaysService } from './Services/HolidaysService';
 import { MembersService } from './Services/MembersService';
 import { Alert, Button, Container } from 'reactstrap';
 import { Workbox } from 'workbox-window';
+import { Login } from './Login';
 
 export class App extends Component<{
 }, {
@@ -28,6 +29,7 @@ export class App extends Component<{
     statusId?: any
     notifications: INotification[]
     isOnline: boolean
+    isStandalone: boolean
     backgroundSyncPermitted: boolean,
     appUpdateAvailable: boolean,
     cachedTrips: ITrip[]
@@ -39,6 +41,10 @@ export class App extends Component<{
 
     constructor(props: any) {
         super(props)
+
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        console.log(isStandalone ? 'app is standalone' : 'app is not standalone')
+
         this.state = {
             path: window.top?.location.hash.replace('#', '') ?? '',
             isLoadingConfig: true,
@@ -48,6 +54,7 @@ export class App extends Component<{
             role: Role.NonMember,
             notifications: [],
             isOnline: navigator.onLine,
+            isStandalone: isStandalone,
             backgroundSyncPermitted: false,
             appUpdateAvailable: false,
             cachedTrips: []
@@ -59,11 +66,13 @@ export class App extends Component<{
 
         // add event handlers to store online/offline status 
         window.addEventListener('offline', () => {
+                console.log('app is offline')
                 this.onOffline()
             }
         );
           
         window.addEventListener('online', () => {
+                console.log('app is online')
                 this.onOnline()
             }
         );
@@ -74,6 +83,16 @@ export class App extends Component<{
                 console.log('got beforeinstallprompt event')
              }
         );
+
+        window.matchMedia('(display-mode: standalone)').addEventListener('change', ({ matches }) => {
+            if (matches) {
+                console.log('app is standalone')
+                this.setState({isStandalone: true});
+            } else {
+                console.log('app is not standalone')
+                this.setState({isStandalone: false});
+            }
+        });
 
         navigator.permissions.query({name: 'background-sync'} as unknown as PermissionDescriptor).then((permissionStatus) => {
             this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
@@ -206,6 +225,7 @@ export class App extends Component<{
             routes: () => <ManageRoutes key='routes' app={this}/>,
             newsletter: () => <Newsletter key='newsletter' app={this} />,
             trips: () => <Trip key='trips' isNew={false} isNewSocial={true} id={id} {...common} />,
+            login: () => <Login key='login' {...common} />,
             default: () => <TripsList key='default' {...common}/>,
         }
 
@@ -231,6 +251,7 @@ export class App extends Component<{
                 path={this.state.path}
                 isLoading={this.isLoading}
                 isOnline={this.state.isOnline}
+                isStandalone={this.state.isStandalone}
                 cachedTrips={this.state.cachedTrips}
                 beforeInstallPrompt={this.beforeInstallPrompt}
                 setPath={setPath}

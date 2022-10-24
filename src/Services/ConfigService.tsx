@@ -35,12 +35,12 @@ export class ConfigService {
         return this.config;
     }
 
-    public static get inIFrame() {
-        return true // true if to style/behave for use in iFrame; false to style/behave as standalone app
-    }
+    // public static get inIFrame() {
+    //     return false // true if to style/behave for use in iFrame; false to style/behave as standalone app
+    // }
 
     public static get containerClassName() {
-        return ConfigService.inIFrame ? "outer-container " : ""
+        return "outer-container " // ConfigService.inIFrame ? "outer-container " : ""
     }
 
 

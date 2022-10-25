@@ -102,7 +102,8 @@ export class App extends Component<{
         })
 
         // add handling for application update
-        if ('serviceWorker' in navigator) {
+        console.log('environment = ' + process.env.NODE_ENV)
+        if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
             const wb = new Workbox(`${process.env.PUBLIC_URL}/service-worker.js`);
             let registration;
         
@@ -136,10 +137,8 @@ export class App extends Component<{
             });
         
             wb.register();
-          }
 
-          // add handling to notify service worker when the cacheTrips setting has changed in the IndexedDB
-          if ('serviceWorker' in navigator) {
+            // add handling to notify service worker when the cacheTrips setting has changed in the IndexedDB
             this.onCacheTripsChanged = () => {
                 return navigator.serviceWorker.ready.then((registration) => {
                     if (registration.active) {
@@ -147,7 +146,9 @@ export class App extends Component<{
                     }
                 });
             }
-          }          
+
+        }
+
     }
 
     public onPopState(event: PopStateEvent) {

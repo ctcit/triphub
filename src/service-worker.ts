@@ -20,6 +20,7 @@ import { UserSettings } from './Services/UserSettings';
 declare const self: ServiceWorkerGlobalScope;
 
 // dynamically enable/disable trip caching via this variable based on IndexedDB setting
+UserSettings.inServiceWorker = true
 let cacheTrips: boolean = false
 const UpdateCacheTripsSetting = (): void => {
   UserSettings.getCacheTrips().then((value: boolean) => {
@@ -109,6 +110,24 @@ registerRoute(
 // -------------------------------------------
 // API GET caching
 
+// GET members
+// GET config
+// GET maps
+// GET public_holidays
+const getsMatchRegex = /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays))/
+const getsMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
+  return cacheTrips && getsMatchRegex.test(url.toString());
+};
+registerRoute(
+  getsMatchCallback, 
+  new NetworkFirst({
+    cacheName: TripsCache.getsCacheName,
+    plugins: [
+      new ExpirationPlugin({ maxAgeSeconds: 7 * 24 * 60 * 60 }),
+    ],
+  })
+);
+
 // GET trips
 // GET trips/{id}
 // GET trips/{id}/participants
@@ -128,22 +147,21 @@ registerRoute(
   'GET'
 );
 
-// GET members
-// GET config
-// GET maps
-// GET public_holidays
-const getsMatchRegex = /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays))/
-const getsMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
-  return cacheTrips && getsMatchRegex.test(url.toString());
+// GET tiles*.data-cdn.linz.govt.nz
+
+const tilesMatchRegex = /tiles.*\.data\-cdn\.linz\.govt\.nz/
+const tilesMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
+  return cacheTrips && tilesMatchRegex.test(url.toString());
 };
 registerRoute(
-  getsMatchCallback, 
+  tilesMatchCallback, 
   new NetworkFirst({
-    cacheName: TripsCache.getsCacheName,
+    cacheName: 'tiles',
     plugins: [
-      new ExpirationPlugin({ maxAgeSeconds: 7 * 24 * 60 * 60 }),
+      new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 }),
     ],
-  })
+  }),
+  'GET'
 );
 
 // -------------------------------------------

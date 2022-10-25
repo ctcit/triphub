@@ -38,6 +38,9 @@ export class TripsCache {
         })
     }
 
+    // GET tiles*.data-cdn.linz.govt.nz
+    public static tilesCacheName = 'tiles'
+
     // updateRequests:
     // - POST trips/{id}
     // - POST trips/{id}/participants/{pid}
@@ -112,6 +115,7 @@ export class TripsCache {
     public static clear() {
         caches.delete(this.tripsCacheName)
         caches.delete(this.getsCacheName)
+        caches.delete(this.tilesCacheName)
     }
 
 }

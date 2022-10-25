@@ -114,7 +114,8 @@ registerRoute(
 // GET config
 // GET maps
 // GET public_holidays
-const getsMatchRegex = /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays))/
+// GET trips
+const getsMatchRegex = /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays)|(trips))$/
 const getsMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
   return cacheTrips && getsMatchRegex.test(url.toString());
 };
@@ -128,11 +129,9 @@ registerRoute(
   })
 );
 
-// GET trips
 // GET trips/{id}
 // GET trips/{id}/participants
-
-const tripsMatchRegex = /.*\/api\/api.php\/trips(\/\d*(\/participants)?)?/
+const tripsMatchRegex = /.*\/api\/api.php\/trips\/\d*(\/participants)?/
 const tripsMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
   return cacheTrips && tripsMatchRegex.test(url.toString());
 };
@@ -141,7 +140,7 @@ registerRoute(
   new NetworkFirst({
     cacheName: TripsCache.tripsCacheName,
     plugins: [
-      new ExpirationPlugin({ maxEntries: 21, maxAgeSeconds: 7 * 24 * 60 * 60 }),
+      new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 7 * 24 * 60 * 60 }),
     ],
   }),
   'GET'

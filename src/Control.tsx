@@ -128,7 +128,9 @@ export class InputControl extends Component<{
     }
 
     private sanitizeValue(value: any) {
-        return value || (this.props.type === 'number' ? value : '')
+        return value || (this.props.type === 'number' ? 
+            value === null ? undefined : value : // input control cannot take null value, use undefined
+            '')
     }
 }
 

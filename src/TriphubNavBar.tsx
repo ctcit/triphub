@@ -73,7 +73,6 @@ export class TriphubNavbar extends Component<{
         const onNewSocialPage = this.props.path === '/newSocial'
         const onManageRoutesPage = this.props.path === '/routes'
 
-        const togglePriviledgesDropdown = () => this.setState({priviledgesDropdownIsOpen: !this.state.priviledgesDropdownIsOpen});
         const setAdminPrivileges = () => this.props.setRole(Role.Admin)
         const setTripLeaderPrivileges = () => this.props.setRole(Role.TripLeader)
         const setMemberPrivileges = () => this.props.setRole(Role.Member)
@@ -177,7 +176,7 @@ export class TriphubNavbar extends Component<{
                             </DropdownMenu>
                         </Dropdown>
                     }
-                    {(onAllTripsPage || onCalendarPage) &&
+                    {
                         <Dropdown key='currentUser' nav={true} isOpen={this.state.currentUserDropdownIsOpen} toggle={toggleCurrentUserDropdown}>
                             <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
                                 <span className='fa fa-user'/> 

@@ -73,7 +73,9 @@ export class Trip extends Component<{
                     this.setState({ trip })
                 })
 
-            this.requeryParticipants()
+                if (this.props.role > Role.NonMember) { // will fail 403 for NonMember
+                    this.requeryParticipants()
+                }
         }
     }
 
@@ -344,6 +346,7 @@ export class Trip extends Component<{
         const setTripFields = (fields: any, setEdited: boolean, save: boolean) => this.setTripFields(fields, setEdited, save)
         const setTripParticipants = (participants: IParticipant[], setEdited: boolean) => this.setTripParticipants(participants, setEdited)
         const saveNewTripParticipant = (participant: IParticipant) => this.saveNewTripParticipant(participant)
+        const newMembersRep = MembersService.Members.length === 1 ? MembersService.Members[0] : null
 
         let status: JSX.Element | null = null
         if (trip.id <= 0) {
@@ -423,7 +426,11 @@ export class Trip extends Component<{
                 <div className="alert alert-danger" role="alert" hidden={!this.state.showValidationMessage || tripWarnings.length === 0} key='validation'>
                     Some trip details are missing or incorrect. Please correct before saving.
                 </div>
-                {this.state.trip.isSocial && this.state.trip.isNoSignup ? null :
+                <div className="alert alert-warning" role="alert" hidden={this.props.role > Role.NonMember || newMembersRep === null} key='nonmember-alert'>
+                    <p>Members, please login in order to sign up for this trip.</p>
+                    <p>Non-members, please refer to <a href="https://ctc.org.nz/index.php/about-the-ctc">About the CTC</a> and contact the new members rep, {newMembersRep?.name}, for details on participating in this trip.</p>
+                </div>
+                {(this.state.trip.isSocial && this.state.trip.isNoSignup) || this.props.role <= Role.NonMember ? null :
                     <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-user fa-fw' />{['Participants', participantWarning, participantCount]}</b></span>}
                         expanded={true}>
@@ -447,7 +454,7 @@ export class Trip extends Component<{
                         Email ...
                     </Accordian>
                 }
-                {this.props.isNew || !this.canEditTrip ? null :
+                {(this.state.trip.isSocial && this.state.trip.isNoSignup) || this.props.isNew || !this.canEditTrip ? null :
                     <Accordian key={`costs${this.state.trip.id}_${this.state.participants.length}`} id='costs'
                         className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-dollar-sign fa-fw' />Cost Calculator</b></span>}
@@ -476,7 +483,9 @@ export class Trip extends Component<{
     }
 
     private memoizedStartEditHeatbeat = memoizeOne((isOnline: boolean) => {
-        this.startEditHeatbeat()
+        if (this.props.role > Role.NonMember) { // Will fail 403 if NonMember
+            this.startEditHeatbeat()
+        }
     });
 
     public startEditHeatbeat() {

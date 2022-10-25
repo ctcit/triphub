@@ -97,8 +97,7 @@ export class TriphubNavbar extends Component<{
                     <b>Trips</b>
                 </NavbarBrand> */}
                 <Nav className="mr-auto" justified={false} fill={false} >
-                    {
-                        !onAllTripsPage &&
+                    {!onAllTripsPage &&
                         <NavItem key='alltrips'>
                             <NavLink onClick={alltrips} disabled={this.props.isLoading}>
                                 <span className='triphub-navbar'>
@@ -108,8 +107,7 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
-                    {
-                        !onCalendarPage &&
+                    {!onCalendarPage &&
                         <NavItem key='calendar'>
                             <NavLink onClick={calendar} disabled={this.props.isLoading}>
                                 <span className='triphub-navbar'>
@@ -119,8 +117,7 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
-                    {
-                        this.props.isOnline && this.props.role >= Role.TripLeader && !onNewTripPage &&
+                    {this.props.isOnline && this.props.role >= Role.TripLeader && !onNewTripPage &&
                         <NavItem key='newTrip'>
                             <NavLink onClick={newtrip} disabled={this.props.isLoading}>
                                 <span className='triphub-navbar'>
@@ -130,8 +127,7 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
-                    {
-                        this.props.isOnline && this.props.role >= Role.Admin && !onManageNewsletterPage &&
+                    {this.props.isOnline && this.props.role >= Role.Admin && !onManageNewsletterPage &&
                         <NavItem key='manageNewsletter'>
                             <NavLink onClick={newsletter}>
                                 <span className='triphub-navbar'>
@@ -141,8 +137,7 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
-                    {
-                        this.props.isOnline && this.props.role >= Role.Admin && !onNewSocialPage &&
+                    {this.props.isOnline && this.props.role >= Role.Admin && !onNewSocialPage &&
                         <NavItem key='addASocialEvent'>
                             <NavLink onClick={newsocial} disabled={this.props.isLoading}>
                                 <span className='triphub-navbar'>
@@ -152,8 +147,7 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
-                    {
-                        this.props.isOnline && this.props.role >= Role.Admin && !onManageRoutesPage &&
+                    {this.props.isOnline && this.props.role >= Role.Admin && !onManageRoutesPage &&
                         <NavItem key='manageRoutes'>
                             <NavLink onClick={routes}>
                                 <span className='triphub-navbar'>
@@ -165,8 +159,7 @@ export class TriphubNavbar extends Component<{
                     }
                 </Nav>
                 <Nav className="mr-auto" justified={false} fill={false}>
-                    {
-                        this.props.role >= Role.Member && (onAllTripsPage || onCalendarPage) &&
+                    {this.props.role >= Role.Member && (onAllTripsPage || onCalendarPage) &&
                         <Dropdown key='workOffline' nav={true} isOpen={this.state.workOfflineDropdownIsOpen} toggle={toggleWorkOfflineDropdown}>
                             <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
                                 <span className='fa fa-cloud'/> 
@@ -184,23 +177,21 @@ export class TriphubNavbar extends Component<{
                             </DropdownMenu>
                         </Dropdown>
                     }
-                    {
-                        (onAllTripsPage || onCalendarPage) &&
+                    {(onAllTripsPage || onCalendarPage) &&
                         <Dropdown key='currentUser' nav={true} isOpen={this.state.currentUserDropdownIsOpen} toggle={toggleCurrentUserDropdown}>
                             <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
                                 <span className='fa fa-user'/> 
                             </DropdownToggle>
                             <DropdownMenu color='primary'>
                                 <DropdownItem >{currentUser?.name} ({this.roleToString(this.props.role)})</DropdownItem>
-                                {
-                                    this.props.isStandalone && this.props.isOnline &&
+                                {this.props.isStandalone && this.props.isOnline &&
                                     <DropdownItem onClick={login}>{!loggedIn ? 'Log in' : 'Log out' }</DropdownItem>
                                 }
                                 { isWebmaster && <DropdownItem divider></DropdownItem> }
-                                { isWebmaster && <DropdownItem onClick={setAdminPrivileges}>Admin</DropdownItem> }
-                                { isWebmaster && <DropdownItem onClick={setTripLeaderPrivileges}>TripLeader</DropdownItem> }
-                                { isWebmaster && <DropdownItem onClick={setMemberPrivileges}>Member</DropdownItem> }
-                                { isWebmaster && <DropdownItem onClick={setNonMemberPrivileges}>NonMember</DropdownItem> }
+                                { isWebmaster && <DropdownItem onClick={setAdminPrivileges}>Set as administrator</DropdownItem> }
+                                { isWebmaster && <DropdownItem onClick={setTripLeaderPrivileges}>Set as trip leader</DropdownItem> }
+                                { isWebmaster && <DropdownItem onClick={setMemberPrivileges}>Set as member</DropdownItem> }
+                                { isWebmaster && <DropdownItem onClick={setNonMemberPrivileges}>Set as non-member</DropdownItem> }
                             </DropdownMenu>
                         </Dropdown>
                     }

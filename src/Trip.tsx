@@ -327,12 +327,18 @@ export class Trip extends Component<{
         const info = this.participantsInfo
         const tripWarnings = TripsService.validateTrip(this.state.trip).filter(i => !i.ok)
         const participantWarnings = info.current.flatMap(p => TripsService.validateParticipant(p, info.all).filter(i => !i.ok))
-        const participantWarning = !!participantWarnings.length
+        const participantWarningJsx = !!participantWarnings.length
             ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0].message} className='fw warning-icon' />
             : null
-        const participantCount = <span key='count' className='TripCount'>
+        const participantCountJsx = <span key='count' className='TripCount'>
             {` (${info.leaders.length + info.early.length}${info.late.length ? '+' + info.late.length : ''})`}
-        </span>
+            </span>
+        const seats = (pa: IParticipant[]) => pa.reduce((total, p, i, a) => p.isVehicleProvider ? total + (p.seats || 0) : 0, 0)
+        const totalSeats = seats(info.leaders) + seats(info.early)
+        const totalLateSeats = seats(info.late)
+        const totalSeatsJsx = <span key='totalseats' className='total-seats-count'>
+            {` (${totalSeats}${totalLateSeats ? '+' + totalLateSeats : ''} seats)`}
+            </span>
         const amAdmin = this.amAdmin
         const approval = TripState[this.state.trip.approval || TripState.Pending.id]
         // Note - approved trips can't be rejected (unless user is admin), but they can be deleted
@@ -432,7 +438,7 @@ export class Trip extends Component<{
                 </div>
                 {(this.state.trip.isSocial && this.state.trip.isNoSignup) || this.props.role <= Role.NonMember ? null :
                     <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
-                        title={<span><b><span key='icon' className='fa fa-user fa-fw' />{['Participants', participantWarning, participantCount]}</b></span>}
+                        title={<span><b><span key='icon' className='fa fa-user fa-fw' />{['Participants', participantWarningJsx, participantCountJsx, totalSeatsJsx]}</b></span>}
                         expanded={true}>
                         <TripParticipants key={'TripParticipants' + this.state.trip.id} 
                             participants={this.state.participants}

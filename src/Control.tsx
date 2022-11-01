@@ -112,12 +112,14 @@ export class InputControl extends Component<{
         const val = `${this.props.onGet(this.props.field)}`.replace(/\W/g, v => `${v.charCodeAt(0)}`)
         const id = this.props.id + '_' + this.props.field
 
+        const inputStyle = this.props.readOnly ? { backgroundColor: 'rgba(200, 200, 200, 0.2)' } : undefined
+
         return (
             <ControlWrapper id={id + '_' + val} field={this.props.field} labelFor={id}
                 label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} 
                 helpText={this.state.helpText}>
-                <Input id={id} type={this.props.type} readOnly={this.props.readOnly} 
+                <Input id={id} type={this.props.type} readOnly={this.props.readOnly} style={inputStyle}
                     list={this.props.list} min={this.props.min} max={this.props.max} step={this.props.step}
                     value={this.sanitizeValue(this.value)} 
                     placeholder={this.props.placeholder}

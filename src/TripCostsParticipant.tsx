@@ -51,11 +51,14 @@ export class TripCostsParticipant extends Component<{
             onGetValidationMessage
         }
 
+        const onToggleBroughtVehicle = () => {
+            onSave('broughtVehicle', !participantCosts.broughtVehicle)
+        }
         const onPaidReimbursed = () => {
             onSave('paid', participantCosts.toPay)
         }
-        const onToggleBroughtVehicle = () => {
-            onSave('broughtVehicle', !participantCosts.broughtVehicle)
+        const onNotPaidReimbursed = () => {
+            onSave('paid', 0)
         }
 
         // 
@@ -73,7 +76,7 @@ export class TripCostsParticipant extends Component<{
             participant.isLeader &&
             <ToolTipIcon key='cost-leader' icon='star' tooltip={`${participant.name} is the leader`} id={iconid} />,
             participant.isVehicleProvider &&
-            <ToolTipIcon key='cost-car' icon='car' tooltip={`${participant.name} is bringing a Car`} id={iconid} />,
+            <ToolTipIcon key='cost-car' icon='car' tooltip={`${participant.name} can bring a car`} id={iconid} />,
             !participant.memberId &&
             <ToolTipIcon key='cost-nonmember' icon='id-badge' tooltip={`${participant.name} is not a member of the CTC`} id={iconid} />,
         ].filter(e => e)
@@ -107,24 +110,31 @@ export class TripCostsParticipant extends Component<{
             style={paymentStatusStyle}>{paymentStatusText}</span>
 
         const buttons = [
-            participantCosts.toPay !== participantCosts.paid &&
-            <ButtonWithTooltip key='paidReimbursed' id={'paidReimbursed' + participant.id} onClick={onPaidReimbursed} tooltipText="Click if participant has paid or been reimbursed">
-                <>
-                    <span className='fa fa-sm fa-balance-scale fa-align-center' />
-                    {this.state.isUpdateOp ? ['Updating ', Spinner] : ''}
-                </>
-            </ButtonWithTooltip>,
             participant.isVehicleProvider && !participantCosts.broughtVehicle &&
             <ButtonWithTooltip key='broughtVehicle' id={'broughtVehicle' + participant.id} onClick={onToggleBroughtVehicle} tooltipText="Click if partcipant brought vehicle">
                 <>
-                    <span className='fa fa-car fa-inverse' />
+                    <span className='fa fa-taxi' />
                     {this.state.isUpdateOp ? ['Updating ', Spinner] : ''}
                 </>
             </ButtonWithTooltip>,
             participantCosts.broughtVehicle &&
-            <ButtonWithTooltip key='notBroughtVehicle' id={'notBroughtVehicle' + participant.id} onClick={onToggleBroughtVehicle} tooltipText="Click if partcipant did not bring vehicle">
+            <ButtonWithTooltip key='notBroughtVehicle' id={'notBroughtVehicle' + participant.id} onClick={onToggleBroughtVehicle} tooltipText="Click if participant did not bring vehicle">
                 <>
                     <span className='fa fa-car'/>
+                    {this.state.isUpdateOp ? ['Updating ', Spinner] : ''}
+                </>
+            </ButtonWithTooltip>,
+            participantCosts.toPay !== participantCosts.paid &&
+            <ButtonWithTooltip key='paidReimbursed' id={'paidReimbursed' + participant.id} onClick={onPaidReimbursed} tooltipText="Click if participant has paid or been reimbursed">
+                <>
+                    <span className='fa fa-sm fa-balance-scale' />
+                    {this.state.isUpdateOp ? ['Updating ', Spinner] : ''}
+                </>
+            </ButtonWithTooltip>,
+            participantCosts.toPay === participantCosts.paid &&
+            <ButtonWithTooltip key='notPaidReimbursed' id={'notPaidReimbursed' + participant.id} onClick={onNotPaidReimbursed} tooltipText="Click if participant has not paid, nor been reimbursed">
+                <>
+                    <span className='fa fa-sm fa-scale-unbalanced-flip' />
                     {this.state.isUpdateOp ? ['Updating ', Spinner] : ''}
                 </>
             </ButtonWithTooltip>,

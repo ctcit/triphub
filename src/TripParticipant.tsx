@@ -148,7 +148,7 @@ export class TripParticipant extends Component<{
             participant.isPlbProvider &&
             <ToolTipIcon key='plb' icon='podcast' tooltip={`${participant.name} is bringing a PLB`} id={iconid} />,
             participant.isVehicleProvider &&
-            <ToolTipIcon key='car' icon='car' tooltip={`${participant.name} is bringing a Car`} id={iconid} />,
+            <ToolTipIcon key='car' icon='car' tooltip={`${participant.name} can bring a car`} id={iconid} />,
             participant.isVehicleProvider && participant.seats &&
             <span key='count' className='TripCount'>{` (${participant.seats} seats)`}</span>,
             logisticInfo &&

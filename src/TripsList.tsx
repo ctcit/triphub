@@ -52,6 +52,7 @@ class TripsLine extends Component<{
             }
         }
 
+        const tdStyle = this.props.available ? undefined : {color: 'grey'}
         const tablerow = [
             <td key={'open' + id}>
                 <ButtonGroup className='trip-list-buttons'>
@@ -66,20 +67,20 @@ class TripsLine extends Component<{
                     <ToolTipIcon id={id + 'notapproved'} icon='exclamation-circle' className='warning-icon' tooltip="Not approved yet" />
                 }
             </td>,
-            <td key={'date' + id} onClick={onClick}>
+            <td key={'date' + id} onClick={onClick} style={tdStyle}>
                 {GetDate(trip.tripDate)}{extractWarnings(/date/)}
             </td>,
-            <td key={'length' + id} onClick={onClick} className='centered'>
+            <td key={'length' + id} onClick={onClick} className='centered' style={tdStyle}>
                 {(!trip.isSocial) && GetLength(trip.length, new Date(trip.tripDate))}{extractWarnings(/length/)}
             </td>,
-            <td key={'title' + id} onClick={onClick}>
+            <td key={'title' + id} onClick={onClick} style={tdStyle}>
                 {trip.title}{extractWarnings(/title/)}
             </td>,
-            <td key={'grade' + id} onClick={onClick} className='desktop-only'>
+            <td key={'grade' + id} onClick={onClick} className='desktop-only' style={tdStyle}>
                 <span hidden={!trip.isSocial}><ToolTipIcon id={'social' + id} icon='users' tooltip='Social Event' /> </span>
                 {trip.grade}{extractWarnings(/grade/)}
             </td>,
-            <td key={'leaders' + id} onClick={onClick} hidden={!me.id} className='desktop-only'>
+            <td key={'leaders' + id} onClick={onClick} hidden={!me.id} className='desktop-only' style={tdStyle}>
                 {trip.leaders}{extractWarnings(/leaders/)}
             </td>,
             <td key={'role' + id} onClick={onClick} hidden={trip.state !== 'MyTrip'}>

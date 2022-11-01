@@ -203,7 +203,7 @@ export class TripParticipants extends Component<{
             (showLegend ? <div className='participant-buttons-legend'>
                 <LegendIcon icon='fa-star'>This person is the leader</LegendIcon>
                 <LegendIcon icon='fa-podcast'>This person is taking a Personal Location Beacon</LegendIcon>
-                <LegendIcon icon='fa-car'>This person is taking a Car</LegendIcon>
+                <LegendIcon icon='fa-car'>This person can bring a car</LegendIcon>
                 <LegendIcon icon='fa-comment'>There is special logistical information here</LegendIcon>
                 <LegendIcon icon='fa-id-badge'>This person is not a member of the CTC</LegendIcon>
                 <LegendButton icon='fa-angle-up'>Moves the person up the list</LegendButton>

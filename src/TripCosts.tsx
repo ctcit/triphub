@@ -1,4 +1,4 @@
-import { ListGroup, ListGroupItem, Container, Row, Col, Form } from 'reactstrap';
+import { ListGroup, ListGroupItem, Container, Row, Col, Form, Button, Navbar } from 'reactstrap';
 import { Component } from 'react';
 import { IParticipant, ITrip, ITripCostCalculations, IValidation } from './Interfaces';
 import { BindMethods } from './Utilities';
@@ -8,6 +8,7 @@ import { MembersService } from './Services/MembersService';
 import { TripsService } from './Services/TripsService';
 import { Accordian } from './Accordian';
 import { CommonDestinationsService } from './Services/CommonDestinationsService'
+import { MdInfo } from 'react-icons/md';
 
 export class TripCosts extends Component<{
     trip: ITrip
@@ -18,6 +19,7 @@ export class TripCosts extends Component<{
     setTripParticipants: (participants: IParticipant[], setEdited: boolean) => void
     forceValidation?: boolean
 }, {
+    showLegend: boolean
 }> {
     public calculations: ITripCostCalculations = {
         distanceOneWay: 0,
@@ -36,7 +38,9 @@ export class TripCosts extends Component<{
 
     constructor(props: any) {
         super(props)
-        this.state = {}
+        this.state = {
+            showLegend: false
+        }
 
         BindMethods(this)
     }
@@ -128,18 +132,20 @@ export class TripCosts extends Component<{
                 (c.vehicleCost ?? 0) - (c.vehicleFee ?? 0)
             totalReimbursements += c.vehicleReimbursement
         })
-        // handle excess vehicle funds - distribute to non-fixed cost vehicle providers (unless there are none)
+        // handle excess vehicle funds - distribute to non-fixed cost vehicle providers (unless there are none) 
         let excessVehicleFunds = this.calculations.totalVehicleFeeToCollect - totalReimbursements
         const haveNonFixedCostVehicleProviders = actualVehicleProviders.length > this.calculations.fixedCostVehicleCount
-        while (excessVehicleFunds > 0) {
-            actualVehicleProviders.forEach(p => {
-                if (excessVehicleFunds > 0 && (!p.isFixedCostVehicle || !haveNonFixedCostVehicleProviders)) {
-                    const c = this.calculations.participants[p.id]
-                    const addExcess = Math.min(1, excessVehicleFunds)
-                    c.vehicleReimbursement = (c.vehicleReimbursement ?? 0) + addExcess
-                    excessVehicleFunds =- addExcess
-                }
-            })
+        if (actualVehicleProviders.length > 0) {
+            while (excessVehicleFunds > 0) {
+                actualVehicleProviders.forEach(p => {
+                    if (excessVehicleFunds > 0 && (!p.isFixedCostVehicle || !haveNonFixedCostVehicleProviders)) {
+                        const c = this.calculations.participants[p.id]
+                        const addExcess = Math.min(1, excessVehicleFunds)
+                        c.vehicleReimbursement = (c.vehicleReimbursement ?? 0) + addExcess
+                        excessVehicleFunds = excessVehicleFunds - addExcess
+                    }
+                })
+            }
         }
 
         // calculate total to pay/reimburse for each participant
@@ -160,7 +166,7 @@ export class TripCosts extends Component<{
 
     public ratePerKm(engineSizeCC: number): number {
         // Note: These are the $/(ONE-WAY)km
-        return engineSizeCC <= 1500 ? 0.82 : engineSizeCC <= 2000 ? 0.93 : 1.14;
+        return !engineSizeCC || engineSizeCC <= 1500 ? 0.82 : engineSizeCC <= 2000 ? 0.93 : 1.14;
     }
 
     public nonMemberFee(): number {
@@ -187,6 +193,10 @@ export class TripCosts extends Component<{
             Promise.resolve(participant)
     }
     
+    public onToggleLegend() {
+        this.setState({ showLegend: !this.state.showLegend })
+    }
+    
     public render() {
         const trip: ITrip = this.props.trip
         const validations: IValidation[] = TripsService.validateTrip(this.props.trip)
@@ -194,6 +204,12 @@ export class TripCosts extends Component<{
         const currentParticipants = this.props.currentParticipants
 
         this.calculateCosts();
+
+        const LegendIcon = (props: { icon: string, children: any }) =>
+            <div><span className={`fas ${props.icon}`} />{props.children}</div>
+        const LegendButton = (props: { icon: string, children: any }) =>
+            <div><Button disabled={true}><span className={`fa ${props.icon}`} /></Button>{props.children}</div>
+        const onToggleLegend = () => this.onToggleLegend();
 
         const onGet = (field: string): any => this.props.trip[field]
         const onSet = (field: string, value: any): Promise<ITrip> => 
@@ -235,6 +251,26 @@ export class TripCosts extends Component<{
 
         return [
             <Container key='parameters-initial' fluid={true}>
+                <Navbar key='navbar' color='light' light={true} expand='md'>
+                {[
+                        <a href="https://youtu.be/77B6EzYLcmo" target="_blank">
+                            <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                        </a>,
+                        <Button key={'help'} onClick={onToggleLegend}>
+                        <span className='fa fa-question-circle' />{this.state.showLegend ? 'Hide legend' : 'Show legend'}
+                        </Button>
+                ]}
+                </Navbar>
+                {this.state.showLegend ? <div className='participant-buttons-legend'>
+                    <LegendIcon icon='fa-star'>This person is the leader</LegendIcon>
+                    <LegendIcon icon='fa-car'>This person can bring a car</LegendIcon>
+                    <LegendIcon icon='fa-id-badge'>This person is not a member of the CTC</LegendIcon>
+                    <LegendButton icon='fa-car'>Click if participant did not bring vehicle</LegendButton>
+                    <LegendButton icon='fa-taxi'>Click if participant brought vehicle</LegendButton>
+                    <LegendButton icon='fa-balance-scale fa-sm'>Click if participant has paid or been reimbursed</LegendButton>
+                    <LegendButton icon='fa-scale-unbalanced-flip fa-sm'>Click if participant has not paid, nor been reimbursed</LegendButton>
+                </div> : null
+                }
                 <Row>
                     <Col sm={6} md={6}>
                         <InputWithSelectControl field='distanceOneWay' label='Distance one way (km)'

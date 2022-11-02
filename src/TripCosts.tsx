@@ -72,7 +72,7 @@ export class TripCosts extends Component<{
         currentParticipants.forEach(p => {
 
             this.calculations.participants[p.id] = {
-                broughtVehicle: p.broughtVehicle ?? p.isVehicleProvider ?? false, // TODO - remove p.isVehicleProvider
+                broughtVehicle: p.broughtVehicle,
                 isFixedCostVehicle: p.isFixedCostVehicle,
                 totalDistance: p.totalDistance ?? null,
                 ratePerKm: p.ratePerKm ?? null,
@@ -96,7 +96,7 @@ export class TripCosts extends Component<{
         actualVehicleProviders.forEach(p => {
             const c = this.calculations.participants[p.id]
             c.totalDistance = c.totalDistance != null ? c.totalDistance : defaultTotalDistance
-            c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize)
+            c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize ?? 0)
             c.vehicleCost = c.vehicleCost != null ? c.vehicleCost : Math.ceil(c.totalDistance * c.ratePerKm / 2) // NOTE: ratePerKm is per ONE-WAY-km, so is twice the rate per total return km
             this.calculations.totalVehicleCost += c.vehicleCost
         })
@@ -187,7 +187,6 @@ export class TripCosts extends Component<{
 
         this.props.setTripParticipants(participants, true)
 
-        return Promise.resolve(participant) // TODO
         return save? 
             TripsService.postTripParticipantUpdate(this.props.trip.id, id, data) :
             Promise.resolve(participant)

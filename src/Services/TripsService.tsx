@@ -111,7 +111,9 @@ export class TripsService {
         return [
             ...Mandatory(participant, mandatoryFields),
             { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` },
-            { field: 'seats', ok: !participant.isVehicleProvider || participant.seats > 0, message: `Seats must be greater than zero` }
+            { field: 'seats', ok: !participant.isVehicleProvider || participant.seats > 0, message: `Seats must be greater than zero` },
+            { field: 'engineSize', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.engineSize !== null, message: `Engine size must be specified` },
+            { field: 'vehicleCost', ok: !participant.isVehicleProvider || (participant.isFixedCostVehicle && participant.vehicleCost !== null), message: `Vehicle cost must be specified` },
         ]
     }
 

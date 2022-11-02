@@ -326,9 +326,13 @@ export class Trip extends Component<{
         const isNew = this.props.isNew
         const info = this.participantsInfo
         const tripWarnings = TripsService.validateTrip(this.state.trip).filter(i => !i.ok)
-        const participantWarnings = info.current.flatMap(p => TripsService.validateParticipant(p, info.all).filter(i => !i.ok))
+        const participantWarnings = info.current
+            .flatMap(p => TripsService.validateParticipant(p, info.all)
+            .filter(i => !i.ok))
+            .map(i => i.message)
+            .filter((value, index, self) => self.indexOf(value) === index) // unique
         const participantWarningJsx = !!participantWarnings.length
-            ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings[0].message} className='fw warning-icon' />
+            ? <ToolTipIcon id='pw' key='pw' icon='warning' tooltip={participantWarnings.join(', ')} className='fw warning-icon' />
             : null
         const participantCountJsx = <span key='count' className='TripCount'>
             {` (${info.leaders.length + info.early.length}${info.late.length ? '+' + info.late.length : ''})`}

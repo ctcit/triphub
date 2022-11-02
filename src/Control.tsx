@@ -473,7 +473,12 @@ export class InputWithSelectControl extends Component<{
 
     public render() {
         const onChange = (newValue: any, actionMeta: ActionMeta<any>) => {
-            this.props.onSet(this.props.field, newValue.value);
+            this.setState({ helpText: undefined, showValidation: true })
+            if (newValue.value !== this.value) {
+                this.setState({ saving: true });
+                this.props.onSave(this.props.field, newValue.value)
+                    .then(() => this.setState({ saving: false }));
+            }
         }
 
         const val = `${this.props.onGet(this.props.field)}`.replace(/\W/g, v => `${v.charCodeAt(0)}`)

@@ -1,14 +1,13 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Component, ReactNode } from 'react';
 import * as React from 'react';
-import { Badge, FormGroup, Input, FormText, Row, DropdownToggle, DropdownMenu, DropdownItem, ButtonDropdown, InputGroup, Label } from 'reactstrap';
+import { Badge, FormGroup, Input, FormText, Row, Label } from 'reactstrap';
 import './index.css';
 import { Spinner } from './Widgets';
 import Textarea from 'react-textarea-autosize';
 import Switch from "react-switch";
 import { InputType } from 'reactstrap/types/lib/Input';
 import Select, { ActionMeta, GroupBase, OptionsOrGroups } from 'react-select'
-import { Group } from '@styled-icons/boxicons-regular';
 
 export class ControlWrapper extends Component<{
     id: string,
@@ -84,15 +83,24 @@ export class InputControl extends Component<{
         return this.props.onGet(this.props.field)
     }
 
+    private sanitizeValue(value: any) {
+        return value || (this.props.type === 'number' ? 
+            value === null ? '' : value : // input control cannot take null value, use ''
+            '')
+    }
+
     public render() {
         const onFocus = (): void => {
             this.setState({ oldValue: this.value, helpText: this.props.helpText });
         }
         const onChange = (event: React.ChangeEvent) => {
-            const value = 
-                this.props.type === 'number' ? (event.target as any).valueAsNumber :
-                this.props.type === 'date' ? (event.target as any).valueAsDate :
-                (event.target as any).value
+            let value
+            if (this.props.type === 'number') {
+                value = (event.target as any).valueAsNumber
+                value = isNaN(value) ? null : value
+            } else {
+                value = (event.target as any).value
+            }
             this.props.onSet(this.props.field, value);
         }
         const onBlur = () => {
@@ -127,12 +135,6 @@ export class InputControl extends Component<{
                     autoComplete='nope' autoFocus={this.props.autoFocus} className={className} />
             </ControlWrapper>
         )
-    }
-
-    private sanitizeValue(value: any) {
-        return value || (this.props.type === 'number' ? 
-            value === null ? undefined : value : // input control cannot take null value, use undefined
-            '')
     }
 }
 
@@ -432,10 +434,13 @@ export class InputWithSelectControl extends Component<{
             this.setState({ oldValue: this.value, helpText: this.props.helpText });
         }
         const onChange = (event: React.ChangeEvent) => {
-            const value = 
-                this.props.type === 'number' ? (event.target as any).valueAsNumber :
-                this.props.type === 'date' ? (event.target as any).valueAsDate :
-                (event.target as any).value
+            let value
+            if (this.props.type === 'number') {
+                value = (event.target as any).valueAsNumber
+                value = isNaN(value) ? null : value
+            } else {
+                value = (event.target as any).value
+            }
             this.props.onSet(this.props.field, value);
         }
         const onBlur = () => {
@@ -468,7 +473,9 @@ export class InputWithSelectControl extends Component<{
     }
 
     private sanitizeValue(value: any) {
-        return value || (this.props.type === 'number' ? value : '')
+        return value || (this.props.type === 'number' ? 
+            value === null ? '' : value : // input control cannot take null value, use ''
+            '')
     }
 
     public render() {

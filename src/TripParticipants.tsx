@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Navbar, ButtonGroup, ListGroup, ListGroupItem } from 'reactstrap';
+import { Button, Navbar, ButtonGroup, ListGroup, ListGroupItem, Container } from 'reactstrap';
 import { Component } from 'react';
 import { IParticipant, IParticipantsInfo, ITrip, Role } from './Interfaces';
 import { Spinner } from './Widgets';
@@ -157,9 +157,9 @@ export class TripParticipants extends Component<{
         const onDropOnDeleted = (ev: any) => this.setParticipant(parseInt(ev.dataTransfer.getData('id'), 10), { isDeleted: true }, true)
         const showLegend = this.state.showLegend
         const LegendIcon = (props: { icon: string, children: any }) =>
-            <div><span className={`fas ${props.icon}`} />{props.children}</div>
+            <div>&nbsp;&nbsp;<span className={`fas ${props.icon}`} />&nbsp;{props.children}</div>
         const LegendButton = (props: { icon: string, children: any }) =>
-            <div><Button disabled={true}><span className={`fa ${props.icon}`} /></Button>{props.children}</div>
+            <div><Button disabled={true}><span className={`fa ${props.icon}`} /></Button>&nbsp;{props.children}</div>
         
         const onSignMeUp = () => this.onSignMeUp();
         const onSignUpTramper = () => this.onSignUpTramper();
@@ -170,50 +170,53 @@ export class TripParticipants extends Component<{
         const setPosition = (id: number, target?: IParticipant) => this.onSetPosition(id, target)
 
         return [
-            <Navbar key='navbar' color='light' light={true} expand='md'>
-                {[
-                    <Button key={'signmeup' + info.all.length} onClick={onSignMeUp}
-                        hidden={isNewTrip || imOnList || !isOpen || !this.props.isOnline}>
-                        <span className='fa fa-pen wiggle' />
-                        {this.state.isSaving ? ['Signing up ', Spinner] : 'Sign me up!'}
-                        {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
-                    </Button>,
-                    <Button key={'signup' + info.all.length} onClick={onSignUpTramper}
-                        hidden={isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged || !this.props.isOnline}>
-                        <span className='fa fa-user-plus' /> Sign up a tramper
-                        {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
-                    </Button>,
-                    <ButtonGroup key={'signupcomplete' + info.all.length}
-                        hidden={isNewTrip || !hasNewTramper || !isOpen}>
-                        <Button onClick={onSignUpTramper} disabled={true}>
-                            <span className='fa fa-user-plus' /> Sign up a tramper:
+            <Container key='parameters-initial' fluid={true}>
+                <Navbar key='navbar' color='light' light={true} expand='md'>
+                    {[
+                        <Button key={'signmeup' + info.all.length} onClick={onSignMeUp}
+                            hidden={isNewTrip || imOnList || !isOpen || !this.props.isOnline}>
+                            <span className='fa fa-pen wiggle' />
+                            {this.state.isSaving ? ['Signing up ', Spinner] : 'Sign me up!'}
+                            {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
+                        </Button>,
+                        <Button key={'signup' + info.all.length} onClick={onSignUpTramper}
+                            hidden={isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged || !this.props.isOnline}>
+                            <span className='fa fa-user-plus' /> Sign up a tramper
+                            {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
+                        </Button>,
+                        <ButtonGroup key={'signupcomplete' + info.all.length}
+                            hidden={isNewTrip || !hasNewTramper || !isOpen}>
+                            <Button onClick={onSignUpTramper} disabled={true}>
+                                <span className='fa fa-user-plus' /> Sign up a tramper:
+                            </Button>
+                            <Button key='save' color='primary' onClick={onSignUpTramperSave}>
+                                {this.state.isSaving ? ['Saving ', Spinner] : 'Save'}
+                            </Button>
+                            <Button key='cancel' color='primary' onClick={onSignUpTramperCancel}>
+                                Cancel
+                            </Button>
+                        </ButtonGroup>,
+                        <Button key={'help' + info.all.length} onClick={onToggleLegend} hidden={isNewTrip || anon}>
+                            <span className='fa fa-question-circle' />{showLegend ? 'Hide legend' : 'Show legend'}
                         </Button>
-                        <Button key='save' color='primary' onClick={onSignUpTramperSave}>
-                            {this.state.isSaving ? ['Saving ', Spinner] : 'Save'}
-                        </Button>
-                        <Button key='cancel' color='primary' onClick={onSignUpTramperCancel}>
-                            Cancel
-                        </Button>
-                    </ButtonGroup>,
-                    <Button key={'help' + info.all.length} onClick={onToggleLegend} hidden={isNewTrip || anon}>
-                        <span className='fa fa-question-circle' />{showLegend ? 'Hide legend' : 'Show legend'}
-                    </Button>
-                ]}
-            </Navbar>,
-            (showLegend ? <div className='participant-buttons-legend'>
-                <LegendIcon icon='fa-star'>This person is the leader</LegendIcon>
-                <LegendIcon icon='fa-podcast'>This person is taking a Personal Location Beacon</LegendIcon>
-                <LegendIcon icon='fa-car'>This person can bring a car</LegendIcon>
-                <LegendIcon icon='fa-comment'>There is special logistical information here</LegendIcon>
-                <LegendIcon icon='fa-id-badge'>This person is not a member of the CTC</LegendIcon>
-                <LegendButton icon='fa-angle-up'>Moves the person up the list</LegendButton>
-                <LegendButton icon='fa-angle-down'>Moves the person down the list</LegendButton>
-                <LegendButton icon='fa-trash'>Takes the person off the list</LegendButton>
-                <LegendButton icon='fa-sm fa-pen'>Puts the person back on the list</LegendButton>
-                <LegendButton icon='fa-sm fa-user-plus'>Puts the person on the wait-list</LegendButton>
-                <LegendButton icon='fa-sm fa-user-times'>Takes the person off the wait-list</LegendButton>
-                <LegendButton icon='fa-sm fa-phone'>Updates emergency contact details</LegendButton>
-            </div> : null),
+                    ]}
+                </Navbar>
+                {showLegend ? <div className='participant-buttons-legend'>
+                    <LegendIcon icon='fa-star'>This person is the leader</LegendIcon>
+                    <LegendIcon icon='fa-podcast'>This person is taking a Personal Location Beacon</LegendIcon>
+                    <LegendIcon icon='fa-car'>This person can bring a car</LegendIcon>
+                    <LegendIcon icon='fa-comment'>There is special logistical information here</LegendIcon>
+                    <LegendIcon icon='fa-id-badge'>This person is not a member of the CTC</LegendIcon>
+                    <LegendButton icon='fa-angle-up'>Moves the person up the list</LegendButton>
+                    <LegendButton icon='fa-angle-down'>Moves the person down the list</LegendButton>
+                    <LegendButton icon='fa-trash'>Takes the person off the list</LegendButton>
+                    <LegendButton icon='fa-sm fa-pen'>Puts the person back on the list</LegendButton>
+                    <LegendButton icon='fa-sm fa-user-plus'>Puts the person on the wait-list</LegendButton>
+                    <LegendButton icon='fa-sm fa-user-times'>Takes the person off the wait-list</LegendButton>
+                    <LegendButton icon='fa-sm fa-phone'>Updates emergency contact details</LegendButton>
+                </div> : null}
+            </Container>,
+
             <ListGroup key='participants'>
                 <ListGroupItem>
                     {

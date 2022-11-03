@@ -48,8 +48,7 @@ export class TripCosts extends Component<{
     public calculateCosts(): void {
         const trip: ITrip = this.props.trip
 
-        // TODO
-        trip.distanceOneWay = trip.distanceOneWay === undefined ? 100 : trip.distanceOneWay // TODO - better default or none?
+        trip.distanceOneWay = trip.distanceOneWay === undefined ? 0 : trip.distanceOneWay
         trip.participantsCount = trip.participantsCount === undefined ? null : trip.participantsCount
         trip.vehicleFee = trip.vehicleFee === undefined ? null : trip.vehicleFee
 
@@ -72,7 +71,7 @@ export class TripCosts extends Component<{
         currentParticipants.forEach(p => {
 
             this.calculations.participants[p.id] = {
-                broughtVehicle: p.broughtVehicle,
+                broughtVehicle: p.isVehicleProvider && p.broughtVehicle,
                 isFixedCostVehicle: p.isFixedCostVehicle,
                 totalDistance: p.totalDistance ?? null,
                 ratePerKm: p.ratePerKm ?? null,
@@ -205,9 +204,9 @@ export class TripCosts extends Component<{
         this.calculateCosts();
 
         const LegendIcon = (props: { icon: string, children: any }) =>
-            <div><span className={`fas ${props.icon}`} />{props.children}</div>
+            <div>&nbsp;<span className={`fas ${props.icon}`} />&nbsp;&nbsp;{props.children}</div>
         const LegendButton = (props: { icon: string, children: any }) =>
-            <div><Button disabled={true}><span className={`fa ${props.icon}`} /></Button>{props.children}</div>
+            <div><Button disabled={true}><span className={`fa ${props.icon}`} /></Button>&nbsp;{props.children}</div>
         const onToggleLegend = () => this.onToggleLegend();
 
         const onGet = (field: string): any => this.props.trip[field]

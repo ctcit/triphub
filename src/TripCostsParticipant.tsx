@@ -7,6 +7,7 @@ import { Accordian } from './Accordian'
 import { BindMethods } from './Utilities'
 import { ButtonWithTooltip } from './ButtonWithTooltip'
 import { ConfigService } from './Services/ConfigService'
+import { TripsService } from './Services/TripsService'
 
 export class TripCostsParticipant extends Component<{
     participant: IParticipant,
@@ -29,7 +30,7 @@ export class TripCostsParticipant extends Component<{
         const participant = this.props.participant
         const participantCosts = this.props.participantCosts
         const canEdit = this.props.canEdit
-        const validations: IValidation[] = [] // TODO
+        const validations: IValidation[] = TripsService.validateParticipant(participant, [participant])
         const warnings = validations.filter(i => !i.ok)
 
         const onGet = (field: string): any => participant[field]

@@ -84,29 +84,30 @@ export interface IParticipantCosts {
     totalDistance: number | null
     ratePerKm: number | null
     vehicleCost: number | null
-    vehicleReimbursement: number | null
+    vehicleReimbursement: number | null // not stored in db; calculated value displayed in read-only control
+    adjustedVehicleReimbursement: number | null // not stored in db; calculated value displayed in read-only control
     
     // all
     vehicleFee: number | null
     nonMemberFee: number | null
     otherFees: number | null // e.g. hut, gear hire fees
 
-    toPay: number | null // negative if reimbursed
+    toPay: number | null // negative if reimbursed - not stored in db; calculated value displayed in read-only control
     paid: number | null // negative if reimbursed
 }
 
 export interface ITripCostCalculations {
     distanceOneWay: number
-    participantsCount: number
-    totalVehicleCost: number
-    fixedCostVehicleCount: number
-    payingParticipantsCount: number // paying vehicle fee
-    calculatedVehicleFee: number
-    roundedCalculatedVehicleFee: number
+    participantsCount: number // not stored in db; calculated value displayed in read-only control
+    totalVehicleCost: number // not stored in db; calculated value displayed in read-only control
+    fixedCostVehicleCount: number // not stored in db; calculated value displayed in read-only control
+    payingParticipantsCount: number // paying vehicle fee - not stored in db; calculated value displayed in read-only control
+    calculatedVehicleFee: number // not stored in db; calculated value displayed in read-only control
+    roundedCalculatedVehicleFee: number // not stored in db; calculated value displayed in read-only control
     vehicleFee: number
-    totalVehicleFeeToCollect: number
-    totalNonMemberFeeToCollect: number
-    totalOtherFeesToCollect: number
+    totalVehicleFeeToCollect: number // not stored in db; calculated value displayed in read-only control
+    totalNonMemberFeeToCollect: number // not stored in db; calculated value displayed in read-only control
+    totalOtherFeesToCollect: number // not stored in db; calculated value displayed in read-only control
 
     participants: {[id: string]: IParticipantCosts}
 }

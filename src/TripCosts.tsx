@@ -76,7 +76,8 @@ export class TripCosts extends Component<{
                 totalDistance: p.totalDistance ?? null,
                 ratePerKm: p.ratePerKm ?? null,
                 vehicleCost: !p.isFixedCostVehicle ? null : p.vehicleCost ?? null,
-                vehicleReimbursement: p.vehicleReimbursement ?? null, // vehicle cost less vehicle fee
+                vehicleReimbursement: p.vehicleReimbursement ?? null, // vehicle cost less vehicle fee,
+                adjustedVehicleReimbursement: p.adjustedVehicleReimbursement ?? null,
             
                 // all
                 vehicleFee: p.vehicleFee ?? null,
@@ -111,12 +112,15 @@ export class TripCosts extends Component<{
         this.calculations.vehicleFee = trip.vehicleFee !== null ? trip.vehicleFee : this.calculations.roundedCalculatedVehicleFee
 
         // calculate fees for all participants
+        let totalNonFixedCostVehicleFeesToCollect = 0
         currentParticipants.forEach(p => {
             const c = this.calculations.participants[p.id]
-            c.vehicleFee = c.vehicleFee != null ? c.vehicleFee : // manually overridden fee (unused)
+            c.vehicleFee = c.vehicleFee != null ? c.vehicleFee : // manually overridden fee
                 c.isFixedCostVehicle ? 0 : // fixed cost vehicle - no fee
                 this.calculations.vehicleFee // otherwise, calculated fee
-            this.calculations.totalVehicleFeeToCollect += !c.broughtVehicle ? c.vehicleFee : 0
+            const vehicleFeeToCollect = !c.broughtVehicle ? c.vehicleFee : 0
+            this.calculations.totalVehicleFeeToCollect += vehicleFeeToCollect
+            totalNonFixedCostVehicleFeesToCollect += c.isFixedCostVehicle ? 0 : vehicleFeeToCollect
             c.nonMemberFee = c.nonMemberFee != null ? c.nonMemberFee : !p.memberId ? this.nonMemberFee() : 0
             this.calculations.totalNonMemberFeeToCollect += c.nonMemberFee
             c.otherFees = c.otherFees ?? 0
@@ -125,23 +129,47 @@ export class TripCosts extends Component<{
 
         // calculate vehicle reimbursements
         let totalReimbursements = 0
+        let totalNonFixedCostVehicleReimbursements = 0
         actualVehicleProviders.forEach(p => {
             const c = this.calculations.participants[p.id]
-            c.vehicleReimbursement = c.vehicleReimbursement !== null ? c.vehicleReimbursement :  // manually overridden (unused)
-                (c.vehicleCost ?? 0) - (c.vehicleFee ?? 0)
+            c.vehicleReimbursement = (c.vehicleCost ?? 0) - (c.vehicleFee ?? 0)
             totalReimbursements += c.vehicleReimbursement
+            c.adjustedVehicleReimbursement = c.vehicleReimbursement
+            totalNonFixedCostVehicleReimbursements += c.isFixedCostVehicle ? 0 : c.vehicleReimbursement
         })
-        // handle excess vehicle funds - distribute to non-fixed cost vehicle providers (unless there are none) 
-        let excessVehicleFunds = this.calculations.totalVehicleFeeToCollect - totalReimbursements
-        const haveNonFixedCostVehicleProviders = actualVehicleProviders.length > this.calculations.fixedCostVehicleCount
+
+        // handle excess or deficient vehicle funds; e.g. due to rounding and/or maunally overriden vehicle fees;
         if (actualVehicleProviders.length > 0) {
+            const nonFixedCostVehiclesCount = actualVehicleProviders.length - this.calculations.fixedCostVehicleCount
+
+            let deficientVehicleFunds = totalReimbursements - this.calculations.totalVehicleFeeToCollect
+            if (deficientVehicleFunds > 0) {
+
+                // deficient funds proportionally reduce non-fixed cost reimbursement (unless none, in which case reduce fixed cost reimbursements)
+                const subtractFactor = totalNonFixedCostVehicleReimbursements === 0 ?
+                    1.0 - this.calculations.totalVehicleFeeToCollect / totalReimbursements :  // reduce fixed costs
+                    1.0 - totalNonFixedCostVehicleFeesToCollect / totalNonFixedCostVehicleReimbursements    // reduce only non-fixed cost
+
+                actualVehicleProviders.forEach(p => {
+                    if (deficientVehicleFunds > 0 && (!p.isFixedCostVehicle || nonFixedCostVehiclesCount === 0)) {
+                        const c = this.calculations.participants[p.id]
+                        const subtractDeficit = Math.floor((c.adjustedVehicleReimbursement ?? 0) * subtractFactor)
+                        c.adjustedVehicleReimbursement = (c.adjustedVehicleReimbursement ?? 0) - subtractDeficit
+                        deficientVehicleFunds += subtractDeficit
+                        totalReimbursements -= subtractDeficit
+                    }
+                })
+            }
+
+            // excess funds distributed too non-fixed cost reimbursement (unless none, in which case to fixed cost reimbursements)
+            let excessVehicleFunds = this.calculations.totalVehicleFeeToCollect - totalReimbursements
             while (excessVehicleFunds > 0) {
                 actualVehicleProviders.forEach(p => {
-                    if (excessVehicleFunds > 0 && (!p.isFixedCostVehicle || !haveNonFixedCostVehicleProviders)) {
+                    if (excessVehicleFunds > 0 && (!p.isFixedCostVehicle || nonFixedCostVehiclesCount === 0)) {
                         const c = this.calculations.participants[p.id]
                         const addExcess = Math.min(1, excessVehicleFunds)
-                        c.vehicleReimbursement = (c.vehicleReimbursement ?? 0) + addExcess
-                        excessVehicleFunds = excessVehicleFunds - addExcess
+                        c.adjustedVehicleReimbursement = (c.adjustedVehicleReimbursement ?? 0) + addExcess
+                        excessVehicleFunds -= addExcess
                     }
                 })
             }
@@ -150,7 +178,7 @@ export class TripCosts extends Component<{
         // calculate total to pay/reimburse for each participant
         actualVehicleProviders.forEach(p => {
             const c = this.calculations.participants[p.id]
-            c.toPay =  (c.nonMemberFee ?? 0) + (c.otherFees ?? 0) - (c.vehicleReimbursement ?? 0)
+            c.toPay =  (c.nonMemberFee ?? 0) + (c.otherFees ?? 0) - (c.adjustedVehicleReimbursement ?? 0)
         })
         others.forEach(p => {
             const c = this.calculations.participants[p.id]
@@ -284,39 +312,40 @@ export class TripCosts extends Component<{
                     <Form key='form' className='indentedparticipants form'>
                         <Container fluid={true}>
                             <Row>
-                                <Col sm={5} md={4}>
+                                <Col sm={5} md={3}>
                                     <InputControl field='participantsCount' label='Total number of people on the trip'
                                         placeholder={this.calculations.participantsCount}
-                                        type='number' min={0} hidden={false} {...common} />
+                                        type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col>
-                                <Col sm={5} md={4}>
+                                <Col sm={5} md={3}>
                                     <InputControl field='fixedCostVehicleCount' label='Total number of fixed cost vehicles'
                                         placeholder={this.calculations.fixedCostVehicleCount}
                                         type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col>
-                                <Col sm={5} md={4}>
-                                    <InputControl field='payingParticipantsCount' label='Number to pay vehicle costs (number on trip less fixed cost vehicle drivers)'
+                                <Col sm={5} md={3}>
+                                    <InputControl field='payingParticipantsCount' label='Number to pay vehicle costs'
+                                        helpText={'Number on trip, less number of fixed cost vehicle drivers'}
                                         placeholder={this.calculations.payingParticipantsCount}
                                         type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col>
                             </Row>
                             <Row>
-                                <Col sm={5} md={4}>
+                                <Col sm={5} md={3}>
                                     <InputControl field='totalVehicleCost' label='Total vehicle costs ($)'
                                         placeholder={this.calculations.totalVehicleCost}
                                         type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col>
-                                {/* <Col sm={5} md={4}>
+                                {/* <Col sm={5} md={3}>
                                     <InputControl field='calculatedVehicleFee' label='Costs per person ($)'
                                         placeholder={this.calculations.calculatedVehicleFee}
                                         type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col> */}
-                                <Col sm={5} md={4}>
+                                <Col sm={5} md={3}>
                                     <InputControl field='roundedCalculatedVehicleFee' label='Costs per person rounded up ($)'
                                         placeholder={this.calculations.roundedCalculatedVehicleFee}
                                         type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col>
-                                <Col sm={5} md={4}>
+                                <Col sm={5} md={3}>
                                     <InputControl field='vehicleFee' label='Vehicle fee ($) to collect from particpants (excluding drivers)'
                                         placeholder={this.calculations.vehicleFee}
                                         type='number' min={0} hidden={false} {...common} />
@@ -327,18 +356,21 @@ export class TripCosts extends Component<{
                 </Accordian>
 
                 <Row>
-                    <Col sm={5} md={4}>
+                    <Col sm={5} md={3}>
                         <InputControl field='totalVehicleFeeToCollect' label='Total vehicle fees ($) to collect from non-drivers'
+                            helpText={'Pay to drivers'}
                             placeholder={this.calculations.totalVehicleFeeToCollect}
                             type='number' min={0} hidden={false} {...common} readOnly={true} />
                     </Col>
-                    <Col sm={5} md={4}>
+                    <Col sm={5} md={3}>
                         <InputControl field='totalNonMemberFeeToCollect' label='Total non-member ($) fees to collect'
+                            helpText={'Pay to the CTC treasurer or bank account'}
                             placeholder={this.calculations.totalNonMemberFeeToCollect}
                             type='number' min={0} hidden={false} {...common} readOnly={true} />
                     </Col>
-                    <Col sm={5} md={4}>
+                    <Col sm={5} md={3}>
                         <InputControl field='totalOtherFeesToCollect' label='Total other fees ($) to collect'
+                            helpText={'e.g. hut or gear fees'}
                             placeholder={this.calculations.totalOtherFeesToCollect}
                             type='number' min={0} hidden={false} {...common} readOnly={true} />
                     </Col>

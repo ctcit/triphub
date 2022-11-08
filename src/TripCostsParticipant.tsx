@@ -161,17 +161,17 @@ export class TripCostsParticipant extends Component<{
                             {
                                 participantCosts.broughtVehicle && !participant.isFixedCostVehicle &&
                                 <Row>
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputWithSelectControl field='engineSize' label='Engine Size (cc), EV=0' 
                                         type="number" min={0} max={10000} step={100}
                                         options={[0,1300,1500,1600,1800,2000,2500,3000]} {...common} />
                                     </Col>
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='ratePerKm' label='Rate ($/ONE-WAY-km)' 
                                         placeholder={participantCosts.ratePerKm}
                                         type='number' {...common} />
                                     </Col>
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='totalDistance' label='Total Return Distance (km)' 
                                         placeholder={participantCosts.totalDistance}
                                         type='number' {...common} />
@@ -181,19 +181,25 @@ export class TripCostsParticipant extends Component<{
                             {
                                 participantCosts.broughtVehicle && !participant.isFixedCostVehicle &&
                                 <Row>
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='vehicleCost' label='Vehicle Cost ($)' 
                                         placeholder={participantCosts.vehicleCost}
                                         type='number' {...common} readOnly={true}/>
                                     </Col>
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='vehicleFee' label='Vehicle Fee ($)' 
                                         placeholder={participantCosts.vehicleFee}
                                         type='number' {...common} />
                                     </Col>
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='vehicleReimbursement' label='Vehicle Reimbursement ($)' 
                                         placeholder={participantCosts.vehicleReimbursement}
+                                        type='number' {...common} readOnly={true} />
+                                    </Col>
+                                    <Col sm={3}>
+                                        <InputControl field='adjustedVehicleReimbursement' label='Adjusted Vehicle Reimbursement ($)' 
+                                        helpText={'Adjusted to balance with collected vehicle fees'}
+                                        placeholder={participantCosts.adjustedVehicleReimbursement}
                                         type='number' {...common} readOnly={true} />
                                     </Col>
                                 </Row>
@@ -201,14 +207,20 @@ export class TripCostsParticipant extends Component<{
                             {
                                 participantCosts.broughtVehicle && participant.isFixedCostVehicle &&
                                 <Row>
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='vehicleCost' label='Vehicle Cost ($)' 
                                         placeholder={participantCosts.vehicleCost}
                                         type='number' {...common} />
                                     </Col>
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='vehicleReimbursement' label='Vehicle Reimbursement ($)' 
                                         placeholder={participantCosts.vehicleReimbursement}
+                                        type='number' {...common} readOnly={true} />
+                                    </Col>
+                                    <Col sm={3}>
+                                        <InputControl field='adjustedVehicleReimbursement' label='Adjusted Vehicle Reimbursement ($)' 
+                                        helpText={'Adjusted to balance with collected vehicle fees'}
+                                        placeholder={participantCosts.adjustedVehicleReimbursement} 
                                         type='number' {...common} readOnly={true} />
                                     </Col>
                                 </Row>
@@ -216,19 +228,20 @@ export class TripCostsParticipant extends Component<{
                             <Row>
                                 {
                                 !participantCosts.broughtVehicle &&
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='vehicleFee' label='Vehicle Fee ($)' 
                                         placeholder={participantCosts.vehicleFee}
                                         type='number' {...common} />
                                     </Col>
                                 }
-                                <Col sm={4}>
+                                <Col sm={3}>
                                     <InputControl field='nonMemberFee' label='Non-Member Fee ($)' 
                                     placeholder={participantCosts.nonMemberFee}
                                     type='number' {...common} />
                                 </Col>
-                                <Col sm={4}>
-                                    <InputControl field='otherFees' label='Other Fees ($); e.g. hut fees' 
+                                <Col sm={3}>
+                                    <InputControl field='otherFees' label='Other Fees ($)' 
+                                    helpText={'e.g. hut or gear fees'}
                                     placeholder={participantCosts.otherFees}
                                     type='number' {...common} />
                                 </Col>
@@ -236,13 +249,13 @@ export class TripCostsParticipant extends Component<{
                             <Row key='3'>
                                 {
                                 (participantCosts.toPay ?? 0) >= 0 ? 
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='toPay' label='Total to pay ($)' 
                                         placeholder={participantCosts.toPay}
                                         type='number' {...common} readOnly={true} />
                                     </Col>
                                 :
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='toPay' label='Total to reimburse ($)' 
                                         placeholder={participantCosts.toPay !== null ? -participantCosts.toPay : null}
                                         type='number' 
@@ -255,13 +268,13 @@ export class TripCostsParticipant extends Component<{
                                     </Col>
                                 }
                                 {(participantCosts.toPay ?? 0) >= 0 ? 
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='paid' label='Total paid ($)' 
                                         placeholder={participantCosts.paid}
                                         type='number' {...common} />
                                     </Col>
                                 :
-                                    <Col sm={4}>
+                                    <Col sm={3}>
                                         <InputControl field='paid' label='Total reimbursed ($)' 
                                         placeholder={participantCosts.paid !== null ? -participantCosts.paid : null}
                                         type='number' 

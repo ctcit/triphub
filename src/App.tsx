@@ -32,16 +32,19 @@ export class App extends Component<{
     isStandalone: boolean
     backgroundSyncPermitted: boolean,
     appUpdateAvailable: boolean,
-    cachedTrips: ITrip[]
+    cachedTrips: ITrip[],
+    pendingSyncsCount: number
 }> {
 
     private onDoAppUpdate = () => {}
     private beforeInstallPrompt: any = null;
     private onCacheTripsChanged = async (): Promise<any> => {}
+    private onDoSync = async (): Promise<any> => {} 
 
     constructor(props: any) {
         super(props)
 
+        // determine if app is running standalone or not
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches
         console.log(isStandalone ? 'app is standalone' : 'app is not standalone')
 
@@ -57,26 +60,28 @@ export class App extends Component<{
             isStandalone: isStandalone,
             backgroundSyncPermitted: false,
             appUpdateAvailable: false,
-            cachedTrips: []
+            cachedTrips: [],
+            pendingSyncsCount: 0
         }
 
         if (window.top) {
             window.top.onpopstate = this.onPopState.bind(this)
         }
 
-        // add event handlers to store online/offline status 
+        // add event handlers to listen for changes in online/offline status 
         window.addEventListener('offline', () => {
                 console.log('app is offline')
                 this.onOffline()
             }
         );
-          
         window.addEventListener('online', () => {
                 console.log('app is online')
                 this.onOnline()
             }
         );
 
+        // capture the event that prompts to install the app as standalone
+        // We use this to implement the "Install app for standalone/offline use..." option
         window.addEventListener('beforeinstallprompt', (event: any) => { 
                 event.preventDefault()
                 this.beforeInstallPrompt = event
@@ -84,6 +89,7 @@ export class App extends Component<{
              }
         );
 
+        // determine if the app is running standalone or not
         window.matchMedia('(display-mode: standalone)').addEventListener('change', ({ matches }) => {
             if (matches) {
                 console.log('app is standalone')
@@ -94,10 +100,14 @@ export class App extends Component<{
             }
         });
 
+        // determine if the background-sync permission is granted and create event listener to listen for changes
         navigator.permissions.query({name: 'background-sync'} as unknown as PermissionDescriptor).then((permissionStatus) => {
             this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
             permissionStatus.addEventListener('change', (e) => {
                 this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
+                if (permissionStatus.state === 'granted') {
+                    this.onDoSync() // force a sync now; otherwise it might not happen until the user goes offline then back online again
+                }
               });
         })
 
@@ -138,15 +148,36 @@ export class App extends Component<{
         
             wb.register();
 
-            // add handling to notify service worker when the cacheTrips setting has changed in the IndexedDB
-            this.onCacheTripsChanged = () => {
-                return navigator.serviceWorker.ready.then((registration) => {
-                    if (registration.active) {
-                        registration.active.postMessage({ type: 'UPDATE_CACHE_TRIP_SETTING'});
-                    }
-                });
+
+            const activeServiceWorker = async (): Promise<ServiceWorker | null> => {
+                return navigator.serviceWorker.ready.then((registration) => registration.active)
             }
 
+            // add handling to notify service worker when the cacheTrips setting has changed in the IndexedDB
+            this.onCacheTripsChanged = async () => {
+                return activeServiceWorker().then(sw => sw?.postMessage({ type: 'UPDATE_CACHE_TRIP_SETTING'}));
+            }
+
+            navigator.serviceWorker.addEventListener("message", (event) => {
+                // event is a MessageEvent object
+                if (event.data) {
+                    if (event.data.type === 'SYNCS_COUNT') {
+                        const pendingSyncsCount = event.data.count ?? 0
+                        this.setState({pendingSyncsCount})
+                        if (pendingSyncsCount > 0) {
+                            this.onDoSync = async () => {
+                                console.log('doing forced sync')
+                                return activeServiceWorker().then(sw => sw?.postMessage({ type: 'DO_SYNCS'}))
+                            }
+                        }
+                    }
+                }
+            });
+            activeServiceWorker().then(sw => sw?.postMessage({ type: 'GET_SYNCS_COUNT'}));
+
+            if (!this.state.backgroundSyncPermitted) {
+                this.onDoSync() // force a sync now as background sync is disabled
+            }
         }
 
     }
@@ -208,6 +239,7 @@ export class App extends Component<{
         const loadingStatus = (state?: any) => this.loadingStatus(state)
         const onDoAppUpdate = () => this.onDoAppUpdate()
         const onCacheTripsChanged = () => this.onCacheTripsChanged()
+        const onDoSync = () => this.onDoSync()
 
         const common = {
             role: this.state.role,
@@ -215,7 +247,6 @@ export class App extends Component<{
             addNotification,
             loadingStatus,
             isOnline: this.state.isOnline,
-            offlineEditsPermitted: this.state.backgroundSyncPermitted,
             setCachedTrips
         }
         const renderings = {
@@ -231,22 +262,33 @@ export class App extends Component<{
         }
 
         return [
-            !this.state.isOnline && 
+            (!this.state.isOnline && 
                 <Alert color='warning'>
                     <span className='fa fa-cloud' />
                     &nbsp;<b>No internet connection. Application is working offline. Limited options available.</b>
-                </Alert>,
-            !this.state.backgroundSyncPermitted && !this.state.isOnline && 
+                </Alert>
+            ),
+            (!this.state.isOnline && this.state.pendingSyncsCount > 0 && 
                 <Alert color='warning'>
                     <span className='fa fa-rotate' />
-                    &nbsp;<b>Background sync is disabled or not supported by your browser.  Consider granting permission (browser dependent) to allow limited offline editing options.</b>
-                </Alert>,
-            this.state.appUpdateAvailable &&
+                    &nbsp;<b>Edits ({this.state.pendingSyncsCount}) are waiting to be synced. {(this.state.backgroundSyncPermitted ?
+                        'These will automatically sync in the background when next online' :
+                        'These will automatically sync when the app is next online.')}</b>
+                </Alert>
+            ),
+            (this.state.isOnline && this.state.pendingSyncsCount > 0 && 
+                <Alert color='warning'>
+                    <span className='fa fa-rotate fa-spin' />
+                    &nbsp;<b>Edits ({this.state.pendingSyncsCount}) are syncing...</b>
+                </Alert>
+            ),
+            (this.state.appUpdateAvailable &&
                 <Alert color='warning'>
                     <span className='fa fa-refresh' />
                     <b>&nbsp;An application update is available.  Please save any changes, then click the 'Update now' button to update.&nbsp;</b>
                     <Button onClick={onDoAppUpdate}>Update now</Button>
-                </Alert>,
+                </Alert>
+            ),
             <TriphubNavbar key='triphubNavbar' 
                 role={this.state.role}
                 path={this.state.path}
@@ -273,6 +315,9 @@ export class App extends Component<{
 
     private onOnline(): void {
         this.setState( { isOnline: true })
+        if (!this.state.backgroundSyncPermitted) {
+            this.onDoSync() // force a sync now as background sync is disabled
+        }
     }
 
     private onOffline(): void {

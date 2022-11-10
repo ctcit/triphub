@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom'
 import { TripsCache } from './Services/TripsCache'
 import { UserSettings } from './Services/UserSettings'
 import { MembersService } from './Services/MembersService'
+import { MdInfo } from 'react-icons/md'
 
 export const PriorityNavItem = (props: any) => {  
     const el: HTMLElement|null = document.getElementById('priority-nav-items') 
@@ -167,6 +168,13 @@ export class TriphubNavbar extends Component<{
                             <DropdownMenu color='primary'>
                                 <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 
                                     onClick={installApp}>Install app for standalone/offline use...</DropdownItem>
+                                <DropdownItem disabled={!this.props.isOnline}>
+                                    <a href="https://youtu.be/mF0jPHLjanI" target="_blank">
+                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                        Standalone/offline tutorial
+                                    </a>
+                                </DropdownItem>
+                                <DropdownItem divider></DropdownItem>
                                 <DropdownItem disabled={this.state.cacheTrips} onClick={startCachingTrips}>Start caching trips</DropdownItem>
                                 <DropdownItem disabled={!this.state.cacheTrips} onClick={stopCachingTrips}>Stop caching trips</DropdownItem>
                                 {this.props.cachedTrips.length > 0 && <DropdownItem divider></DropdownItem>}

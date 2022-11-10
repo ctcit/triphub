@@ -7,10 +7,10 @@ export class TripsCache {
     // GET config
     // GET maps
     // GET public_holidays
+    // GET trips
     public static getsCacheName = 'gets'
 
     // cache to store:
-    // GET trips
     // GET trips/{id}
     // GET trips/{id}/participants
     public static tripsCacheName = 'trips'
@@ -45,9 +45,9 @@ export class TripsCache {
     // - POST trips/{id}
     // - POST trips/{id}/participants/{pid}
     // require updating any of the following getRequests:
-    // - GET trips
-    // - GET trips/{id}
-    // - GET trips/{id}/participants
+    // - GET trips (in "gets" cache)
+    // - GET trips/{id} (in "trips" cache)
+    // - GET trips/{id}/participants (in "trips" cache)
     //
     // NB: Adding new trips or new participants NOT supported
     public static async updateTripsCache(updateRequest: Request): Promise<void> {
@@ -55,22 +55,34 @@ export class TripsCache {
         const updateParticipantRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants\/(\d*)$/
         const updateTripMatch = updateRequest.url.match(updateTripRegex)
         const updateParticipantMatch = updateRequest.url.match(updateParticipantRegex)
-        if (!updateTripMatch && !updateParticipantMatch) {
-            return
-        }
 
         const updateRequestJson = await updateRequest.json()
-
-        const getTripsRegex = /.*\/api\/api.php\/trips$/
-        const getTripRegex = /.*\/api\/api.php\/trips\/(\d*)$/
-        const getParticipantsRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants$/
         
-        const cache = await caches.open(this.tripsCacheName)
+        if (updateTripMatch) {
+            await this.updateTripsCache2(updateRequestJson, updateTripMatch, null, this.getsCacheName)
+        }
+        if (updateTripMatch || updateParticipantMatch) {
+            await this.updateTripsCache2(updateRequestJson, updateTripMatch, updateParticipantMatch, this.tripsCacheName)
+        }
+    }
+
+    private static async updateTripsCache2(
+        updateRequestJson: any,
+        updateTripMatch: RegExpMatchArray | null,
+        updateParticipantMatch: RegExpMatchArray | null,
+        cacheName: string
+        ): Promise<void> {
+
+        const getTripsRegex = updateTripMatch ? /.*\/api\/api.php\/trips$/ : null
+        const getTripRegex = updateTripMatch ? /.*\/api\/api.php\/trips\/(\d*)$/ : null
+        const getParticipantsRegex = updateParticipantMatch ? /.*\/api\/api.php\/trips\/(\d*)\/participants$/ : null
+        
+        const cache = await caches.open(cacheName)
         const getRequests = await cache.keys()
         getRequests.map(async (getRequest: Request) => {
-            const getTripsMatch = getRequest.url.match(getTripsRegex)
-            const getTripMatch = getRequest.url.match(getTripRegex)
-            const getParticipantsMatch = getRequest.url.match(getParticipantsRegex)
+            const getTripsMatch = getTripsRegex ? getRequest.url.match(getTripsRegex) : false
+            const getTripMatch = getTripRegex ? getRequest.url.match(getTripRegex) : false
+            const getParticipantsMatch = getParticipantsRegex ? getRequest.url.match(getParticipantsRegex) : false
 
             if (updateTripMatch && (getTripsMatch || getTripMatch)) {
                 const updateTripId = parseInt(updateTripMatch[1], 10);

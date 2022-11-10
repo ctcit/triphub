@@ -27,7 +27,6 @@ export class Trip extends Component<{
     id?: number,
     role: Role,
     isOnline: boolean,
-    offlineEditsPermitted: boolean,
     setPath(path: string): void,
     addNotification(text: string, colour: string): void,
     loadingStatus(state: any): JSX.Element
@@ -132,9 +131,7 @@ export class Trip extends Component<{
 
     public get canEditTrip() {
         const me = MembersService.Me
-        return (this.props.isOnline || this.props.offlineEditsPermitted) &&
-            (this.amAdmin ||
-                this.state.participants.some((p: IParticipant) => me.id === p.memberId && p.isLeader))
+        return this.amAdmin || this.state.participants.some((p: IParticipant) => me.id === p.memberId && p.isLeader)
     }
 
     public async onDeleteTrip() {

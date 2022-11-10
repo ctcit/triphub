@@ -8,7 +8,7 @@
 // You can also remove this file if you'd prefer not to use a
 // service worker, and the Workbox build step will be skipped.
 
-import { BackgroundSyncPlugin } from 'workbox-background-sync';
+import { BackgroundSyncPlugin, Queue } from 'workbox-background-sync';
 import { clientsClaim, WorkboxPlugin } from 'workbox-core';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL, cleanupOutdatedCaches, PrecacheEntry } from 'workbox-precaching';
@@ -30,20 +30,42 @@ const UpdateCacheTripsSetting = (): void => {
 }
 UpdateCacheTripsSetting()
 
+// get count of requests to sync
+const getSyncsCount = (source: Client | MessagePort | ServiceWorker | null): void => {
+  ((bgSyncPlugin as any)._queue as Queue).size().then((count: number) => {
+    source?.postMessage({ type: 'SYNCS_COUNT', count: count })
+  })
+}
 
+// force any pending requests to sync
+const doSyncs = (source: Client | MessagePort | ServiceWorker | null): void => {
+  ((bgSyncPlugin as any)._queue as Queue).replayRequests().then(() => {
+    getSyncsCount(source);
+  })
+}
+
+// listen for messages from client
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
+  if (event.data) {
+    if (event.data.type === 'SKIP_WAITING') {
     // This allows the web app to trigger skipWaiting via
     // registration.waiting.postMessage({type: 'SKIP_WAITING'})
     self.skipWaiting();
 
-  } else if (event.data && event.data.type === 'UPDATE_CACHE_TRIP_SETTING') {
-    UpdateCacheTripsSetting();
+    } else if (event.data.type === 'UPDATE_CACHE_TRIP_SETTING') {
+      UpdateCacheTripsSetting();
+
+    } else if (event.data.type === 'GET_SYNCS_COUNT') {
+      getSyncsCount(event.source);
+
+    } else if (event.data.type === 'DO_SYNCS') {
+      doSyncs(event.source);
+    }
   }
 });
 
 clientsClaim();
-// cleanupOutdatedCaches();
+cleanupOutdatedCaches();
 
 // -------------------------------------------
 // Precaching
@@ -166,9 +188,26 @@ registerRoute(
 // -------------------------------------------
 // API POST/PUT/DELETE background sync caching
 
+const notifySyncsCountToClient = () => {
+  self.clients.matchAll().then(clients => {
+    clients.forEach(client => getSyncsCount(client)) // let client know any change in pending syncs count
+  })
+}
+
 const bgSyncPlugin = new BackgroundSyncPlugin('syncs', {
-  maxRetentionTime: 7 * 24 * 60 // Retry for max of 7 days (specified in minutes)
+  maxRetentionTime: 7 * 24 * 60, // Retry for max of 7 days (specified in minutes)
+  onSync: (props: any) => {
+    const queue: Queue = props.queue
+    return queue.replayRequests().then(() => notifySyncsCountToClient())
+  }
 });
+
+class BackgroundSyncCountNotifierPlugin implements WorkboxPlugin {
+  fetchDidFail: WorkboxPlugin['fetchDidFail'] = async ({request}) => {
+    notifySyncsCountToClient();
+  };
+}
+const bgSyncCountNotifierPlugin = new BackgroundSyncCountNotifierPlugin();
 
 class TripsCacheUpdaterPlugin implements WorkboxPlugin {
   fetchDidFail: WorkboxPlugin['fetchDidFail'] = async ({request}) => {
@@ -181,12 +220,13 @@ class TripsCacheUpdaterPlugin implements WorkboxPlugin {
 }
 const tripsCacheUpdaterPlugin = new TripsCacheUpdaterPlugin();
 
+
 // POST trips/{id}
 // POST trips/{id}/participants/{pid}
 registerRoute(
   /.*\/api\/api.php\/trips\/\d*(\/participants\/\d*)?$/,
   new NetworkOnly({
-    plugins: [bgSyncPlugin, tripsCacheUpdaterPlugin]
+    plugins: [bgSyncPlugin, tripsCacheUpdaterPlugin, bgSyncCountNotifierPlugin]
   }),
   'POST'
 );

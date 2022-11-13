@@ -258,3 +258,11 @@ export interface INewsletterEvent {
     cost: string
     issueDate: string
 }
+
+export interface IDestination {
+    id: number,
+    to: string,
+    area: string,
+    from: string,
+    distance: number
+}

@@ -136,8 +136,9 @@ registerRoute(
 // GET config
 // GET maps
 // GET public_holidays
+// GET destinations
 // GET trips
-const getsMatchRegex = /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays)|(trips))$/
+const getsMatchRegex = /.*\/api\/api.php\/((members)|(config)|(maps)|(public_holidays)|(destinations)|(trips))$/
 const getsMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
   return cacheTrips && getsMatchRegex.test(url.toString());
 };

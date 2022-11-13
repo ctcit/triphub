@@ -406,29 +406,10 @@ export class InputWithSelectControl extends Component<{
 
     // the following Input control replaces ValueContainer in the ReactSelect control
     private newValueContainer;
-    private options: OptionsOrGroups<any, GroupBase<any>>
 
     constructor(props: any) {
         super(props);
         this.state = { oldValue: this.value, saving: false, showValidation: false }
-
-        // convert options to standardized format
-        this.options = 
-            (Array.isArray(this.props.options)) ?
-                this.props.options.map(option => 
-                    // string[]
-                    typeof option === 'string' ? { label: option, value: option} : 
-                    // number[]
-                    typeof option === 'number' ? { label: option.toString(), value: option} : 
-                    // OptionsOrGroups<any, GroupBase<any>>
-                    option
-                ) :
-            // { [id: string]: any[] }
-            (typeof this.props.options == 'object') ? 
-                Object.entries(this.props.options).map(([id, value]) => ({ label: id, value: value })) :
-            // Bad options
-            []
-            
 
         const onFocus = (): void => {
             this.setState({ oldValue: this.value, helpText: this.props.helpText });
@@ -504,6 +485,23 @@ export class InputWithSelectControl extends Component<{
             })
         }
 
+        // convert options to standardized format
+        const options = 
+            (Array.isArray(this.props.options)) ?
+                this.props.options.map(option => 
+                    // string[]
+                    typeof option === 'string' ? { label: option, value: option} : 
+                    // number[]
+                    typeof option === 'number' ? { label: option.toString(), value: option} : 
+                    // OptionsOrGroups<any, GroupBase<any>>
+                    option
+                ) :
+            // { [id: string]: any[] }
+            (typeof this.props.options == 'object') ? 
+                Object.entries(this.props.options).map(([id, value]) => ({ label: id, value: value })) :
+            // Bad options
+            []
+
         return (
             <ControlWrapper id={id + '_' + val} 
                 field={this.props.field} 
@@ -518,7 +516,7 @@ export class InputWithSelectControl extends Component<{
                     isDisabled={this.props.readOnly}
                     backspaceRemovesValue={false} // if true, disables backspace, DEL, and ESC keys
                     onChange={onChange}
-                    options={this.options}
+                    options={options}
                     isSearchable={true}
                     components={{ ValueContainer: this.newValueContainer }}
                 />

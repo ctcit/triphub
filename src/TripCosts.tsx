@@ -1,13 +1,13 @@
 import { ListGroup, ListGroupItem, Container, Row, Col, Form, Button, Navbar } from 'reactstrap';
 import { Component } from 'react';
-import { IParticipant, ITrip, ITripCostCalculations, IValidation } from './Interfaces';
+import { IDestination, IParticipant, ITrip, ITripCostCalculations, IValidation } from './Interfaces';
 import { BindMethods } from './Utilities';
 import { InputControl, InputWithSelectControl } from './Control';
 import { TripCostsParticipant } from './TripCostsParticipant';
 import { MembersService } from './Services/MembersService';
 import { TripsService } from './Services/TripsService';
 import { Accordian } from './Accordian';
-import { CommonDestinationsService } from './Services/CommonDestinationsService'
+import { DestinationsService } from './Services/DestinationsService'
 import { MdInfo } from 'react-icons/md';
 
 export class TripCosts extends Component<{
@@ -19,7 +19,8 @@ export class TripCosts extends Component<{
     setTripParticipants: (participants: IParticipant[], setEdited: boolean) => void
     forceValidation?: boolean
 }, {
-    showLegend: boolean
+    showLegend: boolean,
+    destinationsByGroups: {[area: string]: {[to: string]: {[from: string]: number}}}
 }> {
     public calculations: ITripCostCalculations = {
         distanceOneWay: 0,
@@ -39,10 +40,15 @@ export class TripCosts extends Component<{
     constructor(props: any) {
         super(props)
         this.state = {
-            showLegend: false
+            showLegend: false,
+            destinationsByGroups: {}
         }
 
         BindMethods(this)
+
+        DestinationsService.getByGroups().then(destinationsByGroups => {
+            this.setState({ destinationsByGroups })
+        })
     }
 
     public calculateCosts(): void {
@@ -261,7 +267,7 @@ export class TripCosts extends Component<{
         const actualVehicleProviders = currentParticipants.filter(p => this.calculations.participants[p.id].broughtVehicle);
         const others = currentParticipants.filter(p => !this.calculations.participants[p.id].broughtVehicle);
 
-        const groupedCommonDistances = Object.entries(CommonDestinationsService.getByGroups()).map(([area, toValues]) => {
+        const groupedCommonDistances = Object.entries(this.state.destinationsByGroups).map(([area, toValues]) => {
             return {
                 label: area,
                 options: Object.entries(toValues).flatMap(([to, fromValues]) => {

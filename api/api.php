@@ -7,6 +7,7 @@
     require('members.php');
     require('newsletters.php');
     require('routes.php');
+    require('destinations.php');
 
     // Extract data from parameters
     $method = $_SERVER['REQUEST_METHOD'];
@@ -373,7 +374,12 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // INPUT <a href='$basehref#notices'>notice</a>
             // OUTPUT <a href='$basehref#notices'>notice</a>
             // INPUTENTITY notices
-            return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
+            return GetNewsletters($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,0);
+
+        case "GET destinations":
+            // DESCRIPTION Gets all destinations
+            // OUTPUT Array of <a href='$basehref#destinations'>destinations</a>
+            return GetDestinations($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
 
         default:
             http_response_code(400);

@@ -39,6 +39,7 @@ class ConfigServer
 	const editTable           = "triphub.edit";
 	const mapsTable           = "triphub.maps";
 	const routesTable 		  = "triphub.routes";
+	const destinationsTable   = "triphub.destinations";
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
 	const apiKey              = "7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC";

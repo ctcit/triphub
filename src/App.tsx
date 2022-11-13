@@ -38,9 +38,7 @@ export class App extends Component<{
 
     private onDoAppUpdate = () => {}
     private beforeInstallPrompt: any = null;
-    private onCacheTripsChanged = async (): Promise<any> => {}
-    private onDoSync = async (): Promise<any> => {} 
-
+    
     constructor(props: any) {
         super(props)
 
@@ -104,11 +102,12 @@ export class App extends Component<{
         navigator.permissions.query({name: 'background-sync'} as unknown as PermissionDescriptor).then((permissionStatus) => {
             this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
             permissionStatus.addEventListener('change', (e) => {
-                this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
-                if (permissionStatus.state === 'granted') {
-                    this.onDoSync() // force a sync now; otherwise it might not happen until the user goes offline then back online again
-                }
-              });
+                this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'}, () => {
+                    if (permissionStatus.state === 'granted') {
+                        this.conditionallyDoSync() // force a sync now; otherwise it might not happen until the user goes offline then back online again
+                    }
+                })
+            });
         })
 
         // add handling for application update
@@ -149,37 +148,19 @@ export class App extends Component<{
             wb.register();
 
 
-            const activeServiceWorker = async (): Promise<ServiceWorker | null> => {
-                return navigator.serviceWorker.ready.then((registration) => registration.active)
-            }
-
-            // add handling to notify service worker when the cacheTrips setting has changed in the IndexedDB
-            this.onCacheTripsChanged = async () => {
-                return activeServiceWorker().then(sw => sw?.postMessage({ type: 'UPDATE_CACHE_TRIP_SETTING'}));
-            }
-
             navigator.serviceWorker.addEventListener("message", (event) => {
                 // event is a MessageEvent object
                 if (event.data) {
                     if (event.data.type === 'SYNCS_COUNT') {
                         const pendingSyncsCount = event.data.count ?? 0
-                        this.setState({pendingSyncsCount})
-                        if (pendingSyncsCount > 0) {
-                            this.onDoSync = async () => {
-                                console.log('doing forced sync')
-                                return activeServiceWorker().then(sw => sw?.postMessage({ type: 'DO_SYNCS'}))
-                            }
-                        }
+                        this.setState({pendingSyncsCount}, () => {
+                            this.conditionallyDoSync()
+                        })
                     }
                 }
             });
-            activeServiceWorker().then(sw => sw?.postMessage({ type: 'GET_SYNCS_COUNT'}));
-
-            if (!this.state.backgroundSyncPermitted) {
-                this.onDoSync() // force a sync now as background sync is disabled
-            }
+            this.getSyncsCount()
         }
-
     }
 
     public onPopState(event: PopStateEvent) {
@@ -239,7 +220,6 @@ export class App extends Component<{
         const loadingStatus = (state?: any) => this.loadingStatus(state)
         const onDoAppUpdate = () => this.onDoAppUpdate()
         const onCacheTripsChanged = () => this.onCacheTripsChanged()
-        const onDoSync = () => this.onDoSync()
 
         const common = {
             role: this.state.role,
@@ -313,11 +293,34 @@ export class App extends Component<{
         this.setState({ path, notifications: [] })
     }
 
-    private onOnline(): void {
-        this.setState( { isOnline: true })
-        if (!this.state.backgroundSyncPermitted) {
+    private async activeServiceWorker(): Promise<ServiceWorker | null> {
+        return navigator.serviceWorker.ready.then((registration) => registration.active)
+    }
+
+    private async onCacheTripsChanged(): Promise<any> {
+        // add handling to notify service worker when the cacheTrips setting has changed in the IndexedDB
+        return this.activeServiceWorker().then(sw => sw?.postMessage({ type: 'UPDATE_CACHE_TRIP_SETTING'}));
+    }    
+    
+    private async onDoSync() {
+        return this.activeServiceWorker().then(sw => sw?.postMessage({ type: 'DO_SYNCS'}))
+    }
+
+    private async conditionallyDoSync() {
+        console.log('backgroundSyncPermitted=' + this.state.backgroundSyncPermitted + ', isOnline=' + this.state.isOnline + ', pendingSyncsCount=' + this.state.pendingSyncsCount)
+        if (!this.state.backgroundSyncPermitted && this.state.isOnline && this.state.pendingSyncsCount > 0) {
+            console.log('doing app initiated sync')
             this.onDoSync() // force a sync now as background sync is disabled
         }
+    }
+
+    private async getSyncsCount() {
+        this.activeServiceWorker().then(sw => sw?.postMessage({ type: 'GET_SYNCS_COUNT'}));
+    }
+
+    private onOnline(): void {
+        this.setState( { isOnline: true })
+        this.conditionallyDoSync()
     }
 
     private onOffline(): void {

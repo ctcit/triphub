@@ -194,11 +194,24 @@ const notifySyncsCountToClient = () => {
   })
 }
 
+let doingBgSync = false
+let bgSyncRequested = false
 const bgSyncPlugin = new BackgroundSyncPlugin('syncs', {
   maxRetentionTime: 7 * 24 * 60, // Retry for max of 7 days (specified in minutes)
-  onSync: (props: any) => {
+  onSync: async (props: any): Promise<void> => {
     const queue: Queue = props.queue
-    return queue.replayRequests().then(() => notifySyncsCountToClient())
+    // ensure only one sync at a time
+    if (doingBgSync) {
+      bgSyncRequested = true
+      return
+    }
+    doingBgSync = true;
+    do {
+      bgSyncRequested = false;
+      await queue.replayRequests()
+    } while (bgSyncRequested)
+    doingBgSync = false;
+    return notifySyncsCountToClient()
   }
 });
 

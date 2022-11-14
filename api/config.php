@@ -40,6 +40,7 @@ class ConfigServer
 	const mapsTable           = "triphub.maps";
 	const routesTable 		  = "triphub.routes";
 	const destinationsTable   = "triphub.destinations";
+	const mileageRatesTable   = "triphub.mileage_rates";
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
 	const apiKey              = "7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC";

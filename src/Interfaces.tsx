@@ -266,3 +266,9 @@ export interface IDestination {
     from: string,
     distance: number
 }
+
+export interface IMileageRate {
+    id: number,
+    engineSizeCC: number,
+    ratePerOneWayKm: number
+}

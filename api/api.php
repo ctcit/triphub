@@ -8,6 +8,7 @@
     require('newsletters.php');
     require('routes.php');
     require('destinations.php');
+    require('mileage_rates.php');
 
     // Extract data from parameters
     $method = $_SERVER['REQUEST_METHOD'];
@@ -380,6 +381,11 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // DESCRIPTION Gets all destinations
             // OUTPUT Array of <a href='$basehref#destinations'>destinations</a>
             return GetDestinations($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
+
+        case "GET mileage_rates":
+            // DESCRIPTION Gets all mileage rates
+            // OUTPUT Array of <a href='$basehref#mileage_rates'>mileage_rates</a>
+            return GetMileageRates($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
 
         default:
             http_response_code(400);

@@ -1,6 +1,6 @@
 import { ListGroup, ListGroupItem, Container, Row, Col, Form, Button, Navbar } from 'reactstrap';
 import { Component } from 'react';
-import { IDestination, IParticipant, ITrip, ITripCostCalculations, IValidation } from './Interfaces';
+import { IDestination, IMileageRate, IParticipant, ITrip, ITripCostCalculations, IValidation } from './Interfaces';
 import { BindMethods } from './Utilities';
 import { InputControl, InputWithSelectControl } from './Control';
 import { TripCostsParticipant } from './TripCostsParticipant';
@@ -9,6 +9,7 @@ import { TripsService } from './Services/TripsService';
 import { Accordian } from './Accordian';
 import { DestinationsService } from './Services/DestinationsService'
 import { MdInfo } from 'react-icons/md';
+import { MileageRatesService } from './Services/MileageRatesService';
 
 export class TripCosts extends Component<{
     trip: ITrip
@@ -20,7 +21,8 @@ export class TripCosts extends Component<{
     forceValidation?: boolean
 }, {
     showLegend: boolean,
-    destinationsByGroups: {[area: string]: {[to: string]: {[from: string]: number}}}
+    destinationsByGroups: {[area: string]: {[to: string]: {[from: string]: number}}},
+    mileageRates: IMileageRate[]
 }> {
     public calculations: ITripCostCalculations = {
         distanceOneWay: 0,
@@ -41,13 +43,17 @@ export class TripCosts extends Component<{
         super(props)
         this.state = {
             showLegend: false,
-            destinationsByGroups: {}
+            destinationsByGroups: {},
+            mileageRates: []
         }
 
         BindMethods(this)
 
         DestinationsService.getByGroups().then(destinationsByGroups => {
             this.setState({ destinationsByGroups })
+        })
+        MileageRatesService.getMileageRates().then(mileageRates => {
+            this.setState({ mileageRates })
         })
     }
 
@@ -199,7 +205,9 @@ export class TripCosts extends Component<{
 
     public ratePerKm(engineSizeCC: number): number {
         // Note: These are the $/(ONE-WAY)km
-        return !engineSizeCC || engineSizeCC <= 1500 ? 0.82 : engineSizeCC <= 2000 ? 0.93 : 1.14;
+        engineSizeCC = engineSizeCC ?? 0
+        const rate = this.state.mileageRates.find(mileageRate => engineSizeCC <= mileageRate.engineSizeCC)?.ratePerOneWayKm ?? 0.0
+        return rate
     }
 
     public nonMemberFee(): number {

@@ -65,6 +65,7 @@ export class TriphubNavbar extends Component<{
         const newsletter = () => this.props.setPath('/newsletter')
         const newsocial = () => this.props.setPath('/newsocial')
         const routes = () => this.props.setPath('/routes')
+        const mileageRates = () => this.props.setPath('/mileageRates')
         const login = () => this.props.setPath('/login')
 
         const onAllTripsPage = this.props.path === '' || this.props.path === '/'
@@ -73,6 +74,7 @@ export class TriphubNavbar extends Component<{
         const onManageNewsletterPage = this.props.path === '/newsletter'
         const onNewSocialPage = this.props.path === '/newSocial'
         const onManageRoutesPage = this.props.path === '/routes'
+        const onManageMileageRatesPage = this.props.path === '/mileageRates'
 
         const setAdminPrivileges = () => this.props.setRole(Role.Admin)
         const setTripLeaderPrivileges = () => this.props.setRole(Role.TripLeader)
@@ -153,6 +155,16 @@ export class TriphubNavbar extends Component<{
                                 <span className='triphub-navbar'>
                                     <span className='fa fa-map'/> 
                                     &nbsp; Manage Routes
+                                </span>
+                            </NavLink>
+                        </NavItem>
+                    }
+                    {this.props.isOnline && this.props.role >= Role.Admin && !onManageMileageRatesPage &&
+                        <NavItem key='manageMileageRates'>
+                            <NavLink onClick={mileageRates}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-dollar-sign'/> 
+                                    &nbsp; Manage Mileage Rates
                                 </span>
                             </NavLink>
                         </NavItem>

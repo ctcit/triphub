@@ -102,6 +102,7 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
                             break;
                         case MYSQLI_TYPE_FLOAT:
                         case MYSQLI_TYPE_DOUBLE:
+                        case MYSQLI_TYPE_DECIMAL:
                             $row[$field->name] = doubleval($row[$field->name]);
                             break;
                         case MYSQLI_TYPE_TINY:

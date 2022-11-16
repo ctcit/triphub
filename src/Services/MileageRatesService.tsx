@@ -18,6 +18,11 @@ export class MileageRatesService {
         return this.getMileageRatesPromise;
     }
 
+    public static async patchMileageRate(id: number, data: any): Promise<IMileageRate> {
+        return apiCall('PATCH', BaseUrl + '/mileage_rates/' + id, data)
+            .then((mileageRates: IMileageRate[]) => mileageRates[0])
+    }
+
     private static getMileageRatesPromise: Promise<IMileageRate[]> | undefined = undefined
     private static mileageRates: IMileageRate[] = []
 

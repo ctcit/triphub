@@ -382,10 +382,37 @@ function ApiProcess($con,$basehref,$method,$route,$entity,$id,$subEntity,$subId,
             // OUTPUT Array of <a href='$basehref#destinations'>destinations</a>
             return GetDestinations($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
 
+        case "POST destinations":
+            // DESCRIPTION Creates a new destination
+            // INPUT A <a href='$basehref#destinations'>destinations</a>
+            // OUTPUT The new <a href='$basehref#destinations'>destination</a>
+            // INPUTENTITY destinations
+            return ApiPost($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$input,0);
+
+        case "POST destinations/{destinationId}":
+        case "PATCH destinations/{destinationId}":
+            // DESCRIPTION Updates destinations detail for a given destination
+            // INPUT <a href='$basehref#destinations'>destinations</a>
+            // OUTPUT <a href='$basehref#destinations'>destinations</a>
+            // INPUTENTITY destinations
+            return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,$id);
+
+        case "DELETE destinations/{destinationId}":
+            UserIdIfHasRoleOrDie($con,"Admin");
+            SqlExecOrDie($con,"DELETE FROM $table WHERE id = $id");
+            return Array("Destination $id deleted");    
+
         case "GET mileage_rates":
             // DESCRIPTION Gets all mileage rates
             // OUTPUT Array of <a href='$basehref#mileage_rates'>mileage_rates</a>
             return GetMileageRates($con, UserIdIfHasRoleOrDie($con,"NonPrivileged"));
+
+        case "PATCH mileage_rates/{mileage_rateId}":
+            // DESCRIPTION Updates mileage_rates detail for a given mileage_rate
+            // INPUT <a href='$basehref#mileage_rates'>mileage_rates</a>
+            // OUTPUT <a href='$basehref#mileage_rates'>mileage_rates</a>
+            // INPUTENTITY mileage_rates
+            return ApiPatch($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$id,$input,$id);
 
         default:
             http_response_code(400);
@@ -585,7 +612,10 @@ function IsReadOnly($table, $col) {
              $table === ConfigServer::newslettersTable || 
              $table === ConfigServer::noticesTable || 
              $table === ConfigServer::editTable ||
-             $table === ConfigServer::routesTable)
+             $table === ConfigServer::routesTable ||
+             $table === ConfigServer::mileage_ratesTable ||
+             $table === ConfigServer::destinationsTable
+             )
         return $col === 'id';
     else
         return true;

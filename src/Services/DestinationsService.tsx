@@ -32,6 +32,21 @@ export class DestinationsService {
         return grouped
     }
 
+    public static async postDestination(newDestination: IDestination): Promise<IDestination> {
+        return apiCall('POST', BaseUrl + '/destinations', newDestination)
+            .then((destinations: IDestination[]) => destinations[0])
+    }
+
+    public static async patchDestination(id: number, data: any): Promise<IDestination> {
+        return apiCall('PATCH', BaseUrl + '/destinations/' + id, data)
+            .then((destinations: IDestination[]) => destinations[0])
+    }
+
+    public static async deleteDestination(id: number): Promise<any> {
+        return apiCall('DELETE', BaseUrl + '/destinations/' + id)
+    }
+
+
     private static getDestinationsPromise: Promise<IDestination[]> | undefined = undefined
     private static destinations: IDestination[] = []
 

@@ -6,14 +6,14 @@
 
 function GetMileageRates($con, $userid)
 {
-	$mileageRatesTable = ConfigServer::mileageRatesTable;
+	$mileage_ratesTable = ConfigServer::mileage_ratesTable;
 
     return SqlResultArray($con, 
         "SELECT 
             mr.id,
             mr.engineSizeCC,
             mr.ratePerOneWayKm
-         FROM $mileageRatesTable mr
+         FROM $mileage_ratesTable mr
          ORDER BY mr.engineSizeCC");
 }
 

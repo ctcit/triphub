@@ -587,7 +587,9 @@ function SqlSetFromInput($con,$input,$table){
 
         $sqlcol = $cols[strtoupper($col)];
 
-        if (strpos($sqlcol["Type"],"text") !== false ||
+        if (is_null($val)) {
+            $set []= "`$col`= NULL";
+        } else if (strpos($sqlcol["Type"],"text") !== false ||
             strpos($sqlcol["Type"],"char") !== false ||
             strpos($sqlcol["Type"],"date") !== false ||
             strpos($sqlcol["Type"],"enum") !== false ) {

@@ -25,7 +25,7 @@ export class TriphubNavbar extends Component<{
     onCacheTripsChanged: () => Promise<any>,
     children?: React.ReactNode
     },{
-        priviledgesDropdownIsOpen: boolean,
+        manageDropdownIsOpen: boolean,
         workOfflineDropdownIsOpen: boolean,
         currentUserDropdownIsOpen: boolean,
         windowWidth: number,
@@ -36,7 +36,7 @@ export class TriphubNavbar extends Component<{
     constructor(props: any){
         super(props)
         this.state = {
-            priviledgesDropdownIsOpen: false,
+            manageDropdownIsOpen: false,
             workOfflineDropdownIsOpen: false,
             currentUserDropdownIsOpen: false,
             windowWidth: window.innerWidth,
@@ -81,6 +81,8 @@ export class TriphubNavbar extends Component<{
         const setMemberPrivileges = () => this.props.setRole(Role.Member)
         const setNonMemberPrivileges = () => this.props.setRole(Role.NonMember)
 
+        const toggleManageDropdown = () => this.setState({manageDropdownIsOpen: !this.state.manageDropdownIsOpen});
+
         const toggleWorkOfflineDropdown = () => this.setState({workOfflineDropdownIsOpen: !this.state.workOfflineDropdownIsOpen});
         const installApp = () => this.installApp()
         const startCachingTrips = () => this.startCachingTrips()
@@ -91,6 +93,7 @@ export class TriphubNavbar extends Component<{
         const loggedIn = this.props.role > Role.NonMember
         const currentUser = MembersService.Me
         const isWebmaster = this.props.role >= Role.Webmaster
+        const isAdmin = this.props.role >= Role.Admin
 
         return (
             <Navbar color='primary' expand={false}>
@@ -129,17 +132,7 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
-                    {this.props.isOnline && this.props.role >= Role.Admin && !onManageNewsletterPage &&
-                        <NavItem key='manageNewsletter'>
-                            <NavLink onClick={newsletter}>
-                                <span className='triphub-navbar'>
-                                    <span className='fa fa-newspaper'/> 
-                                    &nbsp; Manage Newsletter
-                                </span>
-                            </NavLink>
-                        </NavItem>
-                    }
-                    {this.props.isOnline && this.props.role >= Role.Admin && !onNewSocialPage &&
+                    {this.props.isOnline && isAdmin && !onNewSocialPage &&
                         <NavItem key='addASocialEvent'>
                             <NavLink onClick={newsocial} disabled={this.props.isLoading}>
                                 <span className='triphub-navbar'>
@@ -149,25 +142,24 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
-                    {this.props.isOnline && this.props.role >= Role.Admin && !onManageRoutesPage &&
-                        <NavItem key='manageRoutes'>
-                            <NavLink onClick={routes}>
-                                <span className='triphub-navbar'>
-                                    <span className='fa fa-map'/> 
-                                    &nbsp; Manage Routes
-                                </span>
-                            </NavLink>
-                        </NavItem>
-                    }
-                    {this.props.isOnline && this.props.role >= Role.Admin && !onManageMileageRatesPage &&
-                        <NavItem key='manageMileageRates'>
-                            <NavLink onClick={mileageRates}>
-                                <span className='triphub-navbar'>
-                                    <span className='fa fa-dollar-sign'/> 
-                                    &nbsp; Manage Mileage Rates
-                                </span>
-                            </NavLink>
-                        </NavItem>
+                    {this.props.isOnline && isAdmin &&
+                        <Dropdown key='manage' nav={true} isOpen={this.state.manageDropdownIsOpen} toggle={toggleManageDropdown}>
+                            <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
+                                <span className='fa fa-tasks'/>
+                                &nbsp; Manage
+                            </DropdownToggle>
+                            <DropdownMenu color='primary'>
+                            <DropdownItem disabled={onManageNewsletterPage} onClick={newsletter}>
+                                    <span><span className='fa fa-newspaper'/>&nbsp; Manage Newsletter</span>
+                                </DropdownItem> 
+                                <DropdownItem disabled={onManageRoutesPage} onClick={routes}>
+                                    <span><span className='fa fa-map'/>&nbsp; Manage Routes</span>
+                                </DropdownItem> 
+                                <DropdownItem disabled={onManageMileageRatesPage} onClick={mileageRates}>
+                                    <span><span className='fa fa-dollar-sign'/>&nbsp; Manage Mileage Rates</span>
+                                </DropdownItem> 
+                            </DropdownMenu>
+                        </Dropdown>
                     }
                 </Nav>
                 <Nav className="mr-auto" justified={false} fill={false}>

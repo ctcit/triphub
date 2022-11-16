@@ -1,15 +1,13 @@
-import * as React from 'react';
 import { Component } from 'react';
 import { Button, Container, Row, Col } from 'reactstrap';
 import { InputControl } from '../Control';
-import { BaseUrl, NewsletterGenerateUrl } from '..';
+import { NewsletterGenerateUrl } from '..';
 import { App } from '../App';
 import { INewsletter, IValidation } from '../Interfaces';
 import '../index.css';
 import { GetDateString, IsValidDateString, GetClosestWednesday, BindMethods } from '../Utilities';
 import { TripReportList } from './TripReportList';
 import { NoticeList } from './NoticeList';
-import { FullWidthLoading, Spinner } from '../Widgets';
 import { Accordian } from '../Accordian';
 import { NewsletterEventsList } from './NewsletterEvents';
 import { ConfigService } from 'src/Services/ConfigService';
@@ -108,8 +106,10 @@ export class Newsletter extends Component<{
 
         return [
             <Container className={ConfigService.containerClassName} key='newsletter' fluid={true}>
-                <h1 key="title">Manage Newsletter</h1>
-                {isNew && <div><p>No current newsletter, please create a new one..</p></div>}
+                <Container fluid={true} >
+                    <h1 key="title">Manage Newsletter</h1>
+                    {isNew && <div><p>No current newsletter, please create a new one..</p></div>}
+                </Container>
                 {<Container key='form' fluid={true} className='my-3'>
                     <Row>
                         <Col sm={5} md={4}>

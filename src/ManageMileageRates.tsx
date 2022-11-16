@@ -70,8 +70,10 @@ export class ManageMileageRates extends Component<{
 
         return [
             <Container className={ConfigService.containerClassName} key='managemileagerates' fluid={true}>
-                <h1 key="title">Manage Mileage Rates</h1>
-                {this.state.isLoading && <FullWidthLoading />}
+                <Container fluid={true} >
+                    <h1 key="title">Manage Mileage Rates</h1>
+                    {this.state.isLoading && <FullWidthLoading />}
+                </Container>
                 {!this.state.isLoading &&
                     <Container key='form' fluid={true}>
                         <Row>

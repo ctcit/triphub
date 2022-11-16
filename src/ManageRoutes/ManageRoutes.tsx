@@ -212,8 +212,10 @@ export class ManageRoutes extends Component<{
 
         return [
             <Container className={ConfigService.containerClassName} key='manageroutes' fluid={true}>
-                <h1 key="title">Manage Routes</h1>
-                {isLoading && <FullWidthLoading />}
+                <Container fluid={true} >
+                    <h1 key="title">Manage Routes</h1>
+                    {isLoading && <FullWidthLoading />}
+                </Container>
                 {!isLoading &&
                     <Container key='form' fluid={true}>
                         <Row>

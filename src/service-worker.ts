@@ -37,10 +37,26 @@ const getSyncsCount = (source: Client | MessagePort | ServiceWorker | null): voi
   })
 }
 
+let doingReplay = false
+let replayRequested = false
+const protectedReplayRequests = async (queue: Queue): Promise<void> => {
+    // ensure only one replay at a time
+    if (doingReplay) {
+      replayRequested = true
+      return
+    }
+    doingReplay = true;
+    do {
+      replayRequested = false;
+      await queue.replayRequests()
+    } while (replayRequested)
+    doingReplay = false;
+}
+
 // force any pending requests to sync
 const doSyncs = (source: Client | MessagePort | ServiceWorker | null): void => {
-  ((bgSyncPlugin as any)._queue as Queue).replayRequests().then(() => {
-    getSyncsCount(source);
+    protectedReplayRequests((bgSyncPlugin as any)._queue as Queue).then(() => {
+      getSyncsCount(source);
   })
 }
 
@@ -195,23 +211,10 @@ const notifySyncsCountToClient = () => {
   })
 }
 
-let doingBgSync = false
-let bgSyncRequested = false
 const bgSyncPlugin = new BackgroundSyncPlugin('syncs', {
   maxRetentionTime: 7 * 24 * 60, // Retry for max of 7 days (specified in minutes)
   onSync: async (props: any): Promise<void> => {
-    const queue: Queue = props.queue
-    // ensure only one sync at a time
-    if (doingBgSync) {
-      bgSyncRequested = true
-      return
-    }
-    doingBgSync = true;
-    do {
-      bgSyncRequested = false;
-      await queue.replayRequests()
-    } while (bgSyncRequested)
-    doingBgSync = false;
+    await protectedReplayRequests(props.queue)
     return notifySyncsCountToClient()
   }
 });

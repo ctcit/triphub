@@ -1,11 +1,8 @@
-import * as React from 'react';
 import { Component } from 'react';
 import { Container, Row, Col, ButtonGroup, FormText } from 'reactstrap';
-import { BaseUrl } from '..';
-import { App } from '../App';
 import { IArchivedRoute, IMap } from '../Interfaces';
 import '../index.css';
-import { FullWidthLoading, Pill, Spinner } from '../Widgets';
+import { FullWidthLoading } from '../Widgets';
 import { ManageRoutesMap, MapOperation } from './ManageRoutesMap';
 import { IManageRoutesTableState, ManageRoutesTable } from './ManageRoutesTable';
 import 'leaflet-gpx';
@@ -23,7 +20,6 @@ import { MapsService } from 'src/Services/MapsService';
 import { ConfigService } from 'src/Services/ConfigService';
 
 export class ManageRoutes extends Component<{
-    app: App,
     }, {
         isSaving: boolean,
         isLoading: boolean,
@@ -37,7 +33,6 @@ export class ManageRoutes extends Component<{
         tableState: IManageRoutesTableState
     }> {
 
-    public app : App;
     private nz50MapsBySheet: { [mapSheet: string] : IMap } = {};
     private bounds: L.LatLngBounds | undefined = undefined;
 
@@ -56,8 +51,7 @@ export class ManageRoutes extends Component<{
             mapOperation: MapOperation.None,
             tableState: { filters: [], sortBy: [], pageIndex: 0 }
         }
-        this.app = this.props.app
-        
+
         const nz50Maps: IMap[] = MapsService.Maps;
         this.nz50MapsBySheet = {};
         nz50Maps.forEach((nz50Map: IMap) => {

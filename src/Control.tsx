@@ -326,7 +326,6 @@ export class SelectControl extends Component<{
     onSave: (field: string, value: any) => Promise<any>
     onGetValidationMessage: (id: string) => string
     options: string[] | { [id: string]: string[] }
-    data: string
     noSaveBadge?: boolean
 }, {
     saving: boolean
@@ -367,7 +366,6 @@ export class SelectControl extends Component<{
                 saving={this.state.saving} >
                 <Input id={id} type="select" readOnly={this.props.readOnly}
                     value={this.props.onGet(this.props.field)}
-                    // data-data={this.props.data}
                     onChange={onChange} autoComplete='nope'>
                     {options}
                 </Input>

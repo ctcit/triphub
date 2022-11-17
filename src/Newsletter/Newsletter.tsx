@@ -2,7 +2,6 @@ import { Component } from 'react';
 import { Button, Container, Row, Col } from 'reactstrap';
 import { InputControl } from '../Control';
 import { NewsletterGenerateUrl } from '..';
-import { App } from '../App';
 import { INewsletter, IValidation } from '../Interfaces';
 import '../index.css';
 import { GetDateString, IsValidDateString, GetClosestWednesday, BindMethods } from '../Utilities';
@@ -15,7 +14,8 @@ import { NewslettersService } from 'src/Services/NewlettersService';
 
 
 export class Newsletter extends Component<{
-    app: App
+    setPath(path: string): void,
+    loadingStatus(state: any): JSX.Element
 }, {
     newsletter: INewsletter
     isLoadingNewsletter: boolean,
@@ -24,7 +24,6 @@ export class Newsletter extends Component<{
 }> {
 
     public newNewsletter: INewsletter = { id: 0 } as INewsletter
-    public app: App
 
     constructor(props: any) {
         super(props)
@@ -34,7 +33,6 @@ export class Newsletter extends Component<{
             isSaving: false,
             isNew: false
         }
-        this.app = this.props.app
         BindMethods(this)
     }
 
@@ -77,7 +75,7 @@ export class Newsletter extends Component<{
 
     public render() {
         if (this.state.isLoadingNewsletter) {
-            return this.props.app.loadingStatus({ ...this.props.app.state, ...this.state })
+            return this.props.loadingStatus({ ...this.state })
         }
 
         const validations: IValidation[] = this.validate();
@@ -99,7 +97,6 @@ export class Newsletter extends Component<{
         }
 
         const { newsletter, isNew } = this.state
-        const app = this.app
 
         const generate = () => this.generate();
         const onSaveNewNewsletter = () => this.onSaveNewNewsletter();
@@ -148,25 +145,25 @@ export class Newsletter extends Component<{
                             <div className="m-2">
                                 <p>The following trips will be listed in the newsletter:</p>
                             </div>
-                            <NewsletterEventsList app={this.app} />
+                            <NewsletterEventsList setPath={this.props.setPath} />
                             <div className="m-2">
                                 <p>The following trips will <b>not</b> be published - this could be because they are not
                                 open by the newsletter date or are not approved.</p>
                             </div>
-                            <NewsletterEventsList app={this.app} unpublished={true} />
+                            <NewsletterEventsList setPath={this.props.setPath} unpublished={true} />
                         </Accordian>
 
                         <Accordian id='tripReports' className='trip-group my-5' headerClassName='newsletter-group-header' expanded={true}
                             title='Trip Reports'>
                             <div className="m-2">
-                                <TripReportList app={app} newsletterId={newsletter.id} key={'tripReports' + newsletter.id} />
+                                <TripReportList newsletterId={newsletter.id} key={'tripReports' + newsletter.id} />
                             </div>
                         </Accordian>
 
                         <Accordian id='tripReports' className='trip-group my-5' headerClassName='newsletter-group-header' expanded={true}
                             title='Notices'>
                             <div className="m-2">
-                                <NoticeList app={app} />
+                                <NoticeList />
                             </div>
                         </Accordian>
                     </div>

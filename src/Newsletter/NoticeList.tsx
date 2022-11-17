@@ -1,5 +1,4 @@
 import { Component } from 'react';
-import { App } from '../App';
 import { INotice, IValidation } from '../Interfaces';
 import '../index.css';
 import { SwitchControl, InputControl, TextAreaInputControl, SelectControl } from '../Control';
@@ -22,18 +21,14 @@ const Sections: Section[] = [
 ]
 
 class NoticeDetail extends Component<{
-    app: App
     notice: INotice
 }, {
     isLoading: boolean
 }> { 
 
-    public app: App;
-
     constructor(props: any) {
         super(props)
         this.state = { isLoading: false }
-        this.app = this.props.app
     }
 
     public render() {
@@ -92,7 +87,6 @@ class NoticeDetail extends Component<{
 }
 
 export class NoticeList extends Component<{
-    app: App,
 }, {
     notices: INotice[],
     expiredNotices: INotice[],
@@ -100,7 +94,6 @@ export class NoticeList extends Component<{
     showAllExpired: boolean,
 }> {
 
-    public app: App;
     private readonly expiredLimit : number = 10;
 
     constructor(props: any) {
@@ -111,7 +104,6 @@ export class NoticeList extends Component<{
             showDetailFor: null,
             showAllExpired: false,
         }
-        this.app = this.props.app
         BindMethods(this)
     }
 
@@ -235,7 +227,7 @@ export class NoticeList extends Component<{
                 }}>
                 {(this.state.showDetailFor != null) &&
 
-                    <NoticeDetail notice={this.state.showDetailFor} app={this.app} />
+                    <NoticeDetail notice={this.state.showDetailFor} />
                 }
                 <Button onClick={onSaveDetail} color="primary" className="mr-1">Save</Button>
                 <Button onClick={onCancelDetail} className="mr-1">Cancel</Button>

@@ -1,6 +1,5 @@
 
 import { Component } from 'react';
-import { App } from '../App';
 import { ITripReport, INewsletterTripReport } from '../Interfaces';
 import '../index.css';
 import { CapitaliseFirstLetter } from '../Utilities';
@@ -18,14 +17,11 @@ interface ITripReportBinding
 }
 
 export class TripReportList extends Component<{
-    app: App,
     newsletterId: number
     }, {
     tripreports: ITripReportBinding[]
     isLoading: boolean
     }> {
-
-    public app : App;
 
     constructor(props:any){
         super(props)
@@ -33,7 +29,6 @@ export class TripReportList extends Component<{
             tripreports: [],
             isLoading: true
         }
-        this.app = this.props.app
     }
 
 

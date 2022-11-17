@@ -1,4 +1,3 @@
-import { App } from 'src/App';
 import { INewsletterEvent } from 'src/Interfaces';
 import { useState, useEffect } from 'react';
 import { FullWidthLoading } from 'src/Widgets';
@@ -6,7 +5,7 @@ import { NewslettersService } from 'src/Services/NewlettersService';
 import { Table } from 'reactstrap';
 
 export interface INewsletterEventProps {
-    app:App,
+    setPath(path: string): void,
     event:INewsletterEvent
 }
 
@@ -14,7 +13,7 @@ const NewsletterEvent = (props:INewsletterEventProps) : JSX.Element => {
     const eventType = (!props.event.social) ? "Trip" : "Social"
 
     const onClick = () : void => {
-        props.app.setPath('/trips/' + props.event.trip_id)
+        props.setPath('/trips/' + props.event.trip_id)
     }
 
     return <tr onClick={onClick}>
@@ -27,11 +26,11 @@ const NewsletterEvent = (props:INewsletterEventProps) : JSX.Element => {
 }
 
 export interface INewsletterEventsListProps {
-    app:App,
+    setPath(path: string): void,
     unpublished?:boolean
 }
 
-export const NewsletterEventsList = ({app, unpublished}:INewsletterEventsListProps): JSX.Element  => {
+export const NewsletterEventsList = ({setPath, unpublished}:INewsletterEventsListProps): JSX.Element  => {
     const [events, updateEvents] = useState<INewsletterEvent[]>([])
     const [isLoading, updateIsLoading] = useState<boolean>(true)
 
@@ -55,7 +54,7 @@ export const NewsletterEventsList = ({app, unpublished}:INewsletterEventsListPro
                     </tr>
                 </thead>
                 <tbody>
-                    {(events !== null) && events.map((event, index) => <NewsletterEvent event={event} app={app} key={'event'+index}/>)}
+                    {(events !== null) && events.map((event, index) => <NewsletterEvent setPath={setPath} event={event} key={'event'+index}/>)}
                 </tbody>
             </Table>
 }

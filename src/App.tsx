@@ -236,7 +236,7 @@ export class App extends Component<{
             calendar: () => <Calendar key='calendar' {...common} />,
             newtrip: () => <Trip key='newTrip' isNew={true} isNewSocial={false} {...common} />,
             newsocial: () => <Trip key='newSocial' isNew={true} isNewSocial={true} {...common} />,
-            newsletter: () => <Newsletter key='newsletter' app={this} />,
+            newsletter: () => <Newsletter key='newsletter' {...common} />,
             routes: () => <ManageRoutes key='routes' />,
             mileageRates: () => <ManageMileageRates key='mileageRates' {...common}/>,
             destinations: () => <ManageDestinations key='destinations' {...common}/>,

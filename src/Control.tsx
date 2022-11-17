@@ -445,6 +445,11 @@ export class InputWithSelectControl extends Component<{
                 onChange={onChange} 
                 onBlur={onBlur}
                 autoComplete='nope'
+                onKeyDown={e => {   // allow space in value and prevent from opening menu
+                    if (e.keyCode === 32) {
+                        e.stopPropagation();
+                    }
+                }}
             />
         )
     }

@@ -43,6 +43,11 @@ export class TripCostsParticipant extends Component<{
             return (validations.find(v => v.field === field && !v.ok) || {} as any).message
         }
 
+        const onSaveIsFixedCostVehicle = (field: string, value: any): Promise<IParticipant> => {
+            const vehicleCost = value ? participant.vehicleCost : null
+            return onSave('vehicleCost', vehicleCost).then(() => onSave(field, value))
+        }
+
         const common = {
             id: `${participant.id}`,
             readOnly: !canEdit,
@@ -154,7 +159,9 @@ export class TripCostsParticipant extends Component<{
                                 participantCosts.broughtVehicle &&
                                 <Row>
                                     <Col sm={2} md={3}>
-                                        <SwitchControl field='isFixedCostVehicle' label='Fixed cost vehicle (e.g. company)' {...common} />
+                                        <SwitchControl field='isFixedCostVehicle' label='Fixed cost vehicle (e.g. company)' 
+                                            {...common} onSave={onSaveIsFixedCostVehicle}
+                                        />
                                     </Col>
                                 </Row>
                             }

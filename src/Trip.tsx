@@ -466,7 +466,7 @@ export class Trip extends Component<{
                         className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-dollar-sign fa-fw' />Cost Calculator</b></span>}
                         expanded={false}>
-                        <TripCosts 
+                        <TripCosts key={'TripCosts' + this.state.trip.id} 
                             trip={this.state.trip} 
                             participants={this.state.participants} 
                             currentParticipants={this.participantsInfo.current} 

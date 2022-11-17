@@ -85,7 +85,7 @@ export class InputControl extends Component<{
 
     private sanitizeValue(value: any) {
         return value || (this.props.type === 'number' ? 
-            value === null ? '' : value : // input control cannot take null value, use ''
+            value === null || value === undefined ? '' : value : // input control cannot take null value, use ''
             '')
     }
 
@@ -460,7 +460,7 @@ export class InputWithSelectControl extends Component<{
 
     private sanitizeValue(value: any) {
         return value || (this.props.type === 'number' ? 
-            value === null ? '' : value : // input control cannot take null value, use ''
+            value === null || value === undefined ? '' : value : // input control cannot take null value, use ''
             '')
     }
 

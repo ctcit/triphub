@@ -469,6 +469,12 @@ export class InputWithSelectControl extends Component<{
             }
         }
 
+        const onGetValidationMessage = (this.state.showValidation || this.props.forceValidation) ? this.props.onGetValidationMessage : undefined;
+        let className = "form-control textarea triphub-input"
+        if (onGetValidationMessage && onGetValidationMessage(this.props.field)) {
+            className += " is-invalid"
+        }
+
         const val = `${this.props.onGet(this.props.field)}`.replace(/\W/g, v => `${v.charCodeAt(0)}`)
         const id = this.props.id + '_' + this.props.field
 
@@ -508,7 +514,7 @@ export class InputWithSelectControl extends Component<{
                 label={this.props.label} labelFor={id} 
                 hidden={this.props.hidden}
                 isLoading={this.props.isLoading} 
-                onGetValidationMessage={this.props.onGetValidationMessage}
+                onGetValidationMessage={onGetValidationMessage}
                 saving={this.state.saving}
                 helpText={this.state.helpText}>
                 <Select id={id} 

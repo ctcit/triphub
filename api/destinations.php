@@ -11,9 +11,9 @@ function GetDestinations($con, $userid)
     return SqlResultArray($con, 
         "SELECT 
             d.id,
-            d.toLocation AS 'to', 
+            d.toLocation, 
             d.area,
-            d.fromLocation AS 'from',
+            d.fromLocation,
             d.distance
          FROM $destinationsTable d 
          ORDER BY d.distance");

@@ -267,8 +267,6 @@ export class TripCosts extends Component<{
         const common = {
             id: 'trip',
             readOnly: trip.id !== -1 && !this.props.canEditTrip,
-            owner: this,
-            forceValidation: this.props.forceValidation,
              onGet, onSet, onSave, onGetValidationMessage
         }
 

@@ -66,6 +66,7 @@ export class TriphubNavbar extends Component<{
         const newsocial = () => this.props.setPath('/newsocial')
         const routes = () => this.props.setPath('/routes')
         const mileageRates = () => this.props.setPath('/mileageRates')
+        const destinations = () => this.props.setPath('/destinations')
         const login = () => this.props.setPath('/login')
 
         const onAllTripsPage = this.props.path === '' || this.props.path === '/'
@@ -75,6 +76,7 @@ export class TriphubNavbar extends Component<{
         const onNewSocialPage = this.props.path === '/newSocial'
         const onManageRoutesPage = this.props.path === '/routes'
         const onManageMileageRatesPage = this.props.path === '/mileageRates'
+        const onManageDestinationsPage = this.props.path === '/destinations'
 
         const setAdminPrivileges = () => this.props.setRole(Role.Admin)
         const setTripLeaderPrivileges = () => this.props.setRole(Role.TripLeader)
@@ -157,6 +159,9 @@ export class TriphubNavbar extends Component<{
                                 </DropdownItem> 
                                 <DropdownItem disabled={onManageMileageRatesPage} onClick={mileageRates}>
                                     <span><span className='fa fa-dollar-sign'/>&nbsp; Manage Mileage Rates</span>
+                                </DropdownItem> 
+                                <DropdownItem disabled={onManageDestinationsPage} onClick={destinations}>
+                                    <span><span className='fa fa-flag-checkered'/>&nbsp; Manage Destinations</span>
                                 </DropdownItem> 
                             </DropdownMenu>
                         </Dropdown>

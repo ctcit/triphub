@@ -1,6 +1,6 @@
 import { BaseUrl } from "src";
-import { IDestination } from "src/Interfaces";
-import { apiCall } from "src/Utilities";
+import { IDestination, IValidation } from "src/Interfaces";
+import { apiCall, Mandatory } from "src/Utilities";
 
 export class DestinationsService {
 
@@ -24,10 +24,10 @@ export class DestinationsService {
             if (!grouped[destination.area]) {
                 grouped[destination.area] = {}
             }
-            if (!grouped[destination.area][destination.to]) {
-                grouped[destination.area][destination.to] = {}
+            if (!grouped[destination.area][destination.toLocation]) {
+                grouped[destination.area][destination.toLocation] = {}
             }
-            grouped[destination.area][destination.to][destination.from] = destination.distance
+            grouped[destination.area][destination.toLocation][destination.fromLocation] = destination.distance
         })
         return grouped
     }
@@ -46,6 +46,12 @@ export class DestinationsService {
         return apiCall('DELETE', BaseUrl + '/destinations/' + id)
     }
 
+    public static validateDestination(destination: IDestination): IValidation[] {
+        return [
+            ...Mandatory(destination, ['toLocation', 'fromLocation', 'area']),
+            { field: 'distance', ok: destination.distance > 0, message: 'Distance should be greater than zero' }
+        ]
+    }
 
     private static getDestinationsPromise: Promise<IDestination[]> | undefined = undefined
     private static destinations: IDestination[] = []

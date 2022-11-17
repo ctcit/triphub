@@ -11,6 +11,7 @@ import { Spinner, Done } from './Widgets';
 import { INotification, NotificationArea } from './NotificationArea';
 import { ManageRoutes } from './ManageRoutes/ManageRoutes';
 import { ManageMileageRates } from './ManageMileageRates';
+import { ManageDestinations } from './ManageDestinations';
 import { ConfigService } from './Services/ConfigService';
 import { MapsService } from './Services/MapsService';
 import { HolidaysService } from './Services/HolidaysService';
@@ -235,9 +236,10 @@ export class App extends Component<{
             calendar: () => <Calendar key='calendar' {...common} />,
             newtrip: () => <Trip key='newTrip' isNew={true} isNewSocial={false} {...common} />,
             newsocial: () => <Trip key='newSocial' isNew={true} isNewSocial={true} {...common} />,
+            newsletter: () => <Newsletter key='newsletter' app={this} />,
             routes: () => <ManageRoutes key='routes' />,
             mileageRates: () => <ManageMileageRates key='mileageRates' {...common}/>,
-            newsletter: () => <Newsletter key='newsletter' app={this} />,
+            destinations: () => <ManageDestinations key='destinations' {...common}/>,
             trips: () => <Trip key='trips' isNew={false} isNewSocial={true} id={id} {...common} />,
             login: () => <Login key='login' {...common} />,
             default: () => <TripsList key='default' {...common}/>,

@@ -261,9 +261,9 @@ export interface INewsletterEvent {
 
 export interface IDestination {
     id: number,
-    to: string,
+    toLocation: string,
     area: string,
-    from: string,
+    fromLocation: string,
     distance: number
 }
 

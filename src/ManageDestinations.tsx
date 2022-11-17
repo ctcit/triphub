@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import { ButtonGroup, Col, Container, Row } from 'reactstrap'
+import { ButtonGroup, Col, Container, FormText, Row } from 'reactstrap'
 import { IDestination, IValidation, Role } from './Interfaces'
 import './index.css'
 import { BindMethods } from './Utilities'
@@ -188,9 +188,6 @@ export class ManageDestinations extends Component<{
                     <h1 key="title">Manage Destinations</h1>
                     {this.state.isLoading && <FullWidthLoading />}
                 </Container>
-                <div className="alert alert-info" role="alert" hidden={destinationWarnings.length === 0} key='validation'>
-                    Destination will automatically save once all required fields are entered
-                </div>
                 {!this.state.isLoading &&
                     <Container key='form' fluid={true}>
                         <Row>
@@ -237,6 +234,13 @@ export class ManageDestinations extends Component<{
                         </Row>
                         {this.state.selectedDestination &&
                             <Container fluid={true}>
+                                <Row>
+                                    <Col sm={9} md={9}>
+                                        <div className="alert alert-info" role="alert" hidden={destinationWarnings.length === 0} key='validation'>
+                                            Destination will save automatically once all the following fields are entered correctly
+                                        </div>
+                                    </Col>
+                                </Row>
                                 <Row>
                                     <Col sm={9} md={9}>
                                         <InputControl 

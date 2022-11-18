@@ -109,6 +109,10 @@ export class TripParticipant extends Component<{
         const onSaveNewTramper = (_: string, value: any): Promise<IParticipant> => {
             return (MembersService.getMemberByName(value) ? onSaveName : onSave)('name', value)
         }
+        const onSaveIsVehicleProvider = (field: string, value: any): Promise<IParticipant> => {
+            return onSave(field, value).then(() => onSave('broughtVehicle', value))
+        }
+
         const onGetValidationMessage = (field: string): any => {
             return (validations.find(v => v.field === field && !v.ok) || {} as any).message
         }
@@ -243,7 +247,7 @@ export class TripParticipant extends Component<{
                                     <SwitchControl field='isPlbProvider' label='Bringing PLB' {...common} />
                                 </Col>
                                 <Col sm={3}>
-                                    <SwitchControl field='isVehicleProvider' label='Bringing Car' {...common} />
+                                    <SwitchControl field='isVehicleProvider' label='Bringing Car' {...common} onSave={onSaveIsVehicleProvider} />
                                 </Col>
                             </Row>
 

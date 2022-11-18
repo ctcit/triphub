@@ -142,10 +142,11 @@ class HistoryDay extends Component<{
         const id = 'historyday' + this.props.items[0].id
         const members = new Set(this.props.items
             .filter(i => i.userId).map(i => this.props.app.getMemberById(i.userId).name))
+        const onDetail = () => this.onDetail();
 
         return <Accordian key={id} id={id} headerClassName='history-day'
             title={`${stamp} ${[...members].join(', ')}`}
-            onDemand={this.onDetail} />
+            onDemand={onDetail} />
     }
 }
 

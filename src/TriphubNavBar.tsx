@@ -87,7 +87,7 @@ export class TriphubNavbar extends Component<{
         }
 
         if (this.props.app.state.path !== '/pasttrips' &&
-            this.props.app.state.role >= Role.Webmaster) {
+            this.props.app.state.role >= Role.Member) {
             navItems.push(
                 <NavItem key='pasttrips'>
                     <NavLink onClick={pasttrips} disabled={this.props.app.isLoading}>

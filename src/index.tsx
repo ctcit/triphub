@@ -19,7 +19,7 @@ import './index.css';
 //
 (window as any).RunConfig = {
     ApiKey: 'C5HFNPH2H887JJ4B9H22UMC42DMHVL4VVUCD84WGKEWMQG2RUZ',
-    BaseUrl: 'https://ctc.org.nz/triphub-alastair/api/api.php',
+    BaseUrl: 'https://ctc.org.nz/triphub/api/api.php',
     DbApiURL: 'https://ctc.org.nz/db/index.php/rest'
 }
 

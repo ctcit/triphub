@@ -143,6 +143,7 @@ export interface IConfig {
     calendarStartOfWeek: number
     prerequisiteEquipment: string
     prerequisiteSkills: string
+    loginUrl: string
 }
 
 export interface IMap {

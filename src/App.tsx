@@ -19,14 +19,16 @@ import { MembersService } from './Services/MembersService';
 import { Alert, Button, Container } from 'reactstrap';
 import { Workbox } from 'workbox-window';
 import { Login } from './Login';
+import { SilentLogin } from './SilentLogin';
 
 export class App extends Component<{
 }, {
     path: string
     isLoadingConfig: boolean
-    isLoadingMaps: boolean
     isLoadingMembers: boolean
+    isLoadingLoginStatus: boolean
     isLoadingHolidays: boolean
+    isLoadingMaps: boolean
     role: Role
     statusId?: any
     notifications: INotification[]
@@ -48,15 +50,18 @@ export class App extends Component<{
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches
         console.log(isStandalone ? 'app is standalone' : 'app is not standalone')
 
+        const isOnline = navigator.onLine
+
         this.state = {
             path: window.top?.location.hash.replace('#', '') ?? '',
             isLoadingConfig: true,
-            isLoadingMaps: true,
             isLoadingMembers: true,
+            isLoadingLoginStatus: isStandalone && isOnline,
             isLoadingHolidays: true,
+            isLoadingMaps: true,
             role: Role.NonMember,
             notifications: [],
-            isOnline: navigator.onLine,
+            isOnline: isOnline,
             isStandalone: isStandalone,
             backgroundSyncPermitted: false,
             appUpdateAvailable: false,
@@ -187,6 +192,10 @@ export class App extends Component<{
             .then(() => this.setState({ isLoadingHolidays: false }));
     }
 
+    private onLoginStatusLoaded() : void {
+        this.setState({role: MembersService.Me.role, isLoadingLoginStatus: false})
+    }
+
     public addNotification(text: string, colour: string) {
         const notifications: INotification[] = [...this.state.notifications, { text, colour }]
         this.setState({ notifications })
@@ -205,7 +214,8 @@ export class App extends Component<{
         return <Container key='loadingStatus' className={ConfigService.containerClassName + "triphub-loading-container"}>
             <div key='loadingAlert' className="p-5 mb-4 bg-light rounded-3">
                 {this.loadingFields(state).map(f =>
-                    <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substring(2))}</div>)}
+                    <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substring(2))}</div>
+                )}
             </div>
         </Container>
     }
@@ -222,6 +232,7 @@ export class App extends Component<{
         const loadingStatus = (state?: any) => this.loadingStatus(state)
         const onDoAppUpdate = () => this.onDoAppUpdate()
         const onCacheTripsChanged = () => this.onCacheTripsChanged()
+        const onLoginStatusLoaded = () => this.onLoginStatusLoaded()
 
         const common = {
             role: this.state.role,
@@ -273,6 +284,7 @@ export class App extends Component<{
                     <Button onClick={onDoAppUpdate}>Update now</Button>
                 </Alert>
             ),
+
             <TriphubNavbar key='triphubNavbar' 
                 role={this.state.role}
                 path={this.state.path}
@@ -288,7 +300,9 @@ export class App extends Component<{
             <NotificationArea notifications={this.state.notifications} key='notificationArea'
                 containerClassName={ConfigService.containerClassName} 
             />,
-            (renderings[rendering] || renderings.default)()
+            (renderings[rendering] || renderings.default)(),
+            (this.state.isLoadingLoginStatus && <SilentLogin onLoaded={onLoginStatusLoaded}/>
+            )
         ]
     }
 

@@ -28,16 +28,13 @@ export class ConfigService {
             calendarStartOfWeek: 1,
             prerequisiteEquipment: 'Ice Axe,Crampons,Helmet,Rope',
             prerequisiteSkills: 'Snow Skills,River Crossing',
+            loginUrl: 'https://ctc.org.nz/index.php/log-in'
         }
     }
 
     public static get Config(): IConfig {
         return this.config;
     }
-
-    // public static get inIFrame() {
-    //     return false // true if to style/behave for use in iFrame; false to style/behave as standalone app
-    // }
 
     public static get containerClassName() {
         return "outer-container " // ConfigService.inIFrame ? "outer-container " : ""

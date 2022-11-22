@@ -154,7 +154,7 @@ export class PastTrips extends Component<{
                 lengths: this.length.isEdited,
                 costs: this.cost.isEdited,
                 participants: this.participants.isEdited,
-                advanced: !!this.numberOfAdvancedFields,
+                advanced: !!this.numberOfUsedAdvancedFields,
                 trips: false,
             }
         }
@@ -240,12 +240,12 @@ export class PastTrips extends Component<{
         ]
     }
 
-    get numberOfAdvancedFields() {
+    get numberOfUsedAdvancedFields() {
         const { defaults, state } = this
-        const exclude = new Set<PastTripsFields>(['keywords', 'fromDate', 'toDate', 'me', 'highlights', 'version', 'show'])
-
-        return Object.keys(defaults).map(k => k as PastTripsFields).filter((k: PastTripsFields) =>
-            !exclude.has(k) && JSON.stringify(defaults[k]) !== JSON.stringify(state[k])).length
+        const exclude = new Set<PastTripsFields>(['keywords', 'fromDate', 'toDate', 'me', 'highlights', 'version', 'show', 'trips'])
+        const used = Object.keys(defaults).map(k => k as PastTripsFields).filter((k: PastTripsFields) =>
+            !exclude.has(k) && JSON.stringify(defaults[k]) !== JSON.stringify(state[k]))
+        return used.length
     }
 
     public get isAdmin() { return MembersService.amAdmin(this.props.role) }
@@ -353,7 +353,7 @@ export class PastTrips extends Component<{
     public render() {
         const { version, querying, highlights, trips, show } = this.state
         const members = MembersService.Members
-        const { onGet, onSet, onSave, onGetValidationMessage, numberOfAdvancedFields } = this
+        const { onGet, onSet, onSave, onGetValidationMessage } = this
         const nameOptions = {
             'Members': members.filter(m => m.isMember).map(m => m.name),
             'Non-Members': members.filter(m => !m.isMember).map(m => m.name),
@@ -366,7 +366,8 @@ export class PastTrips extends Component<{
             forceValidation: false,
             onGet, onSet, onSave, onGetValidationMessage,
         }
-        const advancedTitle = 'Advanced' + (numberOfAdvancedFields ? ` (querying ${numberOfAdvancedFields} fields)` : ``)
+        const usedFields = this.numberOfUsedAdvancedFields
+        const advancedTitle = 'Advanced' + (usedFields ? ` (querying ${usedFields} field${usedFields > 1 ? 's' : ''})` : ``)
         const gradeRender = (option: string) =>
             <span><span className={`gradeIcon fas fa-${GradeIcon({ grade: option })}`} /> {option}</span>
 

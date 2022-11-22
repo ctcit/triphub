@@ -108,7 +108,7 @@ export class MapSheetControl extends Component<{
                                     <span>&nbsp;
                                         <Button onClick={onEdit}>
                                             <span className='fa fa-map' />
-                                            Pick map sheet
+                                            Select map sheets
                                         </Button>
                                     </span>
                                 }
@@ -118,7 +118,7 @@ export class MapSheetControl extends Component<{
                     </Col>
                     <Modal isOpen={this.state.editing} toggle={onSave}
                         size="lg" style={{ maxWidth: '1600px', width: '95%', margin: '10px auto' }} centered={true}>
-                        <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
+                        <ModalHeader toggle={onSave}>Select Map Sheets</ModalHeader>
                         <ModalBody>
                             <MapSheetPicker
                                 mapSheets={this.mapSheets}

@@ -117,6 +117,12 @@ export class App extends Component<{
                     }
                 })
             });
+        }).catch((ex: any) => {
+            if (ex instanceof TypeError) {
+                console.log('Could not get backround-sync permission - probably not supported by browser')
+            } else {
+                throw ex
+            }
         })
 
         // add handling for application update

@@ -366,7 +366,7 @@ export class PastTrips extends Component<{
             forceValidation: false,
             onGet, onSet, onSave, onGetValidationMessage,
         }
-        const advancedTitle = 'Advanced' + (numberOfAdvancedFields ? ` (${numberOfAdvancedFields})` : ``)
+        const advancedTitle = 'Advanced' + (numberOfAdvancedFields ? ` (querying ${numberOfAdvancedFields} fields)` : ``)
         const gradeRender = (option: string) =>
             <span><span className={`gradeIcon fas fa-${GradeIcon({ grade: option })}`} /> {option}</span>
 

@@ -210,6 +210,7 @@ export class TripMap extends MapCommon<{
                                             minWidth: '300px'
                                         })}}
                                 />
+                                <div>&nbsp;</div>
                                 { !this.props.readOnly &&
                                     <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
                                         onClick={onSelectRouteMaps} disabled={!this.routes || this.routes.length === 0 }  

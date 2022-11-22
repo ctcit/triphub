@@ -1,7 +1,6 @@
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
 import { TabContent, Nav, NavItem, NavLink, FormGroup } from 'reactstrap';
-import { IArchivedRoute, IMap } from '../Interfaces';
 import classnames from 'classnames';
 import ReactResizeDetector from 'react-resize-detector';
 import { RoutesArchiveTab } from '../MapEditor/RoutesArchiveTab';
@@ -10,10 +9,8 @@ import { ManageRoutesDetailsTab } from './ManageRoutesDetailsTab';
 import { Component } from 'react';
 import { MapComponent } from 'src/MapEditor/MapComponent';
 import { RouteDetails } from './ManageRoutesMap';
-import { App } from 'src/App';
 
 export class ManageRoutesMapEditor extends Component<{
-    app: App
     routeDetails: RouteDetails,
     routesAsLatLngs: Array<Array<[number, number]>>,
     onDetailsChanged: (route: RouteDetails) => Promise<void>,
@@ -132,7 +129,6 @@ export class ManageRoutesMapEditor extends Component<{
                     <EditRoutesTab 
                         isActiveTab={this.state.activeTab === "EditRoutes"}
                         mapComponent={this.state.mapComponent}
-                        nz50MapsBySheet={this.props.app.maps}
                         routesAsLatLngs={this.props.routesAsLatLngs}
                         currentRouteIndex={this.state.currentRouteIndex}
                         canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
@@ -140,7 +136,6 @@ export class ManageRoutesMapEditor extends Component<{
                         undoLastRouteEdit={undoLastRouteEdit}
                     />
                     <RoutesArchiveTab
-                        app={this.props.app}
                         isActiveTab={this.state.activeTab === "RoutesArchive"}
                         mapComponent={this.state.mapComponent}
                         routesAsLatLngs={this.props.routesAsLatLngs}
@@ -151,7 +146,6 @@ export class ManageRoutesMapEditor extends Component<{
                     />
                 </TabContent>
                 <MapComponent
-                        app={this.props.app}
                         leafletMapId='manageroutesmapeditormap'
                         setMapComponent={setMapComponent}
                         showMap = {this.state.showMap}

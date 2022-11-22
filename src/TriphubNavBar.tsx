@@ -61,7 +61,7 @@ export class TriphubNavbar extends Component<{
 
         const alltrips = () => this.props.setPath('/')
         const calendar = () => this.props.setPath('/calendar')
-        const pasttrips = () => this.props.app.setPath('/pasttrips')
+        const pasttrips = () => this.props.setPath('/pasttrips')
         const newtrip = () => this.props.setPath('/newtrip')
         const newsletter = () => this.props.setPath('/newsletter')
         const newsocial = () => this.props.setPath('/newsocial')
@@ -128,13 +128,13 @@ export class TriphubNavbar extends Component<{
                     }
                     {this.props.isOnline && this.props.role >= Role.Member && !onPastTripsPage && 
                         <NavItem key='pasttrips'>
-                            <NavLink onClick={pasttrips} disabled={this.props.app.isLoading}>
+                            <NavLink onClick={pasttrips} disabled={this.props.isLoading}>
                                 <span className='triphub-navbar'>
                                     <span className='fa fa-search' />
                                     &nbsp; Past Trips
                                 </span>
                             </NavLink>
-                        </NavItem>)
+                        </NavItem>
                     }
                     {this.props.isOnline && this.props.role >= Role.TripLeader && !onNewTripPage &&
                         <NavItem key='newTrip'>

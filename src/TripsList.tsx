@@ -1,7 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './index.css'
 import { Component } from 'react'
-import { Container, ButtonGroup, Table } from 'reactstrap'
+import { Container, ButtonGroup, Table, Row, Col } from 'reactstrap'
 import { ITrip, Role } from './Interfaces'
 import { BindMethods, GetDate, GetFullDate, GetLength, GradeIcon, GradeValue } from './Utilities'
 import './index.css'
@@ -14,12 +14,12 @@ import { ButtonWithTooltip } from './ButtonWithTooltip'
 import { MembersService } from './Services/MembersService'
 import { TripsService } from './Services/TripsService'
 import { ConfigService } from './Services/ConfigService'
-import memoizeOne from 'memoize-one'
 import { TripsCache } from './Services/TripsCache'
 
 class TripsLine extends Component<{
     trip: ITrip
     available: boolean
+    highlights?: { [key: string]: RegExp }
     minRanking?: number
     maxRanking?: number
     setPath(path: string): void
@@ -36,19 +36,22 @@ class TripsLine extends Component<{
         this.setState({ expanded: !this.state.expanded })
     }
 
-    public onClick() {
-        this.props.setPath('/trips/' + this.props.trip.id)
+    public onShowTrip() {
+        if (this.props.available) {
+            this.props.setPath('/trips/' + this.props.trip.id)
+        }
     }
 
     public render() {
         const trip = this.props.trip
-        const id = trip.id
-        const me = MembersService.Me
-        const { minRanking, maxRanking, trip, owner } = this.props
-        const { app, highlights } = owner.props
-        const { id, ranking } = trip
-        const onClick = highlights ? this.onToggle : this.onShowTrip
+        const { id, ranking } = this.props.trip
+        const minRanking = this.props.minRanking
+        const maxRanking = this.props.maxRanking
+        const highlights = this.props.highlights
 
+        const me = MembersService.Me
+
+        const onClick = highlights ? this.onToggle : this.onShowTrip
 
         let validation = TripsService.validateTrip(trip).filter(i => !i.ok)
 
@@ -95,12 +98,6 @@ class TripsLine extends Component<{
         const leaders = highlight(trip.leaders?.join(', '), highlights?.member, trip.ranking_member)
         const nonleaders = highlight(trip.nonleaders?.join(', '), highlights?.member, trip.ranking_member)
         const editors = highlight(trip.editors?.join(', '), highlights?.member, trip.ranking_member)
-
-        const onClick = () => {
-            if (this.props.available) {
-                this.onClick();
-            }
-        }
 
         const tdStyle = this.props.available ? undefined : {color: 'grey'}
 
@@ -222,9 +219,10 @@ const sorts: { [key in SortBy]: ISort } = {
 
 export class TripsGroup extends Component<{
     trips: ITrip[]
-    expanded: boolean
-    isOnline: boolean,
-    cachedTripIds: number[]
+    isOnline: boolean
+    cachedTripIds?: number[]
+    title?: string
+    expanded?: boolean
     highlights?: { [key: string]: RegExp }
     setPath(path: string): void
 }, {
@@ -298,7 +296,7 @@ export class TripsGroup extends Component<{
                             {this.props.trips.map(
                                 (trip: ITrip) => <TripsLine key={'trip' + trip.id} 
                                     trip={trip}
-                                    available={this.props.isOnline || this.props.cachedTripIds.includes(trip.id)}
+                                    available={this.props.isOnline || (this.props.cachedTripIds?.includes(trip.id) || false)}
                                     minRanking={minRanking} maxRanking={maxRanking}
                                     setPath={this.props.setPath}
                                      />)}

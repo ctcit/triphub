@@ -5,13 +5,13 @@ import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
 import { Component } from 'react';
 import { IMap } from './Interfaces';
+import { MapsService } from './Services/MapsService';
 
 export type NZ50MapPolygon = L.Polygon & { nz50map: { sheetCode: string } };
 export type ArchivedRoutePolygon = L.Polygon & { archivedRoute: { id: string } };
 
 
 export class MapCommon<P extends {
-    app: App
     leafletMapId: string
 }, S, SS = any> extends Component<P, S, SS> {
     // the leaflet map
@@ -112,7 +112,7 @@ export class MapCommon<P extends {
         this.nz50MarkerLayerGroup = L.layerGroup()
             .addTo(this.map);
 
-        for (const nz50Map of Object.values(this.props.app.maps)) {
+        for (const nz50Map of Object.values(MapsService.Maps)) {
 
             // the map sheet polygon
             const polygon = L.polygon(nz50Map.coords, { color: 'blue', weight: 2, fill: true, fillOpacity: 0.0 }).addTo(this.nz50LayerGroup);
@@ -147,7 +147,7 @@ export class MapCommon<P extends {
     }
 
     public mapSheetWithName(mapSheet: string): string {
-        const nz50Map: IMap = this.props.app.maps[mapSheet];
+        const nz50Map: IMap = MapsService.MapsBySheet[mapSheet];
         return nz50Map ? nz50Map.sheetCode + ' ' + nz50Map.name : mapSheet;
     }
 

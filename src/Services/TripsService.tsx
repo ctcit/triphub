@@ -88,6 +88,10 @@ export class TripsService {
         return apiCall('DELETE', BaseUrl + '/trips/' + id + '/edit/' + editId, {});
     }
 
+    public static async getPastTrips(data: any): Promise<ITrip[]> {
+        return apiCall('POST', BaseUrl + '/trips/pasttrips', data)
+    }
+
     public static validateTrip(trip: ITrip): IValidation[] {
         return [
             { field: 'title', ok: !trip.isDeleted, message: 'This trip has been deleted' },

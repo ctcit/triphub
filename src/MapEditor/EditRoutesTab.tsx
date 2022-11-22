@@ -8,7 +8,6 @@ import { IoMdSwap } from 'react-icons/io';
 import { AiOutlineRollback } from 'react-icons/ai';
 import { Spinner } from '../Widgets';
 import { ButtonWithTooltip } from '../ButtonWithTooltip';
-import { IMap } from 'src/Interfaces';
 import { Component } from 'react';
 import { MapComponent } from './MapComponent';
 import memoizeOne from 'memoize-one';
@@ -16,7 +15,6 @@ import memoizeOne from 'memoize-one';
 export class EditRoutesTab extends Component<{
     isActiveTab: boolean,
     mapComponent: MapComponent | undefined,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
     routesAsLatLngs: Array<Array<[number, number]>>,
     currentRouteIndex: number,
     canUndoLastRouteEdit: boolean,

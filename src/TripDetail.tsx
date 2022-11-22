@@ -1,9 +1,8 @@
-import * as React from 'react';
 import { Component } from 'react';
 import { Col, Row, Container } from 'reactstrap';
 import { SwitchControl, TextAreaInputControl, InputControl, SwitchesControl, InputWithSelectControl } from './Control';
 import './index.css';
-import { IValidation, IMap, IArchivedRoute, ITrip, Role } from './Interfaces';
+import { IValidation, IArchivedRoute, ITrip, Role } from './Interfaces';
 import { TripMap } from './TripMap';
 import { AddDays, GetDateString } from './Utilities';
 import { TripState } from './TripStates';
@@ -17,7 +16,6 @@ export class TripDetail extends Component<{
     canEditTrip: boolean,
     forceValidation?: boolean,
     role: Role,
-    maps: IMap[],
     isOnline: boolean,
     setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<ITrip>
 }, {
@@ -25,7 +23,7 @@ export class TripDetail extends Component<{
     editMaps: boolean
 }> {
 
-    private nz50MapsBySheet: { [mapSheet: string]: IMap } = {}
+    // private nz50MapsBySheet: { [mapSheet: string]: IMap } = {}
     private closeDateIteration: number = 0
 
     constructor(props: any) {
@@ -34,12 +32,6 @@ export class TripDetail extends Component<{
             editMap: false,
             editMaps: false,
         }
-
-        const nz50Maps: IMap[] = this.props.maps
-        this.nz50MapsBySheet = {}
-        nz50Maps.forEach((nz50Map: IMap) => {
-            this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map
-        })
     }
 
     public calculateCloseDate(tripDate: string, length: number) {
@@ -62,8 +54,8 @@ export class TripDetail extends Component<{
 
         const onGet = (field: string): any => trip[field]
         const onGetInverted = (field: string): any => !trip[field]
-        const onSet = (field: string, value: any): Promise<ITrip> => this.props.setTripFields({[field]: value}, false, false)
-        const onSave = (field: string, value: any): Promise<ITrip> => this.props.setTripFields({[field]: value}, true, true)
+        const onSet = (field: string, value: any): Promise<any> => this.props.setTripFields({[field]: value}, false, false)
+        const onSave = (field: string, value: any): Promise<any> => this.props.setTripFields({[field]: value}, true, true)
  
         const onGetValidationMessage = (field: string): any => {
             const found: IValidation | undefined = validations.find(validation => validation.field === field && !validation.ok)
@@ -242,7 +234,6 @@ export class TripDetail extends Component<{
                 <Row>
                     <Col sm={10}>
                         <TripMap 
-                            app={this.app}
                             routesId='routes' routesLabel='Routes'
                             mapsId='maps' mapsLabel='Maps'
                             leafletMapId='tripmap'

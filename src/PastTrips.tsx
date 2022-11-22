@@ -1,17 +1,17 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './index.css'
 import { Component } from 'react'
-import { App } from './App'
-import * as React from 'react'
-import { Button, Col, Container, Row } from 'reactstrap'
-import { ControlWrapper, InputControl, SelectControl, SwitchesControl, TextAreaInputControl } from './Control'
+import { Button, ButtonGroup, Col, Container, Row } from 'reactstrap'
+import { ControlWrapper, InputControl, SelectControl, SwitchesControl } from './Control'
 import { BindMethods, FormatDate, GradeIcon } from './Utilities'
 import { Spinner } from './Widgets'
 import { Accordian } from './Accordian'
-import { BaseUrl } from 'src'
 import { ITrip, Role } from './Interfaces'
 import { TripsGroup } from './TripsList'
-import { TripMap } from './TripMap'
+import { ConfigService } from './Services/ConfigService'
+import { MembersService } from './Services/MembersService'
+import { TripsService } from './Services/TripsService'
+import { MapSheetControl } from './MapSheetControl'
 
 const MemberAsOptions = ["Don't care", "Leader", "Non-Leader", "Tramper", "Editor", "Either"] as const
 type MemberAsOption = typeof MemberAsOptions[number]
@@ -129,7 +129,8 @@ class Range {
 }
 
 export class PastTrips extends Component<{
-    app: App
+    role: Role,
+    setPath(path: string): void
 }, IPastTripsState>{
     private cost = new Range(
         this, 'costMin', 'costMax', [0, 20, 30, 40, 50, 75, 100, 200, 999999], v => `$${v}`)
@@ -153,14 +154,12 @@ export class PastTrips extends Component<{
                 lengths: this.length.isEdited,
                 costs: this.cost.isEdited,
                 participants: this.participants.isEdited,
-                advanced: !!this.advanced,
+                advanced: !!this.numberOfAdvancedFields,
                 trips: false,
             }
         }
         BindMethods(this)
     }
-
-    public get app() { return this.props.app }
 
     public get defaults(): IPastTripsState {
         const toDate = new Date()
@@ -227,29 +226,29 @@ export class PastTrips extends Component<{
     }
 
     public get prerequisites() {
-        const config = this.props.app.state.config
+        const config = ConfigService.Config
         return config.prerequisiteEquipment + ',' + config.prerequisiteSkills
     }
 
     public get members(): Array<{ name: string, as: MemberAsOption, visible: boolean }> {
         const { member0, member1, member2, memberAs0, memberAs1, memberAs2, me } = this.state
         return [
-            { name: this.app.me.name, as: me, visible: me !== "Don't care" },
+            { name: MembersService.Me.name, as: me, visible: me !== "Don't care" },
             { name: member0, as: memberAs0, visible: this.isAdmin },
             { name: member1, as: memberAs1, visible: this.isAdmin && member0 !== 'Any' },
             { name: member2, as: memberAs2, visible: this.isAdmin && member0 !== 'Any' && member1 !== 'Any' },
         ]
     }
 
-    get advanced() {
+    get numberOfAdvancedFields() {
         const { defaults, state } = this
         const exclude = new Set<PastTripsFields>(['keywords', 'fromDate', 'toDate', 'me', 'highlights', 'version', 'show'])
 
-        return Object.keys(defaults).filter((k: PastTripsFields) =>
+        return Object.keys(defaults).map(k => k as PastTripsFields).filter((k: PastTripsFields) =>
             !exclude.has(k) && JSON.stringify(defaults[k]) !== JSON.stringify(state[k])).length
     }
 
-    public get isAdmin() { return this.props.app.state.role >= Role.Admin }
+    public get isAdmin() { return MembersService.amAdmin(this.props.role) }
 
     public requery() {
         const { maps, fields } = this.state
@@ -288,7 +287,7 @@ export class PastTrips extends Component<{
             version: new Date().getTime()
         })
 
-        this.props.app.triphubApiCall('POST', BaseUrl + '/trips/pasttrips', parameters)
+        TripsService.getPastTrips(parameters)
             .then((trips: ITrip[]) => {
                 this.setState({
                     querying: false,
@@ -353,8 +352,8 @@ export class PastTrips extends Component<{
 
     public render() {
         const { version, querying, highlights, trips, show } = this.state
-        const { members } = this.props.app
-        const { onGet, onSet, onSave, onGetValidationMessage, advanced } = this
+        const members = MembersService.Members
+        const { onGet, onSet, onSave, onGetValidationMessage, numberOfAdvancedFields } = this
         const nameOptions = {
             'Members': members.filter(m => m.isMember).map(m => m.name),
             'Non-Members': members.filter(m => !m.isMember).map(m => m.name),
@@ -367,26 +366,9 @@ export class PastTrips extends Component<{
             forceValidation: false,
             onGet, onSet, onSave, onGetValidationMessage,
         }
+        const advancedTitle = 'Advanced' + (numberOfAdvancedFields ? ` (${numberOfAdvancedFields})` : ``)
         const gradeRender = (option: string) =>
             <span><span className={`gradeIcon fas fa-${GradeIcon({ grade: option })}`} /> {option}</span>
-
-        const advancedTitle = <div key={version + 1}>
-            <Button onClick={this.onQuery} disabled={querying}>
-                {querying ? Spinner : <span className='fa fa-search' />}
-                {querying ? 'Querying' : 'Query'}
-            </Button>
-            &nbsp;
-            <Button onClick={this.onReset} disabled={querying}>
-                <span className='fa fa-stop-circle' />
-                Reset
-            </Button>
-            &nbsp;
-            <span onClick={this.onToggleAdvanced}>&nbsp;{trips.length} trips</span>
-            &nbsp;
-            <span onClick={this.onToggleAdvanced} className='accordian-expand'>
-                Advanced{advanced ? ` (${advanced})` : ``}&nbsp;&nbsp;
-            </span>
-        </div>
 
         return [
             <Container key={version + 2} fluid={true}>
@@ -406,79 +388,93 @@ export class PastTrips extends Component<{
                         <InputControl field='keywords' label='Keywords' type='text' {...common} />
                     </Col>
                 </Row>
-            </Container>,
-            <Accordian id='advanced' key={version + 3} title={advancedTitle} cardClickExpand={false}
-                className='trip-group' headerClassName='trip-group-header' expanded={show?.advanced}>
-                <Container fluid={true}>
-                    <Row>
-                        <Col sm={2} md={2}>
-                            <InputControl field='limit' label='Limit' type='number' helpText='The maximum number of trips shown' {...common} />
-                        </Col>
-                        <Col sm={2} md={2}>
-                            <Accordian id='fields_accordian' title='Fields' expanded={show?.fields}>
-                                <SwitchesControl field='fields' label='' options={keys(this.fields)} {...common} />
-                            </Accordian>
-                        </Col>
-                    </Row>
-                    {this.members.slice(1).filter(({ visible }) => visible).map((_, i) =>
-                        <Row key={i}>
-                            <Col sm={6} md={6}>
-                                <SelectControl field={`member${i}`} label='Member' options={nameOptions} {...common} />
+                <Accordian id='advanced' key={version + 3} 
+                    title={advancedTitle}
+                    className='trip-group' headerClassName='others-header' 
+                    expanded={show?.advanced}
+                >
+                    <Container fluid={true}>
+                        <Row>
+                            <Col sm={2} md={2}>
+                                <InputControl field='limit' label='Limit' type='number' helpText='The maximum number of trips shown' {...common} />
                             </Col>
                             <Col sm={2} md={2}>
-                                <SelectControl field={`memberAs${i}`} label='As' options={MemberAsOptions.slice(1)} {...common} />
+                                <Accordian id='fields_accordian' title='Fields' expanded={show?.fields}>
+                                    <SwitchesControl field='fields' label='' options={keys(this.fields)} {...common} />
+                                </Accordian>
                             </Col>
                         </Row>
-                    )}
-                    <Row>
-                        <Col sm={2} md={2}>
-                            <Accordian id='lengths_accordian' title='Length' expanded={show?.lengths}>
-                                {this.length.render()}
-                            </Accordian>
-                        </Col>
-                        <Col sm={2} md={2}>
-                            <Accordian id='costs_accordian' title='Costs' expanded={show?.costs}>
-                                {this.cost.render()}
-                            </Accordian>
-                        </Col>
-                        <Col sm={2} md={2}>
-                            <Accordian id='participants_accordian' title='Participants' expanded={show?.participants}>
-                                {this.participants.render()}
-                            </Accordian>
-                        </Col>
-                        <Col sm={2} md={2}>
-                            <Accordian id='grades_accordian' title='Grades' expanded={show?.grades}>
-                                <SwitchesControl field='grades' label='' options={keys(this.grades)}
-                                    renderOption={gradeRender} {...common} />
-                            </Accordian>
-                        </Col>
-                        <Col sm={2} md={2}>
-                            <Accordian id='prerequisites_accordian' title='Prerequisites' expanded={show?.prerequisites}>
-                                <SwitchesControl field='prerequisites' label='' options={this.prerequisites} {...common} />
-                            </Accordian>
-                        </Col>
-                        <Col sm={2} md={2}>
-                            <Accordian id='approvals_accordian' title='State' expanded={show?.approvals}>
-                                <SwitchesControl field='approvals' label='' options={keys(this.approvals)} {...common} />
-                            </Accordian>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col sm={10}>
-                            <TripMap
-                                app={this.props.app}
-                                routesId='routes' routesLabel=''
-                                mapsId='maps' mapsLabel=''
-                                leafletMapId='tripmap'
-                                hiddenRoute={true}
-                                {...common}
-                            />
-                        </Col>
-                    </Row>
-                </Container>
-            </Accordian>,
-            <TripsGroup key={version + 4} trips={trips} title='Trips' app={this.props.app}
-                expanded={show?.trips} highlights={highlights} />
+                        {this.members.slice(1).filter(({ visible }) => visible).map((_, i) =>
+                            <Row key={i}>
+                                <Col sm={6} md={6}>
+                                    <SelectControl field={`member${i}`} label='Member' options={nameOptions} {...common} />
+                                </Col>
+                                <Col sm={2} md={2}>
+                                    <SelectControl field={`memberAs${i}`} label='As' options={MemberAsOptions.slice(1)} {...common} />
+                                </Col>
+                            </Row>
+                        )}
+                        <Row>
+                            <Col sm={2} md={2}>
+                                <Accordian id='lengths_accordian' title='Length' expanded={show?.lengths}>
+                                    {this.length.render()}
+                                </Accordian>
+                            </Col>
+                            <Col sm={2} md={2}>
+                                <Accordian id='costs_accordian' title='Costs' expanded={show?.costs}>
+                                    {this.cost.render()}
+                                </Accordian>
+                            </Col>
+                            <Col sm={2} md={2}>
+                                <Accordian id='participants_accordian' title='Participants' expanded={show?.participants}>
+                                    {this.participants.render()}
+                                </Accordian>
+                            </Col>
+                            <Col sm={2} md={2}>
+                                <Accordian id='grades_accordian' title='Grades' expanded={show?.grades}>
+                                    <SwitchesControl field='grades' label='' options={keys(this.grades)}
+                                        renderOption={gradeRender} {...common} />
+                                </Accordian>
+                            </Col>
+                            <Col sm={2} md={2}>
+                                <Accordian id='prerequisites_accordian' title='Prerequisites' expanded={show?.prerequisites}>
+                                    <SwitchesControl field='prerequisites' label='' options={this.prerequisites} {...common} />
+                                </Accordian>
+                            </Col>
+                            <Col sm={2} md={2}>
+                                <Accordian id='approvals_accordian' title='State' expanded={show?.approvals}>
+                                    <SwitchesControl field='approvals' label='' options={keys(this.approvals)} {...common} />
+                                </Accordian>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col sm={10}>
+                                <MapSheetControl 
+                                    label='Map sheets'
+                                    {...common}
+                                />
+                            </Col>
+                        </Row>
+                    </Container>
+                </Accordian>
+                <ButtonGroup>
+                    <Button onClick={this.onQuery} disabled={querying}>
+                        {querying ? Spinner : <span className='fa fa-search' />}
+                        {querying ? 'Querying' : 'Query'}
+                    </Button>
+                    &nbsp;
+                    <Button onClick={this.onReset} disabled={querying}>
+                        <span className='fa fa-stop-circle' />
+                        Reset
+                    </Button>
+                </ButtonGroup>,
+            </Container>,
+            <TripsGroup key={version + 4} trips={trips} title='Trips'
+                expanded={show?.trips} 
+                highlights={highlights} 
+                isOnline={true}
+                setPath={this.props.setPath}
+            />
         ]
     }
 }

@@ -11,9 +11,9 @@ import { Component } from 'react';
 import { MapComponent } from './MapComponent';
 import memoizeOne from 'memoize-one';
 import Select, { ActionMeta } from 'react-select'
+import { ArchivedRoutesService } from 'src/Services/ArchivedRoutesService';
 
 export class RoutesArchiveTab extends Component<{
-    app: App,
     isActiveTab: boolean,
     mapComponent: MapComponent | undefined,
     routesAsLatLngs: Array<Array<[number, number]>>,
@@ -32,7 +32,7 @@ export class RoutesArchiveTab extends Component<{
 
     private memoizedGetArchivedRoutes = memoizeOne((includeHidden: boolean, force: boolean, isActiveTab: boolean) => {
         if (isActiveTab) {
-            this.props.app.getArchivedRoutes(includeHidden, force)
+            ArchivedRoutesService.getArchivedRoutes(includeHidden, force)
             .then((archivedRoutes: IArchivedRoute[]) => {
                 const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                     return { value: archivedRoute.id, label: archivedRoute.title };
@@ -214,7 +214,7 @@ export class RoutesArchiveTab extends Component<{
     private selectArchivedRoute(archivedRouteId: number) {
         this.setState({ busy: true });
         const mapComponent = (this.props.mapComponent as MapComponent);
-        this.props.getArchivedRoute(archivedRouteId)
+        ArchivedRoutesService.getArchivedRoute(archivedRouteId)
             .then(async (archivedRoute?: IArchivedRoute) => {
                 let routesAsLatLngs: Array<Array<[number, number]>> = mapComponent.getRoutesAsLatLngs();
                 routesAsLatLngs = archivedRoute ? routesAsLatLngs.concat(archivedRoute.routes) : routesAsLatLngs;

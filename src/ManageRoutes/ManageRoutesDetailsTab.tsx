@@ -1,7 +1,5 @@
-import * as L from 'leaflet';
 import 'src/leaflet-editable/leaflet-editable.js';
 import 'leaflet-gpx';
-import * as React from 'react';
 import { Col, Row, TabPane } from 'reactstrap';
 import { Component } from 'react';
 import { InputControl, TextAreaInputControl } from 'src/Control';

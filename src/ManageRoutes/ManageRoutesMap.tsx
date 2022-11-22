@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Col, Row, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Button } from 'reactstrap';
-import { IMap, IArchivedRoute } from '../Interfaces';
+import { IArchivedRoute } from '../Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { MapCommon } from '../MapCommon';
 import { ManageRoutesMapEditor } from './ManageRoutesMapEditor';
 import * as L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-import { App } from 'src/App';
 
 export class RouteDetails {
     public title: string = "";
@@ -18,7 +17,6 @@ export class RouteDetails {
 export enum MapOperation { None, MoveMarker, ZoomExtents }
 
 export class ManageRoutesMap extends MapCommon<{
-    app: App
     readOnly? : boolean,
     route: IArchivedRoute,
     onSave: (route?: IArchivedRoute) => Promise<void>,
@@ -117,7 +115,6 @@ export class ManageRoutesMap extends MapCommon<{
                         <ModalHeader toggle={onSave}>New Route</ModalHeader>
                         <ModalBody>
                             <ManageRoutesMapEditor 
-                                app={this.props.app}
                                 routeDetails={this.pendingRouteDetails}
                                 routesAsLatLngs={this.pendingRoutesLatLngs}
                                 onDetailsChanged={onDetailsChanged}

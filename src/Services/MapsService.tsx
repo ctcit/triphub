@@ -10,7 +10,13 @@ export class MapsService {
             this.getMapsPromise = new Promise<IMap[]>((resolve, reject) => {
                 apiCall('GET', BaseUrl + '/maps')
                     .then((maps: IMap[]) => {
-                        this.maps = maps.sort((a, b) => a.sheetCode.localeCompare(b.sheetCode));;
+                        this.maps = maps.sort((a, b) => a.sheetCode.localeCompare(b.sheetCode));
+
+                        this.mapsBySheet = {}
+                        this.maps.forEach((map: IMap) => {
+                            this.mapsBySheet[map.sheetCode] = map
+                        })
+
                         resolve(maps);
                     });
             });
@@ -22,8 +28,14 @@ export class MapsService {
         return this.maps;
     }
 
+    public static get MapsBySheet(): { [mapSheet: string]: IMap } {
+        return this.mapsBySheet;
+    }
+
     private static getMapsPromise: Promise<IMap[]> | undefined = undefined
 
     private static maps: IMap[] = []
+    private static mapsBySheet: { [mapSheet: string]: IMap } = {}
+
 
 }

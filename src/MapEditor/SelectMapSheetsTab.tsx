@@ -10,11 +10,11 @@ import { Component } from 'react';
 import { MapComponent } from './MapComponent';
 import memoizeOne from 'memoize-one';
 import Select, { ActionMeta } from 'react-select'
+import { MapsService } from 'src/Services/MapsService';
 
 export class SelectMapSheetsTab extends Component<{
     isActiveTab: boolean,
     mapComponent: MapComponent | undefined,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
     mapSheets: string[],
     routesAsLatLngs: Array<Array<[number, number]>>,
     saveMapsheetsChange: (mapSheets: string[]) => Promise<void>
@@ -51,8 +51,8 @@ export class SelectMapSheetsTab extends Component<{
 
         this.state = { 
             activated: false,
-            mapSheetSuggestions: Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
-                const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+            mapSheetSuggestions: Object.keys(MapsService.MapsBySheet).map((mapSheet: string) => {
+                const nz50Map: IMap = MapsService.MapsBySheet[mapSheet];
                 return { value: nz50Map.sheetCode, label: nz50Map.sheetCode + ' ' + nz50Map.name };
             }),
 
@@ -95,25 +95,27 @@ export class SelectMapSheetsTab extends Component<{
                     </a>
                 </Row>
                 <Row className="mb-2">
-                    <Col sm={2}>
-                        <ButtonGroup>
-                            <ButtonWithTooltip id="ZoomToRoutesButton1" color='secondary' 
-                                onClick={zoomToRoutes} disabled={!this.props.mapComponent || this.props.mapComponent.routes.length === 0} 
-                                placement="top" tooltipText="Zoom to route extents">
-                                    <MdZoomOutMap/>
-                            </ButtonWithTooltip>
-                            <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
-                                onClick={selectRouteMaps} disabled={!this.props.mapComponent || this.props.mapComponent.routes.length === 0 }  
-                                placement="top" tooltipText="Select maps overlapping the route">
-                                    <MdGridOff/>
-                            </ButtonWithTooltip>
-                            <ButtonWithTooltip id="ClearSelectedMapsButton" color='secondary' 
-                                onClick={clearSelectedMaps} disabled={false} 
-                                placement="top" tooltipText="Clear all selected maps">
-                                    <MdClear/>
-                            </ButtonWithTooltip>
-                        </ButtonGroup>
-                    </Col>
+                    {this.props.routesAsLatLngs.length > 0 &&
+                        <Col sm={2}>
+                            <ButtonGroup>
+                                <ButtonWithTooltip id="ZoomToRoutesButton1" color='secondary' 
+                                    onClick={zoomToRoutes} disabled={!this.props.mapComponent || this.props.mapComponent.routes.length === 0} 
+                                    placement="top" tooltipText="Zoom to route extents">
+                                        <MdZoomOutMap/>
+                                </ButtonWithTooltip>
+                                <ButtonWithTooltip id="SelectMapsOverlappingRouteButton" color='secondary' 
+                                    onClick={selectRouteMaps} disabled={!this.props.mapComponent || this.props.mapComponent.routes.length === 0 }  
+                                    placement="top" tooltipText="Select maps overlapping the route">
+                                        <MdGridOff/>
+                                </ButtonWithTooltip>
+                                {/* <ButtonWithTooltip id="ClearSelectedMapsButton" color='secondary' 
+                                    onClick={clearSelectedMaps} disabled={false} 
+                                    placement="top" tooltipText="Clear all selected maps">
+                                        <MdClear/>
+                                </ButtonWithTooltip> */}
+                            </ButtonGroup>
+                        </Col>
+                    }
                     <Col sm={6}>
                        <Select
                             autoFocus={false}
@@ -148,8 +150,8 @@ export class SelectMapSheetsTab extends Component<{
     }
 
     private setMapSheetsEventsOn() {
-        Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
-            const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+        Object.keys(MapsService.MapsBySheet).map((mapSheet: string) => {
+            const nz50Map: IMap = MapsService.MapsBySheet[mapSheet];
             const polygon = (this.props.mapComponent as MapComponent).nz50MapPolygonsBySheet[nz50Map.sheetCode];
 
             // add click event handler for polygon
@@ -163,8 +165,8 @@ export class SelectMapSheetsTab extends Component<{
     }
 
     private setMapSheetsEventsOff() {
-        Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
-            const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+        Object.keys(MapsService.MapsBySheet).map((mapSheet: string) => {
+            const nz50Map: IMap = MapsService.MapsBySheet[mapSheet];
             const polygon = (this.props.mapComponent as MapComponent).nz50MapPolygonsBySheet[nz50Map.sheetCode];
 
             // add click event handler for polygon

@@ -417,7 +417,7 @@ export class Trip extends Component<{
                     <TripDetail key={'TripDetail' + this.state.trip.id}
                         trip={this.state.trip} isNew={this.props.isNew} canEditTrip={this.canEditTrip}
                         forceValidation={this.state.showValidationMessage}
-                        role={this.props.role} maps={MapsService.Maps}
+                        role={this.props.role}
                         isOnline={this.props.isOnline}
                         setTripFields={setTripFields}
                     />
@@ -441,7 +441,7 @@ export class Trip extends Component<{
                     <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-user fa-fw' />{['Participants', participantWarningJsx, participantCountJsx, totalSeatsJsx]}</b></span>}
                         expanded={true}>
-                        <TripParticipants key={`TripParticipants${this.state.trip.id}${this.state.trip.prerequisites}} 
+                        <TripParticipants key={`TripParticipants${this.state.trip.id}${this.state.trip.prerequisites}`} 
                             participants={this.state.participants}
                             participantsInfo={this.participantsInfo}
                             trip={this.state.trip}

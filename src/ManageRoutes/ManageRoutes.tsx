@@ -52,11 +52,6 @@ export class ManageRoutes extends Component<{
             tableState: { filters: [], sortBy: [], pageIndex: 0 }
         }
 
-        const nz50Maps: IMap[] = MapsService.Maps;
-        this.nz50MapsBySheet = {};
-        nz50Maps.forEach((nz50Map: IMap) => {
-            this.nz50MapsBySheet[nz50Map.sheetCode] = nz50Map;
-        });
     }
 
     public get(id: string) : any {
@@ -326,7 +321,6 @@ export class ManageRoutes extends Component<{
                                 </Row>
                                 <Row>
                                     <ManageRoutesMap
-                                        app={this.props.app} 
                                         route={this.state.mergedRoutes}
                                         isEditing={this.state.isEditing}
                                         onSave={onSave}

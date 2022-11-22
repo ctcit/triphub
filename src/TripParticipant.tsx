@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { Form, Row, Col, Container, ButtonGroup } from 'reactstrap'
 import { Component } from 'react'
 import { IParticipant, IValidation, IParticipantsInfo, Role, ITrip } from './Interfaces'
@@ -162,7 +161,7 @@ export class TripParticipant extends Component<{
             <ToolTipIcon key='logisticInfo' icon='comment' tooltip={logisticInfo} id={iconid} />,
             !participant.memberId &&
             <ToolTipIcon key='nonmember' icon='id-badge' tooltip={`${participant.name} is not a member of the CTC`} id={iconid} />,
-            this.props.app.getMemberByName(participant.name)?.membershipType === 'Junior' &&
+            MembersService.getMemberByName(participant.name)?.membershipType === 'Junior' &&
             <ToolTipIcon key='junior' icon='child' tooltip={`${participant.name} is a junior member of the CTC`} id={iconid} />,
         ].filter(e => e)
         const buttons = [
@@ -251,7 +250,7 @@ export class TripParticipant extends Component<{
                                 <Col sm={3}>
                                     <SwitchControl field='isPlbProvider' label='Bringing PLB' {...common} />
                                 </Col>
-                                {(participant.isAvalancheGearProvider || new Set((trip.state.trip.prerequisites ?? '').split(',')).has('Avalanche Gear')) &&
+                                {(participant.isAvalancheGearProvider || new Set((this.props.trip.prerequisites ?? '').split(',')).has('Avalanche Gear')) &&
                                     <Col sm={3}>
                                         <SwitchControl field='isAvalancheGearProvider' label='Bringing Avalanche Gear' {...common} />
                                     </Col>

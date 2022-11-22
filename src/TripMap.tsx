@@ -10,9 +10,10 @@ import { MapCommon, NZ50MapPolygon } from './MapCommon';
 import memoizeOne from 'memoize-one';
 import { MdGridOff, MdInfo /* , MdMap */ } from 'react-icons/md';
 import Select, { ActionMeta } from 'react-select'
+import { ArchivedRoutesService } from './Services/ArchivedRoutesService';
+import { MapsService } from './Services/MapsService';
 
 export class TripMap extends MapCommon<{
-    app: App
     routesId: string,
     routesLabel: string,
     mapsId: string,
@@ -25,7 +26,7 @@ export class TripMap extends MapCommon<{
     list? : any,
     isOnline: boolean,
     onGet: (id: string) => any,
-    onSave: (id: string, value: any) => Promise<ITrip>,
+    onSave: (id: string, value: any) => Promise<any>,
     onGetValidationMessage?: (id: string) => string,
     leafletMapId: string,
 }, {
@@ -51,7 +52,7 @@ export class TripMap extends MapCommon<{
     private memoizedGetArchivedRoutes = memoizeOne((loadArchivedRoutes: boolean) => {
         if (loadArchivedRoutes) {
             this.setState({ busy: true }, async () => {
-                this.props.app.getArchivedRoutes(false, false)
+                ArchivedRoutesService.getArchivedRoutes(false, false)
                     .then((archivedRoutes: IArchivedRoute[]) => {
                         const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                             return { value: archivedRoute.id, label: archivedRoute.title };
@@ -83,8 +84,8 @@ export class TripMap extends MapCommon<{
             archivedRoutes: [],
             archivedRouteSuggestions: [],
             busy: true,
-            mapSheetSuggestions: Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
-                const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+            mapSheetSuggestions: Object.keys(MapsService.MapsBySheet).map((mapSheet: string) => {
+                const nz50Map: IMap = MapsService.MapsBySheet[mapSheet];
                 return { value: nz50Map.sheetCode, label: nz50Map.sheetCode + ' ' + nz50Map.name };
             })
         };
@@ -244,9 +245,6 @@ export class TripMap extends MapCommon<{
                             <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
                             <ModalBody>
                                 <MapEditor
-                                    app={this.props.app}
-                                    hiddenMap={this.props.hiddenMap}
-                                    hiddenRoute={this.props.hiddenRoute}
                                     mapSheets={this.mapSheets}
                                     routesAsLatLngs={this.getRoutesAsLatLngs()}
                                     onMapSheetsChanged={onMapSheetsChanged}
@@ -297,7 +295,7 @@ export class TripMap extends MapCommon<{
         maps.forEach(map => {
             if (map && map !== "") {
                 const parts = map.split(" ");
-                if (parts.length > 0 && this.props.app.maps[parts[0]]) {
+                if (parts.length > 0 && MapsService.MapsBySheet[parts[0]]) {
                     mapSheets.push(parts[0]);
                 }
             }
@@ -313,7 +311,7 @@ export class TripMap extends MapCommon<{
 
     private selectArchivedRoute(archivedRouteId: number): void {
         this.setState({ busy: true });
-         this.props.getArchivedRoute(archivedRouteId)
+        ArchivedRoutesService.getArchivedRoute(archivedRouteId)
              .then(async (archivedRoute?: IArchivedRoute) => {
                  if (archivedRoute) {
                     this.saveSelectedRoute(archivedRoute.routes);
@@ -407,7 +405,7 @@ export class TripMap extends MapCommon<{
                 this.pendingMapSheets = mapSheets;
                 promises.push(this.props.onSave('maps', mapSheets
                     .filter(mapSheet => mapSheet)
-                    .map(mapSheet => mapSheet + " " + this.props.app.maps[mapSheet].name)));
+                    .map(mapSheet => mapSheet + " " + MapsService.MapsBySheet[mapSheet].name)));
             }
 
             return Promise.all(promises)

@@ -253,7 +253,7 @@ export class App extends Component<{
             mileageRates: () => <ManageMileageRates key='mileageRates' {...common}/>,
             destinations: () => <ManageDestinations key='destinations' {...common}/>,
             trips: () => <Trip key='trips' isNew={false} isNewSocial={true} id={id} {...common} />,
-			pasttrips: () => <PastTrips key='pasttrips' app={this} />,
+			pasttrips: () => <PastTrips key='pasttrips' {...common} />,
             login: () => <Login key='login' {...common} />,
             default: () => <TripsList key='default' {...common}/>,
         }

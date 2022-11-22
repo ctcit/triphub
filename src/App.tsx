@@ -107,7 +107,8 @@ export class App extends Component<{
         });
 
         // determine if the background-sync permission is granted and create event listener to listen for changes
-        navigator.permissions.query({name: 'background-sync'} as unknown as PermissionDescriptor).then((permissionStatus) => {
+        const permissionName = 'background-sync' as PermissionName
+        navigator.permissions.query({name: permissionName}).then((permissionStatus) => {
             this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
             permissionStatus.addEventListener('change', (e) => {
                 this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'}, () => {
@@ -339,8 +340,9 @@ export class App extends Component<{
     }
 
     private onOnline(): void {
-        this.setState( { isOnline: true })
-        this.conditionallyDoSync()
+        this.setState( { isOnline: true }, () => {
+            this.conditionallyDoSync()
+        })
     }
 
     private onOffline(): void {

@@ -8,6 +8,7 @@ import Textarea from 'react-textarea-autosize';
 import Switch from "react-switch";
 import { InputType } from 'reactstrap/types/lib/Input';
 import Select, { ActionMeta, GroupBase, OptionsOrGroups } from 'react-select'
+import ReactDOM from 'react-dom';
 
 export class ControlWrapper extends Component<{
     id: string,
@@ -74,6 +75,7 @@ export class InputControl extends Component<{
     helpText?: string
     showValidation: boolean
 }> {
+    private inputRef: any
 
     constructor(props: any) {
         super(props);
@@ -91,10 +93,13 @@ export class InputControl extends Component<{
     }
 
     public render() {
+        const setInputRef = (inputRef: any) => this.inputRef = inputRef
+
         const onFocus = (): void => {
             this.setState({ oldValue: this.value, helpText: this.props.helpText });
         }
         const onChange = (event: React.ChangeEvent) => {
+            (ReactDOM.findDOMNode(this.inputRef) as any).focus() // fix for FireFox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1232233
             let value
             if (this.props.type === 'number') {
                 value = (event.target as any).valueAsNumber
@@ -128,7 +133,7 @@ export class InputControl extends Component<{
                 label={this.props.label} hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving}
                 helpText={this.state.helpText}>
-                <Input id={id} type={this.props.type} readOnly={this.props.readOnly} style={inputStyle}
+                <Input id={id} ref={setInputRef} type={this.props.type} readOnly={this.props.readOnly} style={inputStyle}
                     list={this.props.list} min={this.props.min} max={this.props.max} step={this.props.step}
                     value={this.sanitizeValue(this.value)} 
                     placeholder={this.props.placeholder}
@@ -404,6 +409,7 @@ export class InputWithSelectControl extends Component<{
     helpText?: string
     showValidation: boolean
 }> {
+    private inputRef: any
 
     // the following Input control replaces ValueContainer in the ReactSelect control
     private newValueContainer;
@@ -412,10 +418,13 @@ export class InputWithSelectControl extends Component<{
         super(props);
         this.state = { oldValue: this.value, saving: false, showValidation: false }
 
+        const setInputRef = (inputRef: any) => this.inputRef = inputRef
+
         const onFocus = (): void => {
             this.setState({ oldValue: this.value, helpText: this.props.helpText });
         }
         const onChange = (event: React.ChangeEvent) => {
+            (ReactDOM.findDOMNode(this.inputRef) as any).focus() // fix for FireFox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1232233
             let value
             if (this.props.type === 'number') {
                 value = (event.target as any).valueAsNumber
@@ -435,6 +444,7 @@ export class InputWithSelectControl extends Component<{
         }
         this.newValueContainer = ({ children, ...props }: {children?: ReactNode}) => (
             <Input style={{ border: 'none' }} 
+                ref={setInputRef} 
                 type={this.props.type}
                 min={this.props.min} 
                 max={this.props.max}

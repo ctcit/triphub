@@ -30,7 +30,6 @@ export class AccordianTableRow extends Component<{
             </tr>,
             <tr key={'expodd' + this.props.id}/>,
             <tr key={'expbody' + this.props.id}>
-                <td style={{padding: 0}}/>
                 <td colSpan={this.props.tablerow.length+1} style={{padding: 0}}>
                     <Collapse key={'collapse' + this.props.id} isOpen={this.state.expanded} className='noprint'>
                             {this.props.children}

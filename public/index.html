@@ -39,13 +39,13 @@
     </noscript>
     <script>
         function AddStyleLink(doc) {
-            var head = doc.getElementsByTagName("head")[0]
-            var links = head.getElementsByTagName("link")
-            for (var link of links) {
+            const head = doc.getElementsByTagName("head")[0]
+            const links = head.getElementsByTagName("link")
+            for (const link of links) {
                 if (link.hasAttribute('href') && link.getAttribute('href') == "%PUBLIC_URL%/print.css")
                     return
             }
-            var link = doc.createElement("link")
+            const link = doc.createElement("link")
             link.setAttribute("rel", "stylesheet")
             link.setAttribute("href", "%PUBLIC_URL%/print.css")
             link.setAttribute("type", "text/css")

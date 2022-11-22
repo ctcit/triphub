@@ -1,89 +1,129 @@
 <html>
-<title>API Test</title>
+<meta charset="utf-8">
+
+<head>
+    <title>API Test</title>
+    <link rel='stylesheet' href='api.css'>
+    <link rel="icon" type="image/x-icon" href="/templates/ctcprotostar/favicon.ico">
+</head>
 
 <body>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script>
         $(document).ready(function () {
             const params = new URLSearchParams(window.location.search);
-            const method = params.get('method')
-            const endpoint = `${params.get('basehref')}/${params.get('endpoint')}`
-            const fields = JSON.parse(params.get('fields'))
-            const regex = /{\w+}/g
+            const [method, endpoint] = [params.get('method'), params.get('endpoint')]
+            const values = JSON.parse(localStorage.getItem('ApiTest.html') ?? '{}')
+            const fields = [];
 
-            $('#Header').html(`${method} ${endpoint}`)
-            $('#Home').html(`<a href='${params.get('basehref')}'><i>(home)</i></a>`)
-            $('#Submit').html(method)
-            $('#Input').html(params.get('input'))
-            $('#Output').html(params.get('output'))
-            $('#Description').html(params.get('description'))
+            document.title = `API Test ${method} ${endpoint}`
+            $('#Method').text(method).addClass(method)
+            $('#Endpoint').text(endpoint)
+            $('#Submit').text(method)
 
-            endpoint.replace(regex, (key, id) =>
-                $('#Fields').append($(
-                    `<tr><td>${key}</td>
-                         <td></td>
-                         <td><input type='text' id='${id}'/></td></tr>`))
-            );
+            endpoint.replace(/{(\w+)}/g, (name, col) => fields.push({ name, col, isPath: true, type: 'integer' }));
 
-            for (let field of fields) {
-                const checkbox = field.readonly == 'Yes' ? '' 
-                    : `<input type='checkbox' id='${field.col}_enabled'/>`
-                const input = field.readonly == 'Yes' ? '' : field.type == 'text'
-                    ? `<textarea id=${field.col}'></textarea>`
-                    : `<input id='${field.col}' type='text'/>`
-                $('#Fields').append($(
-                    `<tr><td>${field.col}</td>
-                         <td>${checkbox}</td>
-                         <td>${input}</td>
-                         <td>${field.type}</td>
-                         <td>${field.comment}</td></tr>`))
-            }
+            $.ajax({
+                url: 'api.php/metadata',
+                success: (data, status) => {
+                    const metadata = data.endpoints.find(e => e.endpoint == endpoint && e.methods.some(m => m == method))
+                    const entity = data.entities.find(e => e.name === metadata?.inputentity) ?? { cols: [] }
 
-            $("#Submit").click(function () {
-                let data = {}
-                let submitEndpoint = endpoint.replace(regex, (key, id) => $("#" + id).val());
-                $("#Submit").attr("disabled", true)
-                $('#PrettyPrintJsonOutput').html('<i>waiting...</i>')
-                for (let field of fields) {
-                    if ($(`#${field.col}_enabled`).prop('checked'))
-                        data[field.col] = $("#" + field.col).val()
+                    fields.push(...entity.cols.map(f => ({ ...f, isQuery: method == "GET" })))
+                    fields.push({ col: 'prettyprintjson', isQuery: true, type: 'bit' })
+
+                    $('#Input').html(metadata?.input ?? '')
+                    $('#Output').html(metadata?.output ?? '')
+                    $('#Description').html(metadata?.description ?? '')
+                    $('#Result').text('')
+
+                    for (const field of fields) {
+                        field.checkbox = field.readonly == 'Yes' || field.isPath ? $('<span>')
+                            : $('<input>')
+                                .attr('type', 'checkbox')
+                                .attr('checked', values[`${field.col}_enabled`] ?? false)
+
+                        field.value = field.readonly == 'Yes' ? $('<span>') :
+                            $(field.type == 'text' ? '<textarea>' : '<input>')
+                                .attr('type', 'text')
+                                .val(values[field.col] ?? '')
+
+                        $(`<tr>`)
+                            .appendTo($('#Fields'))
+                            .append($('<td>').text(field.name ?? field.col))
+                            .append($('<td>').append(field.checkbox))
+                            .append($('<td>').append(field.value))
+                            .append($('<td>').text(field.type ?? ''))
+                            .append($('<td>').text(field.comment ?? ''))
+                    }
                 }
+            })
+
+            $('#Submit').click(function () {
+                const data = {}
+                const query = {}
+                let submitEndpoint = endpoint;
+                $('#Submit').attr('disabled', true)
+                $('#Result').html('<i>waiting...</i>')
+                for (const field of fields.filter(f => f.readonly !== 'Yes')) {
+                    const value = values[field.col] = field.value.val()
+                    if (field.isPath) {
+                        submitEndpoint = submitEndpoint.replace(field.name, value)
+                    } else if (!(values[`${field.col}_enabled`] = field.checkbox.prop('checked'))) {
+                        continue
+                    } else if (field.isQuery) {
+                        query[field.col] = value
+                    } else {
+                        data[field.col] = field.type === 'json' ? JSON.parse(value) : value
+                    }
+                }
+                localStorage.setItem('ApiTest.html', JSON.stringify(values))
+                const start = new Date();
+
                 $.ajax({
-                    url: submitEndpoint + '?prettyprintjson=1',
+                    url: 'api.php/' + submitEndpoint + '?' +
+                        Object.entries(query).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&'),
                     type: method,
                     data: method == 'GET' || method == 'DELETE' ? null : JSON.stringify(data),
                     success: (data, status) => {
-                        $("#Submit").attr("disabled", false)
-                        $('#PrettyPrintJsonOutput').html(data);
-                        $('.block').css('cursor', 'hand')
-                        $('.block').click(function () {
-                            var id = this.id.split('-')[0]
-                            $('#' + id + '-hide').toggle()
-                            $('#' + id + '-show').toggle()
-                        })
+                        $('#Submit').attr('disabled', false)
+                        $('#Timing').text(`${new Date().getTime() - start.getTime()} ms`)
+                        if (query.prettyprintjson) {
+                            $('#Result').html(data)
+                            $('.block').css('cursor', 'hand').click(function () {
+                                const id = this.id.split('-')[0]
+                                $('#' + id + '-hide').toggle()
+                                $('#' + id + '-show').toggle()
+                            })
+                            $('.depth3').click()
+                        } else {
+                            $('#Result').text(JSON.stringify(data))
+                        }
                     },
                     error: (jqXHR, textStatus, errorThrown) => {
-                        $("#Submit").attr("disabled", false)
-                        $('#PrettyPrintJsonOutput').text(`${textStatus} ${errorThrown}`)
+                        $('#Submit').attr('disabled', false)
+                        $('#Result').text(`${textStatus} ${errorThrown}`)
                     }
                 })
             })
         })
     </script>
-    <h2><span id="Header"></span> <span id="Home"></span></h2>
+    <h2>
+        <span id="Method"></span>
+        <span id="Endpoint"></span>
+        <a href="api.php">🏠</a>
+    </h2>
     <h3>Input</h3>
     <div id="Input"></div>
     <h3>Output</h3>
     <div id="Output"></div>
     <h3>Description</h3>
     <div id="Description"></div>
-
+    <h3>Fields</h3>
     <table id="Fields">
-
-
     </table>
-    <button id="Submit" type="button">Submit</button>
-    <div id="PrettyPrintJsonOutput"></div>
+    <button id="Submit" type="button">Submit</button><span id="Timing"></span>
+    <div id="Result"><i>Loading Meta data...</i></div>
 </body>
 
 </html>

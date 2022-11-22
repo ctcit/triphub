@@ -83,7 +83,8 @@ export class TripParticipant extends Component<{
         const members = MembersService.Members.filter(m => !existing.has(m.name) || m.name === participant.name)
         const nameOptions = {
             'New Tramper': ['New Tramper'],
-            'Members': members.filter(m => m.isMember).map(m => m.name),
+            'Members': members.filter(m => m.isMember && m.membershipType !== 'Junior').map(m => m.name),
+            'Junior Members': members.filter(m => m.isMember && m.membershipType === 'Junior').map(m => m.name),
             'Non-Members': members.filter(m => !m.isMember).map(m => m.name)
         }
 
@@ -155,10 +156,14 @@ export class TripParticipant extends Component<{
             <ToolTipIcon key='car' icon='car' tooltip={`${participant.name} can bring a car`} id={iconid} />,
             participant.isVehicleProvider && participant.seats &&
             <span key='count' className='TripCount'>{` (${participant.seats} seats)`}</span>,
+            participant.isAvalancheGearProvider &&
+            <ToolTipIcon key='avalancheGear' icon='snowflake' tooltip={`${participant.name} is bringing Avalanche Gear`} id={iconid} />,
             logisticInfo &&
             <ToolTipIcon key='logisticInfo' icon='comment' tooltip={logisticInfo} id={iconid} />,
             !participant.memberId &&
             <ToolTipIcon key='nonmember' icon='id-badge' tooltip={`${participant.name} is not a member of the CTC`} id={iconid} />,
+            this.props.app.getMemberByName(participant.name)?.membershipType === 'Junior' &&
+            <ToolTipIcon key='junior' icon='child' tooltip={`${participant.name} is a junior member of the CTC`} id={iconid} />,
         ].filter(e => e)
         const buttons = [
             canMoveUp && canEdit &&
@@ -246,6 +251,11 @@ export class TripParticipant extends Component<{
                                 <Col sm={3}>
                                     <SwitchControl field='isPlbProvider' label='Bringing PLB' {...common} />
                                 </Col>
+                                {(participant.isAvalancheGearProvider || new Set((trip.state.trip.prerequisites ?? '').split(',')).has('Avalanche Gear')) &&
+                                    <Col sm={3}>
+                                        <SwitchControl field='isAvalancheGearProvider' label='Bringing Avalanche Gear' {...common} />
+                                    </Col>
+                                }
                                 <Col sm={3}>
                                     <SwitchControl field='isVehicleProvider' label='Bringing Car' {...common} onSave={onSaveIsVehicleProvider} />
                                 </Col>
@@ -292,7 +302,7 @@ export class TripParticipant extends Component<{
                         </Container>
                     </Form>
                 </Accordian>
-            </div>
+            </div >
         )
     }
 }

@@ -1,20 +1,20 @@
 <?php
 
-function GetMembers($con, $userid, $id = 0) {
+function GetMembers(mysqli $con, int $userid, string $where = 'true') {
 	$newMembersRepView  = ConfigServer::newMembersRepView;
 	$membersTable      = ConfigServer::membersTable;
 	$membershipsTable  = ConfigServer::membershipsTable;
 	$memberRolesTable  = ConfigServer::memberRolesTable;
+	$membershipTypesTable = ConfigServer::membershipTypesTable;
 	$tripsTable		   = ConfigServer::tripsTable;
 	$participantsTable = ConfigServer::participantsTable;
-	$where			   = $id === 0 ? "" : "WHERE id = $id";
 
-	if ($userid == 0)
-	{
+	if ($userid == 0) {
 		return SqlResultArray($con, "SELECT * FROM $newMembersRepView");
 	}
 
-	$query = "SELECT * 
+	return array_values(SqlResultArray($con, 
+		"SELECT * 
 		FROM
 			(SELECT	
 				m.id,
@@ -27,13 +27,17 @@ function GetMembers($con, $userid, $id = 0) {
 				m.emergencyContactName,
 				m.emergencyContactPhone,
 				mr.role AS role,
+				mt.membershipTypeEnum AS membershipType,
 				(CASE WHEN m.id = $userid THEN 1 ELSE 0 END) AS isMe,
 				1 AS isMember
 			FROM $membersTable             m
 			JOIN $membershipsTable         ms  on ms.id = m.membershipId
 			JOIN $memberRolesTable         mr  on mr.memberId = m.id
+			JOIN $membershipTypesTable     mt  on ms.membershipTypeId	 = mt.id
 			WHERE ms.statusAdmin = 'Active' AND ms.membershipTypeId NOT IN (9,10)
-			UNION
+			
+			UNION ALL
+			
 			SELECT 
 				0 as id,
 				p.name,
@@ -42,6 +46,7 @@ function GetMembers($con, $userid, $id = 0) {
 				p.emergencyContactName,
 				p.emergencyContactPhone,
 				'NonMember' as role,
+				'NonMember' AS membershipType,
 				0 as isMe,
 				0 as isMember
 			FROM 
@@ -52,10 +57,8 @@ function GetMembers($con, $userid, $id = 0) {
 				AND t.tripDate > DATE_ADD(now(),INTERVAL -180 DAY)
 				GROUP BY p.name) 		nonmember
 			JOIN $participantsTable 	p ON nonmember.id = p.id) u
-		$where
-		ORDER by name";
-
-	return SqlResultArray($con, $query);
+		WHERE $where
+		ORDER by name, id","name"));
 }
 
 ?>

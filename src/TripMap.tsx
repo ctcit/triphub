@@ -12,12 +12,15 @@ import { MdGridOff, MdInfo /* , MdMap */ } from 'react-icons/md';
 import Select, { ActionMeta } from 'react-select'
 
 export class TripMap extends MapCommon<{
-    routesId : string, 
-    routesLabel : string,
-    mapsId : string, 
-    mapsLabel : string,
-    hidden? : boolean,
-    readOnly? : boolean,
+    app: App
+    routesId: string,
+    routesLabel: string,
+    mapsId: string,
+    mapsLabel: string,
+    hidden?: boolean,
+    hiddenMap?: boolean,
+    hiddenRoute?: boolean,
+    readOnly?: boolean,
     isLoading?: boolean,
     list? : any,
     isOnline: boolean,
@@ -25,11 +28,8 @@ export class TripMap extends MapCommon<{
     onSave: (id: string, value: any) => Promise<ITrip>,
     onGetValidationMessage?: (id: string) => string,
     leafletMapId: string,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
-    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
-    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
-},{
-    savingMapSheets : boolean,
+}, {
+    savingMapSheets: boolean,
     savingRoutes: boolean,
     mapVisible: boolean,
     editing: boolean,
@@ -51,20 +51,20 @@ export class TripMap extends MapCommon<{
     private memoizedGetArchivedRoutes = memoizeOne((loadArchivedRoutes: boolean) => {
         if (loadArchivedRoutes) {
             this.setState({ busy: true }, async () => {
-                this.props.getArchivedRoutes(false, false)
+                this.props.app.getArchivedRoutes(false, false)
                     .then((archivedRoutes: IArchivedRoute[]) => {
                         const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                             return { value: archivedRoute.id, label: archivedRoute.title };
                         });
                         if (this.mounted) {
-                            this.setState({archivedRoutes, archivedRouteSuggestions, busy: false});
+                            this.setState({ archivedRoutes, archivedRouteSuggestions, busy: false });
                         }
                     });
             });
         }
     });
 
-    constructor(props:any) {
+    constructor(props: any) {
         super(props);
 
         const routesAsLatLngs: Array<Array<[number, number]>> = this.getRoutes();
@@ -73,7 +73,7 @@ export class TripMap extends MapCommon<{
         this.pendingRoutesLatLngs = routesAsLatLngs || [];
         this.pendingMapSheets = this.mapSheets;
 
-        this.state = { 
+        this.state = {
             savingMapSheets: false,
             savingRoutes: false,
             mapVisible: routesAsLatLngs && routesAsLatLngs.length > 0,
@@ -93,7 +93,7 @@ export class TripMap extends MapCommon<{
     public componentDidMount() {
         this.mounted = true;
         this.memoizedGetArchivedRoutes(!(this.props.readOnly ?? true));
-        
+
         if (this.state.mapVisible) {
             this.setUpMap();
         }
@@ -103,9 +103,9 @@ export class TripMap extends MapCommon<{
         this.mounted = false;
     }
 
-   public render(){
-        const onEdit = () => { 
-            this.setState({ editsMade: false, editing: true }); 
+    public render() {
+        const onEdit = () => {
+            this.setState({ editsMade: false, editing: true });
         }
 
         // changed in MapEditor - save deferred
@@ -118,14 +118,14 @@ export class TripMap extends MapCommon<{
             this.setState({ editsMade: true });
         }
 
-        const onSave = () => { 
+        const onSave = () => {
             this.Save(this.pendingMapSheets, this.pendingRoutesLatLngs);
         }
-        const onCancel = () => { 
-            this.setState({ editsMade: false, editing: false }); 
+        const onCancel = () => {
+            this.setState({ editsMade: false, editing: false });
         }
         const onCancelDropdownToggle = () => {
-            this.setState({ cancelDropdownOpen: !this.state.cancelDropdownOpen }); 
+            this.setState({ cancelDropdownOpen: !this.state.cancelDropdownOpen });
         }
 
         // changed in TripMap - save immediate
@@ -146,11 +146,6 @@ export class TripMap extends MapCommon<{
                 this.clearRoute();
             }
         }
-
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
-            this.props.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (routeId: number): Promise<IArchivedRoute | undefined> => 
-            this.props.getArchivedRoute(routeId);
 
         return (
             <div>
@@ -183,10 +178,10 @@ export class TripMap extends MapCommon<{
                                             })}}
                                     />
                                     <a href="https://youtu.be/77B6EzYLcmo" target="_blank">
-                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                        <MdInfo size="36" color="#6899e4" style={{ padding: '7px' }} />
                                     </a>
                                 </ButtonGroup>
-                        }
+                            }
                         </ControlWrapper>
                     </Col>
                 </Row>
@@ -236,32 +231,32 @@ export class TripMap extends MapCommon<{
                         { !this.props.readOnly && this.props.isOnline &&
                             <ButtonGroup>
                                 <Button onClick={onEdit}>
-                                    <span className='fa fa-map'/>
-                                    Edit Maps/Routes (Advanced)
+                                    <span className='fa fa-map' />
+                                    {this.props.hiddenRoute ? 'Pick map' : 'Edit Maps/Routes (Advanced)'}
                                 </Button>
                                 <a href="https://youtu.be/mF0jPHLjanI" target="_blank">
-                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                    <MdInfo size="36" color="#6899e4" style={{ padding: '7px' }} />
                                 </a>
                             </ButtonGroup>
                         }
-                        <Modal isOpen={this.state.editing} toggle={onSave} 
-                            size="lg" style={{maxWidth: '1600px', width: '95%', margin: '10px auto'}} centered={true}>
+                        <Modal isOpen={this.state.editing} toggle={onSave}
+                            size="lg" style={{ maxWidth: '1600px', width: '95%', margin: '10px auto' }} centered={true}>
                             <ModalHeader toggle={onSave}>Edit Routes/Maps</ModalHeader>
                             <ModalBody>
-                                <MapEditor 
-                                    nz50MapsBySheet={this.props.nz50MapsBySheet} 
-                                    mapSheets={this.mapSheets} 
+                                <MapEditor
+                                    app={this.props.app}
+                                    hiddenMap={this.props.hiddenMap}
+                                    hiddenRoute={this.props.hiddenRoute}
+                                    mapSheets={this.mapSheets}
                                     routesAsLatLngs={this.getRoutesAsLatLngs()}
-                                    onMapSheetsChanged={onMapSheetsChanged} 
+                                    onMapSheetsChanged={onMapSheetsChanged}
                                     onRoutesChanged={onRoutesChanged}
-                                    getArchivedRoutes={getArchivedRoutes}
-                                    getArchivedRoute={getArchivedRoute}
                                 />
                             </ModalBody>
                             <ModalFooter>
-                                { !this.state.editsMade && <Button color="secondary" onClick={onCancel}>Close</Button> }                                    
-                                { this.state.editsMade && <Button color="primary" onClick={onSave}>Save</Button> }
-                                { this.state.editsMade && 
+                                {!this.state.editsMade && <Button color="secondary" onClick={onCancel}>Close</Button>}
+                                {this.state.editsMade && <Button color="primary" onClick={onSave}>Save</Button>}
+                                {this.state.editsMade &&
                                     <ButtonDropdown color="secondary" drop={'right'} isOpen={this.state.cancelDropdownOpen} toggle={onCancelDropdownToggle}>
                                         <DropdownToggle caret={false}>Cancel</DropdownToggle>
                                         <DropdownMenu>
@@ -274,7 +269,7 @@ export class TripMap extends MapCommon<{
                     </Col>
                 </Row>
             </div>
-         );
+        );
     }
 
     public setUpMap(): void {
@@ -295,14 +290,14 @@ export class TripMap extends MapCommon<{
 
         this.fitBounds();
     }
-    
+
     private getMapSheets(): string[] {
         const mapSheets: string[] = [];
         const maps: string[] = this.props.onGet("maps") || [];
         maps.forEach(map => {
             if (map && map !== "") {
                 const parts = map.split(" ");
-                if (parts.length > 0 && this.props.nz50MapsBySheet[parts[0]]) {
+                if (parts.length > 0 && this.props.app.maps[parts[0]]) {
                     mapSheets.push(parts[0]);
                 }
             }
@@ -316,7 +311,7 @@ export class TripMap extends MapCommon<{
 
     // -----------------
 
-    private selectArchivedRoute(archivedRouteId: number) : void {
+    private selectArchivedRoute(archivedRouteId: number): void {
         this.setState({ busy: true });
          this.props.getArchivedRoute(archivedRouteId)
              .then(async (archivedRoute?: IArchivedRoute) => {
@@ -328,8 +323,8 @@ export class TripMap extends MapCommon<{
                 this.setState({ busy: false });
             });
     }
-    
-    private clearRoute() : void {
+
+    private clearRoute(): void {
         this.saveSelectedRoute([]);
     }
 
@@ -379,7 +374,7 @@ export class TripMap extends MapCommon<{
 
     // -----------------
 
-    private Save = (mapSheets: string[] | null, routesAsLatLngs: Array<Array<[number, number]>> | null): void => { 
+    private Save = (mapSheets: string[] | null, routesAsLatLngs: Array<Array<[number, number]>> | null): void => {
         const state: any = { editsMade: false, editing: false };
         if (mapSheets) {
             state.savingMapSheets = true;
@@ -411,14 +406,14 @@ export class TripMap extends MapCommon<{
                 this.mapSheets = mapSheets;
                 this.pendingMapSheets = mapSheets;
                 promises.push(this.props.onSave('maps', mapSheets
-                    .filter(mapSheet => mapSheet > "")
-                    .map(mapSheet => mapSheet + " " +  this.props.nz50MapsBySheet[mapSheet].name)));
+                    .filter(mapSheet => mapSheet)
+                    .map(mapSheet => mapSheet + " " + this.props.app.maps[mapSheet].name)));
             }
 
             return Promise.all(promises)
                 .then(() => Promise.resolve(), () => Promise.resolve())
-                .then(() => this.setState({savingMapSheets: false, savingRoutes: false}));
-        }); 
+                .then(() => this.setState({ savingMapSheets: false, savingRoutes: false }));
+        });
     }
 
 }

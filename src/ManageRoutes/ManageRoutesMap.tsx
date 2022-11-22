@@ -7,6 +7,7 @@ import { ManageRoutesMapEditor } from './ManageRoutesMapEditor';
 import * as L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import { App } from 'src/App';
 
 export class RouteDetails {
     public title: string = "";
@@ -17,15 +18,13 @@ export class RouteDetails {
 export enum MapOperation { None, MoveMarker, ZoomExtents }
 
 export class ManageRoutesMap extends MapCommon<{
+    app: App
     readOnly? : boolean,
     route: IArchivedRoute,
     onSave: (route?: IArchivedRoute) => Promise<void>,
     onCancel: () => Promise<void>,
     isEditing: boolean,
     leafletMapId: string,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
-    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
-    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined>, // TODO - replace with service
     onBoundsChanged: (bounds: L.LatLngBounds) => void;
     onMarkerMoved: (latLng: L.LatLng) => void;
     mapOperation: MapOperation
@@ -110,11 +109,6 @@ export class ManageRoutesMap extends MapCommon<{
                 break;
         }
 
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
-            this.props.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (routeId: number): Promise<IArchivedRoute | undefined> => 
-            this.props.getArchivedRoute(routeId);
-
         return (
             <div>
                 <Row>
@@ -123,13 +117,11 @@ export class ManageRoutesMap extends MapCommon<{
                         <ModalHeader toggle={onSave}>New Route</ModalHeader>
                         <ModalBody>
                             <ManageRoutesMapEditor 
-                                nz50MapsBySheet={this.props.nz50MapsBySheet} 
+                                app={this.props.app}
                                 routeDetails={this.pendingRouteDetails}
                                 routesAsLatLngs={this.pendingRoutesLatLngs}
                                 onDetailsChanged={onDetailsChanged}
                                 onRoutesChanged={onRoutesChanged}
-                                getArchivedRoutes={getArchivedRoutes}
-                                getArchivedRoute={getArchivedRoute}
                             />
                         </ModalBody>
                         <ModalFooter>

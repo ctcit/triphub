@@ -7,9 +7,9 @@ import { UserSettings } from './Services/UserSettings'
 import { MembersService } from './Services/MembersService'
 import { MdInfo } from 'react-icons/md'
 
-export const PriorityNavItem = (props: any) => {  
-    const el: HTMLElement|null = document.getElementById('priority-nav-items') 
-    return (el !== null) ? ReactDOM.createPortal( props.children, el ) : null
+export const PriorityNavItem = (props: any) => {
+    const el: HTMLElement | null = document.getElementById('priority-nav-items')
+    return (el !== null) ? ReactDOM.createPortal(props.children, el) : null
 }
 
 export class TriphubNavbar extends Component<{
@@ -61,6 +61,7 @@ export class TriphubNavbar extends Component<{
 
         const alltrips = () => this.props.setPath('/')
         const calendar = () => this.props.setPath('/calendar')
+        const pasttrips = () => this.props.app.setPath('/pasttrips')
         const newtrip = () => this.props.setPath('/newtrip')
         const newsletter = () => this.props.setPath('/newsletter')
         const newsocial = () => this.props.setPath('/newsocial')
@@ -71,6 +72,7 @@ export class TriphubNavbar extends Component<{
 
         const onAllTripsPage = this.props.path === '' || this.props.path === '/'
         const onCalendarPage = this.props.path === '/calendar'
+        const onPastTripsPage = this.props.path === '/pasttrips'
         const onNewTripPage = this.props.path === '/newtrip'
         const onManageNewsletterPage = this.props.path === '/newsletter'
         const onNewSocialPage = this.props.path === '/newSocial'
@@ -123,6 +125,16 @@ export class TriphubNavbar extends Component<{
                                 </span>
                             </NavLink>
                         </NavItem>
+                    }
+                    {this.props.isOnline && this.props.role >= Role.Member && !onPastTripsPage && 
+                        <NavItem key='pasttrips'>
+                            <NavLink onClick={pasttrips} disabled={this.props.app.isLoading}>
+                                <span className='triphub-navbar'>
+                                    <span className='fa fa-search' />
+                                    &nbsp; Past Trips
+                                </span>
+                            </NavLink>
+                        </NavItem>)
                     }
                     {this.props.isOnline && this.props.role >= Role.TripLeader && !onNewTripPage &&
                         <NavItem key='newTrip'>
@@ -216,7 +228,7 @@ export class TriphubNavbar extends Component<{
         )
     }
 
-    private setWidth = () => this.setState({windowWidth: window.innerWidth})
+    private setWidth = () => this.setState({ windowWidth: window.innerWidth })
 
     private installApp() {
         if (this.props.beforeInstallPrompt !== null) {

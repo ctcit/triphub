@@ -6,13 +6,13 @@ import 'leaflet-gpx';
 import { Component } from 'react';
 import { IMap } from './Interfaces';
 
-export type NZ50MapPolygon = L.Polygon & {nz50map: { sheetCode: string }};
-export type ArchivedRoutePolygon = L.Polygon & {archivedRoute: { id: string }};
+export type NZ50MapPolygon = L.Polygon & { nz50map: { sheetCode: string } };
+export type ArchivedRoutePolygon = L.Polygon & { archivedRoute: { id: string } };
 
 
 export class MapCommon<P extends {
-    leafletMapId: string,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
+    app: App
+    leafletMapId: string
 }, S, SS = any> extends Component<P, S, SS> {
     // the leaflet map
     public map: L.Map = undefined as any as L.Map; // we know this gets set before it is used
@@ -32,14 +32,14 @@ export class MapCommon<P extends {
 
 
     protected initialHeight: number = 400;
-    protected  initialWidth: number = 680;
+    protected initialWidth: number = 680;
 
     // route markers
     protected routeMarkers: L.Marker[] = [];
     protected routeColours: string[] = ['red', 'magenta', 'cyan', 'yellow', 'deeppink', 'darkviolet', 'teal', 'orangered'];
 
 
-    constructor(props:any) {
+    constructor(props: any) {
         super(props);
     }
 
@@ -52,7 +52,7 @@ export class MapCommon<P extends {
             let index: number = 0;
             this.routes.forEach((route: L.Polyline) => {
                 const color: string = this.routeColours[index % this.routeColours.length];
-                route.setStyle({color});
+                route.setStyle({ color });
                 const latLngs: L.LatLng[] = route.getLatLngs() as L.LatLng[];
                 if (latLngs.length > 0) {
                     if (!suppressCurrentRouteMarker || index !== this.currentRouteIndex) {
@@ -71,7 +71,7 @@ export class MapCommon<P extends {
             });
         }
     }
-    
+
     public setUpMap(): void {
 
         this.map = L.map(this.props.leafletMapId, {
@@ -95,42 +95,43 @@ export class MapCommon<P extends {
         const topoLayer = L.tileLayer('http://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
             minZoom: 6,
             maxZoom: 16,
-            subdomains:'abcd',
+            subdomains: 'abcd',
             attribution: '<a href=“http://data.linz.govt.nz”>Sourced from LINZ. CC BY 4.0'
         }).addTo(this.map);
         const aerialLayer = L.tileLayer('https://basemaps.linz.govt.nz/v1/tiles/aerial/EPSG:3857/{z}/{x}/{y}.webp?api=c01eg2pqbm71b75z3547szpb60k', {
             minZoom: 6,
             maxZoom: 16,
-            subdomains:'abcd',
+            subdomains: 'abcd',
             attribution: '© <a href="//www.linz.govt.nz/linz-copyright">LINZ CC BY 4.0</a> © <a href="//www.linz.govt.nz/data/linz-data/linz-basemaps/data-attribution">Imagery Basemap contributors</a>'
         });
-        L.control.layers({ "Topo": topoLayer, "Aerial": aerialLayer}, {})
-            .addTo(this.map);        
+        L.control.layers({ "Topo": topoLayer, "Aerial": aerialLayer }, {})
+            .addTo(this.map);
 
         this.nz50LayerGroup = L.layerGroup()
             .addTo(this.map);
         this.nz50MarkerLayerGroup = L.layerGroup()
             .addTo(this.map);
 
-        Object.keys(this.props.nz50MapsBySheet).map((mapSheet: string) => {
-            const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+        for (const nz50Map of Object.values(this.props.app.maps)) {
 
             // the map sheet polygon
-            const polygon = L.polygon(nz50Map.coords, {color: 'blue', weight: 2, fill: true, fillOpacity: 0.0}).addTo(this.nz50LayerGroup);
+            const polygon = L.polygon(nz50Map.coords, { color: 'blue', weight: 2, fill: true, fillOpacity: 0.0 }).addTo(this.nz50LayerGroup);
             (polygon as any).nz50map = nz50Map;
 
             // the map sheet label
-            const polygonLabel = L.divIcon({className: 'sheet-div-icon',
-                html: '<div class="sheet-code">' + nz50Map.sheetCode + '</div><div class="sheet-name">' + nz50Map.name + '</div>'});
+            const polygonLabel = L.divIcon({
+                className: 'sheet-div-icon',
+                html: '<div class="sheet-code">' + nz50Map.sheetCode + '</div><div class="sheet-name">' + nz50Map.name + '</div>'
+            });
             // you can set .my-div-icon styles in CSS
 
             // ideally would centre around polygon.getCenter()...
             const markerPos = polygon.getBounds().pad(-0.25).getNorthWest();
 
-            L.marker(markerPos, {icon: polygonLabel, interactive: false}).addTo(this.nz50MarkerLayerGroup);
+            L.marker(markerPos, { icon: polygonLabel, interactive: false }).addTo(this.nz50MarkerLayerGroup);
 
             this.nz50MapPolygonsBySheet[nz50Map.sheetCode] = polygon as NZ50MapPolygon;
-        });
+        };
 
         this.map.on('zoomend', () => {
             if (this.map.getZoom() < 9) {
@@ -146,7 +147,7 @@ export class MapCommon<P extends {
     }
 
     public mapSheetWithName(mapSheet: string): string {
-        const nz50Map: IMap = this.props.nz50MapsBySheet[mapSheet];
+        const nz50Map: IMap = this.props.app.maps[mapSheet];
         return nz50Map ? nz50Map.sheetCode + ' ' + nz50Map.name : mapSheet;
     }
 
@@ -177,14 +178,14 @@ export class MapCommon<P extends {
         if (gpx.charCodeAt(0) === 65279) {
             gpx = gpx.substring(1);
         }
-        
+
         return new Promise<void>((resolve, reject) => {
             const zoom = this.map.getZoom();
             const tolerance = this.getTolerance(Math.max(12, zoom));  // don't generalize too harshly when zoomed out
             new L.GPX(gpx, {
-                async: true, 
+                async: true,
                 polyline_options: {},
-                gpx_options:{
+                gpx_options: {
                     parseElements: ['track', 'route'] as any // yuk!
                 },
                 marker_options: {}
@@ -253,7 +254,7 @@ export class MapCommon<P extends {
 
     public addArrowheads(route: L.Polyline) {
         if (route.getLatLngs().length > 1) {
-            (route as any).arrowheads({ yawn: 45, size: '10px', fill: true, frequency: '100px'});
+            (route as any).arrowheads({ yawn: 45, size: '10px', fill: true, frequency: '100px' });
         }
         return route;
     }

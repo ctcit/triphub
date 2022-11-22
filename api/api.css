@@ -1,0 +1,40 @@
+body {
+    font-family: arial;
+}
+
+table {
+    border-collapse: collapse
+}
+
+td, th {
+    border: solid 1px gray;
+    vertical-align: top
+}
+
+a {
+    text-decoration: none;
+}
+
+input {
+    border: solid 1px #00000020;
+}
+
+.GET {
+    background: lightgreen;
+}
+
+.POST {
+    background: cyan;
+}
+
+.PATCH {
+    background: plum;
+}
+
+.DELETE {
+    background: red;
+}
+
+.messageDestination {
+    background: lightgray
+}

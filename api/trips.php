@@ -1,20 +1,12 @@
 <?php
 
-function GetTrips($con,$userId,$id = null) {
-	$mytrips 			 = 0;
-	$open 	  		     = 1;
-	$closed 			 = 2;
-	$suggested 			 = 3;
-	$deleted 			 = 4;
-	$rejected 	 		 = 5;
-	$suggestImprovements = 6;
-	$draft               = 7;
+function GetTrips(mysqli $con, int $userId, string $where=null): array {
 	$currencyInDays	     = ConfigServer::currencyInDays;
 	$tripsTable          = ConfigServer::tripsTable;
 	$participantsTable   = ConfigServer::participantsTable;
 	$historyTable        = ConfigServer::historyTable;
 	$membersTable        = ConfigServer::membersTable;
-	$where = $id === null ? "t.tripDate > DATE_ADD(now(),INTERVAL -$currencyInDays DAY)" : "t.id = $id";
+	$where 				 = $where ?? "t.tripDate > DATE_ADD(now(),INTERVAL -$currencyInDays DAY)";
 
 	// Change the trips table to store enum "approval".
 	// Return as a string and cast in the typescript (decouples numbering)
@@ -22,68 +14,69 @@ function GetTrips($con,$userId,$id = null) {
 	$trips = SqlResultArray($con,
 	   "SELECT *,
 	   		(CASE
-			   WHEN isDeleted = 1		         	THEN 'Deleted'
-			   WHEN approval  != 'Approved' 		THEN approval
-			   WHEN CURDATE() < openDate 			THEN approval
-			   WHEN CURDATE() <= closeDate			THEN 'Open' ELSE 'Closed'
+			   WHEN isDeleted    		    THEN 'Deleted'
+			   WHEN approval  != 'Approved' THEN approval
+			   WHEN CURDATE() < openDate 	THEN approval
+			   WHEN CURDATE() <= closeDate	THEN 'Open' ELSE 'Closed'
 			END) 			as `state`,
-			'' 				as `leaders`,
-			0 				as `participantCount`,
-			'' 				as `role`
+			'' 				as `role`,
+			JSON_ARRAY()	AS `leaders`,
+			JSON_ARRAY()	AS `nonleaders`,
+			JSON_ARRAY()	AS `editors`
 	    FROM $tripsTable t
-			WHERE $where
-			ORDER BY tripDate");
+		WHERE $where
+		ORDER BY tripDate","id");
+
+	if (!$trips || !$userId) return array_values($trips);
+	
+	$tripIds = implode(',',array_keys($trips));
 
 	$participants = SqlResultArray($con,
-	   "SELECT	p.tripId,
-				coalesce(p.name,concat(trim(m.firstname),' ',trim(m.lastname))) as `name`,
-				isLeader
-			FROM      $tripsTable t
-			JOIN      $participantsTable p ON p.tripId = t.id and p.isDeleted = 0
-			LEFT JOIN $membersTable      m ON m.id = p.memberId
-			WHERE $where");
+	   "SELECT DISTINCT
+	   		p.tripId,
+			coalesce(p.name,concat(trim(m.firstname),' ',trim(m.lastname))) AS `name`,
+			p.memberId,
+			(CASE WHEN isDeleted THEN 'Deleted' WHEN isLeader THEN 'Leader' ELSE 'Non-Leader' END) AS `role`
+		FROM      $participantsTable p
+		LEFT JOIN $membersTable      m ON m.id = p.memberId
+		WHERE p.tripId IN ($tripIds)
+		
+		UNION ALL
 
-	$roles = SqlResultArray($con,
-	   "SELECT c.tripId,
-	   			'Editor'  as `role`
-			FROM $historyTable c
-				JOIN $tripsTable          t on t.id = c.tripId
-				WHERE $where AND c.userId != 0 AND c.userId = $userId
-		UNION
-		SELECT p.tripId,
-				(case when p.isDeleted then 'Removed' when p.isLeader then 'Leader' else 'Tramper' end) as `role`
-			FROM $participantsTable p
-				JOIN $tripsTable        t on t.id = p.tripId
-				WHERE $where AND p.memberId = $userId",
-			"tripId");
+		SELECT DISTINCT	
+			h.tripId,
+			concat(trim(m.firstname),' ',trim(m.lastname)) AS `name`,
+			h.userId as `memberId`,
+			'Editor' AS `role`
+		FROM $historyTable h
+		JOIN $membersTable m ON m.id = h.userId
+		WHERE h.tripId IN ($tripIds)
+        AND NOT (h.table = '$participantsTable' AND JSON_EXTRACT(h.after,'$.memberId') = h.userId)");
+
+	foreach ($participants as $participant) {
+		$tripId = $participant['tripId'];
+		$memberId = $participant['memberId'];
+		$role = $participant['role'];
+		$tripInfo[$tripId][$role] []= $memberId;
+		$trips[$tripId][str_replace('-','',strtolower($role)).'s'] []= $participant['name'];
+
+		if ($role === 'Editor' && in_array($memberId, $tripInfo[$tripId]['Deleted'])) continue;
+		if ($memberId === $userId) $tripInfo[$tripId]['role'] = $role;
+	}
 
 	foreach ($trips as &$trip) {
-		$leaders = array();
-		$trip["participantCount"] = 0;
-
-		foreach ($participants as &$participant) {
-			if ($participant["tripId"] == $trip["id"] && $userId) {
-				$trip["participantCount"]++;
-				if ($participant["isLeader"] == "1")
-					$leaders []= $participant["name"];
+		if ($trip['approval'] === 'Approved' && in_array($trip['state'],['Open','Closed','Approved'])) {
+			$trip['role'] = $tripInfo[$trip['id']]['role'];
+			if ($trip['role']) {
+				$trip['state'] = $trip['role'] === 'Editor' ? $trip['state'] : 'MyTrips';
 			}
-		}
-
-		$trip["leaders"] = implode(", ",$leaders);
-
-		if ($trip["approval"] == 'Approved'
-			&& in_array($trip["state"],['Open','Closed','Approved'])
-			&& array_key_exists($trip["id"],$roles) && $roles[$trip["id"]]["role"] != "Removed") {
-			$trip["role"] = $roles[$trip["id"]]["role"];
-			if ($roles[$trip["id"]]["role"] != "Editor")
-				$trip["state"] = 'MyTrips';
 		}
 	}
 
-	return $trips;
+	return array_values($trips);
 }
 
-function DeleteTripEdits($con) {
+function DeleteTripEdits(mysqli $con): void {
 	$expiryAge = ConfigClient::editRefreshInSec * 10;
 	$table = ConfigServer::editTable;
 
@@ -93,7 +86,7 @@ function DeleteTripEdits($con) {
 // Send email function
 // $email should be an array with keys 'recipients', 'html', 'subject'
 // $historyAction is the action to record in the history table
-function SendEmail($con, $tripId, $email, $userId=null, $historyAction='email') {
+function SendEmail(mysqli $con, int $tripId, array $email, int $userId=null, string $historyAction='email'): void {
 	$historyTable = ConfigServer::historyTable;
 	$tripsTable = ConfigServer::tripsTable;
 	$headers = "MIME-Version: 1.0\r\n".
@@ -113,30 +106,26 @@ function SendEmail($con, $tripId, $email, $userId=null, $historyAction='email') 
 	}
 
 	$emailJson = SqlVal($con,json_encode($email));
-	$userId = ($userId==null) ? "NULL" : $userId;
+	$userId = $userId ?? "NULL";
 	$id = SqlExecOrDie($con, "INSERT $historyTable
 								SET	`tripId` = $tripId,
 									`userId` = $userId,
 									`action` = '$historyAction',
 									`timestamp` = UTC_TIMESTAMP(),
 									`after` = $emailJson", true);
-	SqlExecOrDie($con, "UPDATE $tripsTable
-						SET historyId = $id
-						WHERE id = $tripId");
-
-	return $email;
+	SqlExecOrDie($con, "UPDATE $tripsTable SET historyId = $id WHERE id = $tripId");
 }
 
-function SendTripEmail($con, $tripId, $userId=null, $subject=null, $message=null) {
+function SendTripEmail(mysqli $con, int $tripId, int $userId=null, string $subject=null, string $message=null): array {
 	$email = GetTripHtml($con, $tripId, $subject, $message);
 	SendEmail($con, $tripId, $email, $userId);
 	return $email;
 }
 
-function SendApprovalEmail($con, $tripId) {
-	$trip = GetTrips($con, 'null', $tripId)[0];
-
+function SendApprovalEmail(mysqli $con, int $tripId): array {
 	$participantsTable = ConfigServer::participantsTable;
+	$trip = GetTrips($con, 'null', "t.id = $tripId")[0];
+
 	$leader = SqlResultScalar($con,"SELECT name
 						            FROM $participantsTable
 									WHERE tripId = $tripId AND isLeader = 1 LIMIT 1","id");
@@ -154,7 +143,7 @@ function SendApprovalEmail($con, $tripId) {
 	}
 
 	$email['html'] = "<p>A new trip \"$trip[title]\" has been added".
-					 ( ($leader!=null) ? " by $leader" : "").
+					 ( $leader ? " by $leader" : "").
 					 ".</p>".
                      "<p>Please go to <a href=\"$tripLink\">$tripLink</a> to check and approve this trip.</p>";
 	$email['messageId'] = MakeGuid();
@@ -166,7 +155,7 @@ function SendApprovalEmail($con, $tripId) {
 	return $email;
 }
 
-function PostEmails($con) {
+function PostEmails(mysqli $con): array {
 
 	// Step 1 - Send emails arising from edits
 	DeleteTripEdits($con);
@@ -192,20 +181,20 @@ function PostEmails($con) {
 					"SELECT t.id, t.title, t.tripDate
 					FROM $tripsTable t WHERE approval = 'PENDING'
 					AND tripDate > NOW()
-					AND (SELECT COUNT(*) FROM $historyTable WHERE tripId = t.id
-						 AND action = 'approvalemail') = 0
+					AND (SELECT COUNT(*) 
+						 FROM $historyTable h
+						 WHERE h.tripId = t.id
+						 AND h.action = 'approvalemail') = 0
 				    ORDER BY t.id");
 
 	foreach ($newTrips as &$trip) {
 		$trip['email'] = SendApprovalEmail($con, $trip['id']);
 	}
 
-	$trips = array_merge($trips, $newTrips);
-
-	return $trips;
+	return array_merge($trips, $newTrips);
 }
 
-function GetTripHtmlValue($col,$row,$true="Yes",$false="") {
+function GetTripHtmlValue(array $col, array $row, string $true="Yes", string $false=""): string {
 	$val = $row[$col['Field']];
 	switch ($col["Type"]) {
 		case "bit(1)":
@@ -218,8 +207,7 @@ function GetTripHtmlValue($col,$row,$true="Yes",$false="") {
 				foreach ($val as $key => $item) {
 					if (is_string($item)) {
 						$return .= htmlentities($item);
-					}
-					else {
+					} else {
 						$valStr = print_r($val, true);
 						trigger_error("Unexpected type (".gettype($item).") for item with key=$key val=$valStr");
 					}
@@ -231,54 +219,47 @@ function GetTripHtmlValue($col,$row,$true="Yes",$false="") {
 	}
 }
 
-function CmpParticipant($a,$b) {
-	$dele = intval($a['isDeleted']) - intval($b['isDeleted']);
-	$lead = intval($a['isLeader']) - intval($b['isLeader']);
-	$disp = intval($a['order']) - intval($b['order']);
-	return ($dele != 0 ? $dele : ($lead != 0 ? -$lead : $disp));
-}
-
-function SortParticipants(&$participants) {
+function SortParticipants(array &$participants): void {
 	$participants = array_values($participants);
 	foreach ($participants as &$participant) {
-		$participant['order'] = Coalesce($participant['displayPriority'],$participant['id']);
+		$participant['order'] = $participant['displayPriority'] ?? $participant['id'];
 	}
 
-	usort($participants, "CmpParticipant");
+	array_multisort(
+		array_column($participants,'isDeleted'),SORT_ASC,SORT_NUMERIC,
+		array_column($participants,'isLeader'),SORT_DESC,SORT_NUMERIC,
+		array_column($participants,'order'),SORT_ASC,SORT_NUMERIC,$participants);
 }
 
-function ClassifyParticipants(&$participants, $trip) {
-	$classifications = [];
-
+function ClassifyParticipants(array &$participants, array $trip): array {
 	foreach ($participants as $index => &$participant) {
 		$participant['index'] = $index;
 		$participant['classification'] =
-			((array_key_exists('isCreated', $participant) && $participant['isCreated']) ? 'not-listed' :
+			($participant['isCreated'] ? 'not-listed' :
 			($participant['isDeleted'] ? 'removed' :
 			($participant['isLeader'] ? 'leader' :
 			($trip['isLimited'] && $index >= $trip['maxParticipants'] ? 'waitlisted' : 'listed'))));
-		$classifications[$participant['id']] = $participant;
 	}
 
-	return $classifications;
+	return array_combine(array_column($participants, 'id'), $participants);
 }
 
-function GetTripHtml($con,$id,$subject=null,$message=null) {
+function GetTripHtml(mysqli $con, int $tripId, string $subject=null, string $message=null): array {
 	$tripsTable 		= ConfigServer::tripsTable;
 	$participantsTable	= ConfigServer::participantsTable;
 	$historyTable 		= ConfigServer::historyTable;
 	$membersTable      	= ConfigServer::membersTable;
-	$trip				= GetTrips($con,'null',$id)[0];
+	$trip				= GetTrips($con, 0, "t.id = $tripId")[0];
 	$participants		= SqlResultArray($con,"SELECT *
 											   FROM $participantsTable
-											   WHERE tripId = $id","id");
+											   WHERE tripId = $tripId","id");
 	$oldTrip 			= $trip;
 	$oldParticipants	= $participants;
 	$changes    		= SqlResultArray($con,"SELECT h.*,
 													coalesce(concat(trim(m.firstname),' ',trim(m.lastname)),'?') as changedby
 											   FROM $historyTable h
 											   LEFT JOIN $membersTable m ON m.id = h.userId
-											   WHERE h.tripId = $id AND h.id > $trip[historyId]
+											   WHERE h.tripId = $tripId AND h.id > $trip[historyId]
 											   ORDER BY id DESC");
 	$tripsInfo			= SqlResultArray($con,"SHOW FULL COLUMNS FROM $tripsTable", "Field");
 	$participantsInfo	= SqlResultArray($con,"SHOW FULL COLUMNS FROM $participantsTable", "Field");
@@ -358,10 +339,10 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	if ($oldApproval != $approval) {
 		$changedby = $columnChange['approval']['changedby'];
 		if ($oldApproval == "Pending" && in_array($approval,["Approved","Rejected"])) {
-			$subject = Coalesce($subject, "RE: $trip[title] on $trip[tripDate] has just been $approval");
+			$subject = $subject ?? "RE: $trip[title] on $trip[tripDate] has just been $approval";
 			$notes []= "<li>This trip has just been <b>$approval</b> by <b>$changedby</b></li>";
 		} else {
-			$subject = Coalesce($subject, "RE: $trip[title] on $trip[tripDate] has changed from $oldApproval to $approval");
+			$subject = $subject ?? "RE: $trip[title] on $trip[tripDate] has changed from $oldApproval to $approval";
 			$notes []= "<li>This trip has just been changed from <b>$oldApproval</b> to <b>$approval</b> by <b>$changedby</b></li>";
 		}
 	}
@@ -372,7 +353,7 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		$isNew = array_key_exists("$id,new",$changes);
 		$classification = $participant['classification'];
 		$oldClassification = $oldParticipants[$id]['classification'];
-		$isCreated = array_key_exists('isCreated', $oldParticipants[$id]) && $oldParticipants[$id]['isCreated'];
+		$isCreated = $oldParticipants[$id]['isCreated'];
 		$isDeleted = $participant['isDeleted'];
 		if ($classification == 'waitlisted' && $index == $trip['maxParticipants']) {
 			$detail .= "<tr><td colspan='100' style='$border $deleted'>Waitlist</td></tr>\n";
@@ -412,10 +393,12 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 		}
 	}
 
-	$legend = "<tr><th>Legend: </th><td style='$border $updated'> Updates </td><td style='$border $inserted'> Additions </td></tr>";
+	$legend = "<tr><th>Legend: </th>
+				   <td style='$border $updated'>Updates</td>
+				   <td style='$border $inserted'>Additions</td></tr>";
 	$email['html'] =
 		$message.
-		(count($notes) == 0 ? "" : "<h3>Please note:</h3>\n<ul>".implode("\n",$notes)."</ul>\n").
+		($notes ? "<h3>Please note:</h3>\n<ul>".implode("\n", $notes)."</ul>\n" : "").
 		"<h3>Current trip details:</h3>\n".
 		"<table style='$border'>$header</table>\n".
 		"<h3>Current participants:</h3>\n".
@@ -429,113 +412,9 @@ function GetTripHtml($con,$id,$subject=null,$message=null) {
 	$email['oldParticipants'] = $oldParticipants;
 	$email['changes'] = $changes;
 	$email['notes'] = $notes;
-	$email['subject'] = Coalesce($subject,"RE: $trip[title] on $trip[tripDate]");
+	$email['subject'] = $subject ?? "RE: $trip[title] on $trip[tripDate]";
 
 	return $email;
-}
-
-function ImportLegacyTrips($con, $truncate)
-{
-	$membersTable      = ConfigServer::membersTable;
-	$membershipsTable  = ConfigServer::membershipsTable;
-	$tripsTable		   = ConfigServer::tripsTable;
-	$participantsTable = ConfigServer::participantsTable;
-	$historyTable      = ConfigServer::historyTable;
-	$logTable          = ConfigServer::logTable;
-	$editTable         = ConfigServer::editTable;
-
-	if ($truncate) {
-		SqlExecOrDie($con,"TRUNCATE $tripsTable");
-		SqlExecOrDie($con,"TRUNCATE $participantsTable");
-		SqlExecOrDie($con,"TRUNCATE $historyTable");
-		SqlExecOrDie($con,"TRUNCATE $logTable");
-		SqlExecOrDie($con,"TRUNCATE $editTable");
-	}
-
-	$before = SqlResultArray($con,"SELECT coalesce((SELECT max(id) FROM $tripsTable),0) AS maxid,
-										  		   (SELECT count(*) FROM $tripsTable) AS trips,
-								   		  		   (SELECT count(*) FROM $participantsTable) AS participants")[0];
-
-	$trips1 = SqlExecOrDie($con,
-		"INSERT $tripsTable(legacyTripid, legacyEventid, isDeleted, isApproved, isSocial,
-								title, openDate, closeDate, tripDate,
-								length, departurePoint, cost, grade, maxParticipants,
-								description, logisticInfo, mapHtml)
-		SELECT t.id, e.id, t.isRemoved, 1, e.type = 'Social',
-				coalesce(t.title,e.title), CURDATE(), t.closeDate, t.date,
-				CASE WHEN t.length like 'Day' THEN 1
-					WHEN t.length like 'am' THEN 1
-					WHEN t.length like 'Easter%' THEN 4
-					WHEN t.length like 'Weekend%' THEN 2
-					WHEN t.length like '2%' THEN 2
-					WHEN t.length like '3%' THEN 3
-					WHEN t.length like '4%' THEN 4
-					WHEN t.length like '11' THEN 11
-					ELSE e.tripLength END,
-				coalesce(t.departurePoint,e.departurePoint),
-				coalesce(t.cost,e.cost),
-				coalesce(t.grade,e.grade),
-				t.maxParticipants,
-				CASE WHEN t.isAdHoc THEN t.status ELSE e.text   END,
-				CASE WHEN t.isAdHoc THEN ''       ELSE t.status END,
-				t.mapHtml
-		FROM trip.trips AS t
-		LEFT JOIN newsletter.events AS e ON e.id = t.eventid
-		WHERE t.id NOT IN (SELECT legacyTripId from $tripsTable WHERE legacyTripId IS NOT NULL)");
-	$participants1 = SqlExecOrDie($con,
-		"INSERT $participantsTable(tripId,memberId,name,email,phone,
-									isDeleted,isLeader,isPlbProvider,isVehicleProvider,
-									vehicleRego,logisticInfo,displayPriority,
-									emergencyContactName,emergencyContactPhone)
-		SELECT t.id, p.memberid,
-				CASE coalesce(p.name,'') WHEN '' THEN concat(trim(m.firstname),' ',trim(m.lastname)) ELSE p.name END,
-				CASE coalesce(p.email,'') WHEN '' THEN m.primaryemail ELSE p.name END,
-				CASE coalesce(p.phone,'') WHEN '' THEN
-					coalesce((CASE m.mobilephone WHEN '' THEN null ELSE m.mobilephone END),
-							 (CASE ms.homephone WHEN '' THEN null ELSE ms.homephone END),
-							 (CASE m.workphone WHEN '' THEN null ELSE m.workphone END)) ELSE p.phone END,
-				p.isRemoved, p.isLeader, p.isPLBProvider, p.isVehicleProvider,
-				p.vehicleRego, p.status, p.displayPriority,
-				coalesce(m.emergencyContactName,''), coalesce(m.emergencyContactPhone,'')
-		FROM $tripsTable            AS t
-		JOIN trip.participants       AS p  ON p.tripId = t.legacyTripId
-		LEFT JOIN $membersTable     AS m  ON m.id = p.memberid
-		LEFT JOIN $membershipsTable AS ms ON ms.id = m.membershipid
-		WHERE t.id NOT IN (SELECT DISTINCT tripId from $participantsTable)
-		ORDER BY p.id");
-	$trips2 = SqlExecOrDie($con,
-		"INSERT $tripsTable(legacyEventId, isSocial,
-								title, openDate, closeDate, tripDate,
-								length, departurePoint, cost, grade, description)
-		SELECT e.id, e.type = 'Social', e.title, e.date, e.date, e.date,
-					e.tripLength, e.departurePoint, e.cost, e.grade, e.text
-		FROM newsletter.events e
-		WHERE e.id NOT IN (SELECT legacyEventId from $tripsTable WHERE legacyEventId IS NOT NULL)");
-	$participants2 = SqlExecOrDie($con,
-		"INSERT $participantsTable(tripId,memberId,isLeader,name,email,phone,
-									emergencyContactName,emergencyContactPhone)
-		SELECT t.id, m.id, 1,
-				e.leader,e.leaderEmail,e.leaderPhone,
-				coalesce(m.emergencyContactName,''),coalesce(m.emergencyContactPhone,'')
-		FROM $tripsTable       AS t
-		JOIN newsletter.events 	AS e ON e.id = t.legacyEventId
-		JOIN $membersTable     AS m ON concat(trim(m.firstname),' ',trim(m.lastname)) = e.leader
-		WHERE t.id NOT IN (SELECT DISTINCT tripId from $participantsTable)
-		ORDER BY e.id");
-	SqlExecOrDie($con,
-		"INSERT $historyTable(`tripid`,`timestamp`,`action`,`table`)
-		SELECT id,UTC_TIMESTAMP(),'import','$tripsTable'
-		FROM $tripsTable
-		WHERE id > $before[maxid];");
-	SqlExecOrDie($con,
-		"UPDATE $tripsTable
-		SET historyId = (SELECT max(id) FROM $historyTable h WHERE h.tripId = trips.id)
-		WHERE id > $before[maxid];");
-
-	return array(	"truncated"=>$truncate,
-					"before"=>$before,
-					"mid"=>array("trips"=>$trips1,"participants"=>$participants1),
-				   	"after"=>array("trips"=>$trips2,"participants"=>$participants2));
 }
 
 ?>

@@ -37,8 +37,8 @@ export interface ITrip extends ITripCosts {
     isNoSignup: boolean
     length: number
     logisticInfo: string
-    maps: string[]
-    routes: number[][][]
+    maps?: string[]
+    routes?: number[][][]
     mapHtml: string
     isDeleted: boolean
     approval: string
@@ -46,9 +46,23 @@ export interface ITrip extends ITripCosts {
     isLimited: boolean
     maxParticipants: number
     prerequisites?: string
-    leaders?: string
+    leaders?: string[]
+    nonleaders?: string[]
+    editors?: string[]
     state: string
-
+    computed_participants?: number
+    ranking?: number
+    ranking_length?: number
+    ranking_cost?: number
+    ranking_participants?: number
+    ranking_title?: number
+    ranking_grade?: number
+    ranking_member?: number
+    ranking_description?: number
+    ranking_logisticInfo?: number
+    ranking_prerequisites?: number
+    ranking_approval?: number
+    ranking_maps?: number
 }
 
 export interface ITripCosts {
@@ -68,6 +82,7 @@ export interface IParticipant extends IParticipantCosts {
     isLeader: boolean
     isPlbProvider: boolean
     isVehicleProvider: boolean
+    isAvalancheGearProvider: boolean
     isDeleted: boolean
     logisticInfo: string
     vehicleRego: string
@@ -133,6 +148,7 @@ export interface IMember {
     emergencyContactName: string
     emergencyContactPhone: string
     role: Role
+    membershipType: string
     isMe: boolean
     isMember: boolean
 }

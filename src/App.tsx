@@ -7,6 +7,7 @@ import { Calendar } from './Calendar';
 import { TitleFromId } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
 import { Newsletter } from './Newsletter/Newsletter';
+import { PastTrips } from './PastTrips';
 import { Spinner, Done } from './Widgets';
 import { INotification, NotificationArea } from './NotificationArea';
 import { ManageRoutes } from './ManageRoutes/ManageRoutes';
@@ -252,6 +253,7 @@ export class App extends Component<{
             mileageRates: () => <ManageMileageRates key='mileageRates' {...common}/>,
             destinations: () => <ManageDestinations key='destinations' {...common}/>,
             trips: () => <Trip key='trips' isNew={false} isNewSocial={true} id={id} {...common} />,
+			pasttrips: () => <PastTrips key='pasttrips' app={this} />,
             login: () => <Login key='login' {...common} />,
             default: () => <TripsList key='default' {...common}/>,
         }
@@ -300,7 +302,7 @@ export class App extends Component<{
             <NotificationArea notifications={this.state.notifications} key='notificationArea'
                 containerClassName={ConfigService.containerClassName} 
             />,
-            (renderings[rendering] || renderings.default)(),
+            (renderings[rendering] ?? renderings.default)(),
             (this.state.isLoadingLoginStatus && <SilentLogin onLoaded={onLoginStatusLoaded}/>
             )
         ]

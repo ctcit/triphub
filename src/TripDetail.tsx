@@ -242,12 +242,10 @@ export class TripDetail extends Component<{
                 <Row>
                     <Col sm={10}>
                         <TripMap 
+                            app={this.app}
                             routesId='routes' routesLabel='Routes'
                             mapsId='maps' mapsLabel='Maps'
-                            nz50MapsBySheet={this.nz50MapsBySheet} 
                             leafletMapId='tripmap'
-                            getArchivedRoutes={getArchivedRoutes}
-                            getArchivedRoute={getArchivedRoute}
                             {...common}
                         />
                     </Col>

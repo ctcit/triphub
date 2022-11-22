@@ -4,10 +4,11 @@ import * as React from 'react';
 import { IMap } from '../Interfaces';
 import { MapCommon } from 'src/MapCommon';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
+import { App } from 'src/App';
 
 export class MapComponent extends MapCommon<{
+    app: App
     leafletMapId: string,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
     setMapComponent: (mapComponent: MapComponent) => void,
     showMap: boolean,
     maxMapWidth: number

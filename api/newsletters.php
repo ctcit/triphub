@@ -55,7 +55,7 @@ function GetEvents($con, $userid, $unpublished=false) {
 		ORDER by dateDisplay ASC");
 }
 
-function GetNewsletterVolumes($con, $userid, $volume) {
+function GetNewsletterVolumes($con, $userid) {
 	$newslettersTable = ConfigServer::newslettersTable;
 	$volumeRows = SqlResultArray($con,
 		"SELECT DISTINCT volume

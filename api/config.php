@@ -6,7 +6,7 @@ class ConfigClient
 	const printLines 		    	= 25;
 	const editRefreshInSec      	= 10;
 	const calendarStartOfWeek   	= 1; //0=Sun,6=Sat
-	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Avalanche Gear,Harness';
+	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Harness,Avalanche Gear';
 	const prerequisiteSkills    	= 'Snow Skills,River Crossing';
 	const loginUrl					= 'https://ctc.org.nz/index.php/log-in';
 }
@@ -23,6 +23,7 @@ class ConfigServer
 	const newMembersRepView   = "triphub.view_new_members_rep";
 	const membersTable        = "ctc.members";
 	const membershipsTable    = "ctc.memberships";
+	const membershipTypesTable    = "ctc.membership_types";
 	const committeeTable      = "ctc.view_committee";
 	const newslettersTable    = "newsletter.newsletters";
 	const noticesTable        = "newsletter.notices";
@@ -44,8 +45,8 @@ class ConfigServer
 	const mileage_ratesTable  = "triphub.mileage_rates";
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
-	const apiKey              = "7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC";
-	const apiKeyExpiry        = "00000000";//YYYYMMDD Should be 00000000 in production 
+	const apiKey              = "";//Should be blank in production
+	const apiKeyExpiry        = "20221131";//YYYYMMDD Should be 00000000 in production 
 	const apiKeyUserId	      = 125;
 }
 

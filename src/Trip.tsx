@@ -241,7 +241,7 @@ export class Trip extends Component<{
         const participants = this.state.participants || []
         const all = [...participants].sort((a, b) => GetDisplayPriority(a) - GetDisplayPriority(b))
         const trip = this.state.trip
-        const maxParticipants = trip.maxParticipants === 0 ? 999 : trip.maxParticipants
+        const maxParticipants = trip.maxParticipants || 999
         const leaders = all.filter(p => p.isLeader && !p.isDeleted)
         const moveable = all.filter(p => !p.isLeader && !p.isDeleted)
         const deleted = all.filter(p => p.isDeleted)
@@ -441,7 +441,7 @@ export class Trip extends Component<{
                     <Accordian key='participants' id='participants' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-user fa-fw' />{['Participants', participantWarningJsx, participantCountJsx, totalSeatsJsx]}</b></span>}
                         expanded={true}>
-                        <TripParticipants key={'TripParticipants' + this.state.trip.id} 
+                        <TripParticipants key={`TripParticipants${this.state.trip.id}${this.state.trip.prerequisites}} 
                             participants={this.state.participants}
                             participantsInfo={this.participantsInfo}
                             trip={this.state.trip}

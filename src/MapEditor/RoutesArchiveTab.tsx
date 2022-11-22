@@ -13,16 +13,14 @@ import memoizeOne from 'memoize-one';
 import Select, { ActionMeta } from 'react-select'
 
 export class RoutesArchiveTab extends Component<{
+    app: App,
     isActiveTab: boolean,
     mapComponent: MapComponent | undefined,
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
     routesAsLatLngs: Array<Array<[number, number]>>,
     currentRouteIndex: number,
     canUndoLastRouteEdit: boolean,
     saveRouteChange: (routesAsLatLngs?: Array<Array<[number, number]>>, currentRouteIndex?: number) => Promise<void>,
     undoLastRouteEdit: () => Promise<[Array<Array<[number, number]>>, number, boolean]>, 
-    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
-    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 },{
     archivedRoutes: IArchivedRoute[],
     archivedRouteSuggestions: { value: any, label: string }[],
@@ -34,7 +32,7 @@ export class RoutesArchiveTab extends Component<{
 
     private memoizedGetArchivedRoutes = memoizeOne((includeHidden: boolean, force: boolean, isActiveTab: boolean) => {
         if (isActiveTab) {
-            this.props.getArchivedRoutes(includeHidden, force)
+            this.props.app.getArchivedRoutes(includeHidden, force)
             .then((archivedRoutes: IArchivedRoute[]) => {
                 const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
                     return { value: archivedRoute.id, label: archivedRoute.title };

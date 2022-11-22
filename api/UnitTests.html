@@ -1,61 +1,61 @@
 <html>
-<style>
-    td {
-        vertical-align: top;
-    }
-
-    .messageDestination {
-        background: lightgray
-    }
-</style>
+<meta charset="utf-8">
 
 <head>
     <title>Unit tests for API</title>
+    <link rel='stylesheet' href='api.css'>
+    <link rel="icon" type="image/x-icon" href="/templates/ctcprotostar/favicon.ico">
 </head>
 
 <body>
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
     <script>
-        $(document).ready(function () {
+        $(document).ready(() => {
             const testNames = Object.keys(window).filter(name => name.startsWith('test_'))
 
             for (const testName of testNames) {
-                $(`
-                <tr>
-                    <td>${testName}<td>
-                    <td>${testNames.indexOf(testName) + 1}/${testNames.length}<td>
-                    <td id='${testName}'></td>
-                </tr>`).appendTo($('#result'))
+                $(` <tr>
+                        <td>${testName}</td>
+                        <td>${testNames.indexOf(testName) + 1}/${testNames.length}</td>
+                        <td id='${testName}_status' class='teststatus'>⏳</td>
+                        <td id='${testName}_messages' class='testresult'></td>
+                    </tr>`).appendTo($('#result'))
             }
 
-
             $('#start').click(async () => {
-                try {
-                    for (const testName of testNames) {
+                $('.testresult').text('')
+                $('.teststatus').text('⏳')
+                for (const testName of testNames) {
+                    try {
+                        const start = new Date().getTime()
                         $('.messageDestination').removeClass('messageDestination')
-                        $(`#${testName}`).addClass('messageDestination')
-                        message('Started')
+                        $(`#${testName}_messages`).addClass('messageDestination')
+                        $(`#${testName}_status`).text()
+                        message('Running').addClass('running')
                         await window[testName]()
-                        message('Success').css('color', 'green')
+                        $(`#${testName}_status`).text(`✔️ ${((new Date().getTime() - start) / 1000).toFixed(1)}`)
+                    } catch (e) {
+                        $(`#${testName}_status`).text('❌')
+                        message(`Failed ${e}`).css('color', 'red')
+                        break
                     }
-                } catch (e) {
-                    message(`Failed ${e}`).css('color', 'red')
                 }
+                $('.messageDestination').removeClass('messageDestination')
             })
         })
 
-        function GetDateString(date) {
-            return `${date.getFullYear()}-${`${date.getMonth() + 1}`.padStart(2, '0')}-${`${date.getDate()}`.padStart(2, '0')}`
-        }
-
-        async function submit(method, url, data) {
+        async function submit(method, url, data = null) {
             return new Promise((resolve, reject) => {
                 $.ajax({
-                    url: `https://ctc.org.nz/triphub-alastair/api/api.php/${url}`,
+                    url: `https://ctc.org.nz/triphub-alastair/api/api.php/${url}` + (
+                        (method === 'GET' || method === 'DELETE') && data
+                            ? '?' + Object.entries(data).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&')
+                            : ''
+                    ),
                     type: method,
-                    data: method == 'GET' || method == 'DELETE' ? null : JSON.stringify(data),
-                    headers: { 'Api-Key': '7G0I3BSHPDXV69QWX1IWK4PR3WRJ6KAC', 'Api-Userid': 125 },
-                    success: (data, status) => {
+                    data: method === 'GET' || method === 'DELETE' ? null : JSON.stringify(data),
+                    headers: {},//{ 'Api-Key': '', 'Api-Userid': 0 },
+                    success: data => {
                         console.log(data)
                         resolve(data)
                     },
@@ -70,6 +70,7 @@
         }
 
         function message(msg) {
+            $('.running').remove()
             return $('<div>').appendTo($('.messageDestination')).text(msg)
         }
 
@@ -81,22 +82,54 @@
 
         function assertTrue(condition, msg) {
             if (!condition) {
-                throw Error(`Testing Failed: ${msg || 'No message'}`)
+                throw Error(msg ?? 'No message')
             }
         }
 
-        function assertEquals(a, b) {
-            assertTrue(JSON.stringify(a) == JSON.stringify(b), `${JSON.stringify(a)} != ${JSON.stringify(b)}`)
+        function assertEquals(a, b, msg) {
+            assertTrue(JSON.stringify(a) == JSON.stringify(b), `${JSON.stringify(a)} != ${JSON.stringify(b)} ${msg ?? ''}`)
         }
 
         function assertContains(haystack, needle) {
             assertTrue(haystack.indexOf(needle) >= 0, `${JSON.stringify(needle)} is not in ${JSON.stringify(haystack)}`)
         }
 
+        function historyActions(history) {
+            return history.map(h => h.action[0] + (h.table.split('.')[1]?.[0] ?? '')).join()
+        }
+
+        function pastTripsDate(index) {
+            return `2000-01-${index.toFixed().padStart(2, '0')}`
+        }
+        const pastTripsMax = 10
+        const basetrip = {
+            title: 'test trip',
+            openDate: new Date().toISOString().substring(0, 10),
+            closeDate: new Date().toISOString().substring(0, 10),
+            tripDate: new Date().toISOString().substring(0, 10),
+            isLimited: true,
+            description: 'test trip description',
+            maxParticipants: 2,
+        }
+        const alastair = { memberId: 125, name: 'Alastair Brown' }
+        const nick = { memberId: 2218, name: 'Nick Edwards' }
+        const bruce = { memberId: 520, name: 'Bruce James' }
+        const doug = { memberId: 432, name: 'Doug Forster' }
         let tripId = 0
         let nickId = 0
         let bruceId = 0
         let dougId = 0
+
+        async function test_delete_before() {
+            const pastTrips = await submit('GET', `trips/pasttrips`, { from: pastTripsDate(1), to: pastTripsDate(pastTripsMax) })
+            const testTrips = (await submit('GET', `trips`)).filter(t => t.title == 'test trip')
+
+            message(`deleting ${pastTrips.length}+${testTrips.length} trips`)
+
+            for (const trip of [...pastTrips, ...testTrips]) {
+                await submit('DELETE', `trips/${trip.id}`)
+            }
+        }
 
         async function test_get_config() {
             const result = await submit('GET', 'config')
@@ -123,18 +156,12 @@
         }
 
         async function test_post_trip() {
-            const trip = {
-                title: 'test trip',
-                openDate: GetDateString(new Date()),
-                closeDate: GetDateString(new Date()),
-                tripDate: GetDateString(new Date()),
-                isLimited: true,
-                maxParticipants: 2
-            }
-
             await submit('POST', `trips/emails`)
-            tripId = (await submit('POST', 'trips', trip))[0].id
-            await submit('POST', `trips/${tripId}/participants`, { memberId: 125, name: 'Alastair Brown', isLeader: true })
+            tripId = (await submit('POST', 'trips', basetrip))[0].id
+            await submit('POST', `trips/${tripId}/participants`, { ...alastair, isLeader: true })
+
+            const history = await submit('GET', `trips/${tripId}/history`)
+            assertEquals(historyActions(history), 'ct,cp')
         }
 
         async function test_approve() {
@@ -158,13 +185,13 @@
         }
 
         async function test_add_participants() {
-            nickId = (await submit('POST', `trips/${tripId}/participants`, { memberId: 2218, name: 'Nick Edwards' }))[0].id
-            bruceId = (await submit('POST', `trips/${tripId}/participants`, { memberId: 520, name: 'Bruce James' }))[0].id
+            nickId = (await submit('POST', `trips/${tripId}/participants`, nick))[0].id
+            bruceId = (await submit('POST', `trips/${tripId}/participants`, bruce))[0].id
             await submit('GET', `trips/${tripId}/html`)
             const history = await submit('GET', `trips/${tripId}/history`, {})
             const trip = await submit('GET', `trips/${tripId}`)
             const participants = await submit('GET', `trips/${tripId}/participants`)
-            assertEquals(history.length, 8)
+            assertEquals(historyActions(history), 'ct,cp,ut,e,ut,e,cp,cp')
             assertEquals(trip[0].title, 'test trip')
             assertEquals(participants.length, 3)
         }
@@ -197,7 +224,7 @@
         }
 
         async function test_email_after_signup() {
-            dougId = (await submit('POST', `trips/${tripId}/participants`, { memberId: 432, name: 'Doug Forster' }))[0].id
+            dougId = (await submit('POST', `trips/${tripId}/participants`, doug))[0].id
             await submit('GET', `trips/${tripId}/history`)
             await submit('GET', `trips/${tripId}`)
             const trips = await submit('POST', `trips/emails`)
@@ -215,14 +242,66 @@
             assertEquals(trips[0].email.deletedRecipients.length, 1)
         }
 
-        async function test_delete() {
-            const trips = await submit('GET', 'trips')
-            const testTrips = trips.filter(t => t.title == 'test trip')
-            message(`deleting ${testTrips.length} trips`)
+        async function test_past_trips_query() {
+            let pastTripIndex = 1, result
 
-            for (const trip of testTrips) {
-                await submit('DELETE', `trips/${trip.id}`)
+            async function pastTrip(trip) {
+                return (await submit('POST', 'trips',
+                    { ...basetrip, tripDate: pastTripsDate(pastTripIndex++), ...trip }))[0].id
             }
+
+            async function pastTrips(query) {
+                const trips = await submit('GET', `trips/pasttrips`,
+                    { from: pastTripsDate(1), to: pastTripsDate(pastTripsMax), ...query })
+                message(`${trips.length} for ${JSON.stringify(query)}`)
+                return trips
+            }
+
+            const normal = (await pastTrip({}))
+            const keywor = (await pastTrip({ description: 'Exciting past trip' }))
+            const costly = (await pastTrip({ description: 'Expensive', cost: '$500' }))
+            const gradeE = (await pastTrip({ grade: 'Easy' }))
+            const gradEM = (await pastTrip({ grade: 'Easy/Moderate' }))
+            const gradeM = (await pastTrip({ grade: 'Moderate' }))
+
+            await submit('POST', `trips/${normal}/participants`, { ...alastair, isLeader: true })
+            await submit('POST', `trips/${normal}/participants`, { ...nick, isLeader: false })
+            await submit('POST', `trips/${normal}/participants`, { ...bruce, isLeader: false })
+            await submit('POST', `trips/${keywor}/participants`, { ...nick, isLeader: true })
+            await submit('POST', `trips/${keywor}/participants`, { ...alastair, isLeader: false })
+
+            result = await pastTrips({})
+            assertEquals(result.length, 6)
+
+            result = await pastTrips({ description: 'Exciting' })
+            assertEquals(result.length, 1)
+            assertEquals(result[0].id, keywor, 'id1')
+
+            result = await pastTrips({ description: 'Exciting test' })
+            assertEquals(result.length, 5)
+            assertEquals(result[0].id, keywor, 'id 0')
+            assertEquals(result[1].id, normal, 'id 1')
+
+            result = await pastTrips({ cost: '400|600' })
+            assertEquals(result.length, 1)
+            assertEquals(result[0].id, costly, 'id')
+            assertEquals(result[0].computed_cost, 500)
+
+            result = await pastTrips({ member: alastair.name + '|' + nick.name, memberAs: 'Leader|Non-Leader' })
+            assertEquals(result.length, 2)
+            assertEquals(result[0].id, normal, 'id 0')
+            assertEquals(result[1].id, keywor, 'id 1')
+            assertEquals(result[0].ranking_member, 2, 'ranking 0')
+            assertEquals(result[1].ranking_member, 1, 'ranking 1')
+
+            result = await pastTrips({ grade: 'Easy Moderate' })
+            assertEquals(result.length, 3)
+            assertEquals(result[0].id, gradEM, 'id 0')
+            assertEquals(result[0].ranking_grade, 1, 'ranking 0')
+        }
+
+        async function test_delete_after() {
+            await test_delete_before()
         }
 
     </script>

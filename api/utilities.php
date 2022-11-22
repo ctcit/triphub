@@ -11,30 +11,29 @@ $config = JFactory::getConfig();
 
 $con = ($GLOBALS["___mysqli_ston"] = mysqli_connect($config->get("host"), $config->get("user"), $config->get("password")));
 // N.B. userid here is the JOOMLA id NOT the db id. The common ground here is username.
-$username = array("id"=>$user->id,"name"=>$user->username);
+$username = ["id"=>$user->id, "name"=>$user->username];
 
 if (!$con) {
     die('mysql_connect failed');
 }
 $con->set_charset('utf8mb4');
 
-function LogMessage($con,$level,$message,$log=true){
+function LogMessage(mysqli $con, string $level, string $message, bool $log=true): string {
     if (preg_match(ConfigServer::logLevelFilter, $level) && $log) {
 
         if ($level == 'ERROR')
             error_log($message);
 
         $logTable = ConfigServer::logTable;
-        $levelSql = SqlVal($con,$level);
-        $messageSql = SqlVal($con,$message);
-        SqlExecOrDie($con, "INSERT $logTable(level,message) VALUES($levelSql,$messageSql)", false, false);
+        $levelSql = SqlVal($con, $level);
+        $messageSql = SqlVal($con, $message);
+        SqlExecOrDie($con, "INSERT $logTable(level, message) VALUES($levelSql, $messageSql)", false, false);
     }
 
     return $message;
 }
 
-function GetLogonDetails($con, $dieonfail=TRUE)
-{
+function GetLogonDetails(mysqli $con, bool $dieonfail=true): array {
 	$memberRolesTable = ConfigServer::memberRolesTable;
     $user = JFactory::getUser();
     $userrow = SqlResultArray($con,
@@ -45,18 +44,14 @@ function GetLogonDetails($con, $dieonfail=TRUE)
             LEFT JOIN $memberRolesTable  mr  on mr.memberId = m.id
             where loginname = ".SqlVal($con,$user->username));
 
-    if ($dieonfail && count($userrow) == 0) {
+    if ($dieonfail && !$userrow) {
         die("You are not logged on.");
     }
 
-    if (count($userrow)) {
-        return $userrow[0];
-    } else {
-        return array("id" => 0,"name"  => '',"role"  => '');
-    }
+    return $userrow[0] ?? ["id" => 0,"name"  => '',"role"  => ''];
 }
 
-function SqlVal($con,$value) {
+function SqlVal(mysqli $con, $value): string {
     if ( $value === null ) {
         return "null";
     } else {
@@ -64,7 +59,7 @@ function SqlVal($con,$value) {
     }
 }
 
-function SqlJSONVal($con,$value) {
+function SqlJSONVal(mysqli $con, mixed $value): string {
     if ( $value === null ) {
         return "null";
     } else if ($value === false) {
@@ -76,8 +71,7 @@ function SqlJSONVal($con,$value) {
     }
 }
 
-function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
-{
+function SqlResultArray(mysqli $con, string $sql, string $keycol='', bool $keyupper=false): array {
     $cursor = mysqli_query($con, $sql);
 
     if (!$cursor) {
@@ -88,8 +82,9 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
     }
 
     LogMessage($con,'SQL',$sql);        
+
     $fields = mysqli_fetch_fields($cursor);
-    $rows = array();
+    $rows = [];
     while (($row = mysqli_fetch_array($cursor, MYSQLI_ASSOC))) {
         foreach ($fields as $field) {
             if ($row[$field->name] != null) {
@@ -103,6 +98,7 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
                         case MYSQLI_TYPE_FLOAT:
                         case MYSQLI_TYPE_DOUBLE:
                         case MYSQLI_TYPE_DECIMAL:
+                        case 246:
                             $row[$field->name] = doubleval($row[$field->name]);
                             break;
                         case MYSQLI_TYPE_TINY:
@@ -114,6 +110,7 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
                             break;
                         case MYSQLI_TYPE_JSON:
                             $row[$field->name] = json_decode($row[$field->name]);
+                            break;
                     }
                 }
             }
@@ -132,7 +129,7 @@ function SqlResultArray($con,$sql,$keycol='',$keyupper=false)
     return $rows;
 }
 
-function SqlResultScalar($con, $sql) {
+function SqlResultScalar(mysqli $con, string $sql) {
     $array = SqlResultArray($con, $sql);
     if (!is_array($array) || count($array) != 1) {
         return null;
@@ -141,7 +138,7 @@ function SqlResultScalar($con, $sql) {
     return is_scalar($values[0]) ? $values[0] : null;
 }
 
-function SqlExecOrDie($con,$sql,$returnid=false,$log=true) {
+function SqlExecOrDie(mysqli $con, string $sql, bool $returnid=false, bool $log=true): int {
     if (!mysqli_query($con, $sql)) {
         http_response_code(500);
         die('<pre>'.LogMessage($con,"ERROR","Invalid query: ".
@@ -156,16 +153,12 @@ function SqlExecOrDie($con,$sql,$returnid=false,$log=true) {
     return $result;
 }
 
-function Coalesce($a, $b, $c=null) {
-    return ($a != null ? $a : ($b != null ? $b : $c));
-}
-
-function PrettyPrintJson($json) {
+function PrettyPrintJson($json): string {
     $text = json_encode($json, JSON_PRETTY_PRINT);
     $html = "";
     $pos = 0;
-    $stack = array();
-    $counts = array(0);
+    $stack = [];
+    $counts = [0];
     preg_match_all('/"(\\\\.|[^"])*"[:]?|[\[\]\{\}]|null|true|false|[0-9][0-9\\.]*/', $text, $matches, PREG_OFFSET_CAPTURE);
     foreach ($matches[0] as $item) {
         $match = $item[0];
@@ -173,6 +166,7 @@ function PrettyPrintJson($json) {
         $html .= htmlentities(substr( $text, $pos, $offset - $pos));
         $pos = $offset + strlen($match);
         $counts[sizeof($counts)-1]++;
+        $depth = 'depth'.count($stack);
 
         if (substr($match,-1) == ':') {
             $counts[sizeof($counts)-1]--;
@@ -184,7 +178,7 @@ function PrettyPrintJson($json) {
         } else if ($match == '[' || $match == '{') {
             array_push( $stack, $offset );
             array_push( $counts, 0 );
-            $html .= "<span style='color:blue' class='block' id='$offset'>$match</span>".
+            $html .= "<span style='color:blue' class='block $depth' id='$offset'>$match</span>".
                      "<span id='$offset-show'>";
         } else if ($match == ']' || $match == '}') {
             $start = array_pop($stack);
@@ -202,10 +196,9 @@ function PrettyPrintJson($json) {
     return "<pre>".$html.htmlentities(substr( $text, $pos, strlen($text)-$pos))."</pre>";
 }
 
-function ParseCss($text)
-{
+function ParseCss(string $text) : array {
     $text = preg_replace("/\/\*.*\*\//","",$text);
-    $css = array();
+    $css = [];
 
     foreach (explode("}",$text) as $style) {
         $stylesplit = explode("{",$style);
@@ -226,7 +219,7 @@ function ParseCss($text)
     return $css;
 }
 
-function MakeGuid() {
+function MakeGuid(): string {
     return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', 
                     mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), 
                     mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));

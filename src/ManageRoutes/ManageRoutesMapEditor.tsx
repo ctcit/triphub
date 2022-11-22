@@ -10,15 +10,14 @@ import { ManageRoutesDetailsTab } from './ManageRoutesDetailsTab';
 import { Component } from 'react';
 import { MapComponent } from 'src/MapEditor/MapComponent';
 import { RouteDetails } from './ManageRoutesMap';
+import { App } from 'src/App';
 
 export class ManageRoutesMapEditor extends Component<{
-    nz50MapsBySheet: { [mapSheet: string] : IMap },
+    app: App
     routeDetails: RouteDetails,
     routesAsLatLngs: Array<Array<[number, number]>>,
     onDetailsChanged: (route: RouteDetails) => Promise<void>,
     onRoutesChanged: (routesAsLatLngs: Array<Array<[number, number]>>) =>void,
-    getArchivedRoutes: (includeHidden: boolean, force: boolean) => Promise<IArchivedRoute[]>,
-    getArchivedRoute: (routeId: number) => Promise<IArchivedRoute | undefined> // TODO - replace with service
 }, {
     activeTab: string,
     showMap: boolean,
@@ -95,11 +94,6 @@ export class ManageRoutesMapEditor extends Component<{
             return await this.undoLastRouteEdit();
         }
 
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean): Promise<IArchivedRoute[]> => 
-            this.props.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (routeId: number): Promise<IArchivedRoute | undefined> => 
-            this.props.getArchivedRoute(routeId);
-
         return (
             <FormGroup>
                 <ReactResizeDetector handleWidth={true} handleHeight={false} onResize={onResizeModal} />
@@ -138,7 +132,7 @@ export class ManageRoutesMapEditor extends Component<{
                     <EditRoutesTab 
                         isActiveTab={this.state.activeTab === "EditRoutes"}
                         mapComponent={this.state.mapComponent}
-                        nz50MapsBySheet={this.props.nz50MapsBySheet}
+                        nz50MapsBySheet={this.props.app.maps}
                         routesAsLatLngs={this.props.routesAsLatLngs}
                         currentRouteIndex={this.state.currentRouteIndex}
                         canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
@@ -146,21 +140,19 @@ export class ManageRoutesMapEditor extends Component<{
                         undoLastRouteEdit={undoLastRouteEdit}
                     />
                     <RoutesArchiveTab
+                        app={this.props.app}
                         isActiveTab={this.state.activeTab === "RoutesArchive"}
                         mapComponent={this.state.mapComponent}
-                        nz50MapsBySheet={this.props.nz50MapsBySheet}
                         routesAsLatLngs={this.props.routesAsLatLngs}
                         currentRouteIndex={this.state.currentRouteIndex}
                         canUndoLastRouteEdit={this.state.canUndoLastRouteEdit}
                         saveRouteChange={saveRouteChange}
                         undoLastRouteEdit={undoLastRouteEdit}
-                        getArchivedRoutes={getArchivedRoutes}
-                        getArchivedRoute={getArchivedRoute}
                     />
                 </TabContent>
                 <MapComponent
+                        app={this.props.app}
                         leafletMapId='manageroutesmapeditormap'
-                        nz50MapsBySheet={this.props.nz50MapsBySheet}
                         setMapComponent={setMapComponent}
                         showMap = {this.state.showMap}
                         maxMapWidth={this.state.maxMapWidth}

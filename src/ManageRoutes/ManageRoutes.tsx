@@ -325,15 +325,13 @@ export class ManageRoutes extends Component<{
                                     </Accordian>
                                 </Row>
                                 <Row>
-                                    <ManageRoutesMap 
+                                    <ManageRoutesMap
+                                        app={this.props.app} 
                                         route={this.state.mergedRoutes}
                                         isEditing={this.state.isEditing}
                                         onSave={onSave}
                                         onCancel={onCancel}
                                         leafletMapId='manageroutesmap'
-                                        nz50MapsBySheet={this.nz50MapsBySheet} 
-                                        getArchivedRoutes={getArchivedRoutes}
-                                        getArchivedRoute={getArchivedRoute}
                                         readOnly={this.state.isLoadingRoute}
                                         onBoundsChanged={onBoundsChanged}
                                         onMarkerMoved={onMarkerMoved}

@@ -207,15 +207,20 @@ export class TriphubNavbar extends Component<{
                                         <hr/>
                                         <div><FormText>App is {this.props.isOnline ? 'online' : 'offline'}</FormText></div>
                                         <hr/>
-                                        <div><FormText>Standalone app is {this.props.beforeInstallPrompt === null ? 
-                                            this.props.isStandalone ? 'installed' : 'installed (or not supported by browser)' : 'not installed'}</FormText></div>
                                         <div><FormText>App is currently running {this.props.isStandalone ? 'standalone' : 'in a browser'}</FormText></div>
+                                        {!this.props.isStandalone && 
+                                            <div><FormText>Standalone app is {this.props.beforeInstallPrompt === null ? 
+                                                'installed (or not supported by browser)' : 'not installed'}</FormText>
+                                            </div>
+                                        }
                                         <hr/>
                                         <div><FormText>Background sync is {this.props.backgroundSyncSupported ? 'supported' : 'not supported'} by the browser</FormText></div>
-                                        <div><FormText>Background sync permission is {this.props.backgroundSyncPermitted ? 'enabled' : 'disabled'} for the tramping club website</FormText></div>
+                                        {this.props.backgroundSyncSupported && 
+                                            <div><FormText>Background sync permission is {this.props.backgroundSyncPermitted ? 'enabled' : 'disabled'} for the tramping club website</FormText></div>
+                                        }
                                         <hr/>
                                         <div><FormText>Trips caching is {this.state.cacheTrips ? 'enabled' : 'disabled'}</FormText></div>
-                                        <div><FormText>{this.props.cachedTrips.length} trips are currently cached</FormText></div>
+                                        {this.state.cacheTrips && <div><FormText>{this.props.cachedTrips.length} trips are currently cached</FormText></div>}
                                     </ModalBody>
                                 </Modal>
                                 <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 

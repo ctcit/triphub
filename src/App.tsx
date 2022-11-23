@@ -35,9 +35,10 @@ export class App extends Component<{
     notifications: INotification[]
     isOnline: boolean
     isStandalone: boolean
-    backgroundSyncPermitted: boolean,
-    appUpdateAvailable: boolean,
-    cachedTrips: ITrip[],
+    backgroundSyncSupported: boolean
+    backgroundSyncPermitted: boolean
+    appUpdateAvailable: boolean
+    cachedTrips: ITrip[]
     pendingSyncsCount: number
 }> {
 
@@ -64,6 +65,7 @@ export class App extends Component<{
             notifications: [],
             isOnline: isOnline,
             isStandalone: isStandalone,
+            backgroundSyncSupported: true,
             backgroundSyncPermitted: false,
             appUpdateAvailable: false,
             cachedTrips: [],
@@ -109,6 +111,7 @@ export class App extends Component<{
         // determine if the background-sync permission is granted and create event listener to listen for changes
         const permissionName = 'background-sync' as PermissionName
         navigator.permissions.query({name: permissionName}).then((permissionStatus) => {
+            console.log('backgroundSyncPermitted is ' + (permissionStatus.state === 'granted'))
             this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
             permissionStatus.addEventListener('change', (e) => {
                 this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'}, () => {
@@ -120,6 +123,7 @@ export class App extends Component<{
         }).catch((ex: any) => {
             if (ex instanceof TypeError) {
                 console.log('Could not get backround-sync permission - probably not supported by browser')
+                this.setState({ backgroundSyncSupported: false })
             } else {
                 throw ex
             }
@@ -300,6 +304,8 @@ export class App extends Component<{
                 isLoading={this.isLoading}
                 isOnline={this.state.isOnline}
                 isStandalone={this.state.isStandalone}
+                backgroundSyncSupported={this.state.backgroundSyncSupported}
+                backgroundSyncPermitted={this.state.backgroundSyncPermitted}
                 cachedTrips={this.state.cachedTrips}
                 beforeInstallPrompt={this.beforeInstallPrompt}
                 setPath={setPath}

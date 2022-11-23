@@ -1,6 +1,6 @@
 import { Component } from 'react'
 import { ITrip, Role } from './Interfaces'
-import { NavItem, NavLink, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Navbar, NavbarBrand, Nav, NavbarToggler, Collapse } from 'reactstrap'
+import { NavItem, NavLink, Dropdown, DropdownToggle, DropdownMenu, DropdownItem, Navbar, Nav, Modal, ModalBody, ModalHeader, FormText } from 'reactstrap'
 import ReactDOM from 'react-dom'
 import { TripsCache } from './Services/TripsCache'
 import { UserSettings } from './Services/UserSettings'
@@ -18,6 +18,8 @@ export class TriphubNavbar extends Component<{
     isLoading: boolean,
     isOnline: boolean,
     isStandalone: boolean,
+    backgroundSyncSupported: boolean,
+    backgroundSyncPermitted: boolean,
     cachedTrips: ITrip[],
     beforeInstallPrompt: any,
     setPath: (path: string) => void,
@@ -30,7 +32,8 @@ export class TriphubNavbar extends Component<{
         currentUserDropdownIsOpen: boolean,
         windowWidth: number,
         installAppPrompted: boolean,
-        cacheTrips: boolean
+        cacheTrips: boolean,
+        standaloneOfflineInfoOpen: boolean
     }> {
 
     constructor(props: any){
@@ -41,7 +44,8 @@ export class TriphubNavbar extends Component<{
             currentUserDropdownIsOpen: false,
             windowWidth: window.innerWidth,
             installAppPrompted: false,
-            cacheTrips: false
+            cacheTrips: false,
+            standaloneOfflineInfoOpen: false
         }
 
         UserSettings.getCacheTrips().then((value: boolean) => {
@@ -98,6 +102,8 @@ export class TriphubNavbar extends Component<{
         const currentUser = MembersService.Me
         const isWebmaster = this.props.role >= Role.Webmaster
         const isAdmin = this.props.role >= Role.Admin
+
+        const toggleStandaloneOfflineInfo = () => this.setState({standaloneOfflineInfoOpen: !this.state.standaloneOfflineInfoOpen})
 
         return (
             <Navbar color='primary' expand={false}>
@@ -187,14 +193,33 @@ export class TriphubNavbar extends Component<{
                                 &nbsp;{this.props.cachedTrips.length ? (' (' + this.props.cachedTrips.length + ')') : ''}
                             </DropdownToggle>
                             <DropdownMenu color='primary'>
+                                <DropdownItem onClick={toggleStandaloneOfflineInfo}>Standalone/offline info...</DropdownItem>
+                                <Modal isOpen={this.state.standaloneOfflineInfoOpen} toggle={toggleStandaloneOfflineInfo}
+                                    size="md" centered={false}>
+                                    <ModalHeader toggle={toggleStandaloneOfflineInfo}>Standalone/Offline Info</ModalHeader>
+                                    <ModalBody>
+                                        <div><FormText disabled={!this.props.isOnline}>
+                                            <a href="https://youtu.be/mF0jPHLjanI" target="_blank">
+                                                <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                                                Standalone/offline tutorial
+                                            </a>
+                                        </FormText></div>
+                                        <hr/>
+                                        <div><FormText>App is {this.props.isOnline ? 'online' : 'offline'}</FormText></div>
+                                        <hr/>
+                                        <div><FormText>Standalone app is {this.props.beforeInstallPrompt === null ? 
+                                            this.props.isStandalone ? 'installed' : 'installed (or not supported by browser)' : 'not installed'}</FormText></div>
+                                        <div><FormText>App is currently running {this.props.isStandalone ? 'standalone' : 'in a browser'}</FormText></div>
+                                        <hr/>
+                                        <div><FormText>Background sync is {this.props.backgroundSyncSupported ? 'supported' : 'not supported'} by the browser</FormText></div>
+                                        <div><FormText>Background sync permission is {this.props.backgroundSyncPermitted ? 'enabled' : 'disabled'} for the tramping club website</FormText></div>
+                                        <hr/>
+                                        <div><FormText>Trips caching is {this.state.cacheTrips ? 'enabled' : 'disabled'}</FormText></div>
+                                        <div><FormText>{this.props.cachedTrips.length} trips are currently cached</FormText></div>
+                                    </ModalBody>
+                                </Modal>
                                 <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 
                                     onClick={installApp}>Install app for standalone/offline use...</DropdownItem>
-                                <DropdownItem disabled={!this.props.isOnline}>
-                                    <a href="https://youtu.be/mF0jPHLjanI" target="_blank">
-                                        <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
-                                        Standalone/offline tutorial
-                                    </a>
-                                </DropdownItem>
                                 <DropdownItem divider></DropdownItem>
                                 <DropdownItem disabled={this.state.cacheTrips} onClick={startCachingTrips}>Start caching trips</DropdownItem>
                                 <DropdownItem disabled={!this.state.cacheTrips} onClick={stopCachingTrips}>Stop caching trips</DropdownItem>

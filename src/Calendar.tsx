@@ -1,6 +1,4 @@
-import * as React from 'react';
 import { Component } from 'react';
-import { App } from './App';
 import { ITrip, Role } from './Interfaces';
 import { MonthOfYear, DayOfWeek, AddDays, GetDateString, CountWhile, GetDate } from './Utilities';
 import { PriorityNavItem } from './TriphubNavBar';
@@ -11,7 +9,6 @@ import { HolidaysService } from './Services/HolidaysService';
 import { TripsService } from './Services/TripsService';
 import { Badge, ButtonGroup, DropdownItem, Dropdown, DropdownToggle, DropdownMenu, Container, Table } from 'reactstrap';
 import { TripsCache } from './Services/TripsCache';
-import memoizeOne from 'memoize-one';
 
 interface ICalendarItem {
     id: number
@@ -112,12 +109,15 @@ class CalendarWeek extends Component<{
                                         <ButtonWithTooltip id={`open-${item.id}`}
                                             onClick={onLink} 
                                             tooltipText={available ? 'Go to trip' : 'This trip is not available while offline'}
+                                            disabled={!available}
                                         >
-                                        <span className={trip.isSocial ? 'fas fa-users' : 'fas fa-hiking'} />
+                                            <span className={trip.isSocial ? 'fas fa-users' : 'fas fa-hiking'} />
                                         </ButtonWithTooltip>
                                         <div className='calendar-trip-name'>
                                             <ButtonWithTooltip id={`select-${item.id}`} color='transparent'
-                                                onClick={onSelect} tooltipText={text}>
+                                                onClick={onSelect} tooltipText={text}
+                                                disabled={!available}
+                                            >
                                                 {text}
                                             </ButtonWithTooltip>
                                         </div>

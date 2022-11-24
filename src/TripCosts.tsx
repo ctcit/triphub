@@ -1,4 +1,4 @@
-import { ListGroup, ListGroupItem, Container, Row, Col, Form, Button, Navbar } from 'reactstrap';
+import { ListGroup, ListGroupItem, Container, Row, Col, Form, Button, Navbar, FormText } from 'reactstrap';
 import { Component } from 'react';
 import { IDestination, IMileageRate, IParticipant, ITrip, ITripCostCalculations, IValidation } from './Interfaces';
 import { BindMethods } from './Utilities';
@@ -391,11 +391,11 @@ export class TripCosts extends Component<{
             </Container>,
 
             <ListGroup key='costs-participants'>
-                <ListGroupItem hidden={actualVehicleProviders.length >= 0}>
-                    <div><b>No Vehicle Providers</b></div>
-                </ListGroupItem>
-                <ListGroupItem hidden={actualVehicleProviders.length === 0}>
+                <ListGroupItem>
                     <div><b>Vehicle Providers</b></div>
+                    {actualVehicleProviders.length === 0 &&
+                        <FormText color="muted">No vehicle providers</FormText>
+                    }
                     {
                         actualVehicleProviders.map(p => {
                             const pc = this.calculations.participants[p.id];
@@ -409,8 +409,11 @@ export class TripCosts extends Component<{
                         })
                     }
                 </ListGroupItem>
-                <ListGroupItem hidden={others.length === 0}>
+                <ListGroupItem>
                     <div><b>Others</b></div>
+                    {others.length === 0 &&
+                        <FormText color="muted">No others</FormText>
+                    }
                     {
                         others.map(p => {
                             const pc = this.calculations.participants[p.id];

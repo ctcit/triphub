@@ -273,7 +273,7 @@ export class Calendar extends Component<{
     public requery() {
         this.setState({ isLoadingCalendar: true })
         Promise.all([
-            TripsService.getTrips(),
+            TripsService.getTrips(true),
             TripsCache.getCachedTripIds()
         ]).then(values => {
             const trips: ITrip[] = values[0]

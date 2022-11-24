@@ -330,7 +330,7 @@ export class TripsList extends Component<{
 
     private requeryTrips() {
         Promise.all([
-            TripsService.getTrips(),
+            TripsService.getTrips(true),
             TripsCache.getCachedTripIds()
             ]).then(values => {
                 const trips: ITrip[] = values[0]

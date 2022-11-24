@@ -239,7 +239,8 @@ export class App extends Component<{
 
         const setPath = (path: string) => this.setPath(path)
         const setRole = (role: Role) => this.setState({role})
-        const setCachedTrips = (cachedTrips: ITrip[]) => this.setState({cachedTrips})
+        const setCachedTrips = (cachedTrips: ITrip[]) => this.setCachedTrips(cachedTrips)
+        const addCachedTrip = (cachedTrip: ITrip) => this.addCachedTrip(cachedTrip)
         const addNotification = (text:string, colour: string) => this.addNotification(text, colour)
         const loadingStatus = (state?: any) => this.loadingStatus(state)
         const onDoAppUpdate = () => this.onDoAppUpdate()
@@ -252,7 +253,8 @@ export class App extends Component<{
             addNotification,
             loadingStatus,
             isOnline: this.state.isOnline,
-            setCachedTrips
+            setCachedTrips,
+            addCachedTrip
         }
         const renderings = {
             loading: () => this.loadingStatus(),
@@ -263,7 +265,7 @@ export class App extends Component<{
             routes: () => <ManageRoutes key='routes' />,
             mileageRates: () => <ManageMileageRates key='mileageRates' {...common}/>,
             destinations: () => <ManageDestinations key='destinations' {...common}/>,
-            trips: () => <Trip key='trips' isNew={false} isNewSocial={true} id={id} {...common} />,
+            trips: () => <Trip key={'trip-' + id} isNew={false} isNewSocial={true} id={id} {...common} />,
 			pasttrips: () => <PastTrips key='pasttrips' {...common} />,
             login: () => <Login key='login' {...common} />,
             default: () => <TripsList key='default' {...common}/>,
@@ -371,4 +373,15 @@ export class App extends Component<{
             this.setState({appUpdateAvailable: true})
         })
     }
+
+    private setCachedTrips(cachedTrips: ITrip[]) {
+        this.setState({ cachedTrips })
+    }
+
+    private addCachedTrip(cachedTrip: ITrip) {
+        if (!this.state.cachedTrips.find(trip => trip.id === cachedTrip.id)) {
+            this.setState({ cachedTrips: this.state.cachedTrips.concat(cachedTrip)})
+        }
+    }
+
 }

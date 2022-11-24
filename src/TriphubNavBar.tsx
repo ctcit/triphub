@@ -49,6 +49,7 @@ export class TriphubNavbar extends Component<{
         }
 
         UserSettings.getCacheTrips().then((value: boolean) => {
+            console.log('cacheTrips user settings is ' + value)
             this.setState({ cacheTrips: value })
         })
     }
@@ -186,7 +187,7 @@ export class TriphubNavbar extends Component<{
                     }
                 </Nav>
                 <Nav className="mr-auto" justified={false} fill={false}>
-                    {this.props.role >= Role.Member && (onAllTripsPage || onCalendarPage) &&
+                    {this.props.role >= Role.Member &&
                         <Dropdown key='workOffline' nav={true} isOpen={this.state.workOfflineDropdownIsOpen} toggle={toggleWorkOfflineDropdown}>
                             <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
                                 <span className='fa fa-cloud'/> 
@@ -219,7 +220,7 @@ export class TriphubNavbar extends Component<{
                                             <div><FormText>Background sync permission is {this.props.backgroundSyncPermitted ? 'enabled' : 'disabled'} for the tramping club website</FormText></div>
                                         }
                                         <hr/>
-                                        <div><FormText>Trips caching is {this.state.cacheTrips ? 'enabled' : 'disabled'}</FormText></div>
+                                        <div><FormText>Trips are {this.state.cacheTrips ? '' : 'not '}being cached</FormText></div>
                                         {this.state.cacheTrips && <div><FormText>{this.props.cachedTrips.length} trips are currently cached</FormText></div>}
                                     </ModalBody>
                                 </Modal>

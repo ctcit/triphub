@@ -20,6 +20,7 @@ import { MembersService } from './Services/MembersService'
 import { MapsService } from './Services/MapsService'
 import { TripsService } from './Services/TripsService'
 import memoizeOne from 'memoize-one'
+import { TripsCache } from './Services/TripsCache'
 
 export class Trip extends Component<{
     isNew: boolean,
@@ -29,7 +30,8 @@ export class Trip extends Component<{
     isOnline: boolean,
     setPath(path: string): void,
     addNotification(text: string, colour: string): void,
-    loadingStatus(state: any): JSX.Element
+    loadingStatus(state: any): JSX.Element,
+    addCachedTrip(CachedTrip: ITrip): void
 }, {
     trip: ITrip,
     editId: number,
@@ -68,13 +70,19 @@ export class Trip extends Component<{
 
             TripsService.getTrip(this.props.id as number)
                 .then((trip: ITrip) => {
-                    this.setState({ isLoadingTrip: false })
-                    this.setState({ trip })
+                    this.setState({ isLoadingTrip: false, trip })
+
+                    if (this.props.role > Role.NonMember) { // will fail 403 for NonMember
+                        this.requeryParticipants().then(() => {
+                            TripsCache.getCachedTripIds().then((ids: number[]) => {
+                                if (ids.indexOf(trip.id) >= 0) {
+                                    this.props.addCachedTrip(trip) // notify app that trip is in cache
+                                }
+                            })
+                        })
+                    }
                 })
 
-                if (this.props.role > Role.NonMember) { // will fail 403 for NonMember
-                    this.requeryParticipants()
-                }
         }
     }
 

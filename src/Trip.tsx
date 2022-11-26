@@ -342,7 +342,7 @@ export class Trip extends Component<{
         const participantCountJsx = <span key='count' className='TripCount'>
             {` (${info.leaders.length + info.early.length}${info.late.length ? '+' + info.late.length : ''})`}
             </span>
-        const seats = (pa: IParticipant[]) => pa.reduce((total, p, i, a) => p.isVehicleProvider ? total + (p.seats || 0) : 0, 0)
+        const seats = (pa: IParticipant[]) => pa.reduce((total, p, i, a) => total + (p.isVehicleProvider ? (p.seats ?? 0) : 0), 0)
         const totalSeats = seats(info.leaders) + seats(info.early)
         const totalLateSeats = seats(info.late)
         const totalSeatsJsx = <span key='totalseats' className='total-seats-count'>

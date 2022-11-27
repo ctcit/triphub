@@ -200,7 +200,7 @@ export class TriphubNavbar extends Component<{
                                     <ModalHeader toggle={toggleStandaloneOfflineInfo}>Standalone/Offline Info</ModalHeader>
                                     <ModalBody>
                                         <div><FormText disabled={!this.props.isOnline}>
-                                            <a href="https://youtu.be/mF0jPHLjanI" target="_blank">
+                                            <a href="https://youtu.be/KJjq5YENfUY" target="_blank">
                                                 <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                                                 Standalone/offline tutorial
                                             </a>

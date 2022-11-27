@@ -291,8 +291,9 @@ export class TripCosts extends Component<{
             <Container key='parameters-initial' fluid={true}>
                 <Navbar key='navbar' color='light' light={true} expand='md'>
                 {[
-                        <a key='legend' href="https://youtu.be/77B6EzYLcmo" target="_blank">
+                        <a key='legend' href="https://youtu.be/PCb-FkbWLBk" target="_blank">
                             <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
+                            <FormText color='muted'>Cost Calculator Tutorial</FormText>
                         </a>,
                         <Button key={'help'} onClick={onToggleLegend}>
                         <span className='fa fa-question-circle' />{this.state.showLegend ? 'Hide legend' : 'Show legend'}

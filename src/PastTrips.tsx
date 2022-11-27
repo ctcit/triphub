@@ -468,7 +468,7 @@ export class PastTrips extends Component<{
                         <span className='fa fa-stop-circle' />
                         Reset
                     </Button>
-                </ButtonGroup>,
+                </ButtonGroup>
             </Container>,
             <TripsGroup key={version + 4} trips={trips} title='Trips'
                 expanded={show?.trips} 

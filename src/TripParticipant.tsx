@@ -14,14 +14,14 @@ import { ConfigService } from './Services/ConfigService'
 export class TripParticipant extends Component<{
     participant: IParticipant
     trip: ITrip
-    role: Role,
+    availableToEdit: boolean,
+    amAdminOrLeader: boolean,
     isOnline: boolean,
-    canEditTrip: boolean,
     canWaitList?: boolean
     canUnwaitList?: boolean
     participants: IParticipant[]
     participantsInfo: IParticipantsInfo
-    setParticipant(id: number, data: { [id: string]: any }, save: boolean): Promise<IParticipant>
+    setParticipant(id: number, data: { [id: string]: any }, save: boolean): Promise<void>
     setPosition(id: number, target?: IParticipant): Promise<any>
 }, {
     id?: string
@@ -72,8 +72,8 @@ export class TripParticipant extends Component<{
         const participantActual = { ...participant, name: participant.name || this.state.newTramper }
         const validations: IValidation[] = TripsService.validateParticipant(participantActual, participants)
         const warnings = validations.filter(i => !i.ok)
-        const canEdit = this.props.canEditTrip || MembersService.Me.id === participant.memberId
-        const canEditAsLeader = this.props.role >= Role.TripLeader
+        const canEdit = this.props.availableToEdit && (this.props.amAdminOrLeader || MembersService.Me.id === participant.memberId)
+        const canEditAsLeader = this.props.availableToEdit && this.props.amAdminOrLeader
         const member = MembersService.getMemberById(participant.memberId)
         const isMemberDiff = participant.memberId === MembersService.Me.id && participant.memberId && (
             participant.emergencyContactName !== member.emergencyContactName ||
@@ -90,11 +90,11 @@ export class TripParticipant extends Component<{
         const onGet = (field: string): any => participant[field]
         const onGetName = (_: string): any => MembersService.getMemberByName(participant.name) ? participant.name : 'New Tramper'
         const onGetNewTramper = (_: string): any => this.state.newTramper
-        const onSet = (field: string, value: any): Promise<IParticipant> => this.props.setParticipant(participant.id, { [field]: value }, false)
+        const onSet = (field: string, value: any): Promise<void> => this.props.setParticipant(participant.id, { [field]: value }, false)
         const onSetNewTramper = (_: string, value: any) => this.setState({ newTramper: value })
-        const onSave = (field: string, value: any): Promise<IParticipant> => this.props.setParticipant(participant.id, { [field]: value }, true)
+        const onSave = (field: string, value: any): Promise<void> => this.props.setParticipant(participant.id, { [field]: value }, true)
         
-        const onSaveName = (_: string, value: any): Promise<IParticipant> => {
+        const onSaveName = (_: string, value: any): Promise<void> => {
             const lookup: any = MembersService.getMemberByName(value) || {}
             const body = {
                 name: value === 'New Tramper' ? '' : value,
@@ -106,10 +106,10 @@ export class TripParticipant extends Component<{
             }
             return this.props.setParticipant(participant.id, body, true)
         }
-        const onSaveNewTramper = (_: string, value: any): Promise<IParticipant> => {
+        const onSaveNewTramper = (_: string, value: any): Promise<void> => {
             return (MembersService.getMemberByName(value) ? onSaveName : onSave)('name', value)
         }
-        const onSaveIsVehicleProvider = (field: string, value: any): Promise<IParticipant> => {
+        const onSaveIsVehicleProvider = (field: string, value: any): Promise<void> => {
             return onSave(field, value).then(() => onSave('broughtVehicle', value))
         }
 
@@ -183,12 +183,12 @@ export class TripParticipant extends Component<{
                 <span className='fa fa-sm fa-pen' />
                 {this.state.isSaveOp ? ['Signing up ', Spinner] : ''}
             </ButtonWithTooltip>,
-            this.props.canWaitList && this.props.canEditTrip &&
+            this.props.canWaitList && canEditAsLeader &&
             <ButtonWithTooltip key='waitlist' id={'waitlist' + participant.id} onClick={onToggleWaitlist} tooltipText="Add to wait list">
                 <span className='fa fa-sm fa-user-plus' />
                 {this.state.isWaitlistOp ? ['Adding ', Spinner] : ''}
             </ButtonWithTooltip>,
-            this.props.canUnwaitList && this.props.canEditTrip &&
+            this.props.canUnwaitList && canEditAsLeader &&
             <ButtonWithTooltip key='unwaitlist' id={'unwaitlist' + participant.id} onClick={onToggleWaitlist} tooltipText="Remove from wait list">
                 <span className='fa fa-sm fa-user-times' />
                 {this.state.isWaitlistOp ? ['Removing ', Spinner] : ''}

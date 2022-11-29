@@ -14,7 +14,7 @@ export class TripCostsParticipant extends Component<{
     participantCosts: IParticipantCosts,
     canEdit: boolean,
     onGetValidations: (participant: IParticipant) => IValidation[]
-    setParticipant(id: number, data: { [id: string]: any }, save: boolean): Promise<IParticipant>
+    setParticipant(id: number, data: { [id: string]: any }, save: boolean): Promise<void>
 }, {
     isUpdateOp?: boolean
 }> {
@@ -34,16 +34,16 @@ export class TripCostsParticipant extends Component<{
         const warnings = validations.filter(i => !i.ok)
 
         const onGet = (field: string): any => participant[field]
-        const onSet = (field: string, value: any): Promise<IParticipant> => 
+        const onSet = (field: string, value: any): Promise<void> => 
             this.props.setParticipant(participant.id, { [field]: this.sanitizeNumber(value) }, false)
-        const onSave = (field: string, value: any): Promise<IParticipant> => 
+        const onSave = (field: string, value: any): Promise<void> => 
             this.props.setParticipant(participant.id, { [field]: this.sanitizeNumber(value) }, true)
 
         const onGetValidationMessage = (field: string): any => {
             return (validations.find(v => v.field === field && !v.ok) || {} as any).message
         }
 
-        const onSaveIsFixedCostVehicle = (field: string, value: any): Promise<IParticipant> => {
+        const onSaveIsFixedCostVehicle = (field: string, value: any): Promise<void> => {
             const vehicleCost = value ? participant.vehicleCost : null
             return onSave('vehicleCost', vehicleCost).then(() => onSave(field, value))
         }
@@ -69,9 +69,9 @@ export class TripCostsParticipant extends Component<{
 
         // 
         const onNegativeNumberGet = (field: string): any => this.sanitizeNegativeNumber(participant[field])
-        const onNegativeNumberSet = (field: string, value: any): Promise<IParticipant> => 
+        const onNegativeNumberSet = (field: string, value: any): Promise<void> => 
             this.props.setParticipant(participant.id, { [field]: this.sanitizeNegativeNumber(value) }, false)
-        const onNegativeNumberSave = (field: string, value: any): Promise<IParticipant> => 
+        const onNegativeNumberSave = (field: string, value: any): Promise<void> => 
             this.props.setParticipant(participant.id, { [field]: this.sanitizeNegativeNumber(value) }, true)
 
         const iconid = `${participant.id || 'new'}`

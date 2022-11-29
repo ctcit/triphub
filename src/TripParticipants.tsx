@@ -13,9 +13,9 @@ export class TripParticipants extends Component<{
     participantsInfo: IParticipantsInfo
     trip: ITrip,
     isNew: boolean,
-    role: Role,
+    availableToEdit: boolean,
+    amAdminOrLeader: boolean,
     isOnline: boolean,
-    canEditTrip: boolean,
     setTripParticipants: (participants: IParticipant[], setEdited: boolean) => void
     saveNewTripParticipant: (participant: IParticipant) => Promise<IParticipant[]>
 }, {
@@ -128,19 +128,21 @@ export class TripParticipants extends Component<{
         return this.setParticipant(id, { isDeleted: false, displayPriority: displayPriority.toString() }, true)
     }
 
-    public setParticipant(id: number, fields: { [id: string]: any }, save: boolean): Promise<IParticipant> {
-        const participants = [...this.props.participants]
-        const index = participants.findIndex(p => p.id === id)
-        const participant = { ...participants[index], ...fields }
-
-        participants[index] = participant
-
-        this.props.setTripParticipants(participants, true)
-        return Promise.resolve(
-            save? 
-                TripsService.postTripParticipantUpdate(this.props.trip.id, id, fields) :
-                participant
-            )
+    public setParticipant(id: number, fields: { [id: string]: any }, save: boolean): Promise<void> {
+        return new Promise<void>((resolve) => {
+            const participants = [...this.props.participants]
+            const index = participants.findIndex(p => p.id === id)
+            const participant = { ...participants[index], ...fields }
+    
+            participants[index] = participant
+    
+            this.props.setTripParticipants(participants, true)
+            if (save) {
+                TripsService.postTripParticipantUpdate(this.props.trip.id, id, fields).finally(() => resolve())
+            } else {
+                resolve()
+            }
+        })
     }
     
     public render() {
@@ -148,8 +150,7 @@ export class TripParticipants extends Component<{
         const me = MembersService.Me
         const anon = !me.id
         const info = this.props.participantsInfo
-        const isPrivileged = this.props.canEditTrip
-        const isOpen = this.props.trip.state === 'Open' || isPrivileged
+        const isOpen = this.props.trip.state === 'Open' || this.props.amAdminOrLeader
         const isNewTrip = this.props.isNew
         const hasNewTramper = !!info.all.find((p: IParticipant) => p.id === -1)
         const imOnList = !!info.all.find((m: IParticipant) => m.memberId === me.id)
@@ -181,7 +182,7 @@ export class TripParticipants extends Component<{
                             {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                         </Button>,
                         <Button key={'signup' + info.all.length} onClick={onSignUpTramper}
-                            hidden={isNewTrip || hasNewTramper || !isOpen || anon || !isPrivileged || !this.props.isOnline}>
+                            hidden={isNewTrip || hasNewTramper || !isOpen || anon || !this.props.amAdminOrLeader || !this.props.isOnline}>
                             <span className='fa fa-user-plus' /> Sign up a tramper
                             {info.current.length >= info.maxParticipants ? " (on waitlist)" : ""}
                         </Button>,
@@ -226,8 +227,8 @@ export class TripParticipants extends Component<{
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} 
                                 participant={p}
                                 trip={this.props.trip}
-                                canEditTrip={this.props.canEditTrip}
-                                role={this.props.role}
+                                availableToEdit={this.props.availableToEdit}
+                                amAdminOrLeader={this.props.amAdminOrLeader} 
                                 isOnline={this.props.isOnline}
                                 setParticipant={setParticipant}
                                 setPosition={setPosition}
@@ -243,8 +244,8 @@ export class TripParticipants extends Component<{
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`}
                                 participant={p}
                                 trip={this.props.trip}
-                                canEditTrip={this.props.canEditTrip}
-                                role={this.props.role}
+                                availableToEdit={this.props.availableToEdit}
+                                amAdminOrLeader={this.props.amAdminOrLeader} 
                                 isOnline={this.props.isOnline}
                                 setParticipant={setParticipant}
                                 setPosition={setPosition}
@@ -261,8 +262,8 @@ export class TripParticipants extends Component<{
                             <TripParticipant key={`${p.id}${p.displayPriority}${p.isDeleted}`} 
                                 participant={p}
                                 trip={this.props.trip}
-                                canEditTrip={this.props.canEditTrip}
-                                role={this.props.role}
+                                availableToEdit={this.props.availableToEdit}
+                                amAdminOrLeader={this.props.amAdminOrLeader} 
                                 isOnline={this.props.isOnline}
                                 setParticipant={setParticipant}
                                 setPosition={setPosition}

@@ -1,70 +1,43 @@
 import { BaseUrl } from '..';
 import { IEdit, IHistoryItem, IParticipant, ITrip, IValidation } from '../Interfaces';
-import { apiCall, Mandatory } from '../Utilities';
+import { apiCall, apiCallReturnAll, apiCallReturnFirst, Mandatory } from '../Utilities';
 
 export class TripsService {
 
     // offline GET supported
     public static async getTrips(force: boolean = false): Promise<ITrip[]> {
         if (force || !this.getTripsPromise) {
-            this.getTripsPromise = new Promise<ITrip[]>((resolve, reject) => {
-                apiCall('GET', BaseUrl + '/trips')
-                    .then((trips: ITrip[]) => {
-                        this.trips = trips;
-                        resolve(trips);
-                    }, () => {
-                        this.trips = [];
-                        resolve([]);
-                    }
-                )
-            });
+            this.getTripsPromise = apiCallReturnAll<ITrip>('GET', BaseUrl + '/trips')
         }
         return this.getTripsPromise;
     }
 
-    public static get Trips(): ITrip[] {
-        return this.trips
-    }
-
     // offline GET supported
-    public static async getTrip(id: number): Promise<ITrip> {
-        return apiCall('GET', BaseUrl + '/trips/' + id)
-            .then((trips: ITrip[]) => {
-                return trips[0]
-            })
+    public static async getTrip(id: number): Promise<ITrip | null> {
+        return apiCallReturnFirst<ITrip>('GET', BaseUrl + '/trips/' + id)
     }
 
-    public static async postTripNew(data: ITrip): Promise<ITrip> {
-        return apiCall('POST', BaseUrl + '/trips', data)
-            .then((trips: ITrip[]) => trips[0])
+    public static async postTripNew(data: ITrip): Promise<ITrip | null> {
+        return apiCallReturnFirst<ITrip>('POST', BaseUrl + '/trips', data)
     }
 
     // offline background sync supported
-    public static async postTripUpdate(id: number, data: any): Promise<ITrip> {
-        return apiCall('POST', BaseUrl + '/trips/' + id, data)
-            .then(async (trips: ITrip[]) => {
-                return trips? trips[0] : await this.getTrip(id)
-            })
+    public static async postTripUpdate(id: number, data: any): Promise<ITrip | null> {
+        return apiCallReturnFirst<ITrip>('POST', BaseUrl + '/trips/' + id, data)
     }
 
     // offline GET supported
     public static async getTripParticipants(id: number): Promise<IParticipant[]> {
-        return apiCall('GET', BaseUrl + '/trips/' + id + '/participants')
+        return apiCallReturnAll<IParticipant>('GET', BaseUrl + '/trips/' + id + '/participants')
     }
 
-    public static async postTripParticipantNew(id: number, participant: IParticipant): Promise<IParticipant> {
-        return apiCall('POST', BaseUrl + '/trips/' + id + '/participants', participant)
-            .then((participants: IParticipant[]) => participants[0])
+    public static async postTripParticipantNew(id: number, participant: IParticipant): Promise<IParticipant | null> {
+        return apiCallReturnFirst<IParticipant>('POST', BaseUrl + '/trips/' + id + '/participants', participant)
     }
 
     // offline background sync supported
-    public static async postTripParticipantUpdate(id: number, participantId: number, data: any): Promise<IParticipant> {
-        return apiCall('POST', BaseUrl + '/trips/' + id + '/participants/' + participantId, data)
-            .then(async (participants: IParticipant[]) => {
-                return participants ? 
-                    participants[0] : 
-                    (await this.getTripParticipants(id)).filter(p => p.id === participantId)[0]
-            })
+    public static async postTripParticipantUpdate(id: number, participantId: number, data: any): Promise<IParticipant | null> {
+        return apiCallReturnFirst<IParticipant>('POST', BaseUrl + '/trips/' + id + '/participants/' + participantId, data)
     }
 
     public static async postTripEmail(id: number, data: any): Promise<any> {
@@ -89,7 +62,7 @@ export class TripsService {
     }
 
     public static async getPastTrips(data: any): Promise<ITrip[]> {
-        return apiCall('POST', BaseUrl + '/trips/pasttrips', data)
+        return apiCallReturnAll<ITrip>('POST', BaseUrl + '/trips/pasttrips', data)
     }
 
     public static validateTrip(trip: ITrip): IValidation[] {
@@ -122,11 +95,5 @@ export class TripsService {
     }
 
     private static getTripsPromise: Promise<ITrip[]> | undefined = undefined
-
-    private static trips: ITrip[] = []
-
-    private static first<T>(responseArray: T[]): T {
-        return responseArray[0]
-    }
 
 }

@@ -247,14 +247,16 @@ export class Newsletter extends Component<{
         this.setState({ isLoadingNewsletter: true })
 
         NewslettersService.postNewNewsletter(newsletter)
-            .then((savedNewsletter: INewsletter) => {
-                console.log("Saved newsletter, id=" + savedNewsletter.id)
-                NewslettersService.postNewsletterSetCurrent(savedNewsletter.id)
-                    .then(() => {
-                        console.log("Succesfully set as current")
-                        this.setState({ isNew: false })
-                        this.loadNewsletter(savedNewsletter);
-                    })
+            .then((savedNewsletter: INewsletter | null) => {
+                if (savedNewsletter) {
+                    console.log("Saved newsletter, id=" + savedNewsletter.id)
+                    NewslettersService.postNewsletterSetCurrent(savedNewsletter.id)
+                        .then(() => {
+                            console.log("Succesfully set as current")
+                            this.setState({ isNew: false })
+                            this.loadNewsletter(savedNewsletter);
+                        })
+                    }
             })
     }
 

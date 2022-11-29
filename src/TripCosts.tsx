@@ -214,23 +214,27 @@ export class TripCosts extends Component<{
         return 5.0;
     }
 
-    public setParticipant(id: number, data: { [id: string]: any }, save: boolean): Promise<IParticipant> {
-        const participants = [...this.props.participants]
-        const index = participants.findIndex(p => p.id === id)
-        const participant = { ...participants[index], ...data }
-
-        participants[index] = participant
-        
-        // clear any fixed vehicle cost if not fixed cost vehicle
-        if (!participant.isFixedCostVehicle) { 
-            participant.vehicleCost = null;
-        }
-
-        this.props.setTripParticipants(participants, true)
-
-        return save? 
-            TripsService.postTripParticipantUpdate(this.props.trip.id, id, data) :
-            Promise.resolve(participant)
+    public setParticipant(id: number, data: { [id: string]: any }, save: boolean): Promise<void> {
+        return new Promise<void>((resolve) => {
+            const participants = [...this.props.participants]
+            const index = participants.findIndex(p => p.id === id)
+            const participant = { ...participants[index], ...data }
+    
+            participants[index] = participant
+            
+            // clear any fixed vehicle cost if not fixed cost vehicle
+            if (!participant.isFixedCostVehicle) { 
+                participant.vehicleCost = null;
+            }
+    
+            this.props.setTripParticipants(participants, true)
+    
+            if (save) {
+                return TripsService.postTripParticipantUpdate(this.props.trip.id, id, data).finally(() => resolve())
+            } else {
+                resolve()
+            }
+        })
     }
     
     public onToggleLegend() {

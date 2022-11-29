@@ -272,16 +272,21 @@ export class Calendar extends Component<{
 
     public requery() {
         this.setState({ isLoadingCalendar: true })
+        let trips: ITrip[]
+        let cachedTripIds: number[]
         Promise.all([
             TripsService.getTrips(true),
             TripsCache.getCachedTripIds()
-        ]).then(values => {
-            const trips: ITrip[] = values[0]
-            const cachedTripIds: number[] = values[1]
-
-            this.setState({ trips, cachedTripIds, isLoadingCalendar: false })
-            this.props.setCachedTrips(trips.filter(trip => cachedTripIds.includes(trip.id)))
-        })
+            ]).then(values => {
+                trips = values[0] ?? []
+                cachedTripIds = values[1] ?? []
+            }, () => {
+                trips = []
+                cachedTripIds = []
+            }).finally(() => {
+                this.setState({ trips, cachedTripIds, isLoadingCalendar: false })
+                this.props.setCachedTrips(trips.filter(trip => cachedTripIds.includes(trip.id)))
+                })
     }
 
     public componentDidMount() {

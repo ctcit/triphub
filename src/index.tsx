@@ -6,8 +6,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 import './index.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
-import ReactDOM from 'react-dom';
 import { createRoot } from 'react-dom/client';
+import 'react-toastify/dist/ReactToastify.css';
 
 // use this chrome plugin to get this working if running locally using "npm start"
 // https://chrome.google.com/webstore/detail/allow-control-allow-origi/nlfbmbojpeacfghkpbjhddihlkkiljbi/related?hl=en

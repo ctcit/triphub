@@ -1,6 +1,8 @@
 import { IParticipant, IValidation } from './Interfaces'
 import { DateTime } from 'luxon'
 import { BaseOpt } from 'src'
+import { toast } from 'react-toastify';
+
 
 export const DayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export const MonthOfYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -157,12 +159,44 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
             return JSON.parse(text)
         } catch (ex) {
             console.log(`Failed to parse response: error=${ex} response=${text}`)
+            toast.error(`An unexpected response was returned from the server (failed to parse) : ${ex}`)
             return null
         }
     } catch(ex) {
         console.log(`Failed to fetch: ${ex}`)
+        toast.error(`An error occurred sending or getting data to/from the server: ${ex}`)
         return null
     }
+}
+
+export async function apiCallReturnAll<T>(method: string, url: string, data?: any): Promise<T[]> {
+    return apiCall(method, url, data).then((response: any) => {
+        if (response === null) {
+            return [] // already toasted
+        } else if (response.length === undefined) {
+            console.log(`An array was expected`)
+            toast.error(`An unexpected response was returned from the server (no array)`)
+            return []
+
+        } else {
+            return response as T[]
+        }
+    })
+}
+
+export async function apiCallReturnFirst<T>(method: string, url: string, data?: any): Promise<T | null> {
+    return apiCall(method, url, data).then((response: any) => {
+        if (response === null) {
+            return null // already toasted
+        } else if (!response.length) {
+            console.log(`At least one item in the array was expected`)
+            toast.error(`An unexpected response was returned from the server (no first item)`)
+            return null
+
+        } else {
+            return response[0]
+        }
+    })
 }
 
 export function BindMethods(obj: any) {

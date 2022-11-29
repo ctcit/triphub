@@ -313,7 +313,7 @@ export class TripMap extends MapCommon<{
     private selectArchivedRoute(archivedRouteId: number): void {
         this.setState({ busy: true });
         ArchivedRoutesService.getArchivedRoute(archivedRouteId)
-             .then(async (archivedRoute?: IArchivedRoute) => {
+             .then(async (archivedRoute: IArchivedRoute | null) => {
                  if (archivedRoute) {
                     this.saveSelectedRoute(archivedRoute.routes);
                  }

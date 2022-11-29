@@ -1,42 +1,39 @@
 import { BaseUrl } from '..';
 import { INewsletter, INewsletterEvent, INewsletterTripReport } from '../Interfaces';
-import { apiCall } from '../Utilities';
+import { apiCall, apiCallReturnAll, apiCallReturnFirst } from '../Utilities';
 
 export class NewslettersService {
     public static getNewslettersCurrent(): Promise<INewsletter[]> {
-        return apiCall('GET', BaseUrl + '/newsletters/current')
+        return apiCallReturnAll<INewsletter>('GET', BaseUrl + '/newsletters/current')
     }
 
     public static getNewslettersLatest(): Promise<INewsletter[]> {
-        return apiCall('GET', BaseUrl + '/newsletters/latest')
+        return apiCallReturnAll<INewsletter>('GET', BaseUrl + '/newsletters/latest')
     }
 
-    public static async postNewsletterSetCurrent(id: number): Promise<INewsletter> {
-        return apiCall('POST', BaseUrl + '/newsletters/' + id + '/current')
-            .then((newsletters: INewsletter[]) => newsletters[0])
+    public static async postNewsletterSetCurrent(id: number): Promise<INewsletter | null> {
+        return apiCallReturnFirst('POST', BaseUrl + '/newsletters/' + id + '/current')
     }
 
-    public static async postNewNewsletter(newsletter: INewsletter): Promise<INewsletter> {
-        return apiCall('POST', BaseUrl + '/newsletters', newsletter)
-            .then((newsletters: INewsletter[]) => newsletters[0])
+    public static async postNewNewsletter(newsletter: INewsletter): Promise<INewsletter | null> {
+        return apiCallReturnFirst('POST', BaseUrl + '/newsletters', newsletter)
     }
 
-    public static async postNewsletter(id: number, data: any): Promise<INewsletter> {
-        return apiCall('POST', BaseUrl + '/newsletters/' + id, data)
-            .then((newsletters: INewsletter[]) => newsletters[0])
+    public static async postNewsletter(id: number, data: any): Promise<INewsletter | null> {
+        return apiCallReturnFirst('POST', BaseUrl + '/newsletters/' + id, data)
     }
 
     public static getNewslettersEvents(): Promise<INewsletterEvent[]> {
-        return apiCall('GET', BaseUrl + '/newsletters/events')
+        return apiCallReturnAll<INewsletterEvent>('GET', BaseUrl + '/newsletters/events')
     }
 
     public static getNewslettersUnpublishedEvents(): Promise<INewsletterEvent[]> {
-        return apiCall('GET', BaseUrl + '/newsletters/unpublishedEvents')
+        return apiCallReturnAll<INewsletterEvent>('GET', BaseUrl + '/newsletters/unpublishedEvents')
     }
 
 
     public static getNewslettersTripReports(id: number): Promise<INewsletterTripReport[]> {
-        return apiCall('GET', BaseUrl + '/newsletters/' + id + '/tripreports')
+        return apiCallReturnAll<INewsletterTripReport>('GET', BaseUrl + '/newsletters/' + id + '/tripreports')
     }
 
     public static postNewslettersTripReports(id: number, tripReports: INewsletterTripReport[]): Promise<any> {

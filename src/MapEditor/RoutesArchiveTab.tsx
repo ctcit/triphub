@@ -215,7 +215,7 @@ export class RoutesArchiveTab extends Component<{
         this.setState({ busy: true });
         const mapComponent = (this.props.mapComponent as MapComponent);
         ArchivedRoutesService.getArchivedRoute(archivedRouteId)
-            .then(async (archivedRoute?: IArchivedRoute) => {
+            .then(async (archivedRoute: IArchivedRoute | null) => {
                 let routesAsLatLngs: Array<Array<[number, number]>> = mapComponent.getRoutesAsLatLngs();
                 routesAsLatLngs = archivedRoute ? routesAsLatLngs.concat(archivedRoute.routes) : routesAsLatLngs;
                 mapComponent.setRoutesFromLatLngs(routesAsLatLngs);

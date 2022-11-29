@@ -276,7 +276,7 @@ export class NoticeList extends Component<{
         })
     }
 
-    private setPublishNotice(notice: INotice, publish: boolean): Promise<INotice> {
+    private setPublishNotice(notice: INotice, publish: boolean): Promise<INotice | null> {
         notice.publish = publish;
         return NoticesService.patchNotice(notice.id, notice)
     }

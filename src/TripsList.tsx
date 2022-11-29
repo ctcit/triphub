@@ -329,13 +329,19 @@ export class TripsList extends Component<{
     }
 
     private requeryTrips() {
+        this.setState({ isLoadingTrips: true })
+        let trips: ITrip[]
+        let cachedTripIds: number[]
         Promise.all([
             TripsService.getTrips(true),
             TripsCache.getCachedTripIds()
             ]).then(values => {
-                const trips: ITrip[] = values[0]
-                const cachedTripIds: number[] = values[1]
-
+                trips = values[0] ?? []
+                cachedTripIds = values[1] ?? []
+            }, () => {
+                trips = []
+                cachedTripIds = []
+            }).finally(() => {
                 const order = Object.keys(TripState)
                 const groups = new Map<string, ITrip[]>(
                     trips.sort((a, b) => order.indexOf(a.state) - order.indexOf(b.state))

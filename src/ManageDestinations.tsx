@@ -73,7 +73,9 @@ export class ManageDestinations extends Component<{
                 if (this.state.selectedDestination.id === 0) {
                     // new
                     return DestinationsService.postDestination(this.state.selectedDestination).then(newDestination => {
-                        (this.state.selectedDestination as IDestination).id = newDestination.id
+                        if (newDestination) {
+                            (this.state.selectedDestination as IDestination).id = newDestination.id
+                        }
                         return this.requeryDestinations().then(() => {
                             this.setState({selectedOption: this.state.selectedOption, selectedDestination: this.state.selectedDestination })
                         })

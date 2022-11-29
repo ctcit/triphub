@@ -17,7 +17,7 @@ export class TripDetail extends Component<{
     forceValidation?: boolean,
     role: Role,
     isOnline: boolean,
-    setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<ITrip>
+    setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<void>
 }, {
     editMap: boolean
     editMaps: boolean
@@ -48,7 +48,7 @@ export class TripDetail extends Component<{
         const isSocial = trip.isSocial
 
         const getArchivedRoutes = (includeHidden: boolean, force: boolean) => ArchivedRoutesService.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
+        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | null> =>  {
             return ArchivedRoutesService.getArchivedRoute(archivedRouteId);
         }
 
@@ -62,9 +62,9 @@ export class TripDetail extends Component<{
             return found ? found.message : null
         }
 
-        const onSetInverted = (field: string, value: any): Promise<ITrip> => this.props.setTripFields({[field]: !value}, true, true)
+        const onSetInverted = (field: string, value: any): Promise<void> => this.props.setTripFields({[field]: !value}, true, true)
 
-        const onSetTripDate = (_: string, value: any): Promise<ITrip> => {
+        const onSetTripDate = (_: string, value: any): Promise<void> => {
             const tripDate = value
             let body: any = { tripDate }
 
@@ -86,7 +86,7 @@ export class TripDetail extends Component<{
             return this.props.setTripFields(body, true, true)
         }
 
-        const onSetTripLength = (_: string, value: any): Promise<ITrip> => {
+        const onSetTripLength = (_: string, value: any): Promise<void> => {
             const length = value as number
             let body: any = { length }
 

@@ -17,10 +17,10 @@ import { TextAreaInputControl } from './Control'
 import { TripState } from './TripStates'
 import { ConfigService } from './Services/ConfigService'
 import { MembersService } from './Services/MembersService'
-import { MapsService } from './Services/MapsService'
 import { TripsService } from './Services/TripsService'
 import memoizeOne from 'memoize-one'
 import { TripsCache } from './Services/TripsCache'
+
 
 export class Trip extends Component<{
     isNew: boolean,
@@ -28,6 +28,7 @@ export class Trip extends Component<{
     id?: number,
     role: Role,
     isOnline: boolean,
+    isCached: boolean,
     setPath(path: string): void,
     addNotification(text: string, colour: string): void,
     loadingStatus(state: any): JSX.Element,
@@ -69,20 +70,22 @@ export class Trip extends Component<{
             this.setState({ isLoadingTrip: true })
 
             TripsService.getTrip(this.props.id as number)
-                .then((trip: ITrip) => {
-                    this.setState({ isLoadingTrip: false, trip })
-
-                    if (this.props.role > Role.NonMember) { // will fail 403 for NonMember
-                        this.requeryParticipants().then(() => {
-                            TripsCache.getCachedTripIds().then((ids: number[]) => {
-                                if (ids.indexOf(trip.id) >= 0) {
-                                    this.props.addCachedTrip(trip) // notify app that trip is in cache
-                                }
+                .then((trip: ITrip | null) => {
+                    if (trip) {
+                        this.setState({ trip })
+                        if (this.props.role > Role.NonMember) { // will fail 403 for NonMember
+                            this.requeryParticipants().then(() => {
+                                TripsCache.getCachedTripIds().then((ids: number[]) => {
+                                    if (ids.indexOf(trip.id) >= 0) {
+                                        this.props.addCachedTrip(trip) // notify app that trip is in cache
+                                    }
+                                })
                             })
-                        })
+                        }
                     }
+                }).finally(() => {
+                    this.setState({ isLoadingTrip: false })
                 })
-
         }
     }
 
@@ -94,16 +97,18 @@ export class Trip extends Component<{
         this.stopEditHeartbeat()
     }
 
-    public setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<ITrip>
+    public setTripFields(fields: any, setEdited: boolean, save: boolean): Promise<void>
     {
         return new Promise((resolve) => {
             this.setState(state => ({ trip: { ...state.trip, ...fields } }), () => {
                 if (setEdited && !this.state.editIsEdited) {
                     this.setState({ editIsEdited: true })
                 }
-                resolve(save && this.state.trip.id ?
-                    TripsService.postTripUpdate(this.state.trip.id as number, fields) :
-                    this.state.trip)
+                if (save && this.state.trip.id) {
+                    TripsService.postTripUpdate(this.state.trip.id as number, fields).finally(() => resolve())
+                } else {
+                    resolve()
+                }
             })
         })
     }
@@ -138,6 +143,17 @@ export class Trip extends Component<{
     }
 
     public get canEditTrip() {
+        if (!this.availableToEdit) {
+            return false
+        }
+        return this.amAdminOrLeader
+    }
+
+    public get availableToEdit() {
+        return this.props.isOnline || this.props.isCached
+    }
+
+    public get amAdminOrLeader() {
         const me = MembersService.Me
         return this.amAdmin || this.state.participants.some((p: IParticipant) => me.id === p.memberId && p.isLeader)
     }
@@ -207,9 +223,9 @@ export class Trip extends Component<{
         }
         else {
             TripsService.postTripNew(trip)
-                .then(data => {
-                    const newTrip = data[0] as ITrip
-                    TripsService.postTripParticipantNew(newTrip.id, participants[0])
+                .then(newTrip => {
+                    if (newTrip) {
+                        TripsService.postTripParticipantNew(newTrip.id, participants[0])
                         .then(() => {
                             this.props.setPath('/')
                             const notificationText = trip.approval === TripState.Pending.id ?
@@ -217,6 +233,7 @@ export class Trip extends Component<{
                                 "Trip has been added and auto-approved."
                             this.props.addNotification(notificationText, 'success')
                         })
+                    }
                 })
         }
     }
@@ -423,7 +440,8 @@ export class Trip extends Component<{
                     title={<span title={`Status: ${trip.approval}`}><b><span key='icon' className='fa fa-map-marker fa-fw' />{this.state.trip.title}</b></span>}
                     expanded={true}>
                     <TripDetail key={'TripDetail' + this.state.trip.id}
-                        trip={this.state.trip} isNew={this.props.isNew} canEditTrip={this.canEditTrip}
+                        trip={this.state.trip} isNew={this.props.isNew} 
+                        canEditTrip={this.canEditTrip}
                         forceValidation={this.state.showValidationMessage}
                         role={this.props.role}
                         isOnline={this.props.isOnline}
@@ -455,9 +473,9 @@ export class Trip extends Component<{
                             trip={this.state.trip}
                             setTripParticipants={setTripParticipants}
                             saveNewTripParticipant={saveNewTripParticipant}
-                            isNew={isNew} 
-                            canEditTrip={this.canEditTrip} 
-                            role={this.props.role}
+                            isNew={isNew}
+                            availableToEdit={this.availableToEdit}
+                            amAdminOrLeader={this.amAdminOrLeader} 
                             isOnline={this.props.isOnline} />
                     </Accordian>
                 }
@@ -469,7 +487,7 @@ export class Trip extends Component<{
                         Email ...
                     </Accordian>
                 }
-                {(this.state.trip.isSocial && this.state.trip.isNoSignup) || this.props.isNew || !this.canEditTrip ? null :
+                {(this.state.trip.isSocial && this.state.trip.isNoSignup) || this.props.isNew || !this.amAdminOrLeader ? null :
                     <Accordian key={`costs${this.state.trip.id}_${this.state.participants.length}`} id='costs'
                         className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-dollar-sign fa-fw' />Cost Calculator</b></span>}

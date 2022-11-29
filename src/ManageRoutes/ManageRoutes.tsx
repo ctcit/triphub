@@ -155,10 +155,13 @@ export class ManageRoutes extends Component<{
             this.setState({ tableState: { filters: [], sortBy: [], pageIndex: 0 } })
         }
 
-        const onSave = async (newRoute: IArchivedRoute | undefined): Promise<any> => {
+        const onSave = async (newRoute: IArchivedRoute | undefined): Promise<void> => {
             if (newRoute) {
-                this.setState({ isEditing: false, isSaving: true }); 
-                await this.setSelectedRoutes([await this.RecalculateAndSaveRoute(newRoute)]);
+                this.setState({ isEditing: false, isSaving: true });
+                const route = await this.RecalculateAndSaveRoute(newRoute)
+                if (route) {
+                    await this.setSelectedRoutes([route]);
+                }
                 await ArchivedRoutesService.getArchivedRoutes(true, true); // force reload
                 this.setState({isSaving: false});
             }
@@ -167,15 +170,6 @@ export class ManageRoutes extends Component<{
         const onCancel = (): Promise<void> => {
             this.setState({ isEditing: false }); 
             return Promise.resolve()
-        }
-
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => ArchivedRoutesService.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | undefined> =>  {
-            return ArchivedRoutesService.getArchivedRoute(archivedRouteId)
-        }
-
-        const onGetValidationMessage = (): any => {
-            return null;
         }
 
         const onBoundsChanged = (bounds: L.LatLngBounds) => {
@@ -340,7 +334,7 @@ export class ManageRoutes extends Component<{
         ]
     }
 
-    private async RecalculateAndSaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute> {
+    private async RecalculateAndSaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute | null> {
         newRoute.bounds = this.calculateBounds(newRoute.routes);
         newRoute.summarizedRoutes = this.summarizedRoutes(newRoute.routes);
         return await this.SaveRoute(newRoute);
@@ -586,7 +580,7 @@ export class ManageRoutes extends Component<{
     }
 
     private async CopyAndSaveSelectedRoutes(tolerance: number = 0): Promise<IArchivedRoute[]> {
-        return Promise.all(this.state.selectedRoutes.map(async (route: IArchivedRoute) => {
+        return Promise.all(this.state.selectedRoutes.map((route: IArchivedRoute) => {
             const copiedRoute = this.copyRoute(route);
             if (tolerance > 0) {
                 copiedRoute.routes = copiedRoute.routes.map(r => {
@@ -596,8 +590,8 @@ export class ManageRoutes extends Component<{
                     return generalizedRoute;
                 })
             }
-            return await this.SaveRoute(copiedRoute);
-        }));
+            return this.SaveRoute(copiedRoute);
+        })).then((routes: (IArchivedRoute | null)[]) => routes.filter(route => route !== null) as IArchivedRoute[]);
     }
 
     private async SplitRoute(): Promise<IArchivedRoute[]> {
@@ -607,7 +601,10 @@ export class ManageRoutes extends Component<{
             newRoute.routes = [route];
             newRoute.summarizedRoutes = [newRoute.summarizedRoutes[index]];
             newRoute.bounds = this.calculateBounds(newRoute.routes);
-            routes.push(await this.SaveRoute(newRoute));
+            const newRoute2 = await this.SaveRoute(newRoute)
+            if (newRoute2) {
+                routes.push(newRoute2);
+            }
         });
         return Promise.resolve(routes);
     }
@@ -622,26 +619,29 @@ export class ManageRoutes extends Component<{
         return Promise.resolve();
     }
 
-    private async SaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute> {
-        let savedRoute: IArchivedRoute;
+    private async SaveRoute(newRoute: IArchivedRoute): Promise<IArchivedRoute | null> {
+        let savedRoute: IArchivedRoute | null;
         newRoute = this.Sanitize(newRoute);
         if (newRoute.id > 0) {
             savedRoute = await ArchivedRoutesService.patchArchivedRoute(newRoute.id, newRoute);
         } else {
             savedRoute = await ArchivedRoutesService.postArchivedRoute(newRoute);
         }
-        savedRoute.source = "Routes";
-        let newRoutes; // new routes array will force table to re-render
-        if (newRoute.id === 0) {
-            newRoutes = [savedRoute].concat(this.state.routes); // add to begining as these are the most recently created
-        } else {
-            newRoutes = this.state.routes.map((route: IArchivedRoute) => route.id === savedRoute.id ? savedRoute : route); // replace edited route
+        if (savedRoute) {
+            const savedRoute2 = savedRoute as IArchivedRoute
+            savedRoute2.source = "Routes";
+            let newRoutes: IArchivedRoute[]; // new routes array will force table to re-render
+            if (newRoute.id === 0) {
+                newRoutes = [savedRoute2].concat(this.state.routes); // add to begining as these are the most recently created
+            } else {
+                newRoutes = this.state.routes.map((route: IArchivedRoute) => route.id === savedRoute2.id ? savedRoute2 : route); // replace edited route
+            }
+            this.setState({
+                routes: newRoutes
+            }, async () => {
+                await this.setSelectedRoutes([savedRoute2]);
+            });
         }
-        this.setState({
-            routes: newRoutes
-        }, async () => {
-            await this.setSelectedRoutes([savedRoute]);
-        });
         return Promise.resolve(savedRoute)
     }
 

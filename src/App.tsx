@@ -21,6 +21,7 @@ import { Alert, Button, Container } from 'reactstrap';
 import { Workbox } from 'workbox-window';
 import { Login } from './Login';
 import { SilentLogin } from './SilentLogin';
+import { ToastContainer } from 'react-toastify';
 
 export class App extends Component<{
 }, {
@@ -253,6 +254,7 @@ export class App extends Component<{
             addNotification,
             loadingStatus,
             isOnline: this.state.isOnline,
+            isCached: id !== undefined && Boolean(this.state.cachedTrips.find(ct => ct.id === id)),
             setCachedTrips,
             addCachedTrip
         }
@@ -272,6 +274,21 @@ export class App extends Component<{
         }
 
         return [
+            <div>
+                <ToastContainer
+                    position="top-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                    />
+            </div>
+            ,
             (!this.state.isOnline && 
                 <Alert color='warning'>
                     <span className='fa fa-cloud' />

@@ -1,25 +1,19 @@
 import { BaseUrl } from '..';
 import { IHoliday } from '../Interfaces';
-import { apiCall } from '../Utilities';
+import { apiCallReturnAll } from '../Utilities';
 
 export class HolidaysService {
 
     // offline GET supported
     public static async getHolidays(force: boolean = false): Promise<IHoliday[]> {
         if (force || !this.getHolidaysPromise) {
-            this.getHolidaysPromise = new Promise<IHoliday[]>((resolve, reject) => {
-                apiCall('GET', BaseUrl + '/public_holidays')
-                    .then((holidays: IHoliday[]) => {
-                        this.holidays = holidays
-                        resolve(holidays);
-                    });
-            });
+            this.getHolidaysPromise = apiCallReturnAll<IHoliday>('GET', BaseUrl + '/public_holidays')
+                .then((holidays: IHoliday[]) => {
+                    this.holidays = holidays
+                    return holidays
+                });
         }
         return this.getHolidaysPromise;
-    }
-
-    public static get Holidays(): IHoliday[] {
-        return this.holidays
     }
 
     public static get CanterburyHolidaysByDate(): Map<string, IHoliday> {
@@ -33,3 +27,5 @@ export class HolidaysService {
     private static holidays: IHoliday[] = []
 
 }
+
+

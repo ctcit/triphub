@@ -1,19 +1,13 @@
 import { BaseUrl } from "src";
 import { IDestination, IValidation } from "src/Interfaces";
-import { apiCall, Mandatory } from "src/Utilities";
+import { apiCall, apiCallReturnFirst, apiCallReturnAll, Mandatory } from "src/Utilities";
 
 export class DestinationsService {
 
     // offline GET supported
     public static async getDestinations(force: boolean = false): Promise<IDestination[]> {
         if (force || !this.getDestinationsPromise) {
-            this.getDestinationsPromise = new Promise<IDestination[]>((resolve, reject) => {
-                apiCall('GET', BaseUrl + '/destinations')
-                    .then((destinations: IDestination[]) => {
-                        this.destinations = destinations
-                        resolve(destinations);
-                    });
-            });
+            this.getDestinationsPromise = apiCallReturnAll<IDestination>('GET', BaseUrl + '/destinations')
         }
         return this.getDestinationsPromise;
     }
@@ -32,14 +26,12 @@ export class DestinationsService {
         return grouped
     }
 
-    public static async postDestination(newDestination: IDestination): Promise<IDestination> {
-        return apiCall('POST', BaseUrl + '/destinations', newDestination)
-            .then((destinations: IDestination[]) => destinations[0])
+    public static async postDestination(newDestination: IDestination): Promise<IDestination | null> {
+        return apiCallReturnFirst<IDestination>('POST', BaseUrl + '/destinations', newDestination)
     }
 
-    public static async patchDestination(id: number, data: any): Promise<IDestination> {
-        return apiCall('PATCH', BaseUrl + '/destinations/' + id, data)
-            .then((destinations: IDestination[]) => destinations[0])
+    public static async patchDestination(id: number, data: any): Promise<IDestination | null> {
+        return apiCallReturnFirst<IDestination>('PATCH', BaseUrl + '/destinations/' + id, data)
     }
 
     public static async deleteDestination(id: number): Promise<any> {
@@ -54,7 +46,5 @@ export class DestinationsService {
     }
 
     private static getDestinationsPromise: Promise<IDestination[]> | undefined = undefined
-    private static destinations: IDestination[] = []
-
 
 }

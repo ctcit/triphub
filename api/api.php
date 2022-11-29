@@ -388,7 +388,7 @@ function ApiProcess(
             // INPUT A <a href='$basehref#destinations'>destinations</a>
             // OUTPUT The new <a href='$basehref#destinations'>destination</a>
             // INPUTENTITY destinations
-            return ApiPost($con,UserIdIfHasRoleOrDie($con,"Admin"),$table,$input,0);
+            return ApiPost($con,ValidateUser($con,"Admin"),$table,$input,0);
 
         case "POST destinations/{destinationId}":
         case "PATCH destinations/{destinationId}":

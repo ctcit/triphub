@@ -212,7 +212,7 @@ const notifySyncsCountToClient = () => {
 }
 
 const bgSyncPlugin = new BackgroundSyncPlugin('syncs', {
-  maxRetentionTime: 7 * 24 * 60, // Retry for max of 7 days (specified in minutes)
+  maxRetentionTime: 1 * 24 * 60, // Retry for max of 1 day (specified in minutes)
   onSync: async (props: any): Promise<void> => {
     await protectedReplayRequests(props.queue)
     return notifySyncsCountToClient()

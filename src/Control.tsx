@@ -347,10 +347,12 @@ export class SelectControl extends Component<{
     public render() {
         const id = this.props.id + '_' + this.props.field
         const onChange = (event: React.ChangeEvent) => {
-            const newValue = (event.target as any).value;
-            this.setState({ saving: !this.props.noSaveBadge });
-            this.props.onSave(this.props.field, newValue)
-                .then(() => this.setState({ saving: false }));
+            if (!this.props.readOnly) {
+                const newValue = (event.target as any).value;
+                this.setState({ saving: !this.props.noSaveBadge });
+                this.props.onSave(this.props.field, newValue)
+                    .then(() => this.setState({ saving: false }));
+            }
         }
         let options: JSX.Element[]
 

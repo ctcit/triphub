@@ -274,7 +274,7 @@ export class App extends Component<{
         }
 
         return [
-            <div>
+            <div key='toastContainer'>
                 <ToastContainer
                     position="top-right"
                     autoClose={5000}
@@ -290,13 +290,13 @@ export class App extends Component<{
             </div>
             ,
             (!this.state.isOnline && 
-                <Alert color='warning'>
+                <Alert key='noInternetAlert' color='warning'>
                     <span className='fa fa-cloud' />
                     &nbsp;<b>No internet connection. Application is working offline. Limited options available.</b>
                 </Alert>
             ),
             (!this.state.isOnline && this.state.pendingSyncsCount > 0 && 
-                <Alert color='warning'>
+                <Alert key='editsPendingAlert' color='warning'>
                     <span className='fa fa-rotate' />
                     &nbsp;<b>Edits ({this.state.pendingSyncsCount}) are waiting to be synced. {(this.state.backgroundSyncPermitted ?
                         'These will automatically sync in the background when next online' :
@@ -304,13 +304,13 @@ export class App extends Component<{
                 </Alert>
             ),
             (this.state.isOnline && this.state.pendingSyncsCount > 0 && 
-                <Alert color='warning'>
+                <Alert key='editsSyncingAlert' color='warning'>
                     <span className='fa fa-rotate fa-spin' />
                     &nbsp;<b>Edits ({this.state.pendingSyncsCount}) are syncing...</b>
                 </Alert>
             ),
             (this.state.appUpdateAvailable &&
-                <Alert color='warning'>
+                <Alert key='updateAlert' color='warning'>
                     <span className='fa fa-refresh' />
                     <b>&nbsp;An application update is available.  Please save any changes, then click the 'Update now' button to update.&nbsp;</b>
                     <Button onClick={onDoAppUpdate}>Update now</Button>

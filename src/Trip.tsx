@@ -334,7 +334,9 @@ export class Trip extends Component<{
     }
 
     public render() {
-        this.memoizedStartEditHeatbeat(this.props.isOnline)
+        if (!this.props.isNew) {
+            this.memoizedStartEditHeatbeat(this.props.isOnline)
+        } 
 
         if (this.state.isLoadingTrip) {
             return this.props.loadingStatus({ isLoadingTrip: this.state.isLoadingTrip })

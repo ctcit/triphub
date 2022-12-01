@@ -92,13 +92,13 @@ export class MapCommon<P extends {
         // 	maxZoom: 14,
         // 	attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>) | NZ Topo map sheets sourced from the LINZ Data Service and licensed for reuse under CC BY 4.0'
         // }).addTo(map);
-        const topoLayer = L.tileLayer('http://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
+        const topoLayer = L.tileLayer('https://tiles-{s}.data-cdn.linz.govt.nz/services;key=6076db4a13a14365905f8914ad7e3667/tiles/v4/layer=50767/EPSG:3857/{z}/{x}/{y}.png', {
             minZoom: 6,
             maxZoom: 16,
             subdomains: 'abcd',
             attribution: '<a href=“http://data.linz.govt.nz”>Sourced from LINZ. CC BY 4.0'
         }).addTo(this.map);
-        const aerialLayer = L.tileLayer('https://basemaps.linz.govt.nz/v1/tiles/aerial/EPSG:3857/{z}/{x}/{y}.webp?api=c01eg2pqbm71b75z3547szpb60k', {
+        const aerialLayer = L.tileLayer('https://basemaps.linz.govt.nz/v1/tiles/aerial/EPSG:3857/{z}/{x}/{y}.webp?key=6076db4a13a14365905f8914ad7e3667', {
             minZoom: 6,
             maxZoom: 16,
             subdomains: 'abcd',

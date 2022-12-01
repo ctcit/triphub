@@ -158,13 +158,13 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
         try {
             return JSON.parse(text)
         } catch (ex) {
-            console.log(`Failed to parse response: error=${ex} response=${text}`)
-            toast.error(`An unexpected response was returned from the server (failed to parse) : ${ex}`)
+            console.log(`Failed to parse response: error=${ex} url=${url} response=${text}`)
+            toast.error(`An unexpected response was returned from the server (failed to parse)`)
             return null
         }
     } catch(ex) {
-        console.log(`Failed to fetch: ${ex}`)
-        toast.error(`An error occurred sending or getting data to/from the server: ${ex}`)
+        console.log(`Failed to fetch: ${ex} url=${url}`)
+        toast.error(`An error occurred sending or getting data to/from the server`)
         return null
     }
 }
@@ -174,7 +174,7 @@ export async function apiCallReturnAll<T>(method: string, url: string, data?: an
         if (response === null) {
             return [] // already toasted
         } else if (response.length === undefined) {
-            console.log(`An array was expected`)
+            console.log(`An array was expected: url=${url}`)
             toast.error(`An unexpected response was returned from the server (no array)`)
             return []
 
@@ -189,7 +189,7 @@ export async function apiCallReturnFirst<T>(method: string, url: string, data?: 
         if (response === null) {
             return null // already toasted
         } else if (!response.length) {
-            console.log(`At least one item in the array was expected`)
+            console.log(`At least one item in the array was expected: url=${url}`)
             toast.error(`An unexpected response was returned from the server (no first item)`)
             return null
 

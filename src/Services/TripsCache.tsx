@@ -1,3 +1,4 @@
+import { forEach } from "lodash"
 import { IParticipant, ITrip } from "src/Interfaces"
 
 export class TripsCache {
@@ -56,8 +57,9 @@ export class TripsCache {
         const updateTripMatch = updateRequest.url.match(updateTripRegex)
         const updateParticipantMatch = updateRequest.url.match(updateParticipantRegex)
 
-        const updateRequestJson = await updateRequest.json()
+        const updateRequestJson = await updateRequest.clone().json()
         
+        let response: Response | undefined = undefined
         if (updateTripMatch) {
             await this.updateTripsCache2(updateRequestJson, updateTripMatch, null, this.getsCacheName)
         }
@@ -122,6 +124,45 @@ export class TripsCache {
                 }
             }
         })
+    }
+
+    public static async getFromTripsCache(url: string): Promise<Response | undefined> {
+        const updateTripRegex = /.*\/api\/api.php\/trips\/(\d*)$/
+        const updateParticipantRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants\/(\d*)$/
+        const updateTripMatch = url.match(updateTripRegex)
+        const updateParticipantMatch = url.match(updateParticipantRegex)
+
+        if (updateTripMatch || updateParticipantMatch) {
+            const getTripRegex = updateTripMatch ? /.*\/api\/api.php\/trips\/(\d*)$/ : null
+            const getParticipantsRegex = updateParticipantMatch ? /.*\/api\/api.php\/trips\/(\d*)\/participants$/ : null
+    
+            const cache = await caches.open(this.tripsCacheName)
+            const getRequests = await cache.keys()
+            for(let getRequest of getRequests) {
+                const getTripMatch = getTripRegex ? getRequest.url.match(getTripRegex) : false
+                const getParticipantsMatch = getParticipantsRegex ? getRequest.url.match(getParticipantsRegex) : false
+    
+                if (updateTripMatch && getTripMatch) {
+                    const getTripId = parseInt(getTripMatch[1], 10);
+                    const updateTripId = parseInt(updateTripMatch[1], 10);
+                    if (getTripId === updateTripId) {
+                        return await cache.match(getRequest);
+                    }
+    
+                } else if (updateParticipantMatch && getParticipantsMatch) {
+                    const getTripId = parseInt(getParticipantsMatch[1], 10);
+                    const updateTripId = parseInt(updateParticipantMatch[1], 10)
+                    if (getTripId === updateTripId) {
+                        const updateParticipantId = parseInt(updateParticipantMatch[2], 10);
+                        const response = await cache.match(getRequest)
+                        const participants = response ? (await response.clone().json()) as unknown as IParticipant[] : []
+                        const participant = participants.find(p => p.id === updateParticipantId)
+                        return participant ? new Response(JSON.stringify([participant]), { headers: { "Content-Type" : "application/json" } }) : undefined
+                    }
+                }
+            };
+        }
+        return undefined
     }
 
     public static clear() {

@@ -234,6 +234,9 @@ class TripsCacheUpdaterPlugin implements WorkboxPlugin {
     await TripsCache.updateTripsCache(request);
     return response;
   };
+  handlerDidError: WorkboxPlugin['handlerDidError'] = async ({request, error}) => {
+    return await TripsCache.getFromTripsCache(request.url);
+  };
 }
 const tripsCacheUpdaterPlugin = new TripsCacheUpdaterPlugin();
 

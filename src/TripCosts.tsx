@@ -61,17 +61,18 @@ export class TripCosts extends Component<{
         const trip: ITrip = this.props.trip
 
         trip.distanceOneWay = trip.distanceOneWay === undefined ? 0 : trip.distanceOneWay
-        trip.participantsCount = trip.participantsCount === undefined ? null : trip.participantsCount
+        trip.totalVehicleCost = trip.totalVehicleCost === undefined ? null : trip.totalVehicleCost
+        trip.payingParticipantsCount = trip.payingParticipantsCount === undefined ? null : trip.payingParticipantsCount
         trip.vehicleFee = trip.vehicleFee === undefined ? null : trip.vehicleFee
 
         const currentParticipants: IParticipant[] = this.props.currentParticipants
 
         this.calculations = {
             distanceOneWay: trip.distanceOneWay,
-            participantsCount: trip.participantsCount !== null ? trip.participantsCount : currentParticipants.length,
+            participantsCount: currentParticipants.length,
             totalVehicleCost: 0,
             fixedCostVehicleCount: 0,
-            payingParticipantsCount: 0, // paying vehicle fee
+            payingParticipantsCount: 0, // number of those paying vehicle fee
             calculatedVehicleFee: 0,
             roundedCalculatedVehicleFee: 0,
             vehicleFee: 0,
@@ -104,18 +105,24 @@ export class TripCosts extends Component<{
         const others: IParticipant[] = currentParticipants.filter(p => !this.calculations.participants[p.id].broughtVehicle);
 
         // calculate total vehicle cost
-        const defaultTotalDistance = this.tripDistanceOneWayRoundedUp(trip.distanceOneWay) * 2
-        actualVehicleProviders.forEach(p => {
-            const c = this.calculations.participants[p.id]
-            c.totalDistance = c.totalDistance != null ? c.totalDistance : defaultTotalDistance
-            c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize ?? 0)
-            c.vehicleCost = c.vehicleCost != null ? c.vehicleCost : Math.ceil(c.totalDistance * c.ratePerKm / 2) // NOTE: ratePerKm is per ONE-WAY-km, so is twice the rate per total return km
-            this.calculations.totalVehicleCost += c.vehicleCost
-        })
+        if (trip.totalVehicleCost === null) {
+            const defaultTotalDistance = this.tripDistanceOneWayRoundedUp(trip.distanceOneWay) * 2
+            actualVehicleProviders.forEach(p => {
+                const c = this.calculations.participants[p.id]
+                c.totalDistance = c.totalDistance != null ? c.totalDistance : defaultTotalDistance
+                c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize ?? 0)
+                c.vehicleCost = c.vehicleCost != null ? c.vehicleCost : Math.ceil(c.totalDistance * c.ratePerKm / 2) // NOTE: ratePerKm is per ONE-WAY-km, so is twice the rate per total return km
+                this.calculations.totalVehicleCost += c.vehicleCost
+            })
+        } else {
+            this.calculations.totalVehicleCost = trip.totalVehicleCost
+        }
 
         // handle fixed cost vehicles
         this.calculations.fixedCostVehicleCount = actualVehicleProviders.filter(p => p.isFixedCostVehicle).length
-        this.calculations.payingParticipantsCount = this.calculations.participantsCount - this.calculations.fixedCostVehicleCount
+        this.calculations.payingParticipantsCount = trip.payingParticipantsCount === null ?
+            this.calculations.participantsCount - this.calculations.fixedCostVehicleCount : 
+            trip.payingParticipantsCount
 
         // calculate vehicle fee per paying participant
         this.calculations.calculatedVehicleFee = this.calculations.payingParticipantsCount > 0 ? 
@@ -343,14 +350,14 @@ export class TripCosts extends Component<{
                                     <InputControl field='payingParticipantsCount' label='Number to pay vehicle costs'
                                         helpText={'Number on trip, less number of fixed cost vehicle drivers'}
                                         placeholder={this.calculations.payingParticipantsCount}
-                                        type='number' min={0} hidden={false} {...common} readOnly={true} />
+                                        type='number' min={0} hidden={false} {...common} />
                                 </Col>
                             </Row>
                             <Row>
                                 <Col sm={5} md={3}>
                                     <InputControl field='totalVehicleCost' label='Total vehicle costs ($)'
                                         placeholder={this.calculations.totalVehicleCost}
-                                        type='number' min={0} hidden={false} {...common} readOnly={true} />
+                                        type='number' min={0} hidden={false} {...common} />
                                 </Col>
                                 {/* <Col sm={5} md={3}>
                                     <InputControl field='calculatedVehicleFee' label='Costs per person ($)'

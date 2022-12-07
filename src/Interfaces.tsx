@@ -67,7 +67,8 @@ export interface ITrip extends ITripCosts {
 
 export interface ITripCosts {
     distanceOneWay: number
-    participantsCount: number | null // to override number of participants
+    totalVehicleCost: number | null // to override total vehicle cost
+    payingParticipantsCount: number | null // to override number of paying participants
     vehicleFee: number | null // to override calculated value
 }
 
@@ -114,9 +115,9 @@ export interface IParticipantCosts {
 export interface ITripCostCalculations {
     distanceOneWay: number
     participantsCount: number // not stored in db; calculated value displayed in read-only control
-    totalVehicleCost: number // not stored in db; calculated value displayed in read-only control
+    totalVehicleCost: number
     fixedCostVehicleCount: number // not stored in db; calculated value displayed in read-only control
-    payingParticipantsCount: number // paying vehicle fee - not stored in db; calculated value displayed in read-only control
+    payingParticipantsCount: number
     calculatedVehicleFee: number // not stored in db; calculated value displayed in read-only control
     roundedCalculatedVehicleFee: number // not stored in db; calculated value displayed in read-only control
     vehicleFee: number

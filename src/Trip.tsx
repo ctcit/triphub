@@ -203,7 +203,8 @@ export class Trip extends Component<{
                 state: this.props.isNewSocial ? 'Open' : 'Suggested',
 
                 distanceOneWay: 0,
-                participantsCount: null,
+                totalVehicleCost: null,
+                payingParticipantsCount: null,
                 vehicleFee: null
             },
             participants: [

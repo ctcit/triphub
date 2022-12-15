@@ -227,8 +227,8 @@ export class TriphubNavbar extends Component<{
                                 <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 
                                     onClick={installApp}>Install app for standalone/offline use...</DropdownItem>
                                 <DropdownItem divider></DropdownItem>
-                                <DropdownItem disabled={this.state.cacheTrips} onClick={startCachingTrips}>Start caching trips</DropdownItem>
-                                <DropdownItem disabled={!this.state.cacheTrips} onClick={stopCachingTrips}>Stop caching trips</DropdownItem>
+                                <DropdownItem disabled={!this.props.isOnline || this.state.cacheTrips} onClick={startCachingTrips}>Start caching trips</DropdownItem>
+                                <DropdownItem disabled={!this.props.isOnline || !this.state.cacheTrips} onClick={stopCachingTrips}>Stop caching trips</DropdownItem>
                                 {this.props.cachedTrips.length > 0 && <DropdownItem divider></DropdownItem>}
                                 {this.props.cachedTrips.map((trip: ITrip) => { 
                                     return <DropdownItem value={trip.id} onClick={onCachedTripClick}>{trip.title}</DropdownItem> 
@@ -271,7 +271,9 @@ export class TriphubNavbar extends Component<{
     private startCachingTrips() {
         UserSettings.setCacheTrips(true).then(() => {
             this.props.onCacheTripsChanged().then(() => {
-                window.location.reload();
+                // go back to main trips list and reload to ensure we cache all basic data
+                this.props.setPath('/')
+                window.location.reload()
             })
         })
     }
@@ -280,7 +282,8 @@ export class TriphubNavbar extends Component<{
         UserSettings.setCacheTrips(false).then(() => {
             this.props.onCacheTripsChanged().then(() => {
                 TripsCache.clear()
-                window.location.reload();
+                // reload to update cached trips UI
+                window.location.reload()
             })
         })
     }

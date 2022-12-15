@@ -2,12 +2,11 @@ import { Component } from 'react';
 import { Col, Row, Container } from 'reactstrap';
 import { SwitchControl, TextAreaInputControl, InputControl, SwitchesControl, InputWithSelectControl } from './Control';
 import './index.css';
-import { IValidation, IArchivedRoute, ITrip, Role } from './Interfaces';
+import { IValidation, ITrip, Role } from './Interfaces';
 import { TripMap } from './TripMap';
 import { AddDays, GetDateString } from './Utilities';
 import { TripState } from './TripStates';
 import { ConfigService } from './Services/ConfigService'
-import { ArchivedRoutesService } from './Services/ArchivedRoutesService';
 import { TripsService } from './Services/TripsService';
 
 export class TripDetail extends Component<{
@@ -46,11 +45,6 @@ export class TripDetail extends Component<{
         const validations: IValidation[] = TripsService.validateTrip(trip)
         const approval = TripState[trip.approval || ''] || TripState.Pending
         const isSocial = trip.isSocial
-
-        const getArchivedRoutes = (includeHidden: boolean, force: boolean) => ArchivedRoutesService.getArchivedRoutes(includeHidden, force);
-        const getArchivedRoute = (archivedRouteId: number): Promise<IArchivedRoute | null> =>  {
-            return ArchivedRoutesService.getArchivedRoute(archivedRouteId);
-        }
 
         const onGet = (field: string): any => trip[field]
         const onGetInverted = (field: string): any => !trip[field]

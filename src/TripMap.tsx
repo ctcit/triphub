@@ -7,7 +7,6 @@ import { ResizableBox, ResizeCallbackData } from 'react-resizable';
 import { ButtonWithTooltip } from './ButtonWithTooltip';
 import { ControlWrapper } from './Control';
 import { MapCommon, NZ50MapPolygon } from './MapCommon';
-import memoizeOne from 'memoize-one';
 import { MdGridOff, MdInfo /* , MdMap */ } from 'react-icons/md';
 import Select, { ActionMeta } from 'react-select'
 import { ArchivedRoutesService } from './Services/ArchivedRoutesService';
@@ -36,6 +35,7 @@ export class TripMap extends MapCommon<{
     editing: boolean,
     editsMade: boolean,
     cancelDropdownOpen: boolean,
+    isRoutesLoading: boolean,
     archivedRoutes: IArchivedRoute[],
     archivedRouteSuggestions: { value: any, label: string }[],
     busy: boolean, // loading archivedRoutes
@@ -47,23 +47,16 @@ export class TripMap extends MapCommon<{
     // routes
     private pendingRoutesLatLngs: Array<Array<[number, number]>> = [];  // changed routes before being saved
 
-    private mounted: boolean = false;
-
-    private memoizedGetArchivedRoutes = memoizeOne((loadArchivedRoutes: boolean) => {
-        if (loadArchivedRoutes) {
-            this.setState({ busy: true }, async () => {
-                ArchivedRoutesService.getArchivedRoutes(false, false)
-                    .then((archivedRoutes: IArchivedRoute[]) => {
-                        const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
-                            return { value: archivedRoute.id, label: archivedRoute.title };
-                        });
-                        if (this.mounted) {
-                            this.setState({ archivedRoutes, archivedRouteSuggestions, busy: false });
-                        }
-                    });
-            });
-        }
-    });
+    private getArchivedRoutes() {
+        this.setState({ isRoutesLoading: true}, () => {
+            ArchivedRoutesService.getArchivedRoutes(false, false).then((archivedRoutes: IArchivedRoute[]) => {
+                const archivedRouteSuggestions = archivedRoutes.map((archivedRoute: IArchivedRoute) => {
+                    return { value: archivedRoute.id, label: archivedRoute.title };
+                })
+                this.setState({ isRoutesLoading: false, archivedRoutes, archivedRouteSuggestions})
+            })
+        })
+    }
 
     constructor(props: any) {
         super(props);
@@ -81,6 +74,7 @@ export class TripMap extends MapCommon<{
             editing: false,
             editsMade: false,
             cancelDropdownOpen: false,
+            isRoutesLoading: false,
             archivedRoutes: [],
             archivedRouteSuggestions: [],
             busy: true,
@@ -92,16 +86,12 @@ export class TripMap extends MapCommon<{
     }
 
     public componentDidMount() {
-        this.mounted = true;
-        this.memoizedGetArchivedRoutes(!(this.props.readOnly ?? true));
-
         if (this.state.mapVisible) {
             this.setUpMap();
         }
     }
 
     public componentWillUnmount() {
-        this.mounted = false;
     }
 
     public render() {
@@ -147,6 +137,7 @@ export class TripMap extends MapCommon<{
                 this.clearRoute();
             }
         }
+        const onRoutesFocus = () => { this.getArchivedRoutes() }
 
         return (
             <div>
@@ -168,11 +159,14 @@ export class TripMap extends MapCommon<{
                                         isMulti={false}
                                         isClearable={true}
                                         isSearchable={true}
+                                        onFocus={onRoutesFocus}
+                                        isLoading={this.state.isRoutesLoading}
                                         options={this.state.archivedRouteSuggestions}
                                         onChange={onArchivedRouteChange}
                                         delimiter=','
                                         placeholder={'Start typing to add a route from the archives by name'}
                                         isDisabled={this.props.readOnly}
+                                        // components={{ DropdownIndicator:() => null, IndicatorSeparator:() => null }}
                                         styles={{ control: (provided: any, state: any) => ({
                                                 ...provided,
                                                 minWidth: '300px'

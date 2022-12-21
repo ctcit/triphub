@@ -133,6 +133,7 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
+                    <div id='priority-nav-items' />
                     {this.props.isOnline && this.props.role >= Role.Member && !onPastTripsPage && 
                         <NavItem key='pasttrips'>
                             <NavLink onClick={pasttrips} disabled={this.props.isLoading}>

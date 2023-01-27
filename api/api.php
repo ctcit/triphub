@@ -402,7 +402,9 @@ function TableFromEntity(string $entity): string {
 // * Admin
 // * Webmaster
 function ValidateUser(mysqli $con, string $requiredRole="NonPrivileged"): int {
-    if ($_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
+    if (ConfigServer::apiKeyUserId == 0 ||
+        ConfigServer::apiKey == "" || 
+        $_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
         // Not using an API key - get user logon details
         $member = GetLogonDetails($con, false);
     } else  if (date("Ymd") < ConfigServer::apiKeyExpiry) {
@@ -571,6 +573,7 @@ function IsReadOnly(string $table, string $col): bool {
 function ApiMetadata(mysqli $con,string $basehref): array {
     $constants = (new ReflectionClass("ConfigServer"))->getConstants();
     $filehandle = fopen("api.php", "r") or die("Unable to open file!");
+    $endpoint = null;
    
     // Parses this file to extract endpoint information
     while (!feof($filehandle)) {

@@ -67,8 +67,8 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 	foreach ($trips as &$trip) {
 		if ($trip['approval'] === 'Approved' && in_array($trip['state'],['Open','Closed','Approved'])) {
 			$trip['role'] = $tripInfo[$trip['id']]['role'];
-			if ($trip['role']) {
-				$trip['state'] = $trip['role'] === 'Editor' ? $trip['state'] : 'MyTrips';
+			if ($trip['role'] && $trip['role'] !== 'Editor' && $trip['role'] !== 'Deleted') {
+				$trip['state'] = 'MyTrips';
 			}
 		}
 	}

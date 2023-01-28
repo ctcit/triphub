@@ -35,6 +35,26 @@ input {
     background: red;
 }
 
-.messageDestination {
-    background: lightgray
+.testresult {
+    width: 100%;
+}
+
+.teststatus {
+    text-align: center;
+    vertical-align: middle;
+    width: 4em;
+}
+
+.rotate {
+    animation: rotation 1s infinite linear;
+}
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(359deg);
+    }
 }

@@ -13,34 +13,43 @@
         $(document).ready(() => {
             const testNames = Object.keys(window).filter(name => name.startsWith('test_'))
 
-            for (const testName of testNames) {
-                $(` <tr>
-                        <td>${testName}</td>
-                        <td>${testNames.indexOf(testName) + 1}/${testNames.length}</td>
-                        <td id='${testName}_status' class='teststatus'>⏳</td>
-                        <td id='${testName}_messages' class='testresult'></td>
-                    </tr>`).appendTo($('#result'))
+            function resetList() {
+                $('#result').empty()
+                for (const testName of testNames) {
+                    $(` <tr>
+                            <td>${testNames.indexOf(testName) + 1}</td>
+                            <td>${testName}</td>
+                            <td id='${testName}_status' class='teststatus'>⏳</td>
+                            <td id='${testName}_messages' class='testresult'></td>
+                        </tr>`).appendTo($('#result'))
+                }
             }
 
+            resetList()
             $('#start').click(async () => {
-                $('.testresult').text('')
-                $('.teststatus').text('⏳')
+                resetList()
+                const testsStart = new Date().getTime()
                 for (const testName of testNames) {
+                    const testStart = new Date().getTime()
+                    $('.messageDestination').removeClass('messageDestination')
+                    $('.rotate').removeClass('rotate')
+                    $(`#${testName}_messages`).addClass('messageDestination')
+                    $(`#${testName}_status`).addClass('rotate')
+                    $(`#status`).text(`${testNames.indexOf(testName) + 1}/${testNames.length}`)
+
                     try {
-                        const start = new Date().getTime()
-                        $('.messageDestination').removeClass('messageDestination')
-                        $(`#${testName}_messages`).addClass('messageDestination')
-                        $(`#${testName}_status`).text()
-                        message('Running').addClass('running')
                         await window[testName]()
-                        $(`#${testName}_status`).text(`✔️ ${((new Date().getTime() - start) / 1000).toFixed(1)}`)
                     } catch (e) {
-                        $(`#${testName}_status`).text('❌')
-                        message(`Failed ${e}`).css('color', 'red')
+                        $(`#${testName}_status,#status`).text('❌')
+                        message(`Failed\n${e?.stackTrace ?? e}`).css({ color: 'red' })
                         break
                     }
+
+                    $(`#status`).text(`✔️ ${testNames.indexOf(testName) + 1}/${testNames.length} ${((new Date().getTime() - testsStart) / 1000).toFixed(1)}`)
+                    $(`#${testName}_status`).text(`✔️\u00A0${((new Date().getTime() - testStart) / 1000).toFixed(1)}`)
                 }
                 $('.messageDestination').removeClass('messageDestination')
+                $('.rotate').removeClass('rotate')
             })
         })
 
@@ -70,37 +79,40 @@
         }
 
         function message(msg) {
-            $('.running').remove()
-            return $('<div>').appendTo($('.messageDestination')).text(msg)
+            return $('<div>').appendTo($('.messageDestination'))
+                .append(msg.split('\n').map(l => $('<div>').text(l)))
         }
 
         function messageHtml(html) {
-            const id = `html${Math.random()}`.replace('.', '')
-            message('').append($('<button>').text('\u00A0').click(e => $(`#${id}`).toggle()))
-            message('').attr('id', id).html(html).hide()
+            const row = $(`<tr class="html"><td colspan="4">${html}</td></tr>`).hide()
+                .insertAfter($('.messageDestination').closest('tr'))
+            message('').append($('<button>').text('HTML').click(e => row.toggle()))
         }
 
-        function assertTrue(condition, msg) {
+        function assertTrue(condition, ...msg) {
             if (!condition) {
-                throw Error(msg ?? 'No message')
+                throw Error(msg?.join('\n') ?? 'No message')
             }
         }
 
-        function assertEquals(a, b, msg) {
-            assertTrue(JSON.stringify(a) == JSON.stringify(b), `${JSON.stringify(a)} != ${JSON.stringify(b)} ${msg ?? ''}`)
+        function assertEquals(actual, expected, msg) {
+            assertTrue(JSON.stringify(actual) === JSON.stringify(expected),
+                'Actual', JSON.stringify(actual),
+                'Expected', JSON.stringify(expected), msg ?? '')
         }
 
-        function assertContains(haystack, needle) {
-            assertTrue(haystack.indexOf(needle) >= 0, `${JSON.stringify(needle)} is not in ${JSON.stringify(haystack)}`)
+        function assertContains(haystack, needle, msg) {
+            assertTrue(haystack.indexOf(needle) >= 0,
+                'Actual', JSON.stringify(needle),
+                'NOT one of', JSON.stringify(haystack), msg ?? '')
         }
 
         function historyActions(history) {
             return history.map(h => h.action[0] + (h.table.split('.')[1]?.[0] ?? '')).join()
         }
 
-        function pastTripsDate(index) {
-            return `2000-01-${index.toFixed().padStart(2, '0')}`
-        }
+        const pastTripsDate = (index) => `2000-01-${index.toFixed().padStart(2, '0')}`
+        const pastTripsRange = () => ({ from: pastTripsDate(1), to: pastTripsDate(pastTripsMax) })
         const pastTripsMax = 10
         const basetrip = {
             title: 'test trip',
@@ -121,7 +133,7 @@
         let dougId = 0
 
         async function test_delete_before() {
-            const pastTrips = await submit('GET', `trips/pasttrips`, { from: pastTripsDate(1), to: pastTripsDate(pastTripsMax) })
+            const pastTrips = await submit('POST', `trips/pasttrips`, { ...pastTripsRange(), deleted: 1 })
             const testTrips = (await submit('GET', `trips`)).filter(t => t.title == 'test trip')
 
             message(`deleting ${pastTrips.length}+${testTrips.length} trips`)
@@ -146,13 +158,13 @@
         async function test_get_members() {
             const result = await submit('GET', 'members')
             assertTrue(result.length > 1)
-            assertEquals(Object.keys(result[0]), ['id', 'name', 'email', 'phone', 'emergencyContactName', 'emergencyContactPhone', 'role', 'isMe', 'isMember'])
+            assertEquals(Object.keys(result[0]), ['id', 'name', 'email', 'phone', 'emergencyContactName', 'emergencyContactPhone', 'role', 'membershipType', 'isMe', 'isMember'])
         }
 
         async function test_get_member() {
             const result = await submit('GET', 'members/125')
             assertEquals(result.length, 1)
-            assertEquals(Object.keys(result[0]), ['id', 'name', 'email', 'phone', 'emergencyContactName', 'emergencyContactPhone', 'role', 'isMe', 'isMember'])
+            assertEquals(Object.keys(result[0]), ['id', 'name', 'email', 'phone', 'emergencyContactName', 'emergencyContactPhone', 'role', 'membershipType', 'isMe', 'isMember'])
         }
 
         async function test_post_trip() {
@@ -167,8 +179,11 @@
         async function test_approve() {
             await submit('POST', `trips/${tripId}`, { approval: 'Approved' })
             const trips = await submit('POST', `trips/emails`)
-            messageHtml(trips[0].email.html)
+            const recipients = trips[0]?.email.recipients.map(r => r.name).sort().join()
+
+            messageHtml(`Recipients: ${recipients}<br/>${trips[0].email.html}`)
             assertEquals(trips.length, 1)
+            assertEquals(recipients, 'Alastair Brown')
             assertContains(trips[0].email.subject, 'RE: test trip on ')
             assertContains(trips[0].email.subject, ' has just been Approved')
             assertContains(trips[0].email.html, 'This trip has just been <b>Approved</b> by ')
@@ -177,8 +192,10 @@
         async function test_reject() {
             await submit('POST', `trips/${tripId}`, { approval: 'Rejected' })
             const trips = await submit('POST', `trips/emails`, {})
-            messageHtml(trips[0].email.html)
+            const recipients = trips[0]?.email.recipients.map(r => r.name).sort().join()
+            messageHtml(`Recipients: ${recipients}<br/>${trips[0].email.html}`)
             assertEquals(trips.length, 1)
+            assertEquals(recipients, 'Alastair Brown')
             assertContains(trips[0].email.subject, 'RE: test trip on ')
             assertContains(trips[0].email.subject, ' has changed from Approved to Rejected')
             assertContains(trips[0].email.html, 'This trip has just been changed from <b>Approved</b> to <b>Rejected</b> by ')
@@ -187,10 +204,12 @@
         async function test_add_participants() {
             nickId = (await submit('POST', `trips/${tripId}/participants`, nick))[0].id
             bruceId = (await submit('POST', `trips/${tripId}/participants`, bruce))[0].id
+
             await submit('GET', `trips/${tripId}/html`)
             const history = await submit('GET', `trips/${tripId}/history`, {})
             const trip = await submit('GET', `trips/${tripId}`)
             const participants = await submit('GET', `trips/${tripId}/participants`)
+
             assertEquals(historyActions(history), 'ct,cp,ut,e,ut,e,cp,cp')
             assertEquals(trip[0].title, 'test trip')
             assertEquals(participants.length, 3)
@@ -198,17 +217,23 @@
 
         async function test_email_initial() {
             const trips = await submit('POST', `trips/emails`, {})
-            messageHtml(trips[0].email.html)
+            const recipients = trips[0]?.email.recipients.map(r => r.name).sort().join()
+
+            messageHtml(`Recipients: ${recipients}<br/>${trips[0].email.html}`)
             assertEquals(trips.length, 1)
+            assertEquals(recipients, 'Alastair Brown,Bruce James,Nick Edwards')
         }
 
         async function test_email_after_participant_change() {
             await submit('POST', `trips/${tripId}/participants/${bruceId}`, { displayPriority: nickId - 0.5 })
             const history = await submit('GET', `trips/${tripId}/history`)
             const trips = await submit('POST', `trips/emails`, {})
+            const recipients = trips[0]?.email.recipients.map(r => r.name).sort().join()
+
+            messageHtml(`Recipients: ${recipients}<br/>${trips[0].email.html}`)
             assertEquals(history.length, 10)
-            messageHtml(trips[0].email.html)
             assertEquals(trips.length, 1)
+            assertEquals(recipients, 'Alastair Brown,Bruce James,Nick Edwards')
             assertContains(trips[0].email.html, '<b>Bruce James</b> has changed from <b>waitlisted</b> to <b>listed</b>')
             assertContains(trips[0].email.html, '<b>Nick Edwards</b> has changed from <b>listed</b> to <b>waitlisted</b>')
         }
@@ -216,10 +241,15 @@
         async function test_email_after_trip_change() {
             await submit('POST', `trips/${tripId}`, { isLimited: false })
             const history = await submit('GET', `trips/${tripId}/history`)
+
             assertEquals(history.length, 12)
+
             const trips = await submit('POST', `trips/emails`, {})
-            messageHtml(trips[0].email.html)
+            const recipients = trips[0]?.email.recipients.map(r => r.name).sort().join()
+
+            messageHtml(`Recipients: ${recipients}<br/>${trips[0].email.html}`)
             assertEquals(trips.length, 1)
+            assertEquals(recipients, 'Alastair Brown,Nick Edwards')
             assertContains(trips[0].email.html, '<b>Nick Edwards</b> has changed from <b>waitlisted</b> to <b>listed</b>')
         }
 
@@ -228,76 +258,123 @@
             await submit('GET', `trips/${tripId}/history`)
             await submit('GET', `trips/${tripId}`)
             const trips = await submit('POST', `trips/emails`)
-            messageHtml(trips[0].email.html)
+            const recipients = trips[0]?.email.recipients.map(r => r.name).sort().join()
+
+            messageHtml(`Recipients: ${recipients}<br/>${trips[0].email.html}`)
             assertEquals(trips.length, 1)
+            assertEquals(recipients, 'Alastair Brown,Doug Forster')
             assertContains(trips[0].email.html, '<b>Doug Forster</b> has signed up and is <b>listed</b>')
         }
 
         async function test_email_after_delete() {
             await submit('POST', `trips/${tripId}/participants/${bruceId}`, { isDeleted: true })
             const trips = await submit('POST', `trips/emails`, {})
-            messageHtml(trips[0].email.html)
+            const recipients = trips[0]?.email.recipients.map(r => r.name).sort().join()
+            messageHtml(`Recipients: ${recipients}<br/>${trips[0].email.html}`)
             assertEquals(trips.length, 1)
+            assertEquals(recipients, 'Alastair Brown')
             assertContains(trips[0].email.html, '<b>Bruce James</b> has changed from <b>listed</b> to <b>removed</b>')
             assertEquals(trips[0].email.deletedRecipients.length, 1)
         }
 
-        async function test_past_trips_query() {
-            let pastTripIndex = 1, result
+        let pastTripIds = {}
 
-            async function pastTrip(trip) {
-                return (await submit('POST', 'trips',
-                    { ...basetrip, tripDate: pastTripsDate(pastTripIndex++), ...trip }))[0].id
-            }
+        async function pastTripCreate(trip) {
+            const tripDate = pastTripsDate(Object.keys(pastTripIds).length + 1)
+            return (await submit('POST', 'trips', { ...basetrip, tripDate, ...trip }))[0].id
+        }
 
-            async function pastTrips(query) {
-                const trips = await submit('GET', `trips/pasttrips`,
-                    { from: pastTripsDate(1), to: pastTripsDate(pastTripsMax), ...query })
-                message(`${trips.length} for ${JSON.stringify(query)}`)
-                return trips
-            }
+        async function pastTripsQuery(query) {
+            const trips = await submit('POST', `trips/pasttrips`, { ...pastTripsRange(), ...query })
+            message(`${trips.length} for ${JSON.stringify(query)}`)
+            return trips
+        }
 
-            const normal = (await pastTrip({}))
-            const keywor = (await pastTrip({ description: 'Exciting past trip' }))
-            const costly = (await pastTrip({ description: 'Expensive', cost: '$500' }))
-            const gradeE = (await pastTrip({ grade: 'Easy' }))
-            const gradEM = (await pastTrip({ grade: 'Easy/Moderate' }))
-            const gradeM = (await pastTrip({ grade: 'Moderate' }))
+        async function test_past_trips_create() {
+            pastTripIds = {}
+            pastTripIds.normal = await pastTripCreate({})
+            pastTripIds.worded = await pastTripCreate({ description: 'Exciting past trip' })
+            pastTripIds.costly = await pastTripCreate({ description: 'Expensive', cost: '$500' })
+            pastTripIds.gradeE = await pastTripCreate({ grade: 'Easy' })
+            pastTripIds.gradEM = await pastTripCreate({ grade: 'Easy/Moderate' })
+            pastTripIds.gradeM = await pastTripCreate({ grade: 'Moderate' })
+            pastTripIds.isGone = await pastTripCreate({ isDeleted: 1 })
 
-            await submit('POST', `trips/${normal}/participants`, { ...alastair, isLeader: true })
-            await submit('POST', `trips/${normal}/participants`, { ...nick, isLeader: false })
-            await submit('POST', `trips/${normal}/participants`, { ...bruce, isLeader: false })
-            await submit('POST', `trips/${keywor}/participants`, { ...nick, isLeader: true })
-            await submit('POST', `trips/${keywor}/participants`, { ...alastair, isLeader: false })
+            await submit('POST', `trips/${pastTripIds.normal}/participants`, { ...alastair, isLeader: true })
+            await submit('POST', `trips/${pastTripIds.normal}/participants`, { ...nick, isLeader: false })
+            await submit('POST', `trips/${pastTripIds.normal}/participants`, { ...bruce, isLeader: false })
+            await submit('POST', `trips/${pastTripIds.worded}/participants`, { ...nick, isLeader: true })
+            await submit('POST', `trips/${pastTripIds.worded}/participants`, { ...alastair, isLeader: false })
 
-            result = await pastTrips({})
-            assertEquals(result.length, 6)
+            const result = await pastTripsQuery({})
+            assertEquals(result.length, Object.keys(pastTripIds).length - 1)
+        }
 
-            result = await pastTrips({ description: 'Exciting' })
+        async function test_past_trips_one_word() {
+            const result = await pastTripsQuery({ description: 'Exciting' })
             assertEquals(result.length, 1)
-            assertEquals(result[0].id, keywor, 'id1')
+            assertEquals(result[0].id, pastTripIds.worded, 'id1')
+        }
 
-            result = await pastTrips({ description: 'Exciting test' })
+        async function test_past_trips_two_words() {
+            const result = await pastTripsQuery({ description: 'Exciting test' })
             assertEquals(result.length, 5)
-            assertEquals(result[0].id, keywor, 'id 0')
-            assertEquals(result[1].id, normal, 'id 1')
+            assertEquals(result[0].id, pastTripIds.worded, 'id 0')
+            assertEquals(result[1].id, pastTripIds.normal, 'id 1')
+        }
 
-            result = await pastTrips({ cost: '400|600' })
+        async function test_past_trips_cost() {
+            const result = await pastTripsQuery({ cost: { min: 400, max: 600 } })
             assertEquals(result.length, 1)
-            assertEquals(result[0].id, costly, 'id')
+            assertEquals(result[0].id, pastTripIds.costly, 'id')
             assertEquals(result[0].computed_cost, 500)
+        }
 
-            result = await pastTrips({ member: alastair.name + '|' + nick.name, memberAs: 'Leader|Non-Leader' })
-            assertEquals(result.length, 2)
-            assertEquals(result[0].id, normal, 'id 0')
-            assertEquals(result[1].id, keywor, 'id 1')
+        async function test_past_trips_multi_member() {
+            const result = await pastTripsQuery({ memberMap: { 'Alastair Brown': 'Leader', 'Nick Edwards': 'Non-Leader' } })
+            assertEquals(result.length, Object.keys(pastTripIds).length - 1)
+            assertEquals(result[0].id, pastTripIds.normal, 'id 0')
+            assertEquals(result[1].id, pastTripIds.worded, 'id 1')
             assertEquals(result[0].ranking_member, 2, 'ranking 0')
             assertEquals(result[1].ranking_member, 1, 'ranking 1')
+            assertEquals(result[2].ranking_member, 0.5, 'ranking 2')
+            assertEquals(result[0].editors, ['Alastair Brown'], 'editors 0')
+            assertEquals(result[1].editors, ['Alastair Brown'], 'editors 1')
+            assertEquals(result[2].editors, ['Alastair Brown'], 'editors 2')
+        }
 
-            result = await pastTrips({ grade: 'Easy Moderate' })
+        async function test_past_trips_one_member_match_two() {
+            const result = await pastTripsQuery({ memberMap: { 'Nick Edwards': 'Any' } })
+            assertEquals(result.length, 2)
+            assertEquals(result[0].id, pastTripIds.normal, 'id 0')
+            assertEquals(result[1].id, pastTripIds.worded, 'id 1')
+            assertEquals(result[0].ranking_member, 0.5, 'ranking 0')
+            assertEquals(result[1].ranking_member, 0.5, 'ranking 1')
+        }
+
+        async function test_past_trips_one_member_match_one() {
+            const result = await pastTripsQuery({ memberMap: { 'Bruce James': 'Any' } })
+            assertEquals(result.length, 1)
+            assertEquals(result[0].id, pastTripIds.normal, 'id 0')
+            assertEquals(result[0].ranking_member, 0.5, 'ranking 0')
+        }
+
+        async function test_past_trips_grade() {
+            const result = await pastTripsQuery({ grade: 'Easy Moderate' })
             assertEquals(result.length, 3)
-            assertEquals(result[0].id, gradEM, 'id 0')
+            assertEquals(result[0].id, pastTripIds.gradEM, 'id 0')
+            assertEquals(result[1].id, pastTripIds.gradeE, 'id 1')
+            assertEquals(result[2].id, pastTripIds.gradeM, 'id 2')
             assertEquals(result[0].ranking_grade, 1, 'ranking 0')
+            assertTrue(result[1].ranking_grade < 1, 'ranking 1')
+            assertTrue(result[2].ranking_grade < 1, 'ranking 2')
+        }
+
+        async function test_past_trips_deleted() {
+            const result = await pastTripsQuery({ deleted: true })
+            assertEquals(result.length, Object.keys(pastTripIds).length)
+            assertEquals(result[0].id, pastTripIds.isGone, 'id 0')
+            assertEquals(result[1].id, pastTripIds.normal, 'id 1')
         }
 
         async function test_delete_after() {
@@ -305,7 +382,7 @@
         }
 
     </script>
-    <button id='start'>Start</button>
+    <button id='start'>Start</button><span id='status'></span>
     <table id='result'></table>
 </body>
 

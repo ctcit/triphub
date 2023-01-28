@@ -147,6 +147,7 @@ export class PastTrips extends Component<{
         }
         this.state = {
             ...this.state,
+            querying: false,
             trips: [],
             show: {
                 ...Object.fromEntries(Object.entries(this.state).map(([k, v]) => [k, !!v])),
@@ -252,7 +253,6 @@ export class PastTrips extends Component<{
 
     public requery() {
         const { maps, fields } = this.state
-        const { cost, length, participants } = this
         const map = (options: string, mapping: { [key: string]: string[] }) =>
             [...new Set(options.split(', ').flatMap(i => mapping[i] ?? []))]
         const fieldList = fields ? fields.split(',') : Object.keys(this.fields)
@@ -266,12 +266,6 @@ export class PastTrips extends Component<{
             maps: maps.map(m => m.split(' ')[0] + '[ A-Za-z]*'),
         }
         const members = this.members.filter(({ name, visible }) => name !== 'Any' && visible)
-        const ranges = {
-            length: length.value,
-            cost: cost.value,
-            participants: participants.value,
-            memberMap: Object.fromEntries(members.map(m => [m.name, m.as])),
-        }
         const parameters = Object.fromEntries(Object.entries({
             from: this.state.fromDate,
             to: this.state.toDate,
@@ -279,7 +273,10 @@ export class PastTrips extends Component<{
             deleted: /Deleted/.test(this.state.approvals) ? 1 : 0,
             ...fulltext,
             ...regexp,
-            ...ranges
+            length: this.length.value,
+            cost: this.cost.value,
+            participants: this.participants.value,
+            memberMap: Object.fromEntries(members.map(m => [m.name, m.as])),
         }).filter(([_, v]) => Array.isArray(v) ? v.length : v))
 
         this.setState({
@@ -373,6 +370,11 @@ export class PastTrips extends Component<{
 
         return [
             <Container key={version + 2} fluid={true}>
+                <Row>
+                    <Col sm={6} md={6}>
+                        <h2>Past trips query</h2>
+                    </Col>
+                </Row>
                 <Row>
                     <Col sm={2} md={2}>
                         <InputControl field='fromDate' label='From' type='date' helpText='The date of the earliest trip' {...common} />

@@ -124,7 +124,7 @@ function SendTripEmail(mysqli $con, int $tripId, int $userId=null, string $subje
 
 function SendApprovalEmail(mysqli $con, int $tripId): array {
 	$participantsTable = ConfigServer::participantsTable;
-	$trip = GetTrips($con, 'null', "t.id = $tripId")[0];
+	$trip = GetTrips($con, 0, "t.id = $tripId")[0];
 
 	$leader = SqlResultScalar($con,"SELECT name
 						            FROM $participantsTable

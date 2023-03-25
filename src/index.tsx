@@ -17,11 +17,11 @@ import './index.css';
 //
 // or just temporarily uncomment these lines:
 //
-(window as any).RunConfig = {
-    ApiKey: 'C5HFNPH2H887JJ4B9H22UMC42DMHVL4VVUCD84WGKEWMQG2RUZ',
-    BaseUrl: 'https://ctc.org.nz/triphub/api/api.php',
-    DbApiURL: 'https://ctc.org.nz/db/index.php/rest'
-}
+//(window as any).RunConfig = {
+//    ApiKey: 'C5HFNPH2H887JJ4B9H22UMC42DMHVL4VVUCD84WGKEWMQG2RUZ',
+//    BaseUrl: 'https://ctc.org.nz/triphub/api/api.php',
+//    DbApiURL: 'https://ctc.org.nz/db/index.php/rest'
+//}
 
 const runConfig: any = (window as any).RunConfig;
 export const BaseUrl = runConfig?.BaseUrl ?? 'https://ctc.org.nz/triphub/api/api.php';

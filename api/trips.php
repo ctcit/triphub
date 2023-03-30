@@ -23,12 +23,12 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 			JSON_ARRAY()	AS `leaders`,
 			JSON_ARRAY()	AS `nonleaders`,
 			JSON_ARRAY()	AS `editors`
-	    FROM $tripsTable t
+		FROM $tripsTable t
 		WHERE $where
 		ORDER BY tripDate","id");
 
 	if (!$trips || !$userId) return array_values($trips);
-	
+
 	$tripIds = implode(',',array_keys($trips));
 
 	$participants = SqlResultArray($con,
@@ -40,10 +40,10 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 		FROM      $participantsTable p
 		LEFT JOIN $membersTable      m ON m.id = p.memberId
 		WHERE p.tripId IN ($tripIds)
-		
+
 		UNION ALL
 
-		SELECT DISTINCT	
+		SELECT DISTINCT
 			h.tripId,
 			concat(trim(m.firstname),' ',trim(m.lastname)) AS `name`,
 			h.userId as `memberId`,
@@ -51,22 +51,28 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 		FROM $historyTable h
 		JOIN $membersTable m ON m.id = h.userId
 		WHERE h.tripId IN ($tripIds)
-        AND NOT (h.table = '$participantsTable' AND JSON_EXTRACT(h.after,'$.memberId') = h.userId)");
+		AND NOT (h.table = '$participantsTable' AND JSON_EXTRACT(h.after,'$.memberId') = h.userId)");
 
+	$tripRoles = [];
 	foreach ($participants as $participant) {
 		$tripId = $participant['tripId'];
 		$memberId = $participant['memberId'];
 		$role = $participant['role'];
-		$tripInfo[$tripId][$role] []= $memberId;
 		$trips[$tripId][str_replace('-','',strtolower($role)).'s'] []= $participant['name'];
 
-		if ($role === 'Editor' && in_array($memberId, $tripInfo[$tripId]['Deleted'])) continue;
-		if ($memberId === $userId) $tripInfo[$tripId]['role'] = $role;
+		if ($memberId === $userId) {
+			if ($role !== 'Editor' ||
+			    !array_key_exists($tripId, $tripRoles) ||
+				$tripRoles[$tripId]) {
+				// Only set "Editor" role if a role hasn't already been set
+				$tripRoles[$tripId] = $role;
+			}
+		}
 	}
 
 	foreach ($trips as &$trip) {
 		if ($trip['approval'] === 'Approved' && in_array($trip['state'],['Open','Closed','Approved'])) {
-			$trip['role'] = $tripInfo[$trip['id']]['role'];
+			$trip['role'] = $tripRoles[$trip['id']] ?? '';
 			if ($trip['role'] && $trip['role'] !== 'Editor' && $trip['role'] !== 'Deleted') {
 				$trip['state'] = 'MyTrips';
 			}
@@ -93,7 +99,7 @@ function SendEmail(mysqli $con, int $tripId, array $email, int $userId=null, str
 			   "Content-type: text/html;charset=UTF-8\r\n".
 			   "From: <noreply@ctc.org.nz>\r\n";
 
-    foreach ($email['recipients'] as $recipient) {
+	foreach ($email['recipients'] as $recipient) {
 		if (filter_var($recipient['email'], FILTER_VALIDATE_EMAIL)) {
 			if (!mail($recipient['email'], $email['subject'], $email['html'], $headers)) {
 				LogMessage($con,"ERROR","mail() failed $recipient[email], $email[subject], $email[html]");
@@ -127,14 +133,14 @@ function SendApprovalEmail(mysqli $con, int $tripId): array {
 	$trip = GetTrips($con, 0, "t.id = $tripId")[0];
 
 	$leader = SqlResultScalar($con,"SELECT name
-						            FROM $participantsTable
+									FROM $participantsTable
 									WHERE tripId = $tripId AND isLeader = 1 LIMIT 1","id");
 
 	$committeeTable = ConfigServer::committeeTable;
-    $recipients = SqlResultArray($con, "SELECT fullName, email
-	                                    FROM $committeeTable
+	$recipients = SqlResultArray($con, "SELECT fullName, email
+										FROM $committeeTable
 										WHERE role IN ('IT Convenor', 'Day Trip Organiser', 'Overnight Trip Organiser')");
-    $tripLink = ConfigServer::triphubUrl."/#/trips/$trip[id]";
+	$tripLink = ConfigServer::triphubUrl."/#/trips/$trip[id]";
 
 	$email = ["recipients"=>[]];
 
@@ -145,7 +151,7 @@ function SendApprovalEmail(mysqli $con, int $tripId): array {
 	$email['html'] = "<p>A new trip \"$trip[title]\" has been added".
 					 ( $leader ? " by $leader" : "").
 					 ".</p>".
-                     "<p>Please go to <a href=\"$tripLink\">$tripLink</a> to check and approve this trip.</p>";
+					 "<p>Please go to <a href=\"$tripLink\">$tripLink</a> to check and approve this trip.</p>";
 	$email['messageId'] = MakeGuid();
 	$email['originalMessageId'] = MakeGuid();
 	$email['trip'] = $trip;
@@ -181,11 +187,11 @@ function PostEmails(mysqli $con): array {
 					"SELECT t.id, t.title, t.tripDate
 					FROM $tripsTable t WHERE approval = 'PENDING'
 					AND tripDate > NOW()
-					AND (SELECT COUNT(*) 
+					AND (SELECT COUNT(*)
 						 FROM $historyTable h
 						 WHERE h.tripId = t.id
 						 AND h.action = 'approvalemail') = 0
-				    ORDER BY t.id");
+					ORDER BY t.id");
 
 	foreach ($newTrips as &$trip) {
 		$trip['email'] = SendApprovalEmail($con, $trip['id']);
@@ -319,7 +325,7 @@ function GetTripHtml(mysqli $con, int $tripId, string $subject=null, string $mes
 
 		$style = $border.($trip[$field] === $oldTrip[$field] ? "" : $updated);
 		$header .= "<tr><th style='$style'>".htmlentities($col['Comment'])."</th>
-					    <td style='$style'>$val</td></tr>";
+						<td style='$style'>$val</td></tr>";
 		$tripChanges = $tripChanges || $oldTrip[$field] != $trip[$field];
 	}
 

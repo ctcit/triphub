@@ -376,7 +376,7 @@ function ApiProcess(
             // INPUT <a href='$basehref#notices'>notice</a>
             // OUTPUT <a href='$basehref#notices'>notice</a>
             // INPUTENTITY notices
-            return GetNewsletters($con,ValidateUser($con, "Admin"),$table,$id,$input,0);
+            return ApiPatch($con,ValidateUser($con, "Admin"), $table, $id, $input, 0);
 
         case "GET destinations":
             // DESCRIPTION Gets all destinations

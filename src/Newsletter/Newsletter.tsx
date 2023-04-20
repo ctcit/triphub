@@ -42,7 +42,9 @@ export class Newsletter extends Component<{
     }
 
     public set(id: string, val: any): void {
-        this.state.newsletter[id] = val;
+        const fields = {}
+        fields[id] = val
+        this.setState(state => ({ newsletter: { ...state.newsletter, ...fields } }))
     }
 
     public validate(): IValidation[] {

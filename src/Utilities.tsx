@@ -138,10 +138,7 @@ export function GradeIcon({ grade }: { grade: string }) {
 }
 
 export async function apiCall(method: string, url: string, data?: any): Promise<any> {
-    const request: RequestInit = /localhost/.test(`${window.location}`) ? { headers: BaseOpt } : {}
-
-    // Accept header is required when querying the db api, and doesn't hurt when querying the triphub api
-    request.headers = { ...request.headers, 'Accept': 'application/json' }
+    const request: RequestInit =  { headers: BaseOpt }
 
     request.method = method
 

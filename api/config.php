@@ -46,8 +46,8 @@ class ConfigServer
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
 	const apiKey              = "";//Should be blank in production
-	const apiKeyExpiry        = "20221131";//YYYYMMDD Should be 00000000 in production 
-	const apiKeyUserId	      = 125;
+	const apiKeyExpiry        = "00000000";//YYYYMMDD Should be 00000000 in production 
+	const apiKeyUserId	      = 2218;
 }
 
 ?>

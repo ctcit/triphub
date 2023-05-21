@@ -133,7 +133,7 @@ class TripsLine extends Component<{
             <td key={'leaders' + id} onClick={onClick} hidden={!me.id} className='desktop-only' style={tdStyle}>
                 {leaders}{extractWarnings(/leaders/)}
             </td>,
-            <td key={'role' + id} onClick={onClick} hidden={trip.state !== 'MyTrip'}>
+            <td key={'role' + id} onClick={onClick} hidden={trip.state !== 'MyTrips'}>
                 {trip.role}{extractWarnings(/role/)}
             </td>,
             <td key={'ranking' + id} onClick={onClick} hidden={trip.ranking === undefined} style={rankingStyle()}>
@@ -283,7 +283,7 @@ export class TripsGroup extends Component<{
                                 <th onClick={onSort.leader} className='sortable desktop-only' hidden={!me.id}>
                                     Leader{sortBy === 'leader' ? sortArrow : ''}
                                 </th>
-                                <th hidden={trips[0]?.state !== 'MyTrip'}>
+                                <th hidden={trips[0]?.state !== 'MyTrips'}>
                                     My Role
                                 </th>
                                 <th onClick={onSort.rank} className='sortable' hidden={!rankings.length}>

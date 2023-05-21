@@ -5,7 +5,7 @@ Christchurch Tramping Club "TripHub" trip management system.
 There are a number of different build configurations.
 ### Local testing
 This runs the triphub application from a local http-server instance, but uses the API from a remote location (e.g. ctc.org.nz)
-   * Not sources need to be changed.
+   * No sources need to be changed.
    * Deploy the API somewhere, (e.g. ctc.org.nz/triphub-bruce/api) or use the standard ctc.org.nz/triphub/api if you haven't made any API changes.
    * Edit config.php in the deployed API (e.g. ctc.org.nz/triphub-bruce/api) and set `apiKeyExpiry` and `apiKeyUserId`.
    * Add new local file `public/runtime-config.js` (won't be committed due to exclusion in .gitignore) and edit:
@@ -17,6 +17,7 @@ This runs the triphub application from a local http-server instance, but uses th
     }
 
    * Use `npm run start` script to run on localhost:3000
+   * If you get an error like `CORS header 'Access-Control-Allow-Origin' missing`, double check that the apiKeyExpiry setting in `config.php` on the deployed API you are trying to access is a date in the future.
 ### Staging
 This builds the triphub application and the API to deploy on a remote server, but not the standard location (`ctc.org.nz/triphub`).
    * Not sources need to be changed.

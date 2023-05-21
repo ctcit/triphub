@@ -21,7 +21,8 @@ const Sections: Section[] = [
 ]
 
 class NoticeDetail extends Component<{
-    notice: INotice
+    notice: INotice,
+    setDetail(notice: INotice): void
 }, {
     isLoading: boolean
 }> { 
@@ -39,10 +40,12 @@ class NoticeDetail extends Component<{
         }
 
         const onSet = (field: string, value: any): void => {
-            this.props.notice[field] = value;
+            this.props.notice[field] = value
+            this.props.setDetail(this.props.notice)
         }
 
         const onSave = (id: string, value: any): Promise<void> => {
+            onSet(id, value)
             validations = this.validate(this.props.notice)
             // Don't actually save until the save button is pressed
             return Promise.resolve();
@@ -114,6 +117,7 @@ export class NoticeList extends Component<{
     public render() {
         const onNewNotice = () => this.onNewNotice();
         const onShowAll = () => this.onShowAll();
+        const onSetDetail = (notice: INotice) => this.onSetDetail(notice);
         const onSaveDetail = () => this.onSaveDetail();
         const onCancelDetail = () => this.onCancelDetail();
 
@@ -227,12 +231,18 @@ export class NoticeList extends Component<{
                 }}>
                 {(this.state.showDetailFor != null) &&
 
-                    <NoticeDetail notice={this.state.showDetailFor} />
+                    <NoticeDetail notice={this.state.showDetailFor} setDetail={onSetDetail} />
                 }
                 <Button onClick={onSaveDetail} color="primary" className="mr-1">Save</Button>
                 <Button onClick={onCancelDetail} className="mr-1">Cancel</Button>
             </ReactModal>
         ];
+    }
+
+    public onSetDetail(notice: INotice) {
+        if (this.state.showDetailFor != null ) {
+            this.setState({ showDetailFor: notice })
+        }
     }
 
     public onSaveDetail() {

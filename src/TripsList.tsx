@@ -264,7 +264,7 @@ export class TripsGroup extends Component<{
                         <span key='count' className='trip-count'> ({trips.length})</span>
                     </span>
                     }>
-                    <Table className='TripGroup' size='sm' striped={true}>
+                    <Table className='TripGroup triphub-table-striped' size='sm' >
                         <thead>
                             <tr>
                                 <th />
@@ -334,13 +334,13 @@ export class TripsList extends Component<{
         let cachedTripIds: number[]
         Promise.all([
             TripsService.getTrips(true),
-            TripsCache.getCachedTripIds()
+            //TripsCache.getCachedTripIds()
             ]).then(values => {
                 trips = values[0] ?? []
-                cachedTripIds = values[1] ?? []
+                //cachedTripIds = values[1] ?? []
             }, () => {
                 trips = []
-                cachedTripIds = []
+                //cachedTripIds = []
             }).finally(() => {
                 const order = Object.keys(TripState)
                 const groups = new Map<string, ITrip[]>(

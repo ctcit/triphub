@@ -124,7 +124,7 @@ export class NoticeList extends Component<{
                 const notices = this.state.notices.filter(n => n.section === section.name)
                 return notices.length === 0 ? null : <div key={section.name + "Notices"}>
                     <h3>{section.title}</h3>
-                    <Table className='TripGroup table-fixed' size='sm' striped={true}>
+                    <Table className='TripGroup table-fixed triphub-table-striped' size='sm'>
                         <thead>
                             <tr>
                                 <th className='mobile-only' />

@@ -66,7 +66,7 @@ export class TripReportList extends Component<{
                 <FullWidthLoading /> :
             (this.state.tripreports.length === 0) ?
             <p className='newsletter-no-trip-reports'>No trip reports this month :-(. Try posting on Facebook to encourage people to submit them!</p> :
-            <Table className='TripGroup' size='sm' striped={true}>
+            <Table className='TripGroup triphub-table-striped' size='sm'>
                 <thead>
                     <tr>
                         <th className='mobile-only'/>

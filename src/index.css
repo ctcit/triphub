@@ -2,10 +2,46 @@
 /*  General */
 /* ---------------------------- */
 
+:root {
+  --dark-green: #00591d;
+  --dark-green-hover: #176831;
+  --navbar-green: #02501b;
+  --pale: #e8e9e8;
+  /* --pale: #E9EDE9; */
+  /* --pale: #E7EFEA; */
+  --masthead: #272d27;
+  --orange: #E05A00;
+  --yellowy: #E0A800;
+}
+
+.ctc-navbar {
+  background-color: var(--dark-green-hover)
+}
+
+.triphub-alert {
+  background-color: var(--pale)
+}
+
+.triphub-loading {
+  background-color: var(--pale)
+}
+
+.triphub-table-striped:nth-of-type(odd){
+  /* background-color: #ECEBEA; */
+  background-color: var(--pale);
+  border-left: 4px var(--dark-green) solid;
+}
+
+.triphub-table-striped:nth-of-type(even){
+  background-color: #FAFBF8;
+  border-left: 4px #d0d6b3 solid;
+}
+
+
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: Lato, sans-serif;
 }
 
 
@@ -102,7 +138,7 @@ button>span.fa {
 /* ---------------------------- */
 
 .trip-group-header {
-  background-color: #d6e5f8d8;
+  background-color: var(--pale);
 }
 
 .TripGroup td {
@@ -118,6 +154,10 @@ button>span.fa {
   padding: 0px 3px;
   height: 25px;
   width: 25px;
+}
+
+.trip-list-table {
+
 }
 
 

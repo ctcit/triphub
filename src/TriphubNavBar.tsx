@@ -107,7 +107,7 @@ export class TriphubNavbar extends Component<{
         const toggleStandaloneOfflineInfo = () => this.setState({standaloneOfflineInfoOpen: !this.state.standaloneOfflineInfoOpen})
 
         return (
-            <Navbar color='primary' expand={false}>
+            <Navbar className='ctc-navbar' expand={false}>
                 {/* <NavbarBrand className='triphub-navbar' href="#home" hidden={!this.props.isStandalone}>
                     <img src="CTCLogo.png" width="40" height="40" className="d-inline-block" />
                     <b>Trips</b>

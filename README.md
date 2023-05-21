@@ -8,7 +8,7 @@ This runs the triphub application from a local http-server instance, but uses th
    * Not sources need to be changed.
    * Deploy the API somewhere, (e.g. ctc.org.nz/triphub-bruce/api) or use the standard ctc.org.nz/triphub/api if you haven't made any API changes.
    * Edit config.php in the deployed API (e.g. ctc.org.nz/triphub-bruce/api) and set `apiKeyExpiry` and `apiKeyUserId`.
-   * Ddd new local file `public/runtime-config.js` (won't be committed due to exclusion in .gitignore) and edit:
+   * Add new local file `public/runtime-config.js` (won't be committed due to exclusion in .gitignore) and edit:
 
     window.RunConfig = {
         ApiKey: '8674e5d6-bef3-4f49-9a6c-5143c7556155',
@@ -20,7 +20,7 @@ This runs the triphub application from a local http-server instance, but uses th
 ### Staging
 This builds the triphub application and the API to deploy on a remote server, but not the standard location (`ctc.org.nz/triphub`).
    * Not sources need to be changed.
-   * Deploy api to e..g ctc.org.nz/triphub-bruce/api
+   * Deploy api to e.g. ctc.org.nz/triphub-bruce/api
    * Run `npm run build:stg` to build portable build
    * Copy the build folder contents to e.g. ctc.org.nz/triphub-bruce/web
 

@@ -225,7 +225,7 @@ export class App extends Component<{
     public loadingStatus(state: any = {}): JSX.Element {
         state = { ...this.state, ...state }
         return <Container key='loadingStatus' className={ConfigService.containerClassName + "triphub-loading-container"}>
-            <div key='loadingAlert' className="p-5 mb-4 bg-light rounded-3">
+            <div key='loadingAlert' className="p-5 mb-4 triphub-loading rounded-3">
                 {this.loadingFields(state).map(f =>
                     <div key={f}>{state[f] ? Spinner : Done} {TitleFromId(f.substring(2))}</div>
                 )}

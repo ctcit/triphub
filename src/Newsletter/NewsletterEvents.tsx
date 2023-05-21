@@ -43,7 +43,7 @@ export const NewsletterEventsList = ({setPath, unpublished}:INewsletterEventsLis
     }, [])
 
     return (isLoading) ? <FullWidthLoading/> :
-            <Table className="TripGroup" size='sm' striped={true}>
+            <Table className="TripGroup triphub-table-striped" size='sm'>
                 <thead>
                     <tr>
                         <th className='mobile-only'/>

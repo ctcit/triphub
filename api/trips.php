@@ -62,8 +62,7 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 
 		if ($memberId === $userId) {
 			if ($role !== 'Editor' ||
-			    !array_key_exists($tripId, $tripRoles) ||
-				$tripRoles[$tripId]) {
+			    !array_key_exists($tripId, $tripRoles)) {
 				// Only set "Editor" role if a role hasn't already been set
 				$tripRoles[$tripId] = $role;
 			}

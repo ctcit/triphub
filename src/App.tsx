@@ -17,7 +17,7 @@ import { ConfigService } from './Services/ConfigService';
 import { MapsService } from './Services/MapsService';
 import { HolidaysService } from './Services/HolidaysService';
 import { MembersService } from './Services/MembersService';
-import { Alert, Button, Container } from 'reactstrap';
+import { Alert, Button, Container, FormText, Modal, ModalBody, ModalHeader, Row } from 'reactstrap';
 import { Workbox } from 'workbox-window';
 import { Login } from './Login';
 import { SilentLogin } from './SilentLogin';
@@ -41,6 +41,8 @@ export class App extends Component<{
     appUpdateAvailable: boolean
     cachedTrips: ITrip[]
     pendingSyncsCount: number
+    installAppPrompted: boolean
+    installStandalone: boolean
 }> {
 
     private onDoAppUpdate = () => {}
@@ -54,9 +56,12 @@ export class App extends Component<{
         console.log(isStandalone ? 'app is standalone' : 'app is not standalone')
 
         const isOnline = navigator.onLine
+        let path = window.top?.location.hash.replace('#', '') ?? ''
+        const installStandalone = this.parsePath(path).route === 'installStandalone'
+        path = installStandalone ? '' : path
 
         this.state = {
-            path: window.top?.location.hash.replace('#', '') ?? '',
+            path: path,
             isLoadingConfig: true,
             isLoadingMembers: true,
             isLoadingLoginStatus: isStandalone && isOnline,
@@ -70,7 +75,9 @@ export class App extends Component<{
             backgroundSyncPermitted: false,
             appUpdateAvailable: false,
             cachedTrips: [],
-            pendingSyncsCount: 0
+            pendingSyncsCount: 0,
+            installAppPrompted: false,
+            installStandalone: installStandalone
         }
 
         if (window.top) {
@@ -234,9 +241,8 @@ export class App extends Component<{
     }
 
     public render() {
-        const pathParts = `${this.state.path}/`.split('/')
-        const rendering = this.isLoading ? 'loading' : pathParts[1]
-        const id = pathParts[2] ? parseInt(pathParts[2], 10) : undefined
+        const {route, id} = this.parsePath(this.state.path)
+        const rendering = this.isLoading ? 'loading' : route
 
         const setPath = (path: string) => this.setPath(path)
         const setRole = (role: Role) => this.setState({role})
@@ -247,6 +253,9 @@ export class App extends Component<{
         const onDoAppUpdate = () => this.onDoAppUpdate()
         const onCacheTripsChanged = () => this.onCacheTripsChanged()
         const onLoginStatusLoaded = () => this.onLoginStatusLoaded()
+        const installStandalone = () => this.installStandalone()
+
+        const onDismissInstallStandalone = () => this.setState({installStandalone: false})
 
         const common = {
             role: this.state.role,
@@ -316,6 +325,17 @@ export class App extends Component<{
                     <Button onClick={onDoAppUpdate}>Update now</Button>
                 </Alert>
             ),
+            (this.state.installStandalone &&
+                <Alert key='installStandaloneAlert' color='warning' toggle={onDismissInstallStandalone}>
+                    <span className='fa fa-cloud-arrow-down' />
+                    <b>&nbsp;App is {this.beforeInstallPrompt === null ? 'already installed standalone (or not supported by browser)' : 'not installed standalone'}&nbsp;</b>
+                        {this.beforeInstallPrompt !== null && 
+                            <Button disabled={this.state.installAppPrompted} 
+                                onClick={installStandalone}>Install</Button>
+                        }
+
+                </Alert>
+            ),
 
             <TriphubNavbar key='triphubNavbar' 
                 role={this.state.role}
@@ -338,6 +358,13 @@ export class App extends Component<{
             (this.state.isLoadingLoginStatus && <SilentLogin onLoaded={onLoginStatusLoaded}/>
             )
         ]
+    }
+
+    private parsePath(path: string): {route: string, id: number | undefined} {
+        const pathParts = `${path}/`.split('/')
+        const route = pathParts[1]
+        const id = pathParts[2] ? parseInt(pathParts[2], 10) : undefined
+        return {route, id}
     }
 
     private changePath(path: string): void {
@@ -398,6 +425,14 @@ export class App extends Component<{
     private addCachedTrip(cachedTrip: ITrip) {
         if (!this.state.cachedTrips.find(trip => trip.id === cachedTrip.id)) {
             this.setState({ cachedTrips: this.state.cachedTrips.concat(cachedTrip)})
+        }
+    }
+
+    private installStandalone() {
+        if (this.beforeInstallPrompt !== null) {
+            this.beforeInstallPrompt.prompt()
+            this.beforeInstallPrompt = null
+            this.setState({ installStandalone: false, installAppPrompted: true })
         }
     }
 

@@ -35,6 +35,7 @@ export class TriphubNavbar extends Component<{
         cacheTrips: boolean,
         standaloneOfflineInfoOpen: boolean
     }> {
+    private inIframe = window.location !== window.parent.location;
 
     constructor(props: any){
         super(props)
@@ -93,7 +94,7 @@ export class TriphubNavbar extends Component<{
         const toggleManageDropdown = () => this.setState({manageDropdownIsOpen: !this.state.manageDropdownIsOpen});
 
         const toggleWorkOfflineDropdown = () => this.setState({workOfflineDropdownIsOpen: !this.state.workOfflineDropdownIsOpen});
-        const installApp = () => this.installApp()
+        const installStandalone = () => this.installStandalone()
         const startCachingTrips = () => this.startCachingTrips()
         const stopCachingTrips = () => this.stopCachingTrips()
         const onCachedTripClick = (e: any) => this.onCachedTripClick(e.currentTarget.value)
@@ -225,8 +226,8 @@ export class TriphubNavbar extends Component<{
                                         {this.state.cacheTrips && <div><FormText>{this.props.cachedTrips.length} trips are currently cached</FormText></div>}
                                     </ModalBody>
                                 </Modal>
-                                <DropdownItem disabled={this.state.installAppPrompted || this.props.beforeInstallPrompt === null} 
-                                    onClick={installApp}>Install app for standalone/offline use...</DropdownItem>
+                                <DropdownItem disabled={this.state.installAppPrompted || (!this.inIframe && this.props.beforeInstallPrompt === null)} 
+                                    onClick={installStandalone}>Install app for standalone/offline use...</DropdownItem>
                                 <DropdownItem divider></DropdownItem>
                                 <DropdownItem disabled={!this.props.isOnline || this.state.cacheTrips} onClick={startCachingTrips}>Start caching trips</DropdownItem>
                                 <DropdownItem disabled={!this.props.isOnline || !this.state.cacheTrips} onClick={stopCachingTrips}>Stop caching trips</DropdownItem>
@@ -262,10 +263,17 @@ export class TriphubNavbar extends Component<{
 
     private setWidth = () => this.setState({ windowWidth: window.innerWidth })
 
-    private installApp() {
+    private installStandalone() {
         if (this.props.beforeInstallPrompt !== null) {
             this.props.beforeInstallPrompt.prompt()
             this.setState({ installAppPrompted: true })
+        } else {
+            // in iframe - open a new tab of the site not in an iframe
+            let src = (window.frameElement as any)?.src
+            if (src) {
+                src = src.replace(/.$/,'') + '#/installStandalone'
+                window.open(src)
+            }
         }
     }
 

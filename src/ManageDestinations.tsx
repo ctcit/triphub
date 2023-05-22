@@ -185,7 +185,7 @@ export class ManageDestinations extends Component<{
         const onDelete = () => this.onDelete()
 
         return [
-            <Container className={ConfigService.containerClassName} key='managedestinations' fluid={true}>
+            <Container className={ConfigService.containerClassName} key='managedestinations' fluid={true} style={{ minHeight: '500px' }}>
                 <Container fluid={true} >
                     <h1 key="title">Manage Destinations</h1>
                     {this.state.isLoading && <FullWidthLoading />}

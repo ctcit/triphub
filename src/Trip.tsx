@@ -104,7 +104,7 @@ export class Trip extends Component<{
                 if (setEdited && !this.state.editIsEdited) {
                     this.setState({ editIsEdited: true })
                 }
-                if (save && this.state.trip.id) {
+                if (save && this.state.trip.id > 0) {
                     TripsService.postTripUpdate(this.state.trip.id as number, fields).finally(() => resolve())
                 } else {
                     resolve()

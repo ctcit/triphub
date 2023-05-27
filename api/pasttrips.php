@@ -57,7 +57,7 @@ function PastTrips(mysqli $con, int $userId, array $query): array
         $where[] = 'NOT t.isDeleted';
     }
 
-    // Exit now with nust the trips in the date range if there are no of filters 
+    // Exit now with just the trips in the date range if there are no of filters 
     if (!$rankCols && !$memberMap) return GetTrips($con, $userId, implode(' AND ', $where));
 
     if ($rankCols) {
@@ -138,7 +138,7 @@ function PastTrips(mysqli $con, int $userId, array $query): array
         }
     }
 
-    // Sort and limit the trips, by ranking (descending) then date
+    // Sort and limit the trips, by ranking (descending) then date (ascending)
     array_multisort(
         array_column($trips, 'ranking'),
         SORT_DESC,

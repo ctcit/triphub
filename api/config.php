@@ -45,6 +45,7 @@ class ConfigServer
 	const mileage_ratesTable  = "triphub.mileage_rates";
 	const logTable            = "triphub.log";
 	const logLevelFilter      = "/.*/";
+	const logLinesRetained    = 10000;
 	const apiKey              = "";//Should be blank in production
 	const apiKeyExpiry        = "00000000";//YYYYMMDD Should be 00000000 in production 
 	const apiKeyUserId	      = 2218;

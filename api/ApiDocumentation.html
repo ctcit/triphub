@@ -21,12 +21,12 @@
                     for (const endpoint of endpoints) {
                         $('#Endpoints').append($(`
                             <tr>
-                                <th>${endpoint.methods.map(method => `
-                                    <div class='${method}'>
-                                        <a href='ApiTest.html?method=${method}&endpoint=${endpoint.endpoint}'>${method}</a>
+                                <th>${endpoint.methods.map(m => `
+                                    <div class='${m.method}'>
+                                        <a href='ApiTest.html?method=${m.method}&endpoint=${m.endpoint}'>${m.method}</a>
                                     </div>`).join('')}
                                 </th>
-                                <td>${endpoint.endpoint}</td>
+                                <td>${[...new Set(endpoint.methods.map(m => m.endpoint))].join('<br/>')}</td>
                                 <td>${endpoint.security}</td>
                                 <td>${endpoint.description}</td>
                                 <td>${endpoint.input}</td>

@@ -207,11 +207,15 @@ function ApiProcess(
             return ["Edit $subId deleted"];
 
         case "POST trips/emails":
-            // DESCRIPTION Sends any necessary emails
+        case "POST maintenance/regular":
+            // DESCRIPTION Sends any necessary emails, and maintains log table at an acceptable size
             // OUTPUT Array of trip indentification details for any trips that had emails send
             ValidateUser($con, "Member");
+            $logTable = ConfigServer::logTable;
+            $logMaxId = SqlResultScalar($con, "SELECT COALESCE(MAX(id),0) FROM $logTable") - ConfigServer::logLinesRetained;
+            SqlExecOrDie($con,"DELETE FROM $logTable WHERE id < $logMaxId");
             return PostEmails($con);
-
+    
         case "POST trips/pasttrips":
             // DESCRIPTION Performs query of past trips
             // INPUT <a href='$basehref#pasttrips'>pasttrips</a>
@@ -624,8 +628,7 @@ function ApiMetadata(mysqli $con,string $basehref): array {
         $line = trim(fgets($filehandle));
         if (preg_match('/case "(GET|POST|PATCH|DELETE)( (.*))?":/', $line, $matches)) {
             $endpoint = $endpoint ?? ['security'=>'NonPrivileged','description'=>'','input'=>'','output'=>'','inputentity'=>''];
-            $endpoint['methods'] []= $matches[1];
-            $endpoint['endpoint'] = $matches[3] ?? '';
+            $endpoint['methods'] []= ['method'=>$matches[1],'endpoint'=>$matches[3] ?? ''];
         } else if (preg_match('/\/\/ (DESCRIPTION|INPUT|OUTPUT|INPUTENTITY) (.*)/', $line, $matches)) {
             $key = strtolower($matches[1]);
             $value = str_replace('$basehref',$basehref,$matches[2]);

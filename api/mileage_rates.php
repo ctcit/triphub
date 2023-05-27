@@ -1,7 +1,7 @@
 <?php
 
 # ---------------------------------------------
-# Mileagae Rates (Per ONE-WAY km)
+# Mileage Rates (Per ONE-WAY km)
 # ---------------------------------------------
 
 function GetMileageRates($con, $userid)

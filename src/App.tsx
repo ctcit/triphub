@@ -52,7 +52,8 @@ export class App extends Component<{
         super(props)
 
         // determine if app is running standalone or not
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        const matchMedia = window.matchMedia('(display-mode: standalone)')
+        const isStandalone = matchMedia.matches
         console.log(isStandalone ? 'app is standalone' : 'app is not standalone')
 
         const isOnline = navigator.onLine
@@ -106,36 +107,42 @@ export class App extends Component<{
         );
 
         // determine if the app is running standalone or not
-        window.matchMedia('(display-mode: standalone)').addEventListener('change', ({ matches }) => {
-            if (matches) {
-                console.log('app is standalone')
-                this.setState({isStandalone: true});
-            } else {
-                console.log('app is not standalone')
-                this.setState({isStandalone: false});
-            }
-        });
+        if ((matchMedia as any).addEventListener) {
+            window.matchMedia('(display-mode: standalone)').addEventListener('change', ({ matches }) => {
+                if (matches) {
+                    console.log('app is standalone')
+                    this.setState({isStandalone: true});
+                } else {
+                    console.log('app is not standalone')
+                    this.setState({isStandalone: false});
+                }
+            });
+        }
 
         // determine if the background-sync permission is granted and create event listener to listen for changes
         const permissionName = 'background-sync' as PermissionName
-        navigator.permissions.query({name: permissionName}).then((permissionStatus) => {
-            console.log('backgroundSyncPermitted is ' + (permissionStatus.state === 'granted'))
-            this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
-            permissionStatus.addEventListener('change', (e) => {
-                this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'}, () => {
-                    if (permissionStatus.state === 'granted') {
-                        this.conditionallyDoSync() // force a sync now; otherwise it might not happen until the user goes offline then back online again
-                    }
-                })
-            });
-        }).catch((ex: any) => {
-            if (ex instanceof TypeError) {
-                console.log('Could not get backround-sync permission - probably not supported by browser')
-                this.setState({ backgroundSyncSupported: false })
-            } else {
-                throw ex
-            }
-        })
+        if (navigator.permissions) {
+            navigator.permissions.query({name: permissionName}).then((permissionStatus) => {
+                console.log('backgroundSyncPermitted is ' + (permissionStatus.state === 'granted'))
+                this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'})
+                permissionStatus.addEventListener('change', (e) => {
+                    this.setState({backgroundSyncPermitted: permissionStatus.state === 'granted'}, () => {
+                        if (permissionStatus.state === 'granted') {
+                            this.conditionallyDoSync() // force a sync now; otherwise it might not happen until the user goes offline then back online again
+                        }
+                    })
+                });
+            }).catch((ex: any) => {
+                if (ex instanceof TypeError) {
+                    console.log('Could not get backround-sync permission - probably not supported by browser')
+                    this.setState({ backgroundSyncSupported: false })
+                } else {
+                    throw ex
+                }
+            })
+        } else {
+            console.log('Could not get backround-sync permission - permissions not supported by browser')
+        }
 
         // add handling for application update
         console.log('environment = ' + process.env.NODE_ENV)

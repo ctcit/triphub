@@ -27,7 +27,7 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 		WHERE $where
 		ORDER BY tripDate","id");
 
-	if (!$trips || !$userId) return array_values($trips);
+	if (!$trips) return [];
 
 	$tripIds = implode(',',array_keys($trips));
 
@@ -58,11 +58,12 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 		$tripId = $participant['tripId'];
 		$memberId = $participant['memberId'];
 		$role = $participant['role'];
+
 		$trips[$tripId][str_replace('-','',strtolower($role)).'s'] []= $participant['name'];
 
 		if ($memberId === $userId) {
 			if ($role !== 'Editor' ||
-			    !array_key_exists($tripId, $tripRoles) ||
+				!array_key_exists($tripId, $tripRoles) ||
 				$tripRoles[$tripId]) {
 				// Only set "Editor" role if a role hasn't already been set
 				$tripRoles[$tripId] = $role;
@@ -71,10 +72,20 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 	}
 
 	foreach ($trips as &$trip) {
-		if ($trip['approval'] === 'Approved' && in_array($trip['state'],['Open','Closed','Approved'])) {
-			$trip['role'] = $tripRoles[$trip['id']] ?? '';
-			if ($trip['role'] && $trip['role'] !== 'Editor' && $trip['role'] !== 'Deleted') {
-				$trip['state'] = 'MyTrips';
+		if ($userId == 0) {
+			// Not a signed in user
+			// Strip off some un-needed fields
+			$toRemove = ["approvalText", "nonleaders", "editors", "routes",
+						"totalVehicleCost", "payingParticipantsCount",
+						"vehicleFee"];
+			foreach($toRemove as $key) unset($trip[$key]);
+		} else {
+			// Signed in user - set role & state
+			if ($trip['approval'] === 'Approved' && in_array($trip['state'],['Open','Closed','Approved'])) {
+				$trip['role'] = $tripRoles[$trip['id']] ?? '';
+				if ($trip['role'] && $trip['role'] !== 'Editor' && $trip['role'] !== 'Deleted') {
+					$trip['state'] = 'MyTrips';
+				}
 			}
 		}
 	}

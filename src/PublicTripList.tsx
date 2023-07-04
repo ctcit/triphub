@@ -55,6 +55,9 @@ export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
                         <dd>{trip.departurePoint} {trip.departureDetails}</dd>
                         <dt>Leader:</dt>
                         <dd>{trip.leaders}</dd>
+                        { (trip.prerequisites !== undefined && trip.prerequisites !== null && trip.prerequisites.length > 0 ) &&
+                        <><dt>Prerequisites:</dt>
+                        <dd>{trip.prerequisites}</dd></>}
                     </dl>
                     <p>{trip.description}</p>
                     <p>{trip.logisticInfo}</p>

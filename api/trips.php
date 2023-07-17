@@ -6,7 +6,7 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 	$participantsTable   = ConfigServer::participantsTable;
 	$historyTable        = ConfigServer::historyTable;
 	$membersTable        = ConfigServer::membersTable;
-	$where 				 = $where ?? "t.tripDate > DATE_ADD(now(),INTERVAL -$currencyInDays DAY)";
+	$where 				 = $where ?? "t.tripDate > DATE_ADD(now(),INTERVAL -$currencyInDays-length DAY)";
 
 	// Change the trips table to store enum "approval".
 	// Return as a string and cast in the typescript (decouples numbering)

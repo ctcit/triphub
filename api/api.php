@@ -83,6 +83,13 @@ function ApiProcess(
             // OUTPUT Single <a href='$basehref#members'>members</a>
             return GetMembers($con, ValidateUser($con, "NonPrivileged"), "id = $id");
 
+        case "POST members/{memberId}":
+        case "PATCH members/{memberId}":
+            // DESCRIPTION Sets emergency contact details for member
+            // OUTPUT Single <a href='$basehref#members'>members</a>
+            // INPUTENTITY members
+            return ApiPatch($con, ValidateUser($con, "Member"), $table, $id, $input, 0);
+
         case "GET trips":
             // DESCRIPTION Gets all trips whose close date is after the current date less one week
             // OUTPUT Array of <a href='$basehref#trips'>trips</a> + tripState + leaders

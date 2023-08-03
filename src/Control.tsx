@@ -76,6 +76,7 @@ export class InputControl extends Component<{
     showValidation: boolean
 }> {
     private inputRef: any
+    private valueChanged: boolean = false
 
     constructor(props: any) {
         super(props);
@@ -96,7 +97,12 @@ export class InputControl extends Component<{
         const setInputRef = (inputRef: any) => this.inputRef = inputRef
 
         const onFocus = (): void => {
-            this.setState({ oldValue: this.value, helpText: this.props.helpText });
+            let stateChange: any = { helpText: this.props.helpText }
+            if (!this.valueChanged) {
+                // don't set oldValue if gains focus without yet saving value (as happens when picking date from dropdown)
+                stateChange['oldValue'] = this.value
+            }
+            this.setState(stateChange);
         }
         const onChange = (event: React.ChangeEvent) => {
             (ReactDOM.findDOMNode(this.inputRef) as any).focus() // fix for FireFox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1232233
@@ -108,11 +114,13 @@ export class InputControl extends Component<{
                 value = (event.target as any).value
             }
             this.props.onSet(this.props.field, value);
+            this.valueChanged = true;
         }
         const onBlur = () => {
             this.setState({ helpText: undefined, showValidation: true })
             if (this.state.oldValue !== this.value) {
                 this.setState({ saving: true });
+                this.valueChanged = false;
                 this.props.onSave(this.props.field, this.value)
                     .then(() => this.setState({ saving: false }));
             }

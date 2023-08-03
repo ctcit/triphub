@@ -124,9 +124,22 @@ export class TripCosts extends Component<{
             this.calculations.participantsCount - this.calculations.fixedCostVehicleCount : 
             trip.payingParticipantsCount
 
+        // adjustments for participants that have overriding vehicle fee specified
+        let overriddenVehicleFeeTotal = 0
+        let overriddenVehicleFeeCount = 0
+        currentParticipants.forEach(p => {
+            const c = this.calculations.participants[p.id]
+            if (c.vehicleFee != null) {
+                overriddenVehicleFeeTotal += c.vehicleFee
+                overriddenVehicleFeeCount++
+            }
+        })
+
         // calculate vehicle fee per paying participant
-        this.calculations.calculatedVehicleFee = this.calculations.payingParticipantsCount > 0 ? 
-            this.calculations.totalVehicleCost / this.calculations.payingParticipantsCount : 0
+        const adjustedPayingParticipantsCount = this.calculations.payingParticipantsCount - overriddenVehicleFeeCount
+        const adjustedTotalVehicleCost = Math.max(0, this.calculations.totalVehicleCost - overriddenVehicleFeeTotal)
+        this.calculations.calculatedVehicleFee = adjustedPayingParticipantsCount > 0 ? 
+            adjustedTotalVehicleCost / adjustedPayingParticipantsCount : 0
         this.calculations.roundedCalculatedVehicleFee = Math.ceil(this.calculations.calculatedVehicleFee)
         this.calculations.vehicleFee = trip.vehicleFee !== null ? trip.vehicleFee : this.calculations.roundedCalculatedVehicleFee
 
@@ -172,7 +185,7 @@ export class TripCosts extends Component<{
                 actualVehicleProviders.forEach(p => {
                     if (deficientVehicleFunds > 0 && (!p.isFixedCostVehicle || nonFixedCostVehiclesCount === 0)) {
                         const c = this.calculations.participants[p.id]
-                        const subtractDeficit = Math.floor((c.adjustedVehicleReimbursement ?? 0) * subtractFactor)
+                        const subtractDeficit = Math.ceil((c.adjustedVehicleReimbursement ?? 0) * subtractFactor)
                         c.adjustedVehicleReimbursement = (c.adjustedVehicleReimbursement ?? 0) - subtractDeficit
                         deficientVehicleFunds += subtractDeficit
                         totalReimbursements -= subtractDeficit

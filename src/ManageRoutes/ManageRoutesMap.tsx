@@ -2,11 +2,13 @@ import * as React from 'react';
 import { Modal, ModalHeader, ModalBody, ModalFooter, Col, Row, ButtonDropdown, DropdownItem, DropdownToggle, DropdownMenu, Button } from 'reactstrap';
 import { IArchivedRoute } from '../Interfaces';
 import { ResizableBox, ResizeCallbackData } from 'react-resizable';
-import { MapCommon } from '../MapCommon';
+import { ArchivedRoutePolygon, MapCommon } from '../MapCommon';
 import { ManageRoutesMapEditor } from './ManageRoutesMapEditor';
 import * as L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import { ArchivedRoutesService } from 'src/Services/ArchivedRoutesService';
+import memoizeOne from 'memoize-one';
 
 export class RouteDetails {
     public title: string = "";
@@ -28,19 +30,23 @@ export class ManageRoutesMap extends MapCommon<{
     mapOperation: MapOperation
 },{
     isSaving : boolean,
-    cancelDropdownOpen: boolean
+    cancelDropdownOpen: boolean,
+    archivedRoutes: IArchivedRoute[]
 }>{
     private pendingRouteDetails: RouteDetails = new RouteDetails(); // changed details before being saved
     private pendingRoutesLatLngs: Array<Array<[number, number]>> = [];  // changed routes before being saved
 
     private mapMarker: L.Marker<any> | undefined;
+    protected archivedRoutesLayerGroup: L.LayerGroup<ArchivedRoutePolygon[]> = L.layerGroup();
+    private infoControl: L.Control = new L.Control();
 
     constructor(props:any) {
         super(props);
 
         this.state = { 
             isSaving: false,
-            cancelDropdownOpen: false
+            cancelDropdownOpen: false,
+            archivedRoutes: []
         };
     }
 
@@ -176,6 +182,70 @@ export class ManageRoutesMap extends MapCommon<{
         });
 
         this.props.onMarkerMoved(this.mapMarker.getLatLng())
+
+        this.infoControl = (L as any).control();
+        const infoControl: any = this.infoControl;
+        infoControl.onAdd = () => {
+            infoControl._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+            return infoControl._div;
+        };
+        infoControl.update = (html: string) => {
+            infoControl._div.innerHTML = html;
+        };
+
+        ArchivedRoutesService.getArchivedRoutes(false, false)
+            .then((archivedRoutes: IArchivedRoute[]) => {
+                this.setState({archivedRoutes}, () => {
+                    this.showArchivedRoutes();
+                });
+            });
+    }
+
+    // -------------------------------------------------------
+    // Routes Archive
+    // -------------------------------------------------------
+
+    private showArchivedRoutes(): void {
+        const infoControl: any = this.infoControl;
+
+        this.archivedRoutesLayerGroup = L.layerGroup()
+            .addTo(this.map);
+        this.infoControl
+            .addTo(this.map);
+
+        // -----
+        const polylineOptions: any = {color: 'green', weight: 5, opacity: 0.4};
+        this.state.archivedRoutes.map((archivedRoute: IArchivedRoute) => {
+            if (archivedRoute.summarizedRoutes) {
+                const routesLatLngsArray: L.LatLng[][] = archivedRoute.summarizedRoutes.map((route: number[][]) => 
+                    route.map((point: number[]) => new L.LatLng(point[0], point[1])));
+                // the route summary polylines
+                const polylines = routesLatLngsArray.map((routeLatLngs: L.LatLng[]) => 
+                    L.polyline(routeLatLngs, polylineOptions).addTo(this.archivedRoutesLayerGroup)
+                );
+                polylines.forEach(polyline => {
+                    // add click event handler for polyline
+                    (polyline as any).archivedRoute = archivedRoute;
+
+                    polyline.on('mouseover', () => {
+                        polylines.forEach(p => { p.setStyle({weight: 10, opacity: 0.7})} );
+                        infoControl.update('<b>' + archivedRoute.title + '</b><br /><p>' + archivedRoute.description + '</p>');
+                    });
+                    polyline.on('mouseout', () => {
+                        polylines.forEach(p => { p.setStyle(polylineOptions)} );
+                        this.setDefaultInfoControlMessage();
+                    });
+                });
+            }
+        });
+
+        this.setDefaultInfoControlMessage();
+    }
+
+    private setDefaultInfoControlMessage(): void {
+        const infoControl: any = this.infoControl;
+        const defaultInfoControlMessage: string = 'Hover over a route for details.';
+        infoControl.update(defaultInfoControlMessage);
     }
 
 }

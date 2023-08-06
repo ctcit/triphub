@@ -369,7 +369,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
 
           {/* <Styles> */}
             {/* <div className="tableWrap"> */}
-              <Table striped={true} bordered={true} hover={true} size="sm" {...getTableProps()}>
+              <Table striped={false} bordered={true} hover={true} size="sm" {...getTableProps()}>
                 {!props.hideHeaders && (
                 <thead>
                   {

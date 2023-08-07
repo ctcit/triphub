@@ -10,6 +10,7 @@ import { Accordian } from './Accordian';
 import { DestinationsService } from './Services/DestinationsService'
 import { MdInfo } from 'react-icons/md';
 import { MileageRatesService } from './Services/MileageRatesService';
+import { ToolTipIcon } from './ToolTipIcon';
 
 export class TripCosts extends Component<{
     trip: ITrip
@@ -262,8 +263,8 @@ export class TripCosts extends Component<{
     
     public render() {
         const trip: ITrip = this.props.trip
-        const validations: IValidation[] = TripsService.validateTrip(this.props.trip)
-
+        const validations: IValidation[] = TripsService.validateCosts(this.props.trip)
+        const warnings = validations.filter(i => !i.ok)
         const currentParticipants = this.props.currentParticipants
 
         this.calculateCosts();
@@ -288,6 +289,11 @@ export class TripCosts extends Component<{
         const overriddenClassName = (field: string): string => onGet(field) === null ? 'input-control' : 'overridden-input-control'
 
         // const onSetInverted = (field: string, value: any): Promise<ITrip> => this.props.setTripFields({[field]: !value}, true, true)
+        const title = [
+            <span key='title'>More Details</span>,
+            warnings.length &&
+            <ToolTipIcon key='cost-warning' icon='warning' tooltip={warnings.map(v => v.message).join(', ')} className='warning-icon' id='costs-warning'/>,
+        ].filter(e => e)
 
         const common = {
             id: 'trip',
@@ -346,7 +352,7 @@ export class TripCosts extends Component<{
 
                 <Accordian id={'parameters-continued'} className='others-section'
                     headerClassName='others-header' expanded={false}
-                    title={'More Details'}>
+                    title={<span>{title}</span>}>
                     <Form key='form' className='indentedparticipants form'>
                         <Container fluid={true}>
                             <Row>

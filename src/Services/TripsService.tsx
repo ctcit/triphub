@@ -94,6 +94,27 @@ export class TripsService {
         ]
     }
 
+    public static validateCosts(trip: ITrip): IValidation[] {
+        return [
+            { field: 'payingParticipantsCount', ok: trip.payingParticipantsCount === null, message: 'Number to pay vehicle costs is overridden' },
+            { field: 'totalVehicleCost', ok: trip.totalVehicleCost === null, message: 'Total vehicle costs is overridden' },
+            { field: 'vehicleFee', ok: trip.vehicleFee === null, message: 'Vehicle fee is overridden' },
+        ]
+    }
+
+    public static validateCostsParticipant(participant: IParticipant, participants: IParticipant[]): IValidation[] {
+        return [
+            { field: 'engineSize', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.engineSize !== null, message: `Engine size must be specified` },
+            { field: 'vehicleCost', ok: !participant.isVehicleProvider || !participant.isFixedCostVehicle || participant.vehicleCost !== null, message: `Vehicle cost must be specified` },
+            { field: 'ratePerKm', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.ratePerKm === null, message: `Rate is overridden` },
+            { field: 'totalDistance', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.totalDistance === null, message: `Total return distance is overridden` },
+            { field: 'vehicleFee', ok: participant.vehicleFee === null, message: `Vehicle fee is overridden` },
+            { field: 'nonMemberFee', ok: participant.nonMemberFee === null, message: `Non-member fee is overridden` },
+            { field: 'otherFees', ok: participant.otherFees === null, message: `Other fees is overridden` },
+        ]
+    }
+
+
     private static getTripsPromise: Promise<ITrip[]> | undefined = undefined
 
 }

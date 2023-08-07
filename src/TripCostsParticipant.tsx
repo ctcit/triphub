@@ -30,7 +30,7 @@ export class TripCostsParticipant extends Component<{
         const participant = this.props.participant
         const participantCosts = this.props.participantCosts
         const canEdit = this.props.canEdit
-        const validations: IValidation[] = TripsService.validateParticipant(participant, [participant])
+        const validations: IValidation[] = TripsService.validateCostsParticipant(participant, [participant])
         const warnings = validations.filter(i => !i.ok)
 
         const onGet = (field: string): any => participant[field]

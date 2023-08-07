@@ -105,16 +105,15 @@ export class TripCosts extends Component<{
         const others: IParticipant[] = currentParticipants.filter(p => !this.calculations.participants[p.id].broughtVehicle);
 
         // calculate total vehicle cost
-        if (trip.totalVehicleCost === null) {
-            const defaultTotalDistance = this.tripDistanceOneWayRoundedUp(trip.distanceOneWay) * 2
-            actualVehicleProviders.forEach(p => {
+        const defaultTotalDistance = this.tripDistanceOneWayRoundedUp(trip.distanceOneWay) * 2
+        actualVehicleProviders.forEach(p => {
                 const c = this.calculations.participants[p.id]
                 c.totalDistance = c.totalDistance != null ? c.totalDistance : defaultTotalDistance
                 c.ratePerKm = c.ratePerKm != null ? c.ratePerKm : this.ratePerKm(p.engineSize ?? 0)
                 c.vehicleCost = c.vehicleCost != null ? c.vehicleCost : Math.ceil(c.totalDistance * c.ratePerKm / 2) // NOTE: ratePerKm is per ONE-WAY-km, so is twice the rate per total return km
                 this.calculations.totalVehicleCost += c.vehicleCost
             })
-        } else {
+        if (trip.totalVehicleCost !== null) {
             this.calculations.totalVehicleCost = trip.totalVehicleCost
         }
 

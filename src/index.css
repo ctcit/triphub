@@ -687,3 +687,16 @@ button-badge:hover {
   display: inline-block;
   padding: 3px;
 }
+
+/* ---------------------------- */
+/* Cost Calculator  */
+/* ---------------------------- */
+
+.input-control {
+  font-weight: normal;
+}
+
+.overridden-input-control {
+  font-weight: bold;
+  color: darkorange
+}

@@ -43,6 +43,8 @@ export class TripCostsParticipant extends Component<{
             return (validations.find(v => v.field === field && !v.ok) || {} as any).message
         }
 
+        const overriddenClassName = (field: string): string => onGet(field) === null ? 'input-control' : 'overridden-input-control'
+
         const onSaveIsFixedCostVehicle = (field: string, value: any): Promise<void> => {
             const vehicleCost = value ? participant.vehicleCost : null
             return onSave('vehicleCost', vehicleCost).then(() => onSave(field, value))
@@ -176,11 +178,13 @@ export class TripCostsParticipant extends Component<{
                                     <Col sm={3}>
                                         <InputControl field='ratePerKm' label='Rate ($/ONE-WAY-km)' 
                                         placeholder={participantCosts.ratePerKm}
+                                        className={overriddenClassName('ratePerKm')}
                                         type='number' {...common} />
                                     </Col>
                                     <Col sm={3}>
                                         <InputControl field='totalDistance' label='Total Return Distance (km)' 
                                         placeholder={participantCosts.totalDistance}
+                                        className={overriddenClassName('totalDistance')}
                                         type='number' {...common} />
                                     </Col>
                                 </Row>
@@ -196,6 +200,7 @@ export class TripCostsParticipant extends Component<{
                                     <Col sm={3}>
                                         <InputControl field='vehicleFee' label='Vehicle Fee ($)' 
                                         placeholder={participantCosts.vehicleFee}
+                                        className={overriddenClassName('vehicleFee')}
                                         type='number' {...common} />
                                     </Col>
                                     <Col sm={3}>
@@ -238,18 +243,21 @@ export class TripCostsParticipant extends Component<{
                                     <Col sm={3}>
                                         <InputControl field='vehicleFee' label='Vehicle Fee ($)' 
                                         placeholder={participantCosts.vehicleFee}
+                                        className={overriddenClassName('vehicleFee')}
                                         type='number' {...common} />
                                     </Col>
                                 }
                                 <Col sm={3}>
                                     <InputControl field='nonMemberFee' label='Non-Member Fee ($)' 
                                     placeholder={participantCosts.nonMemberFee}
+                                    className={overriddenClassName('nonMemberFee')}
                                     type='number' {...common} />
                                 </Col>
                                 <Col sm={3}>
                                     <InputControl field='otherFees' label='Other Fees ($)' 
                                     helpText={'e.g. hut or gear fees'}
                                     placeholder={participantCosts.otherFees}
+                                    className={overriddenClassName('otherFees')}
                                     type='number' {...common} />
                                 </Col>
                             </Row>

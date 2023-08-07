@@ -285,6 +285,8 @@ export class TripCosts extends Component<{
         }
         const onGetValidations = () => validations;
         const setParticipant = (id: number, data: { [id: string]: any }, save: boolean) => this.setParticipant(id, data, save)
+        
+        const overriddenClassName = (field: string): string => onGet(field) === null ? 'input-control' : 'overridden-input-control'
 
         // const onSetInverted = (field: string, value: any): Promise<ITrip> => this.props.setTripFields({[field]: !value}, true, true)
 
@@ -363,6 +365,7 @@ export class TripCosts extends Component<{
                                     <InputControl field='payingParticipantsCount' label='Number to pay vehicle costs'
                                         helpText={'Number on trip, less number of fixed cost vehicle drivers'}
                                         placeholder={this.calculations.payingParticipantsCount}
+                                        className={overriddenClassName('payingParticipantsCount')}
                                         type='number' min={0} hidden={false} {...common} />
                                 </Col>
                             </Row>
@@ -370,6 +373,7 @@ export class TripCosts extends Component<{
                                 <Col sm={5} md={3}>
                                     <InputControl field='totalVehicleCost' label='Total vehicle costs ($)'
                                         placeholder={this.calculations.totalVehicleCost}
+                                        className={overriddenClassName('totalVehicleCost')}
                                         type='number' min={0} hidden={false} {...common} />
                                 </Col>
                                 {/* <Col sm={5} md={3}>
@@ -385,6 +389,7 @@ export class TripCosts extends Component<{
                                 <Col sm={5} md={3}>
                                     <InputControl field='vehicleFee' label='Vehicle fee ($) to collect from particpants (excluding drivers)'
                                         placeholder={this.calculations.vehicleFee}
+                                        className={overriddenClassName('vehicleFee')}
                                         type='number' min={0} hidden={false} {...common} />
                                 </Col>
                             </Row>

@@ -94,6 +94,16 @@ export class TripDetail extends Component<{
             return this.props.setTripFields(body, true, true)
         }
 
+        const onSetIsLimited = (_: string, value: any): Promise<void> => {
+            const isLimited = value
+            let body: any = { isLimited }
+            if (!isLimited) {
+                const maxParticipants: number = 0
+                body = { ...body, maxParticipants }
+            }
+            return this.props.setTripFields(body, true, true)
+        }
+
         const common = {
             id: 'trip',
             readOnly: trip.id !== -1 && !this.props.canEditTrip,
@@ -106,6 +116,8 @@ export class TripDetail extends Component<{
         const commonInverted = { ...common, 'onGet': onGetInverted, 'onSave': onSetInverted }
         const commonTripDate = { ...common, 'onSet': onSetTripDate }
         const commonLength = { ...common, 'onSet': onSetTripLength }
+        const commonIsLimited = { ...common, 'onSave': onSetIsLimited }
+
         const config = ConfigService.Config
 
         const openDateHelp = trip.isSocial ?
@@ -182,7 +194,7 @@ export class TripDetail extends Component<{
 
                 <Row>
                     <Col sm={5} md={4}>
-                        <SwitchControl field='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...common} />
+                        <SwitchControl field='isLimited' label='Limited Numbers' hidden={trip.isSocial && trip.isNoSignup} {...commonIsLimited} />
                     </Col>
                     <Col sm={5} md={4}>
                         <InputControl field='maxParticipants' label={isSocial ? 'Maximum Attendees' : 'Maximum trampers'}

@@ -77,7 +77,7 @@ class CalendarWeek extends Component<{
 
                     trips[trips.indexOf(oldTrip)] = newTrip
 
-                    TripsService.postTripUpdate(oldTrip.id, { [field]: newTrip[field] })
+                    TripsService.postTripUpdate(oldTrip.id, { [field]: (newTrip as any)[field] })
                     this.props.calendar.setState({ trips })
                 }
 
@@ -324,10 +324,10 @@ export class Calendar extends Component<{
         const toggleShowDropdown = () => this.setState({ showDropdownIsOpen: !this.state.showDropdownIsOpen });
         const StateItem = (props: { field: string, value: any, toggle?: boolean, children: any }) => {
             const onClick =
-                () => this.setState({ [props.field]: props.toggle ? !state[props.field] : props.value } as any)
+                () => this.setState({ [props.field]: props.toggle ? !(state as any)[props.field] : props.value } as any)
             return (
                 <DropdownItem onClick={onClick}>
-                    <span className={state[props.field] === props.value ? 'fa fa-check' : 'fa fa-fw'} />{props.children}
+                    <span className={(state as any)[props.field] === props.value ? 'fa fa-check' : 'fa fa-fw'} />{props.children}
                 </DropdownItem>
             )
         }

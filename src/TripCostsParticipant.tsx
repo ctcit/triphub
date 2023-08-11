@@ -33,7 +33,7 @@ export class TripCostsParticipant extends Component<{
         const validations: IValidation[] = TripsService.validateCostsParticipant(participant, [participant])
         const warnings = validations.filter(i => !i.ok)
 
-        const onGet = (field: string): any => participant[field]
+        const onGet = (field: string): any => (participant as any)[field]
         const onSet = (field: string, value: any): Promise<void> => 
             this.props.setParticipant(participant.id, { [field]: this.sanitizeNumber(value) }, false)
         const onSave = (field: string, value: any): Promise<void> => 
@@ -70,7 +70,7 @@ export class TripCostsParticipant extends Component<{
         }
 
         // 
-        const onNegativeNumberGet = (field: string): any => this.sanitizeNegativeNumber(participant[field])
+        const onNegativeNumberGet = (field: string): any => this.sanitizeNegativeNumber((participant as any)[field])
         const onNegativeNumberSet = (field: string, value: any): Promise<void> => 
             this.props.setParticipant(participant.id, { [field]: this.sanitizeNegativeNumber(value) }, false)
         const onNegativeNumberSave = (field: string, value: any): Promise<void> => 

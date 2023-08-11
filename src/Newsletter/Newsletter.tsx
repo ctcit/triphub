@@ -38,11 +38,11 @@ export class Newsletter extends Component<{
 
 
     public get(id: string): any {
-        return this.state.newsletter[id]
+        return (this.state.newsletter as any)[id]
     }
 
     public set(id: string, val: any): void {
-        const fields = {}
+        const fields: any = {}
         fields[id] = val
         this.setState(state => ({ newsletter: { ...state.newsletter, ...fields } }))
     }

@@ -55,7 +55,7 @@ export class ManageRoutes extends Component<{
     }
 
     public get(id: string) : any {
-        return this.state.mergedRoutes[id];
+        return (this.state.mergedRoutes as any)[id];
     }
 
     public componentDidMount() {

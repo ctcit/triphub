@@ -29,7 +29,7 @@ export const BaseUrl = runConfig?.BaseUrl ?? 'https://ctc.org.nz/triphub/api/api
 export const DbApiURL = runConfig?.DbApiURL ?? 'https://ctc.org.nz/db/index.php/rest';
 export const BaseOpt = { 'Accept': 'application/json' }
 if (runConfig?.ApiKey) {
-    BaseOpt['Api-Key'] = runConfig.ApiKey;
+    (BaseOpt as any)['Api-Key'] = runConfig.ApiKey;
 }
 export const NewsletterGenerateUrl = '/db/generate.php?expand=newsletter.odt'
 

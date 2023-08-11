@@ -46,11 +46,11 @@ export class ManageMileageRates extends Component<{
         const amAdmin = this.props.role >= Role.Admin
 
         const onGet = this.state.mileageRates.map(mr => {
-            return ((field: string): any => this.getMileageRate(mr.id)[field])
+            return ((field: string): any => (this.getMileageRate(mr.id) as any)[field])
         })
         const onSet = this.state.mileageRates.map(mr => {
             return (field: string, value: any): Promise<IMileageRate> => {
-                const mr2 = this.getMileageRate(mr.id)
+                const mr2: any = this.getMileageRate(mr.id)
                 mr2[field] = value
                 this.setState({ mileageRates: this.state.mileageRates })
                 return Promise.resolve(mr2)
@@ -58,7 +58,7 @@ export class ManageMileageRates extends Component<{
         })
         const onSave = this.state.mileageRates.map(mr => {
             return (field: string, value: any): Promise<IMileageRate> => {
-                this.getMileageRate(mr.id)[field] = value
+                (this.getMileageRate(mr.id) as any)[field] = value
                 this.setState({ mileageRates: this.state.mileageRates })
                 return MileageRatesService.patchMileageRate(mr.id, mr).then(mr2 => {
                     MileageRatesService.getMileageRates(true) // force update of cached rates

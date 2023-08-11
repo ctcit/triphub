@@ -58,7 +58,7 @@ export class Email extends Component<{
     public render() {
         const { sending, copying, copied } = this.state;
         const validations: IValidation[] = Mandatory(this.state, ['subject', 'body']);
-        const onGet = (field: string): any => this.state[field]
+        const onGet = (field: string): any => (this.state as any)[field]
         const onSet = (field: string, value: any): void => this.setState({ [field]: value })
         const onSave = (_: string, __: any): Promise<void> => Promise.resolve()
         const onCopyNames = () => this.copy('names')

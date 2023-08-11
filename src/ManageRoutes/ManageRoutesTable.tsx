@@ -199,7 +199,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
         const rowIdsMap = {};
         props.routes.forEach((route: IArchivedRoute, index: number) => {
           if (props.selectedRouteIds.find((routeId: number) => route.id === routeId)) {
-            rowIdsMap[index] = true;
+            (rowIdsMap as any)[index] = true;
           }
         });
         return rowIdsMap;
@@ -316,7 +316,7 @@ export function ManageRoutesTable(props: IManageRoutesTableProps) {
     }, [props.tableState.pageIndex]);
     
     useEffect(() => {
-      const selectedRows = Object.keys(selectedRowIds).map(selectedRowId => data[selectedRowId]);
+      const selectedRows = Object.keys(selectedRowIds).map(selectedRowId => (data as any)[selectedRowId]);
       props.onRoutesSelected(selectedRows);
     }, [selectedRowIds]);
 

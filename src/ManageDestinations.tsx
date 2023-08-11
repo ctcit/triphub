@@ -60,7 +60,7 @@ export class ManageDestinations extends Component<{
 
     private setDestination(field: string, value: any, save: boolean = false): Promise<void> {
         if (this.state.selectedDestination && this.state.selectedOption) {
-            this.state.selectedDestination[field] = value
+            (this.state.selectedDestination as any)[field] = value
             const d = this.state.selectedDestination
             this.state.selectedOption.label = this.makeLabel(d.toLocation, d.fromLocation, d.distance)
         }
@@ -140,7 +140,7 @@ export class ManageDestinations extends Component<{
             this.setState({selectedOption: newValue, selectedDestination: newValue.value as IDestination})
         }
 
-        const onGet = (field: string): any => this.state.selectedDestination ? this.state.selectedDestination[field] : null
+        const onGet = (field: string): any => this.state.selectedDestination ? (this.state.selectedDestination as any)[field] : null
         const onSet = (field: string, value: any): void => {
             this.setDestination(field, value);
         }

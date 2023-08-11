@@ -51,7 +51,7 @@ class HistoryItem extends Component<{
                 const rows: JSX.Element[] = []
                 if (item.after instanceof Object) {
                     for (const key of Object.keys(item.after)) {
-                        let value = item.after[key]
+                        let value = (item.after as any)[key]
                         let skip = false
                         switch (key) {
                             case 'filteredRecipients':
@@ -154,13 +154,13 @@ export class History extends Component<{
         }
 
         if (at.participantId === null) {
-            return this.props.trip[column]
+            return (this.props.trip as any)[column]
         }
 
         const participant = this.props.participants.find((p: IParticipant) => p.id === at.participantId)
 
         if (participant !== undefined) {
-            return participant[column]
+            return (participant as any)[column]
         }
 
         return null

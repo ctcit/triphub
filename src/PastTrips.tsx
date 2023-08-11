@@ -257,7 +257,7 @@ export class PastTrips extends Component<{
             [...new Set(options.split(', ').flatMap(i => mapping[i] ?? []))]
         const fieldList = fields ? fields.split(',') : Object.keys(this.fields)
         const fulltext = {
-            ...Object.fromEntries(fieldList.map(f => [this.fields[f] as string, this.state.keywords])),
+            ...Object.fromEntries(fieldList.map(f => [(this.fields as any)[f] as string, this.state.keywords])),
             prerequisites: this.state.prerequisites,
             grade: map(this.state.grades, this.grades).join(' '),
         }
@@ -325,7 +325,7 @@ export class PastTrips extends Component<{
         localStorage.setItem('pasttrips', JSON.stringify({ ...this.state, ...state }))
     }
 
-    public onGet(key: string): any { return this.state[key] }
+    public onGet(key: string): any { return (this.state as any)[key] }
     public onSet(key: string, value: any): void {
         const field = key as PastTripsFields
         const { costMax, costMin, lengthMax, lengthMin, participantsMin, participantsMax } = this.state

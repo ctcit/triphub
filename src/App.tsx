@@ -229,7 +229,7 @@ export class App extends Component<{
     }
 
     public get isLoading(): boolean {
-        return this.loadingFields(this.state).some(f => this.state[f])
+        return this.loadingFields(this.state).some(f => (this.state as any)[f])
     }
 
     public loadingFields(state: any): string[] {
@@ -361,7 +361,7 @@ export class App extends Component<{
             <NotificationArea notifications={this.state.notifications} key='notificationArea'
                 containerClassName={ConfigService.containerClassName} 
             />,
-            (renderings[rendering] ?? renderings.default)(),
+            ((renderings as any)[rendering] ?? renderings.default)(),
             (this.state.isLoadingLoginStatus && <SilentLogin onLoaded={onLoginStatusLoaded}/>
             )
         ]

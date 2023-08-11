@@ -87,7 +87,7 @@ export class TripParticipant extends Component<{
             'Non-Members': members.filter(m => !m.isMember).map(m => m.name)
         }
 
-        const onGet = (field: string): any => participant[field]
+        const onGet = (field: string): any => (participant as any)[field]
         const onGetName = (_: string): any => MembersService.getMemberByName(participant.name) ? participant.name : 'New Tramper'
         const onGetNewTramper = (_: string): any => this.state.newTramper
         const onSet = (field: string, value: any): Promise<void> => this.props.setParticipant(participant.id, { [field]: value }, false)

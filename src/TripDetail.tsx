@@ -46,8 +46,8 @@ export class TripDetail extends Component<{
         const approval = TripState[trip.approval || ''] || TripState.Pending
         const isSocial = trip.isSocial
 
-        const onGet = (field: string): any => trip[field]
-        const onGetInverted = (field: string): any => !trip[field]
+        const onGet = (field: string): any => (trip as any)[field]
+        const onGetInverted = (field: string): any => !(trip as any)[field]
         const onSet = (field: string, value: any): Promise<any> => this.props.setTripFields({[field]: value}, false, false)
         const onSave = (field: string, value: any): Promise<any> => this.props.setTripFields({[field]: value}, true, true)
  

@@ -36,11 +36,11 @@ class NoticeDetail extends Component<{
         let validations: IValidation[] = this.validate(this.props.notice);
 
         const onGet = (field: string): any => {
-            return this.props.notice[field];
+            return (this.props.notice as any)[field];
         }
 
         const onSet = (field: string, value: any): void => {
-            this.props.notice[field] = value
+            (this.props.notice as any)[field] = value
             this.props.setDetail(this.props.notice)
         }
 

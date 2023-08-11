@@ -18,9 +18,9 @@ export class MembersService {
                     members = members.filter(m => m.name !== '')
                     members.filter(m => m.isMember).forEach(m => this.membersById.set(m.id, m))
                     members.filter(m => m.isMember).forEach(m => this.membersByName.set(m.name, m))
-                    members = members.filter(m => m.isMember || !this.membersByName[m.name])
+                    members = members.filter(m => m.isMember || !(this.membersByName as any)[m.name])
                     members.filter(m => !m.isMember).forEach(m => this.membersByName.set(m.name, m))
-                    members.forEach(m => m.role = Role[m.role as unknown as string])
+                    members.forEach(m => m.role = (Role as any)[m.role as unknown as string])
                     
                     return members;
                 })

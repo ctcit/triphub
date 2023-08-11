@@ -275,7 +275,7 @@ export class TripCosts extends Component<{
             <div><Button disabled={true}><span className={`fa ${props.icon}`} /></Button>&nbsp;{props.children}</div>
         const onToggleLegend = () => this.onToggleLegend();
 
-        const onGet = (field: string): any => this.props.trip[field]
+        const onGet = (field: string): any => (this.props.trip as any)[field]
         const onSet = (field: string, value: any): Promise<ITrip> => 
             this.props.setTripFields({[field]: this.sanitizeNumber(value)}, false, false)
         const onSave = (field: string, value: any): Promise<ITrip> => 

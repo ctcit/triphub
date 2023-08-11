@@ -26,7 +26,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "suppressImplicitAnyIndexErrors": true
+    // "suppressImplicitAnyIndexErrors": true // to be deprecated
 
     // ---- old config ----
     // "lib": ["es6",  "es2016", "esnext", "dom"],
@@ -43,6 +43,9 @@
     // "noUnusedLocals": false,
     // "downlevelIteration": true,
   },
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
     "node_modules",
     "build",
@@ -51,5 +54,5 @@
     "webpack",
     "jest",
     "src/setupTests.ts"
-  ]
+  ],
 }

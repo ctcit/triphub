@@ -171,7 +171,7 @@ registerRoute(
 
 // GET trips/{id}
 // GET trips/{id}/participants
-const tripsMatchRegex = /.*\/api\/api.php\/trips\/\d*(\/participants)?/
+const tripsMatchRegex = /.*\/api\/api.php\/trips\/\d+(\/participants)?$/
 const tripsMatchCallback = ({url, request, event}: {url: URL, request: Request, event: ExtendableEvent}) => {
   return cacheTrips && tripsMatchRegex.test(url.toString());
 };
@@ -245,7 +245,7 @@ const tripsCacheUpdaterPlugin = new TripsCacheUpdaterPlugin();
 // POST trips/{id}
 // POST trips/{id}/participants/{pid}
 registerRoute(
-  /.*\/api\/api.php\/trips\/\d*(\/participants\/\d*)?$/,
+  /.*\/api\/api.php\/trips\/\d+(\/participants\/\d+)?$/,
   new NetworkOnly({
     plugins: [bgSyncPlugin, tripsCacheUpdaterPlugin, bgSyncCountNotifierPlugin]
   }),
@@ -254,7 +254,7 @@ registerRoute(
 
 // DELETE trips/{id}/edit/{editId}
 registerRoute(
-  /.*\/api\/api.php\/trips\/\d*\/edit\/\d*?$/,
+  /.*\/api\/api.php\/trips\/\d+\/edit\/\d+?$/,
   new NetworkOnly({
     plugins: [bgSyncPlugin]
   }),

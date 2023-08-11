@@ -1,4 +1,3 @@
-import { forEach } from "lodash"
 import { IParticipant, ITrip } from "src/Interfaces"
 
 export class TripsCache {
@@ -18,8 +17,8 @@ export class TripsCache {
 
     // get the ids of trips that are in the trips cache (must have both details and participants)
     public static async getCachedTripIds(): Promise<number[]> {
-        const getTripRegex = /.*\/api\/api.php\/trips\/(\d*)/
-        const getParticipantsRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants/
+        const getTripRegex = /.*\/api\/api.php\/trips\/(\d+)/
+        const getParticipantsRegex = /.*\/api\/api.php\/trips\/(\d+)\/participants/
         return caches.open(this.tripsCacheName).then((cache: Cache) => {
             return cache.keys().then((requests: readonly Request[]) => {
                 const tripIds: number[] = []
@@ -52,8 +51,8 @@ export class TripsCache {
     //
     // NB: Adding new trips or new participants NOT supported
     public static async updateTripsCache(updateRequest: Request): Promise<void> {
-        const updateTripRegex = /.*\/api\/api.php\/trips\/(\d*)$/
-        const updateParticipantRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants\/(\d*)$/
+        const updateTripRegex = /.*\/api\/api.php\/trips\/(\d+)$/
+        const updateParticipantRegex = /.*\/api\/api.php\/trips\/(\d+)\/participants\/(\d+)$/
         const updateTripMatch = updateRequest.url.match(updateTripRegex)
         const updateParticipantMatch = updateRequest.url.match(updateParticipantRegex)
 
@@ -76,8 +75,8 @@ export class TripsCache {
         ): Promise<void> {
 
         const getTripsRegex = updateTripMatch ? /.*\/api\/api.php\/trips$/ : null
-        const getTripRegex = updateTripMatch ? /.*\/api\/api.php\/trips\/(\d*)$/ : null
-        const getParticipantsRegex = updateParticipantMatch ? /.*\/api\/api.php\/trips\/(\d*)\/participants$/ : null
+        const getTripRegex = updateTripMatch ? /.*\/api\/api.php\/trips\/(\d+)$/ : null
+        const getParticipantsRegex = updateParticipantMatch ? /.*\/api\/api.php\/trips\/(\d+)\/participants$/ : null
         
         const cache = await caches.open(cacheName)
         const getRequests = await cache.keys()
@@ -127,14 +126,14 @@ export class TripsCache {
     }
 
     public static async getFromTripsCache(url: string): Promise<Response | undefined> {
-        const updateTripRegex = /.*\/api\/api.php\/trips\/(\d*)$/
-        const updateParticipantRegex = /.*\/api\/api.php\/trips\/(\d*)\/participants\/(\d*)$/
+        const updateTripRegex = /.*\/api\/api.php\/trips\/(\d+)$/
+        const updateParticipantRegex = /.*\/api\/api.php\/trips\/(\d+)\/participants\/(\d+)$/
         const updateTripMatch = url.match(updateTripRegex)
         const updateParticipantMatch = url.match(updateParticipantRegex)
 
         if (updateTripMatch || updateParticipantMatch) {
-            const getTripRegex = updateTripMatch ? /.*\/api\/api.php\/trips\/(\d*)$/ : null
-            const getParticipantsRegex = updateParticipantMatch ? /.*\/api\/api.php\/trips\/(\d*)\/participants$/ : null
+            const getTripRegex = updateTripMatch ? /.*\/api\/api.php\/trips\/(\d+)$/ : null
+            const getParticipantsRegex = updateParticipantMatch ? /.*\/api\/api.php\/trips\/(\d+)\/participants$/ : null
     
             const cache = await caches.open(this.tripsCacheName)
             const getRequests = await cache.keys()

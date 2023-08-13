@@ -20,7 +20,6 @@ import { UserSettings } from './Services/UserSettings';
 declare const self: ServiceWorkerGlobalScope;
 
 // dynamically enable/disable trip caching via this variable based on IndexedDB setting
-UserSettings.inServiceWorker = true
 let cacheTrips: boolean = false
 const UpdateCacheTripsSetting = (): void => {
   UserSettings.getCacheTrips().then((value: boolean) => {
@@ -227,7 +226,7 @@ const tilesMatchCallback = ({url, request, event}: {url: URL, request: Request, 
 registerRoute(
   tilesMatchCallback, 
   new NetworkFirst({
-    cacheName: 'tiles',
+    cacheName: TripsCache.tilesCacheName,
     plugins: [
       new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 7 * 24 * 60 * 60 }),
     ],

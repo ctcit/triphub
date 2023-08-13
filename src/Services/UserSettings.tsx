@@ -1,14 +1,13 @@
 import { openDB, deleteDB, wrap, unwrap } from 'idb';
+import { ServiceWorkerUtilities } from './ServiceWorkerUtilities';
 
 export class UserSettings {
-    public static inServiceWorker: boolean = false // to be set by the client
-
-    public static triphubDBName = 'triphub'
+    public static triphubDBName = ServiceWorkerUtilities.triphubStackName
     public static userSettingsObjectStoreName = 'user-settings'
 
     private static idbSupportedPromise: Promise<boolean> | undefined = undefined
     public static idbSupported(): boolean {
-        return this.inServiceWorker || (typeof window !== 'undefined' && 'indexedDB' in window)
+        return ServiceWorkerUtilities.inServiceWorker || (typeof window !== 'undefined' && 'indexedDB' in window)
     }
 
     public static async getCacheTrips(): Promise<boolean> {

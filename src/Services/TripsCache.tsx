@@ -1,6 +1,9 @@
 import { IParticipant, ITrip } from "src/Interfaces"
+import { ServiceWorkerUtilities } from "./ServiceWorkerUtilities"
 
 export class TripsCache {
+
+    public static inServiceWorker: boolean = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope
 
     // cache to store:
     // GET members
@@ -8,12 +11,12 @@ export class TripsCache {
     // GET maps
     // GET public_holidays
     // GET trips
-    public static getsCacheName = 'gets'
+    public static getsCacheName = 'gets-' + ServiceWorkerUtilities.triphubStackName
 
     // cache to store:
     // GET trips/{id}
     // GET trips/{id}/participants
-    public static tripsCacheName = 'trips'
+    public static tripsCacheName = 'trips-' + ServiceWorkerUtilities.triphubStackName
 
     // get the ids of trips that are in the trips cache (must have both details and participants)
     public static async getCachedTripIds(): Promise<number[]> {
@@ -39,7 +42,7 @@ export class TripsCache {
     }
 
     // GET tiles*.data-cdn.linz.govt.nz
-    public static tilesCacheName = 'tiles'
+    public static tilesCacheName = 'tiles-' + ServiceWorkerUtilities.triphubStackName
 
     // updateRequests:
     // - POST trips/{id}

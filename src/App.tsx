@@ -4,7 +4,7 @@ import { Role, ITrip } from './Interfaces';
 import { Trip } from './Trip';
 import { TripsList } from './TripsList';
 import { Calendar } from './Calendar';
-import { TitleFromId } from './Utilities';
+import { TitleFromId, checkIfDefinitelyOnline } from './Utilities';
 import { TriphubNavbar } from './TriphubNavBar';
 import { Newsletter } from './Newsletter/Newsletter';
 import { PastTrips } from './PastTrips';
@@ -21,7 +21,7 @@ import { Alert, Button, Container, FormText, Modal, ModalBody, ModalHeader, Row 
 import { Workbox } from 'workbox-window';
 import { Login } from './Login';
 import { SilentLogin } from './SilentLogin';
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer, toast } from 'react-toastify';
 
 export class App extends Component<{
 }, {
@@ -34,6 +34,7 @@ export class App extends Component<{
     role: Role
     statusId?: any
     notifications: INotification[]
+    isProbablyOnline: boolean
     isOnline: boolean
     isStandalone: boolean
     backgroundSyncSupported: boolean
@@ -70,7 +71,8 @@ export class App extends Component<{
             isLoadingMaps: true,
             role: Role.NonMember,
             notifications: [],
-            isOnline: isOnline,
+            isProbablyOnline: isOnline,
+            isOnline: isOnline, // definitely online
             isStandalone: isStandalone,
             backgroundSyncSupported: true,
             backgroundSyncPermitted: false,
@@ -87,15 +89,24 @@ export class App extends Component<{
 
         // add event handlers to listen for changes in online/offline status 
         window.addEventListener('offline', () => {
-                console.log('app is offline')
                 this.onOffline()
             }
         );
         window.addEventListener('online', () => {
-                console.log('app is online')
-                this.onOnline()
+                this.onProbablyOnline()
             }
         );
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'IS_ONLINE') {
+                // backup for when app does this test (rather than service worker)
+                const isDefinitelyOnline = event.data.isDefinitelyOnline ?? false
+                if (isDefinitelyOnline) {
+                    this.onOnline();
+                } else {
+                    this.onOffline();
+                }
+            }
+        });
 
         // capture the event that prompts to install the app as standalone
         // We use this to implement the "Install app for standalone/offline use..." option
@@ -183,13 +194,21 @@ export class App extends Component<{
 
 
             navigator.serviceWorker.addEventListener("message", (event) => {
-                // event is a MessageEvent object
+                // event is a MessageEvent object from the service worker
                 if (event.data) {
                     if (event.data.type === 'SYNCS_COUNT') {
                         const pendingSyncsCount = event.data.count ?? 0
                         this.setState({pendingSyncsCount}, () => {
                             this.conditionallyDoSync()
                         })
+
+                    } else if (event.data.type === 'IS_ONLINE') {
+                        const isDefinitelyOnline = event.data.isDefinitelyOnline ?? false
+                        if (isDefinitelyOnline) {
+                            this.onOnline();
+                        } else {
+                            this.onOffline();
+                        }
                     }
                 }
             });
@@ -257,7 +276,9 @@ export class App extends Component<{
         const addCachedTrip = (cachedTrip: ITrip) => this.addCachedTrip(cachedTrip)
         const addNotification = (text:string, colour: string) => this.addNotification(text, colour)
         const loadingStatus = (state?: any) => this.loadingStatus(state)
+        const onRetryConnection = () => this.onRetryConnection()
         const onDoAppUpdate = () => this.onDoAppUpdate()
+        const onDoSync = () => this.onDoSync()
         const onCacheTripsChanged = () => this.onCacheTripsChanged()
         const onLoginStatusLoaded = () => this.onLoginStatusLoaded()
         const installStandalone = () => this.installStandalone()
@@ -305,10 +326,15 @@ export class App extends Component<{
                     />
             </div>
             ,
-            (!this.state.isOnline && 
-                <Alert key='noInternetAlert' color='warning'>
+            // ----------------------
+            // OFFLINE
+            (!this.state.isOnline &&
+                <Alert key='noInternetNoOffline' color='warning'>
                     <span className='fa fa-cloud' />
-                    &nbsp;<b>No internet connection. Application is working offline. Limited options available.</b>
+                    &nbsp;<b>{this.state.cachedTrips.length === 0 ? 
+                        'No internet connection with server. No cached trips, so application is unable to run offline.' :
+                        'No internet connection with server. Application is running offline. Limited options available.'}&nbsp;</b>
+                    <Button onClick={onRetryConnection}>Retry</Button>
                 </Alert>
             ),
             (!this.state.isOnline && this.state.pendingSyncsCount > 0 && 
@@ -319,20 +345,23 @@ export class App extends Component<{
                         'These will automatically sync when the app is next online.')}</b>
                 </Alert>
             ),
+
+            // ----------------------
+            // ONLINE
             (this.state.isOnline && this.state.pendingSyncsCount > 0 && 
                 <Alert key='editsSyncingAlert' color='warning'>
                     <span className='fa fa-rotate fa-spin' />
-                    &nbsp;<b>Edits ({this.state.pendingSyncsCount}) are syncing...</b>
+                    &nbsp;<b>Edits ({this.state.pendingSyncsCount}) are syncing....</b>
                 </Alert>
             ),
-            (this.state.appUpdateAvailable &&
+            (this.state.isOnline && this.state.appUpdateAvailable &&
                 <Alert key='updateAlert' color='warning'>
                     <span className='fa fa-refresh' />
                     <b>&nbsp;An application update is available.  Please save any changes, then click the 'Update now' button to update.&nbsp;</b>
                     <Button onClick={onDoAppUpdate}>Update now</Button>
                 </Alert>
             ),
-            (this.state.installStandalone &&
+            (this.state.isOnline && this.state.installStandalone &&
                 <Alert key='installStandaloneAlert' color='warning' toggle={onDismissInstallStandalone}>
                     <span className='fa fa-cloud-arrow-down' />
                     <b>&nbsp;App is {this.beforeInstallPrompt === null ? 'already installed standalone (or not supported by browser)' : 'not installed standalone'}&nbsp;</b>
@@ -343,6 +372,7 @@ export class App extends Component<{
 
                 </Alert>
             ),
+            // ----------------------
 
             <TriphubNavbar key='triphubNavbar' 
                 role={this.state.role}
@@ -362,7 +392,8 @@ export class App extends Component<{
                 containerClassName={ConfigService.containerClassName} 
             />,
             ((renderings as any)[rendering] ?? renderings.default)(),
-            (this.state.isLoadingLoginStatus && <SilentLogin onLoaded={onLoginStatusLoaded}/>
+            (this.state.isLoadingLoginStatus && 
+                <SilentLogin onLoaded={onLoginStatusLoaded}/>
             )
         ]
     }
@@ -404,14 +435,34 @@ export class App extends Component<{
         this.activeServiceWorker().then(sw => sw?.postMessage({ type: 'GET_SYNCS_COUNT'}));
     }
 
+    private onProbablyOnline(): void {
+        console.log('app is probably online')
+        this.setState( { isProbablyOnline: true }, () => {
+            checkIfDefinitelyOnline()
+        })
+    }
+
     private onOnline(): void {
+        console.log('app is online')
         this.setState( { isOnline: true }, () => {
             this.conditionallyDoSync()
         })
     }
 
     private onOffline(): void {
-        this.setState( { isOnline: false })
+        console.log('app is offline')
+        this.setState( { isOnline: false, isProbablyOnline: false })
+    }
+
+    private onRetryConnection(): void {
+        checkIfDefinitelyOnline()
+        setTimeout(() => {
+            if (this.state.isOnline) {
+                // window.location.reload()
+            } else {
+                toast.warn(`No internet connection with server`, {autoClose: 1000, hideProgressBar: true})
+            }
+        }, 2000)
     }
 
     private async promptForUpdate(): Promise<boolean> {

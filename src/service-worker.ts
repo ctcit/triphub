@@ -39,25 +39,54 @@ const getSyncsCount = (source: Client | MessagePort | ServiceWorker | null): voi
 
 let doingReplay = false
 let replayRequested = false
-const protectedReplayRequests = async (queue: Queue): Promise<void> => {
+const protectedReplayRequests = async (queue: Queue): Promise<boolean> => {
     // ensure only one replay at a time
     if (doingReplay) {
       replayRequested = true
-      return
+      return true
     }
     doingReplay = true;
-    do {
-      replayRequested = false;
-      await queue.replayRequests()
-    } while (replayRequested)
-    doingReplay = false;
+    try {
+      do {
+        replayRequested = false;
+        await queue.replayRequests()
+      } while (replayRequested)
+    } catch(err) {
+      console.log('protectedReplayRequests failed ' + err)
+      return false
+    } finally {
+      doingReplay = false;
+    }
+    return true
 }
 
 // force any pending requests to sync
-const doSyncs = (source: Client | MessagePort | ServiceWorker | null): void => {
-    protectedReplayRequests((bgSyncPlugin as any)._queue as Queue).then(() => {
-      getSyncsCount(source);
+const doSyncs = (event: ExtendableMessageEvent): void => {
+    protectedReplayRequests((bgSyncPlugin as any)._queue as Queue).then((ok: boolean) => {
+      if (ok) {
+        getSyncsCount(event.source);
+      } else {
+        checkIfOnline(event)
+      }
   })
+}
+
+// do a test fetch to check if we are online or not
+const checkIfOnline = (event: ExtendableMessageEvent): void => {
+  let url = `${process.env.PUBLIC_URL}/CTCLogo.png`;
+  let request = new Request(url, {
+    method: 'HEAD', // skip the actual content download
+  });
+  event.waitUntil(fetch(request)
+    .then(response => {
+      console.log('Definitely online')
+      return event.source?.postMessage({ type: 'IS_ONLINE', isDefinitelyOnline: true })
+    },
+    (error) => {
+      console.log('Definitely offline')
+      return event.source?.postMessage({ type: 'IS_ONLINE', isDefinitelyOnline: false })
+    })
+  )
 }
 
 // listen for messages from client
@@ -75,7 +104,10 @@ self.addEventListener('message', (event) => {
       getSyncsCount(event.source);
 
     } else if (event.data.type === 'DO_SYNCS') {
-      doSyncs(event.source);
+      doSyncs(event);
+
+    } else if (event.data.type === 'CHECK_IF_ONLINE') {
+      checkIfOnline(event);
     }
   }
 });

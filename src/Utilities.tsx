@@ -165,6 +165,7 @@ export async function apiCall(method: string, url: string, data?: any): Promise<
     } catch(ex) {
         console.log(`Failed to fetch: ${ex} url=${url}`)
         toast.error(`An error occurred sending or getting data to/from the server`)
+        checkIfDefinitelyOnline()
         return null
     }
 }
@@ -197,6 +198,28 @@ export async function apiCallReturnFirst<T>(method: string, url: string, data?: 
             return response[0]
         }
     })
+}
+
+export function checkIfDefinitelyOnline(): void {
+    if (navigator.serviceWorker?.controller) {
+        // get service worker to do test (bypasses caching, etc?)
+        navigator.serviceWorker.controller.postMessage({type: 'CHECK_IF_ONLINE'})
+    } else {
+        // no service worker so get app to do test
+        let url = `${process.env.PUBLIC_URL}/CTCLogo.png`;
+        let request = new Request(url, {
+          method: 'HEAD', // skip the actual content download
+        });
+        fetch(request)
+          .then(response => {
+            console.log('Definitely online (app determined)')
+            return window.postMessage({ type: 'IS_ONLINE', isDefinitelyOnline: true })
+          },
+          (error) => {
+            console.log('Definitely offline (app determined)')
+            return window.postMessage({ type: 'IS_ONLINE', isDefinitelyOnline: false })
+          })
+    }
 }
 
 export function BindMethods(obj: any) {

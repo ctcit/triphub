@@ -210,7 +210,7 @@ export function checkIfDefinitelyOnline(): void {
         let request = new Request(url, {
           method: 'HEAD', // skip the actual content download
         });
-        fetch(request)
+        fetch(request, {cache: 'no-store'})
           .then(response => {
             console.log('Definitely online (app determined)')
             return window.postMessage({ type: 'IS_ONLINE', isDefinitelyOnline: true })

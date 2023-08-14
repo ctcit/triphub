@@ -76,7 +76,7 @@ const checkIfOnline = (event: ExtendableMessageEvent): void => {
   let request = new Request(url, {
     method: 'HEAD', // skip the actual content download
   });
-  event.waitUntil(fetch(request)
+  event.waitUntil(fetch(request, {cache: 'no-store'})
     .then(response => {
       console.log('Definitely online')
       return event.source?.postMessage({ type: 'IS_ONLINE', isDefinitelyOnline: true })

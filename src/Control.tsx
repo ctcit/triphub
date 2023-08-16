@@ -105,9 +105,9 @@ export class InputControl extends Component<{
             this.setState(stateChange);
         }
         const onChange = (event: React.ChangeEvent) => {
-            (ReactDOM.findDOMNode(this.inputRef) as any).focus() // fix for FireFox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1232233
             let value
             if (this.props.type === 'number') {
+                (ReactDOM.findDOMNode(this.inputRef) as any).focus() // fix for FireFox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1232233
                 value = (event.target as any).valueAsNumber
                 value = isNaN(value) ? null : value
             } else {

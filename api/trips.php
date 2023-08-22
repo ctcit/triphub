@@ -287,7 +287,9 @@ function GetTripHtml(mysqli $con, int $tripId, string $subject=null, string $mes
 	$border				= "border: solid 1px black; border-collapse: collapse;";
 	$ignore				= ['id','approval','isDeleted','isSocial','isNoSignup','routes','mapRoute',
 						   'isLimited','lastEmailChangeId','tripId','memberId','displayPriority',
-						   'historyId','legacyTripId','legacyEventId'];
+						   'historyId','legacyTripId','legacyEventId',
+						   'distanceOneWay','totalVehicleCost','payingParticipantsCount','vehicleFee',
+						   'broughtVehicle','totalDistance','ratePerKm','vehicleFee','nonMemberFee','otherFees','paid'];
 	$message			= $message == null ? "" : "<h3>Message from the trip leader:</h3><p>".htmlentities($message)."</p>";
 	$email				= ["recipients"=>[], "filteredRecipients"=>[]];
 	$tripChanges        = false;

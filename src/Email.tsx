@@ -22,12 +22,9 @@ export class Email extends Component<{
 }>{
     constructor(props: any) {
         super(props)
-
         const filteredRecipients = this.props.participants.filter(p => !p.isDeleted && p.email.trim().length > 0)
-
         this.state = {
-            recipients: filteredRecipients.map(p => p.email.trim()).join('; '),
-            names: filteredRecipients.map(p => p.name).join(', '),
+            recipients: filteredRecipients.map(p => p.name + ' <' + p.email.trim() + '>').join('; '),
             subject: `Re: ${this.props.trip.title} on ${GetFullDate(this.props.trip.tripDate)}`,
             body: '',
         }
@@ -35,22 +32,26 @@ export class Email extends Component<{
     }
 
     public onSend() {
+        const filteredRecipients = this.props.participants.filter(p => !p.isDeleted && p.email.trim().length > 0)
         this.setState({ sending: true })
         this.props.setTripIsEdited()
-        TripsService.postTripEmail(this.props.trip.id, this.state)
+        TripsService.postTripEmail(this.props.trip.id, {
+            recipients: filteredRecipients.map(p => p.email.trim()).join(';'),
+            subject: this.state.subject,
+            body: this.state.body
+        })
             .then(() => this.setState({ sending: false }))
     }
 
     public async copy(field: 'names' | 'recipients') {
         this.setState({ copying: field });
         await new Promise(res => setTimeout(res, 1000))
-        const textarea = document.createElement('textarea')
-        document.body.appendChild(textarea)
-        textarea.value = `${this.state[field]}`
-        textarea.select()
-        textarea.setSelectionRange(0, textarea.value.length);
-        (document as any).execCommand('copy')
-        document.body.removeChild(textarea)
+
+        const text = field === "names" ? 
+            this.props.participants.filter(p => !p.isDeleted).map(p => p.name).join(', ') :
+            this.props.participants.filter(p => !p.isDeleted && p.email.trim().length > 0).map(p => p.email.trim()).join('; ')
+        navigator.clipboard.writeText(text)
+
         this.setState({ copied: field, copying: undefined });
         await new Promise(res => setTimeout(res, 5000))
         this.setState({ copied: undefined });
@@ -59,7 +60,18 @@ export class Email extends Component<{
  
     public render() {
         const { sending, copying, copied } = this.state;
+
         const validations: IValidation[] = Mandatory(this.state, ['subject', 'body']);
+        const participantsWithNoEmail = this.props.participants
+            .filter(p => !p.isDeleted && p.email.trim().length === 0)
+            .map(p => p.name)
+            .join("; ")
+        validations.push({ 
+            field: 'recipients', 
+            ok: participantsWithNoEmail.length === 0, 
+            message: `The following participants have no email address: ` + participantsWithNoEmail 
+        })
+
         const onGet = (field: string): any => (this.state as any)[field]
         const onSet = (field: string, value: any): void => this.setState({ [field]: value })
         const onSave = (field: string, value: any): Promise<any> => new Promise<any>((resolve) => {
@@ -75,6 +87,7 @@ export class Email extends Component<{
 
         const common = {
             id: 'email',
+            forceValidation: true,
             onGet, onSet, onSave, onGetValidationMessage
         }
 

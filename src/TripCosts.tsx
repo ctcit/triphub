@@ -465,16 +465,19 @@ export class TripCosts extends Component<{
                 </ListGroupItem>
             </ListGroup>,
 
-            <Container key='email' fluid={true}>
-                <Accordian id={'email'} className='email-section'
-                    headerClassName='email-header' expanded={false}
-                    title={<span><span key='icon' className='fa fa-file-invoice-dollar fa-fw' />Email Costs</span>}>
-                    <Form key='form' className='indentedparticipants form'>
-                        <TripCostsEmail trip={trip} participants={currentParticipants} participantCosts={this.calculations.participants} />
-                    </Form>
-                </Accordian>
-            </Container>,
-
+            <div>
+                {!this.props.canEditTrip ? null :
+                    <Container key='email' fluid={true}>
+                        <Accordian id={'email'} className='email-section'
+                            headerClassName='email-header' expanded={false}
+                            title={<span><span key='icon' className='fa fa-file-invoice-dollar fa-fw' />Email Costs</span>}>
+                            <Form key='form' className='indentedparticipants form'>
+                                <TripCostsEmail trip={trip} participants={currentParticipants} participantCosts={this.calculations.participants} />
+                            </Form>
+                        </Accordian>
+                    </Container>
+                }
+            </div>
         ]
     }
 

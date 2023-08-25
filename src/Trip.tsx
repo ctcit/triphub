@@ -504,7 +504,7 @@ export class Trip extends Component<{
                             setTripParticipants={setTripParticipants} />
                     </Accordian>
                 }
-                {(!amAdmin || this.props.isNew) ? null :
+                {(!amAdmin || this.props.isNew || !this.canEditTrip) ? null :
                     <Accordian key='history' id='history' className='trip-section' headerClassName='trip-section-header'
                         title={<span><b><span key='icon' className='fa fa-history fa-fw' />History</b></span>}
                         expanded={false} onDemand={onHistory}>

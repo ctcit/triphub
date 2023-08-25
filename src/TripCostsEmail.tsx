@@ -59,7 +59,7 @@ export class TripCostsEmail extends Component<{
     public onSend() {
         this.setState({ sending: true })
         const promises = this.props.participants
-            .filter(p => !p.isDeleted && this.filterByOption(p, this.state.options ?? '') && p.email.trim().length > 0)
+            .filter(p => this.filterRecipient(p, this.state.options ?? ''))
             .map(p => {
                 const email = {
                     recipients: p.email.trim(),
@@ -76,7 +76,18 @@ export class TripCostsEmail extends Component<{
         this.memoizedUpdateRecipients(this.props.participants, this.props.participantCosts)
 
         const { sending } = this.state;
+        
         const validations: IValidation[] = Mandatory(this.state, ['subject', 'body']);
+        const participantsWithNoEmail = this.props.participants
+            .filter(p => !p.isDeleted && this.filterByOption(p, this.state.options ?? '') && p.email.trim().length === 0)
+            .map(p => p.name)
+            .join("; ")
+        validations.push({ 
+            field: 'recipients', 
+            ok: participantsWithNoEmail.length === 0, 
+            message: `The following selected participants have no email address: ` + participantsWithNoEmail 
+        })
+
         const onGet = (field: string): any => (this.state as any)[field]
         const onSet = (field: string, value: any): void => this.setState({ [field]: value })
         const onSave = (field: string, value: any): Promise<any> => new Promise<any>((resolve) => {
@@ -95,6 +106,7 @@ export class TripCostsEmail extends Component<{
 
         const common = {
             id: 'trip-costs-email',
+            forceValidation: true,
             onGet, onSet, onSave, onGetValidationMessage
         }
         const commonOptions = { ...common, 'onSave': onSaveOptions }
@@ -148,10 +160,13 @@ export class TripCostsEmail extends Component<{
         // console.log('----------------')
         // console.log(options)
         return this.props.participants
-            .filter(p => !p.isDeleted && this.filterByOption(p, options))
-            .map(p => p.email.trim())
-            .filter(e => e.length > 0)
+            .filter(p => this.filterRecipient(p, options))
+            .map(p => p.name + ' <' + p.email.trim() + '>')
             .join('; ')
+    }
+
+    private filterRecipient(p: IParticipant, options: string): boolean {
+        return !p.isDeleted && this.filterByOption(p, options) && p.email.trim().length > 0
     }
 
     private filterByOption(p: IParticipant, options: string): boolean {
@@ -166,10 +181,23 @@ export class TripCostsEmail extends Component<{
     }
 
     private getParticipantEmailText(participant: IParticipant, participantCosts: IParticipantCosts) {
-        const text = 'Hi ' + participant.name + ',\n' +
+        let text = 'Hi ' + participant.name + ',\n' +
             '\n' +
             'Regarding costs for this trip, ' + this.getPaymentStatusText(participantCosts) + '.\n' +
             '\n'
+
+        const fees = []
+        if (participantCosts.nonMemberFee ?? 0 !== 0) {
+            fees.push('the non-member fee of $' + participantCosts.nonMemberFee)
+        }
+        if (participantCosts.otherFees ?? 0 !== 0) {
+            fees.push('other fees (e.g. hut or gear hire) of $' + participantCosts.otherFees)
+        }
+        if (fees.length > 0) {
+            text += 'Note that the above includes ' + fees.join(" and ") + '.\n' +
+            '\n'
+        }
+
         return text
     }
 

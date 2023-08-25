@@ -11,6 +11,7 @@ import { DestinationsService } from './Services/DestinationsService'
 import { MdInfo } from 'react-icons/md';
 import { MileageRatesService } from './Services/MileageRatesService';
 import { ToolTipIcon } from './ToolTipIcon';
+import { TripCostsEmail } from './TripCostsEmail';
 
 export class TripCosts extends Component<{
     trip: ITrip
@@ -352,7 +353,7 @@ export class TripCosts extends Component<{
 
                 <Accordian id={'parameters-continued'} className='others-section'
                     headerClassName='others-header' expanded={false}
-                    title={<span>{title}</span>}>
+                    title={<span><span key='icon' className='fa fa-ellipsis fa-fw' />{title}</span>}>
                     <Form key='form' className='indentedparticipants form'>
                         <Container fluid={true}>
                             <Row>
@@ -463,6 +464,16 @@ export class TripCosts extends Component<{
                     }
                 </ListGroupItem>
             </ListGroup>,
+
+            <Container key='email' fluid={true}>
+                <Accordian id={'email'} className='email-section'
+                    headerClassName='email-header' expanded={false}
+                    title={<span><span key='icon' className='fa fa-file-invoice-dollar fa-fw' />Email Costs</span>}>
+                    <Form key='form' className='indentedparticipants form'>
+                        <TripCostsEmail trip={trip} participants={currentParticipants} participantCosts={this.calculations.participants} />
+                    </Form>
+                </Accordian>
+            </Container>,
 
         ]
     }

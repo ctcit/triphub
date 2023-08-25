@@ -172,6 +172,16 @@ function ApiProcess(
             $input['result'] = "Email sent for trip $id";
             return $input;
 
+        case "POST trips/{tripId}/basicEmail":
+            // DESCRIPTION Sends email to specified trip participants
+            // INPUT <a href='$basehref#subjectbody'>subject + body</a>
+            // OUTPUT Confirmation string
+            // INPUTENTITY subjectbody
+            ValidateUser($con, "Member");
+            SendTripBasicEmail($con, $id, ValidateUser($con, "Member"), $input['recipients'], $input['subject'], $input['body']);
+            $input['result'] = "Email sent for trip $id";
+            return $input;
+
         case "GET trips/{tripId}/participants/{participantId}":
             // DESCRIPTION Gets participants detail for a given trip
             // OUTPUT The <a href='$basehref#participants'>participant</a>

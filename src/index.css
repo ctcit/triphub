@@ -169,10 +169,17 @@ button>span.fa {
 }
 
 /* ---------------------------- */
-/* Other */
+/* Other/Email */
 /* ---------------------------- */
 
 .others-header {
+  padding: 0.40rem 1.25rem;
+  margin-top: -10px;
+  /* hack */
+  background-color: rgb(245, 245, 245);
+}
+
+.email-header {
   padding: 0.40rem 1.25rem;
   margin-top: -10px;
   /* hack */

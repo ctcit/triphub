@@ -139,6 +139,25 @@ function SendTripEmail(mysqli $con, int $tripId, int $userId=null, string $subje
 	return $email;
 }
 
+function SendTripBasicEmail(mysqli $con, int $tripId, int $userId=null, string $recipients=null, string $subject=null, string $message=null): array {
+	$participantsTable	= ConfigServer::participantsTable;
+	$participants		= SqlResultArray($con,"SELECT *
+											   FROM $participantsTable
+											   WHERE tripId = $tripId","id");
+
+	$email = ['recipients' => [], 'html' => nl2br(htmlentities($message)), 'subject' => $subject];
+	$recipientsArray = explode(";", $recipients ?? "");
+	foreach ($participants as $index => &$participant) {
+		$emailAddress = trim($participant["email"]);
+		if (preg_match(ConfigServer::emailFilter, $emailAddress) && array_search($emailAddress, $recipientsArray) === false) {
+			$email['recipients'] []= ['name'=>$participant['fullName'],'email'=>$emailAddress];
+		}
+	}
+	
+	SendEmail($con, $tripId, $email, $userId);
+	return $email;
+}
+
 function SendApprovalEmail(mysqli $con, int $tripId): array {
 	$participantsTable = ConfigServer::participantsTable;
 	$trip = GetTrips($con, 0, "t.id = $tripId")[0];
@@ -290,7 +309,7 @@ function GetTripHtml(mysqli $con, int $tripId, string $subject=null, string $mes
 						   'historyId','legacyTripId','legacyEventId',
 						   'distanceOneWay','totalVehicleCost','payingParticipantsCount','vehicleFee',
 						   'broughtVehicle','totalDistance','ratePerKm','vehicleFee','nonMemberFee','otherFees','paid'];
-	$message			= $message == null ? "" : "<h3>Message from the trip leader:</h3><p>".htmlentities($message)."</p>";
+	$message			= $message == null ? "" : "<h3>Message from the trip leader:</h3><p>".nl2br(htmlentities($message))."</p>";
 	$email				= ["recipients"=>[], "filteredRecipients"=>[]];
 	$tripChanges        = false;
 	$columnChange 		= [];

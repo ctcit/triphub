@@ -44,6 +44,10 @@ export class TripsService {
         return apiCall('POST', BaseUrl + '/trips/' + id + '/email', data);
     }
 
+    public static async postTripBasicEmail(id: number, data: any): Promise<any> {
+        return apiCall('POST', BaseUrl + '/trips/' + id + '/basicEmail', data);
+    }
+
     public static async getTripHistory(id: number): Promise<IHistoryItem[]> {
         return apiCall('GET', BaseUrl + '/trips/' + id + '/history');
     }

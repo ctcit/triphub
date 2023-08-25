@@ -94,6 +94,7 @@ export class TripsService {
             { field: 'name', ok: !duplicate, message: `Duplicate name - ${participant.name}` },
             { field: 'seats', ok: !participant.isVehicleProvider || participant.seats > 0, message: `Seats must be greater than zero` },
             { field: 'engineSize', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.engineSize !== null, message: `Engine size must be specified` },
+            { field: 'engineSize', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.engineSize === 0 || (participant.engineSize ?? 0) > 500, message: `Engine size must be specified in cc` },
             { field: 'vehicleCost', ok: !participant.isVehicleProvider || !participant.isFixedCostVehicle || participant.vehicleCost !== null, message: `Vehicle cost must be specified` },
         ]
     }
@@ -109,6 +110,7 @@ export class TripsService {
     public static validateCostsParticipant(participant: IParticipant, participants: IParticipant[]): IValidation[] {
         return [
             { field: 'engineSize', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.engineSize !== null, message: `Engine size must be specified` },
+            { field: 'engineSize', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.engineSize === 0 || (participant.engineSize ?? 0) > 500, message: `Engine size must be specified in cc` },
             { field: 'vehicleCost', ok: !participant.isVehicleProvider || !participant.isFixedCostVehicle || participant.vehicleCost !== null, message: `Vehicle cost must be specified` },
             { field: 'ratePerKm', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.ratePerKm === null, message: `Rate is overridden` },
             { field: 'totalDistance', ok: !participant.isVehicleProvider || participant.isFixedCostVehicle || participant.totalDistance === null, message: `Total return distance is overridden` },

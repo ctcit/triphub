@@ -393,7 +393,8 @@ export class TripCosts extends Component<{
                                         type='number' min={0} hidden={false} {...common} readOnly={true} />
                                 </Col>
                                 <Col sm={5} md={3}>
-                                    <InputControl field='vehicleFee' label='Vehicle fee ($) to collect from particpants (excluding drivers)'
+                                    <InputControl field='vehicleFee' label='Vehicle fee ($)'
+                                        helpText={'Applies to all participants except fixed-cost-vehicle drivers'}
                                         placeholder={this.calculations.vehicleFee}
                                         className={overriddenClassName('vehicleFee')}
                                         type='number' min={0} hidden={false} {...common} />
@@ -405,8 +406,8 @@ export class TripCosts extends Component<{
 
                 <Row>
                     <Col sm={5} md={3}>
-                        <InputControl field='totalVehicleFeeToCollect' label='Total vehicle fees ($) to collect from non-drivers'
-                            helpText={'Pay to drivers'}
+                        <InputControl field='totalVehicleFeeToCollect' label='Total vehicle fees ($) to collect'
+                            helpText={'Collected from non-drivers, and paid to drivers'}
                             placeholder={this.calculations.totalVehicleFeeToCollect}
                             type='number' min={0} hidden={false} {...common} readOnly={true} />
                     </Col>

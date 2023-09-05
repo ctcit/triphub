@@ -74,7 +74,7 @@ class NoticeDetail extends Component<{
             <InputControl field='title' label='Title' type='text' {...common} />
             <InputControl field='date' label='Expiry Date' type='date' {...common} />
             <SelectControl field='section' label='Section' options={Sections.map(s => s.name)} {...common} />
-            <TextAreaInputControl field='text' label='Text' {...common} />
+            <TextAreaInputControl field='text' label='Text' {...common} onSet={undefined} />
             <SwitchControl field='publish' label='Publish' {...common} />
         </div>;
     }

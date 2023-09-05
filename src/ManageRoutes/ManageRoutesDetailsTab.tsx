@@ -64,7 +64,7 @@ export class ManageRoutesDetailsTab extends Component<{
 
                 <Row>
                     <Col>
-                        <TextAreaInputControl field='description' label='Description' minRows={15} {...common}/>
+                        <TextAreaInputControl field='description' label='Description' minRows={15} {...common} onSet={undefined}/>
                     </Col>
                 </Row>
 

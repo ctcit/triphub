@@ -165,6 +165,7 @@ export class TextAreaInputControl extends Component<{
     helpText?: string,
     forceValidation?: boolean,
     onGet: (id: string) => any,
+    onSet?: (id: string, value: any) => void
     onSave: (id: string, value: any) => Promise<any>,
     onGetValidationMessage: (id: string) => string,
 }, {
@@ -189,13 +190,14 @@ export class TextAreaInputControl extends Component<{
         }
         const onChange = (event: React.ChangeEvent) => {
             const newValue = (event.target as any).value;
-            this.setState({ value: newValue });
+            this.props.onSet ? this.props.onSet(this.props.field, newValue) : this.setState({ value: newValue });
         }
         const onBlur = () => {
             this.setState({ helpText: undefined, showValidation: true });
-            if (this.state.oldValue !== this.state.value) {
+            const value = this.props.onSet ? this.props.onGet(this.props.field) : this.state.value
+            if (this.state.oldValue !== value) {
                 this.setState({ saving: true });
-                this.props.onSave(this.props.field, this.state.value)
+                this.props.onSave(this.props.field, value)
                     .then(() => this.setState({ saving: false }));
             }
         }
@@ -205,12 +207,13 @@ export class TextAreaInputControl extends Component<{
             className += " is-invalid"
         }
 
+        const value = this.props.onSet ? this.props.onGet(this.props.field) : this.state.value
         return (
             <ControlWrapper id={id} field={this.props.field} label={this.props.label} labelFor={id}
                 hidden={this.props.hidden} isLoading={this.props.isLoading}
                 onGetValidationMessage={onGetValidationMessage} saving={this.state.saving} helpText={this.state.helpText} >
                 <Textarea id={id} className={className} readOnly={this.props.readOnly}
-                    value={this.state.value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} minRows={this.props.minRows} style={this.props.style} />
+                    value={value} onFocus={onFocus} onChange={onChange} onBlur={onBlur} minRows={this.props.minRows} style={this.props.style} />
             </ControlWrapper>
         )
     }

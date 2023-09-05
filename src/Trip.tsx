@@ -308,6 +308,7 @@ export class Trip extends Component<{
         const approval = this.state.approval || TripState.Pending
         const common = {
             onGet: () => this.state.trip.approvalText,
+            onSet: (_: string, value: any) => this.setState({ trip: { ...this.state.trip, approvalText: value } }),
             onGetValidationMessage: () => null as unknown as string,
             onSave: (_: string, value: any) => {
                 this.setState({ trip: { ...this.state.trip, approvalText: value } });
@@ -327,7 +328,7 @@ export class Trip extends Component<{
                     <Row>
                         <Col>
                             <TextAreaInputControl id='approval' field='description'
-                                label={approval.prompt || ''} {...common} />
+                                label={approval.prompt || ''} {...common} onSet={undefined} />
                         </Col>
                     </Row>
                 </Container>

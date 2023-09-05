@@ -218,14 +218,14 @@ export class TripDetail extends Component<{
 
                 <Row>
                     <Col>
-                        <TextAreaInputControl field='description' label='Description' {...common} />
+                        <TextAreaInputControl field='description' label='Description' {...common} onSet={undefined} />
                     </Col>
                 </Row>
 
                 <Row>
                     <Col>
                         <TextAreaInputControl field='logisticInfo' label='Logistic Information'
-                            helpText='Any additional information related to travel, accomodation etc' {...common} />
+                            helpText='Any additional information related to travel, accomodation etc' {...common} onSet={undefined} />
                     </Col>
                 </Row>
 
@@ -234,7 +234,7 @@ export class TripDetail extends Component<{
                     <Col>
                         <TextAreaInputControl field='approvalText' label={approval.label || ''}
                             helpText={`Text that was entered when '${approval.button}' was selected`}
-                            {...common} readOnly={!this.amAdmin} />
+                            {...common} readOnly={!this.amAdmin} onSet={undefined} />
                     </Col>
                 </Row>
                 <Row>

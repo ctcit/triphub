@@ -294,7 +294,7 @@ export class TripParticipant extends Component<{
 
                             <Row key='5'>
                                 <Col>
-                                    <TextAreaInputControl field='logisticInfo' label='Logistic Information' {...common} />
+                                    <TextAreaInputControl field='logisticInfo' label='Logistic Information' {...common} onSet={undefined}/>
                                 </Col>
                             </Row>
 

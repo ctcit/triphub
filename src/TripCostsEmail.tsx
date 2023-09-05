@@ -24,6 +24,7 @@ export class TripCostsEmail extends Component<{
     bodyPreview: string
     bodyPreviewIndex: number
     sending: boolean
+    sendingPreviewed: boolean
 }>{
     private recipientNameTag = '{{recipient-name}}'
     private recipientBalanceStatusTag = '{{recipient-balance-status}}'
@@ -68,7 +69,8 @@ export class TripCostsEmail extends Component<{
             bodyTemplate: this.bodyTemplateDefault,
             bodyPreview: '',
             bodyPreviewIndex: 0,
-            sending: false
+            sending: false,
+            sendingPreviewed: false
         }
 
         BindMethods(this)
@@ -83,9 +85,9 @@ export class TripCostsEmail extends Component<{
     }
 
     public onSendPreviewedEmail() {
-        this.setState({ sending: true })
+        this.setState({ sendingPreviewed: true })
         this.sendEmail(this.state.recipients[this.state.bodyPreviewIndex])
-            .finally(() => this.setState({ sending: false }))
+            .finally(() => this.setState({ sendingPreviewed: false }))
     }
 
     public sendEmail(participant: IParticipant): Promise<any> {
@@ -101,7 +103,7 @@ export class TripCostsEmail extends Component<{
     public render() {
         this.memoizedUpdateRecipients(this.props.participants, this.props.participantCosts)
 
-        const { sending } = this.state;
+        const { sending, sendingPreviewed } = this.state;
         
         const validations: IValidation[] = Mandatory(this.state, ['subject', 'body']);
         const participantsWithNoEmail = this.props.participants
@@ -239,8 +241,8 @@ export class TripCostsEmail extends Component<{
                                         {this.state.recipients.length > 0 &&
                                             <Col>
                                                 <Button onClick={onSendPreviewedEmail}>
-                                                    {sending ? Spinner : <span className='fa fa-paper-plane' />}
-                                                    {sending ? 'Sending' : 'Send to ' + this.state.recipients[this.state.bodyPreviewIndex]?.name }
+                                                    {sendingPreviewed ? Spinner : <span className='fa fa-paper-plane' />}
+                                                    {sendingPreviewed ? 'Sending' : 'Send to ' + this.state.recipients[this.state.bodyPreviewIndex]?.name }
                                                 </Button>
                                             </Col>
                                         }

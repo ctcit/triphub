@@ -149,7 +149,7 @@ function SendTripBasicEmail(mysqli $con, int $tripId, int $userId=null, string $
 	$recipientsArray = explode(";", $recipients ?? "");
 	foreach ($participants as $index => &$participant) {
 		$emailAddress = trim($participant["email"]);
-		if (preg_match(ConfigServer::emailFilter, $emailAddress) && array_search($emailAddress, $recipientsArray) === false) {
+		if (preg_match(ConfigServer::emailFilter, $emailAddress) && array_search($emailAddress, $recipientsArray) !== false) {
 			$email['recipients'] []= ['name'=>$participant['fullName'],'email'=>$emailAddress];
 		}
 	}

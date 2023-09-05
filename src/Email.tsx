@@ -95,8 +95,8 @@ export class Email extends Component<{
             <Container key='detail' fluid={true}>
                 <Row>
                     <Col>
-                        <InputControl type={'textarea'} key={copying ?? 'recipients'} field={copying ?? 'recipients'}
-                        label='Recipients' readOnly={true} {...common} />
+                        <TextAreaInputControl key={copying ?? 'recipients'} field={copying ?? 'recipients'}
+                        label='Recipients' readOnly={true} style={{backgroundColor: '#EBEBE4'}} minRows={3} {...common} />
                     </Col>
                 </Row>
                 <Row>
@@ -106,7 +106,7 @@ export class Email extends Component<{
                 </Row>
                 <Row>
                     <Col>
-                        <TextAreaInputControl key='body' field='body' label='Body' {...common} />
+                        <TextAreaInputControl key='body' field='body' label='Body' minRows={10} {...common} />
                     </Col>
                 </Row>
                 <Row>

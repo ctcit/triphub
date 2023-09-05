@@ -428,7 +428,7 @@ export class TripCosts extends Component<{
             </Container>,
 
             <ListGroup key='costs-participants'>
-                <ListGroupItem>
+                <ListGroupItem key='vehicle-providers'>
                     <div><b>Vehicle Providers</b></div>
                     {actualVehicleProviders.length === 0 &&
                         <FormText color="muted">No vehicle providers</FormText>
@@ -446,7 +446,7 @@ export class TripCosts extends Component<{
                         })
                     }
                 </ListGroupItem>
-                <ListGroupItem>
+                <ListGroupItem key='others'>
                     <div><b>Others</b></div>
                     {others.length === 0 &&
                         <FormText color="muted">No others</FormText>
@@ -466,12 +466,12 @@ export class TripCosts extends Component<{
                 </ListGroupItem>
             </ListGroup>,
 
-            <div>
+            <div key='email-costs-div'>
                 {!this.props.canEditTrip ? null :
-                    <Container key='email' fluid={true}>
+                    <Container key='email-costs-container' fluid={true}>
                         <Accordian id={'email'} className='email-section'
                             headerClassName='email-header' expanded={false}
-                            title={<span><span key='icon' className='fa fa-file-invoice-dollar fa-fw' />Email Costs</span>}>
+                            title={<span><span key='icon' className='fa fa-paper-plane fa-fw' />Email Costs</span>}>
                             <Form key='form' className='indentedparticipants form'>
                                 <TripCostsEmail trip={trip} participants={currentParticipants} participantCosts={this.calculations.participants} />
                             </Form>

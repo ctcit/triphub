@@ -323,7 +323,7 @@ export class TripCosts extends Component<{
             <Container key='parameters-initial' fluid={true}>
                 <Navbar key='navbar' color='light' light={true} expand='md'>
                 {[
-                        <a key='legend' href="https://youtu.be/onCAc9Of4_Y" target="_blank">
+                        <a key='legend' href="https://youtu.be/ap8kTN5ekEg" target="_blank">
                             <MdInfo size="36" color="#6899e4" style={{padding: '7px'}}/>
                             <FormText color='muted'>Cost Calculator Tutorial</FormText>
                         </a>,

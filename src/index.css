@@ -1,3 +1,76 @@
+/* Definitions */
+:root {
+  --dark-green: #00591d;
+  --dark-green-fade: #00591d50;
+  --dark-green-hover: #176831;
+  --navbar-green: #02501b;
+  --background: #f5f6f5;
+  --background-higher: #ebedeb;
+  --masthead: #272d27;
+  --orange: #E05A00;
+  --yellowy: #F5AF00;
+  --black: #212529;
+  --on-dark: #f7f7f7f7;
+}
+
+/* ------------------------------------- */
+/*  General - from main site style-sheet */
+/* ------------------------------------- */
+
+a, a:hover, a:visited, a:active, a:focus {
+  color: var(--dark-green)
+}
+
+h1, h2, h3, h4 {
+  font-family:  'Lato', sans-serif;
+  font-weight: 500;
+}
+
+h1 {
+  color: var(--dark-green) ;
+  margin-bottom: 1.0rem;
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+h2 {
+  color: var(--dark-green) ;
+  font-size: 2rem;
+}
+
+h3 {
+  color: var(--dark-green) ;
+  font-size: 1.5rem;
+}
+
+/* ----------------------------------------- */
+/*  Common styles from main site style-sheet */
+/* ----------------------------------------- */
+
+.ctc-button, .ctc-button:link, .ctc-button:visited, .ctc-button:active {
+    background-color: var(--dark-green);
+    border-color: var(--dark-green);
+    color: var(--on-dark);
+}
+
+.ctc-button:hover {
+  background-color: white;
+  background-color: var(--dark-green-hover);
+}
+
+.ctc-button-outline, .ctc-button-outline:link, .ctc-button-outline:visited, .ctc-button-outline:active {
+    border-color: var(--dark-green);
+    background-color: var(--on-dark);
+    color: var(--dark-green)
+}
+
+.ctc-button-outline:hover {
+  background-color: var(--dark-green-hover);
+  color: var(--on-dark);
+
+}
+
+
 /* ---------------------------- */
 /*  General */
 /* ---------------------------- */
@@ -5,7 +78,8 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: 'Lato', sans-serif;
+  background-color: var(--background);
 }
 
 
@@ -37,11 +111,6 @@ button>span.fa {
   display: none;
 }
 
-/*
-.triphub-input {
-  max-width: 850px;
-}
-*/
 .triphub-input::placeholder {
   font-style: italic;
 }
@@ -73,12 +142,17 @@ button>span.fa {
 /* ---------------------------- */
 
 .triphub-navbar {
-  color: white;
-  /* hack */
+  background-color: var(--navbar-green);
 }
 
-.triphub-navbar:hover {
-  color: lightblue;
+.triphub-navbar-item {
+  color: white;
+}
+
+.triphub-navbar-item:hover,
+.triphub-navbar-item:focus {
+  color: white;
+  opacity: 80%;
   /* hack */
   cursor: pointer
 }
@@ -102,7 +176,7 @@ button>span.fa {
 /* ---------------------------- */
 
 .trip-group-header {
-  background-color: #d6e5f8d8;
+  background-color: var(--dark-green-fade)
 }
 
 .TripGroup td {
@@ -126,7 +200,7 @@ button>span.fa {
 /* ---------------------------- */
 
 .trip-section-header {
-  background-color: #d6e5f8d8;
+  background-color: var(--dark-green-fade)
 }
 
 /* ---------------------------- */

@@ -298,7 +298,8 @@ export class Trip extends Component<{
             TripState[this.state.trip.approval || TripState.Pending.id].nextStates.indexOf(approval.id) >= 0
 
         return visible ?
-            <Button color='primary' onClick={onApproval} key={approval.id} className="px-2 mx-1">
+            <Button onClick={onApproval} key={approval.id}
+                    className="px-2 mx-1 ctc-button-outline">
                 <span className={`fa ${approval.icon} fa-fw`} />{approval.button}
             </Button> : null
     }
@@ -321,7 +322,8 @@ export class Trip extends Component<{
             <Container>
                 <div>
                     {this.approvalButton(approval, this.onApprovalSubmit)}
-                    <Button color='primary' onClick={onApprovalCancel} className="px-2 mx-1">
+                    <Button onClick={onApprovalCancel}
+                            className="ctc-button-outline px-2 mx-1">
                         Cancel</Button>
                 </div>
                 <Container fluid={true}>
@@ -433,10 +435,12 @@ export class Trip extends Component<{
                 </div>
                 <div key='adminActions' className="py-1">
                     {approvalButtons}
-                    <Button color='primary' onClick={onDeleteTrip} hidden={!this.canEditTrip || isNew || trip.isDeleted} className="px-2 mx-1">
+                    <Button onClick={onDeleteTrip} hidden={!this.canEditTrip || isNew || trip.isDeleted}
+                            className="ctc-button-outline px-2 mx-1">
                         <span className='fa fa-trash fa-fw' />Delete this trip
                     </Button>
-                    <Button onClick={onDeleteTrip} hidden={isNew || !trip.isDeleted} className="px-2 mx-1">
+                    <Button onClick={onDeleteTrip} hidden={isNew || !trip.isDeleted}
+                            className="ctc-button-outline px-2 mx-1">
                         <span className='fa fa-undo fa-fw' />Undelete this trip
                     </Button>
                 </div>
@@ -444,7 +448,7 @@ export class Trip extends Component<{
                     title={<span title={`Status: ${trip.approval}`}><b><span key='icon' className='fa fa-map-marker fa-fw' />{this.state.trip.title}</b></span>}
                     expanded={true}>
                     <TripDetail key={'TripDetail' + this.state.trip.id}
-                        trip={this.state.trip} isNew={this.props.isNew} 
+                        trip={this.state.trip} isNew={this.props.isNew}
                         canEditTrip={this.canEditTrip}
                         forceValidation={this.state.showValidationMessage}
                         role={this.props.role}
@@ -453,10 +457,10 @@ export class Trip extends Component<{
                     />
                 </Accordian>
                 <div hidden={!isNew} key='saveCancel' className="py-2">
-                    <Button color='primary' onClick={onSaveSuggestedTrip} className="px-2 mx-1">
+                    <Button onClick={onSaveSuggestedTrip} className="ctc-button-outline px-2 mx-1">
                         Save
                     </Button>
-                    <Button color='primary' onClick={onCancelSuggestedTrip} className="px-2 mx-1">
+                    <Button onClick={onCancelSuggestedTrip} className="ctc-button-outline px-2 mx-1">
                         Cancel
                     </Button>
                 </div>

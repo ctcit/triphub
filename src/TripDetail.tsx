@@ -50,7 +50,7 @@ export class TripDetail extends Component<{
         const onGetInverted = (field: string): any => !(trip as any)[field]
         const onSet = (field: string, value: any): Promise<any> => this.props.setTripFields({[field]: value}, false, false)
         const onSave = (field: string, value: any): Promise<any> => this.props.setTripFields({[field]: value}, true, true)
- 
+
         const onGetValidationMessage = (field: string): any => {
             const found: IValidation | undefined = validations.find(validation => validation.field === field && !validation.ok)
             return found ? found.message : null

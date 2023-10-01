@@ -336,7 +336,7 @@ export class Calendar extends Component<{
 
         const filterElement: JSX.Element = (
             <Dropdown key='filterDropdown' nav={true} isOpen={this.state.showDropdownIsOpen} toggle={toggleShowDropdown}>
-                <DropdownToggle className="triphub-navbar" nav={true} caret={true}>
+                <DropdownToggle className="triphub-navbar-item" nav={true} caret={true}>
                     <span className='fa fa-filter' />&nbsp; Filter trips
                 </DropdownToggle>
                 <DropdownMenu color='primary'>

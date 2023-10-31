@@ -195,6 +195,7 @@ export class Trip extends Component<{
                 mapHtml: '',
                 routes: [],
                 isLimited: false,
+                isFull: false,
                 maxParticipants: 0,
                 isDeleted: false,
                 approval: this.props.isNewSocial || this.amAdmin ? TripState.Approved.id : TripState.Pending.id,

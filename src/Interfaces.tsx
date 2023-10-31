@@ -45,6 +45,7 @@ export interface ITrip extends ITripCosts {
     approvalText: string
     isLimited: boolean
     maxParticipants: number
+    isFull: boolean
     prerequisites?: string
     leaders?: string[]
     nonleaders?: string[]

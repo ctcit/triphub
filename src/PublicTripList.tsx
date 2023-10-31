@@ -5,7 +5,7 @@ import { BaseUrl } from 'src';
 import { Accordian } from './Accordian';
 import { StateFilter } from './Calendar';
 import {ITrip} from './Interfaces'
-import { apiCall, GetDate, GetLength, IsClosed } from './Utilities';
+import { apiCall, GetDate, GetLength } from './Utilities';
 import { FullWidthLoading } from './Widgets';
 
 export interface IPublicCalendarProps {

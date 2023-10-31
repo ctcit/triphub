@@ -72,6 +72,8 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 	}
 
 	foreach ($trips as &$trip) {
+		$trip['isFull'] = $trip['isLimited'] && 
+					      (count($trip['Participants'] + count($trip['Leaders']) >= $trip['maxParticipants'];
 		if ($userId == 0) {
 			// Not a signed in user
 			// Strip off some un-needed fields

@@ -19,7 +19,7 @@ export class TripCoordinatorDashboard extends Component<{
         const pendingTrips = this.props.trips.filter(trip => TripState[trip.state].isRequiringApproval)
         return (
             <Container key="tripCoordiantorDashboardContainter" className={ConfigService.containerClassName + " my-3"} fluid={true}>
-                <Alert color='primary'>
+                <Alert color='warning'>
                     {(pendingTrips && pendingTrips.length > 0) ?
                         [<h4 key="approvalTitle">Suggested Trips</h4>,
                         <p key="approvalText">The following suggested trips require approval:</p>,

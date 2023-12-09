@@ -108,16 +108,12 @@ export class TriphubNavbar extends Component<{
         const toggleStandaloneOfflineInfo = () => this.setState({standaloneOfflineInfoOpen: !this.state.standaloneOfflineInfoOpen})
 
         return (
-            <Navbar color='primary' expand={false}>
-                {/* <NavbarBrand className='triphub-navbar' href="#home" hidden={!this.props.isStandalone}>
-                    <img src="CTCLogo.png" width="40" height="40" className="d-inline-block" />
-                    <b>Trips</b>
-                </NavbarBrand> */}
+            <Navbar className='triphub-navbar' expand={false}>
                 <Nav className="mr-auto" justified={false} fill={false} >
                     {!onAllTripsPage &&
                         <NavItem key='alltrips'>
                             <NavLink onClick={alltrips} disabled={this.props.isLoading}>
-                                <span className='triphub-navbar'>
+                                <span className='triphub-navbar-item'>
                                     <span className='fa fa-bars'/>
                                     &nbsp; All trips
                                 </span>
@@ -127,7 +123,7 @@ export class TriphubNavbar extends Component<{
                     {!onCalendarPage &&
                         <NavItem key='calendar'>
                             <NavLink onClick={calendar} disabled={this.props.isLoading}>
-                                <span className='triphub-navbar'>
+                                <span className='triphub-navbar-item'>
                                     <span className='fa fa-calendar'/>
                                     &nbsp; Calendar
                                 </span>
@@ -138,7 +134,7 @@ export class TriphubNavbar extends Component<{
                     {this.props.isOnline && this.props.role >= Role.Member && !onPastTripsPage && 
                         <NavItem key='pasttrips'>
                             <NavLink onClick={pasttrips} disabled={this.props.isLoading}>
-                                <span className='triphub-navbar'>
+                                <span className='triphub-navbar-item'>
                                     <span className='fa fa-search' />
                                     &nbsp; Past Trips
                                 </span>
@@ -148,7 +144,7 @@ export class TriphubNavbar extends Component<{
                     {this.props.isOnline && this.props.role >= Role.TripLeader && !onNewTripPage &&
                         <NavItem key='newTrip'>
                             <NavLink onClick={newtrip} disabled={this.props.isLoading}>
-                                <span className='triphub-navbar'>
+                                <span className='triphub-navbar-item'>
                                     <span className='fa fa-lightbulb'/> 
                                     &nbsp; New trip
                                 </span>
@@ -158,7 +154,7 @@ export class TriphubNavbar extends Component<{
                     {this.props.isOnline && isAdmin && !onNewSocialPage &&
                         <NavItem key='addASocialEvent'>
                             <NavLink onClick={newsocial} disabled={this.props.isLoading}>
-                                <span className='triphub-navbar'>
+                                <span className='triphub-navbar-item'>
                                     <span className='fa fa-users'/> 
                                     &nbsp; Add a social event
                                 </span>
@@ -167,7 +163,7 @@ export class TriphubNavbar extends Component<{
                     }
                     {this.props.isOnline && isAdmin &&
                         <Dropdown key='manage' nav={true} isOpen={this.state.manageDropdownIsOpen} toggle={toggleManageDropdown}>
-                            <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
+                            <DropdownToggle className='triphub-navbar-item' nav={true} caret={false}>
                                 <span className='fa fa-tasks'/>
                                 &nbsp; Manage
                             </DropdownToggle>
@@ -191,7 +187,7 @@ export class TriphubNavbar extends Component<{
                 <Nav className="mr-auto" justified={false} fill={false}>
                     {this.props.role >= Role.Member &&
                         <Dropdown key='workOffline' nav={true} isOpen={this.state.workOfflineDropdownIsOpen} toggle={toggleWorkOfflineDropdown}>
-                            <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
+                            <DropdownToggle className='triphub-navbar-item' nav={true} caret={false}>
                                 <span className='fa fa-cloud'/> 
                                 &nbsp;{this.props.cachedTrips.length ? (' (' + this.props.cachedTrips.length + ')') : ''}
                             </DropdownToggle>
@@ -240,7 +236,7 @@ export class TriphubNavbar extends Component<{
                     }
                     {
                         <Dropdown key='currentUser' nav={true} isOpen={this.state.currentUserDropdownIsOpen} toggle={toggleCurrentUserDropdown}>
-                            <DropdownToggle className='triphub-navbar' nav={true} caret={false}>
+                            <DropdownToggle className='triphub-navbar-item' nav={true} caret={false}>
                                 <span className='fa fa-user'/> 
                             </DropdownToggle>
                             <DropdownMenu color='primary'>

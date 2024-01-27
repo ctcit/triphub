@@ -5,6 +5,10 @@ define('JPATH_BASE', dirname(dirname(__DIR__)));// Assume we are two levels down
 require_once ( JPATH_BASE.'/includes/defines.php' );
 require_once ( JPATH_BASE.'/includes/framework.php' );
 
+if ( !array_key_exists('HTTP_HOST', $_SERVER) || $_SERVER['HTTP_HOST'] == "" ) {
+    $_SERVER['HTTP_HOST'] = "http://ctc.org.nz";
+}
+
 // Boot the DI container
 $container = \Joomla\CMS\Factory::getContainer();
 

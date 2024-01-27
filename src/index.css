@@ -4,6 +4,7 @@
   --dark-green-fade: #00591d50;
   --dark-green-hover: #176831;
   --navbar-green: #02501b;
+  --navbar-green-fade: #02501bee;
   --background: #f5f6f5;
   --background-higher: #ebedeb;
   --masthead: #272d27;
@@ -119,6 +120,11 @@ button>span.fa {
   min-height: 80px;
 }
 
+.badge-green {
+  background-color: var(--dark-green)!important;
+  color: var(--on-dark);
+}
+
 /* ---------------------------- */
 /* Containers */
 /* ---------------------------- */
@@ -142,7 +148,7 @@ button>span.fa {
 /* ---------------------------- */
 
 .triphub-navbar {
-  background-color: var(--navbar-green);
+  background-color: var(--navbar-green-fade);
 }
 
 .triphub-navbar-item {
@@ -174,6 +180,10 @@ button>span.fa {
 /* ---------------------------- */
 /* Tripgroup  */
 /* ---------------------------- */
+
+.trip-group {
+  background-color: var(--background);
+}
 
 .trip-group-header {
   background-color: var(--dark-green-fade)
@@ -719,6 +729,11 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   display: block;
   clear: left;
 }
+
+.public-calendar-description {
+  font-size: 0.95rem;
+}
+
 
 
 /* ---------------------------- */

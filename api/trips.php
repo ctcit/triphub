@@ -72,10 +72,11 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 	}
 
 	foreach ($trips as &$trip) {
+		$trip['isFull'] = $trip['isLimited'] && (count($trip['nonleaders'] + count($trip['deaders']) >= $trip['maxParticipants'];
 		if ($userId == 0) {
 			// Not a signed in user
 			// Strip off some un-needed fields
-			$toRemove = ["approvalText", "nonleaders", "editors", "routes",
+			$toRemove = ["approvalText", "nonleaders", "editors", "routes", "deleteds",
 						"totalVehicleCost", "payingParticipantsCount",
 						"vehicleFee"];
 			foreach($toRemove as $key) unset($trip[$key]);

@@ -56,6 +56,10 @@ export function GetDate(value: Date | string | number): string {
     return FormatDate(value, 'Ddd D Mmm')
 }
 
+export function GetDateFullMonth(value: Date | string | number): string {
+    return FormatDate(value, 'Ddd D Mmmm')
+}
+
 export function GetFullDate(value: Date | string | number): string {
     return FormatDate(value, 'Ddd D Mmm YYYY')
 }

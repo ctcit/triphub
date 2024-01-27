@@ -20,7 +20,7 @@ This runs the triphub application from a local http-server instance, but uses th
    * If you get an error like `CORS header 'Access-Control-Allow-Origin' missing`, double check that the apiKeyExpiry setting in `config.php` on the deployed API you are trying to access is a date in the future.
 ### Staging
 This builds the triphub application and the API to deploy on a remote server, but not the standard location (`ctc.org.nz/triphub`).
-   * Not sources need to be changed.
+   * No sources need to be changed.
    * Deploy api to e.g. ctc.org.nz/triphub-bruce/api
    * Run `npm run build:stg` to build portable build
    * Copy the build folder contents to e.g. ctc.org.nz/triphub-bruce/web

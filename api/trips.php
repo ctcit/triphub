@@ -72,7 +72,7 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 	}
 
 	foreach ($trips as &$trip) {
-		$trip['isFull'] = $trip['isLimited'] && (count($trip['nonleaders'] + count($trip['deaders']) >= $trip['maxParticipants'];
+		$trip['isFull'] = $trip['isLimited'] && (count($trip['nonleaders']) + count($trip['leaders'])) >= $trip['maxParticipants'];
 		if ($userId == 0) {
 			// Not a signed in user
 			// Strip off some un-needed fields
@@ -268,14 +268,18 @@ function SortParticipants(array &$participants): void {
 		array_column($participants,'order'),SORT_ASC,SORT_NUMERIC,$participants);
 }
 
+function IsSetAndTrue(array $array, string $key): bool {
+	return array_key_exists($key, $array) && $array[$key];
+}
+
 function ClassifyParticipants(array &$participants, array $trip): array {
 	foreach ($participants as $index => &$participant) {
 		$participant['index'] = $index;
 		$participant['classification'] =
-			($participant['isCreated'] ? 'not-listed' :
-			($participant['isDeleted'] ? 'removed' :
-			($participant['isLeader'] ? 'leader' :
-			($trip['isLimited'] && $index >= $trip['maxParticipants'] ? 'waitlisted' : 'listed'))));
+			(IsSetAndTrue($participant, 'isCreated') ? 'not-listed' :
+			(IsSetAndTrue($participant, 'isDeleted') ? 'removed' :
+			(IsSetAndTrue($participant, 'isLeader') ? 'leader' :
+			(IsSetAndTrue($trip, 'isLimited') && $index >= $trip['maxParticipants'] ? 'waitlisted' : 'listed'))));
 	}
 
 	return array_combine(array_column($participants, 'id'), $participants);
@@ -305,7 +309,7 @@ function GetTripHtml(mysqli $con, int $tripId, string $subject=null, string $mes
 	$inserted			= "background-color:".$css[".inserted"]["background-color"].";";
 	$deleted			= "color:".$css[".deleted"]["color"].";";
 	$border				= "border: solid 1px black; border-collapse: collapse;";
-	$ignore				= ['id','approval','isDeleted','isSocial','isNoSignup','routes','mapRoute',
+	$ignore				= ['id','approval','approvalText','isDeleted','isSocial','isNoSignup','routes','mapRoute',
 						   'isLimited','lastEmailChangeId','tripId','memberId','displayPriority',
 						   'historyId','legacyTripId','legacyEventId',
 						   'distanceOneWay','totalVehicleCost','payingParticipantsCount','vehicleFee',
@@ -392,7 +396,7 @@ function GetTripHtml(mysqli $con, int $tripId, string $subject=null, string $mes
 		$isNew = array_key_exists("$id,new",$changes);
 		$classification = $participant['classification'];
 		$oldClassification = $oldParticipants[$id]['classification'];
-		$isCreated = $oldParticipants[$id]['isCreated'];
+		$isCreated = IsSetAndTrue($oldParticipants[$id], 'isCreated');
 		$isDeleted = $participant['isDeleted'];
 		if ($classification == 'waitlisted' && $index == $trip['maxParticipants']) {
 			$detail .= "<tr><td colspan='100' style='$border $deleted'>Waitlist</td></tr>\n";

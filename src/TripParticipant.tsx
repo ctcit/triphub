@@ -40,8 +40,12 @@ export class TripParticipant extends Component<{
 
     public onDeleted() {
         this.setState({ isSaveOp: true })
-        this.props.setParticipant(this.props.participant.id, { isDeleted: !this.props.participant.isDeleted }, true)
-            .then(() => this.setState({ isSaveOp: false }))
+        // move to end of list...
+        this.props.setPosition(this.props.participant.id, this.props.participantsInfo.moveable[this.props.participantsInfo.moveable.length - 1])
+            // ...then delete    
+            .then(() => this.props.setParticipant(this.props.participant.id, { isDeleted: !this.props.participant.isDeleted }, true)
+                .then(() => this.setState({ isSaveOp: false }))
+            )
     }
 
     public onToggleWaitlist() {

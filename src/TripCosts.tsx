@@ -154,7 +154,7 @@ export class TripCosts extends Component<{
             const vehicleFeeToCollect = !c.broughtVehicle ? c.vehicleFee : 0
             this.calculations.totalVehicleFeeToCollect += vehicleFeeToCollect
             totalNonFixedCostVehicleFeesToCollect += c.isFixedCostVehicle ? 0 : vehicleFeeToCollect
-            c.nonMemberFee = c.nonMemberFee != null ? c.nonMemberFee : !p.memberId ? this.nonMemberFee() : 0
+            c.nonMemberFee = c.nonMemberFee != null ? c.nonMemberFee : !p.memberId ? this.nonMemberFeePerDay() * trip.length : 0
             this.calculations.totalNonMemberFeeToCollect += c.nonMemberFee
             c.otherFees = c.otherFees ?? 0
             this.calculations.totalOtherFeesToCollect += c.otherFees
@@ -231,7 +231,7 @@ export class TripCosts extends Component<{
         return rate
     }
 
-    public nonMemberFee(): number {
+    public nonMemberFeePerDay(): number {
         return 5.0;
     }
 

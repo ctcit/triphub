@@ -267,7 +267,7 @@ export class TriphubNavbar extends Component<{
             // in iframe - open a new tab of the site not in an iframe
             let src = (window.frameElement as any)?.src
             if (src) {
-                src = src.replace(/.$/,'') + '#/installStandalone'
+                src = src + '#/installStandalone'
                 window.open(src)
             }
         }

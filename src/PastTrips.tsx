@@ -477,6 +477,7 @@ export class PastTrips extends Component<{
                 highlights={highlights} 
                 isOnline={true}
                 setPath={this.props.setPath}
+                fullDate={true}
             />
         ]
     }

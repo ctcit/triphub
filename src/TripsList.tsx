@@ -22,7 +22,8 @@ class TripsLine extends Component<{
     highlights?: { [key: string]: RegExp }
     minRanking?: number
     maxRanking?: number
-    setPath(path: string): void
+    setPath(path: string): void,
+    fullDate?: boolean
 }, {
     expanded?: boolean
 }> {
@@ -116,7 +117,7 @@ class TripsLine extends Component<{
                 }
             </td>,
             <td key={'date' + id} onClick={onClick} style={tdStyle}>
-                {highlights ? GetFullDate(trip.tripDate) : GetDate(trip.tripDate)}{extractWarnings(/date/)}
+                {highlights ? GetFullDate(trip.tripDate) : this.props.fullDate ? GetFullDate(trip.tripDate) : GetDate(trip.tripDate)}{extractWarnings(/date/)}
             </td>,
             <td key={'length' + id} onClick={onClick} className='centered' style={tdStyle}>
                 {!trip.isSocial && highlight(GetLength(trip.length, new Date(trip.tripDate)), /.*/, trip.ranking_length)}
@@ -225,6 +226,7 @@ export class TripsGroup extends Component<{
     expanded?: boolean
     highlights?: { [key: string]: RegExp }
     setPath(path: string): void
+    fullDate?: boolean
 }, {
     sortBy: SortBy
     sortDir: number
@@ -299,6 +301,7 @@ export class TripsGroup extends Component<{
                                     available={this.props.isOnline || (this.props.cachedTripIds?.includes(trip.id) || false)}
                                     minRanking={minRanking} maxRanking={maxRanking}
                                     setPath={this.props.setPath}
+                                    fullDate={this.props.fullDate}
                                      />)}
                         </tbody>
                     </Table>

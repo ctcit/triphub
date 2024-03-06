@@ -43,7 +43,8 @@ export class App extends Component<{
     cachedTrips: ITrip[]
     pendingSyncsCount: number
     installAppPrompted: boolean
-    installStandalone: boolean
+    installStandalone: boolean,
+    isSocial: boolean
 }> {
 
     private onDoAppUpdate = () => {}
@@ -80,7 +81,8 @@ export class App extends Component<{
             cachedTrips: [],
             pendingSyncsCount: 0,
             installAppPrompted: false,
-            installStandalone: installStandalone
+            installStandalone: installStandalone,
+            isSocial: false
         }
 
         if (window.top) {
@@ -282,6 +284,7 @@ export class App extends Component<{
         const onCacheTripsChanged = () => this.onCacheTripsChanged()
         const onLoginStatusLoaded = () => this.onLoginStatusLoaded()
         const installStandalone = () => this.installStandalone()
+        const isSocial = (value: boolean) => this.setState({ isSocial: value})
 
         const onDismissInstallStandalone = () => this.setState({installStandalone: false})
 
@@ -293,18 +296,19 @@ export class App extends Component<{
             isOnline: this.state.isOnline,
             isCached: id !== undefined && Boolean(this.state.cachedTrips.find(ct => ct.id === id)),
             setCachedTrips,
-            addCachedTrip
+            addCachedTrip,
+            isSocial
         }
         const renderings = {
             loading: () => this.loadingStatus(),
             calendar: () => <Calendar key='calendar' {...common} />,
-            newtrip: () => <Trip key='newTrip' isNew={true} isNewSocial={false} {...common} />,
-            newsocial: () => <Trip key='newSocial' isNew={true} isNewSocial={true} {...common} />,
+            newtrip: () => <Trip key='newTrip' isNew={true} isNewSocial={false} copyFromId={id} {...common} />,
+            newsocial: () => <Trip key='newSocial' isNew={true} isNewSocial={true} copyFromId={id} {...common} />,
             newsletter: () => <Newsletter key='newsletter' {...common} />,
             routes: () => <ManageRoutes key='routes' />,
             mileageRates: () => <ManageMileageRates key='mileageRates' {...common}/>,
             destinations: () => <ManageDestinations key='destinations' {...common}/>,
-            trips: () => <Trip key={'trip-' + id} isNew={false} isNewSocial={true} id={id} {...common} />,
+            trips: () => <Trip key={'trip-' + id} isNew={false} isNewSocial={false} id={id} {...common} />,
 			pasttrips: () => <PastTrips key='pasttrips' {...common} />,
             login: () => <Login key='login' {...common} />,
             default: () => <TripsList key='default' {...common}/>,
@@ -387,6 +391,7 @@ export class App extends Component<{
                 setPath={setPath}
                 setRole={setRole}
                 onCacheTripsChanged={onCacheTripsChanged}
+                isSocial={this.state.isSocial}
             />,
             <NotificationArea notifications={this.state.notifications} key='notificationArea'
                 containerClassName={ConfigService.containerClassName} 

@@ -168,9 +168,9 @@ function SendApprovalEmail(mysqli $con, int $tripId): array {
 									WHERE tripId = $tripId AND isLeader = 1 LIMIT 1","id");
 
 	$committeeTable = ConfigServer::committeeTable;
-	$recipients = SqlResultArray($con, "SELECT fullName, email
+	$recipients = SqlResultArray($con, "SELECT DISTINCT fullName, email
 										FROM $committeeTable
-										WHERE role IN ('IT Convenor', 'Day Trip Organiser', 'Overnight Trip Organiser')");
+										WHERE role IN ('IT Convenor', 'Day Trip Organiser', 'Overnight Trip Organiser', 'Access Officer')");
 	$tripLink = ConfigServer::triphubUrl."/#/trips/$trip[id]";
 
 	$email = ["recipients"=>[]];

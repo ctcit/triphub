@@ -248,5 +248,10 @@ function MakeGuid(): string {
                     mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
 }
 
+function PurgeLogs(mysqli $con) {
+    $logTable = ConfigServer::logTable;
+    $logMaxId = SqlResultScalar($con, "SELECT COALESCE(MAX(id),0) FROM $logTable") - ConfigServer::logLinesRetained;
+    SqlExecOrDie($con,"DELETE FROM $logTable WHERE id < $logMaxId");
+}
 
 ?>

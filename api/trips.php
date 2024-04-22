@@ -18,8 +18,8 @@ function GetTrips(mysqli $con, int $userId, string $where=null): array {
 			   WHEN approval  != 'Approved' THEN approval
 			   WHEN CURDATE() < openDate 	THEN approval
 			   WHEN CURDATE() <= closeDate	THEN 'Open' ELSE 'Closed'
-			END) 			as `state`,
-			'' 				as `role`,
+			END) 			AS `state`,
+			'' 				AS `role`,
 			JSON_ARRAY()	AS `leaders`,
 			JSON_ARRAY()	AS `nonleaders`,
 			JSON_ARRAY()	AS `editors`
@@ -193,6 +193,9 @@ function SendApprovalEmail(mysqli $con, int $tripId): array {
 }
 
 function PostEmails(mysqli $con): array {
+
+	// Step 0: Purge the log
+	PurgeLogs($con);
 
 	// Step 1 - Send emails arising from edits
 	DeleteTripEdits($con);

@@ -228,9 +228,6 @@ function ApiProcess(
             // DESCRIPTION Sends any necessary emails, and maintains log table at an acceptable size
             // OUTPUT Array of trip indentification details for any trips that had emails send
             ValidateUser($con, "Member");
-            $logTable = ConfigServer::logTable;
-            $logMaxId = SqlResultScalar($con, "SELECT COALESCE(MAX(id),0) FROM $logTable") - ConfigServer::logLinesRetained;
-            SqlExecOrDie($con,"DELETE FROM $logTable WHERE id < $logMaxId");
             return PostEmails($con);
     
         case "POST trips/pasttrips":

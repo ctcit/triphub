@@ -91,7 +91,7 @@ export const TripState: { [id: string]: IState } = {
         label: 'Reason for being in draft',
         nextStates: ['Pending'],
         roleToChange: Role.TripLeader,
-        roleToView: Role.Admin,
+        roleToView: Role.TripLeader,
     },
     Deleted: {
         id: 'Deleted',

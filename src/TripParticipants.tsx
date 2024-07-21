@@ -137,7 +137,7 @@ export class TripParticipants extends Component<{
             participants[index] = participant
     
             this.props.setTripParticipants(participants, true)
-            if (save) {
+            if (save && this.props.trip.id >= 0) {
                 TripsService.postTripParticipantUpdate(this.props.trip.id, id, fields).finally(() => resolve())
             } else {
                 resolve()

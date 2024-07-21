@@ -25,8 +25,10 @@ export class TriphubNavbar extends Component<{
     setPath: (path: string) => void,
     setRole: (role: Role) => void,
     onCacheTripsChanged: () => Promise<any>,
-    children?: React.ReactNode
+    children?: React.ReactNode,
+    isSocial: boolean
     },{
+        newDropdownIsOpen: boolean,
         manageDropdownIsOpen: boolean,
         workOfflineDropdownIsOpen: boolean,
         currentUserDropdownIsOpen: boolean,
@@ -40,6 +42,7 @@ export class TriphubNavbar extends Component<{
     constructor(props: any){
         super(props)
         this.state = {
+            newDropdownIsOpen: false,
             manageDropdownIsOpen: false,
             workOfflineDropdownIsOpen: false,
             currentUserDropdownIsOpen: false,
@@ -68,9 +71,11 @@ export class TriphubNavbar extends Component<{
         const alltrips = () => this.props.setPath('/')
         const calendar = () => this.props.setPath('/calendar')
         const pasttrips = () => this.props.setPath('/pasttrips')
-        const newtrip = () => this.props.setPath('/newtrip')
+        const newTrip = () => this.props.setPath('/newtrip')
+        const copyCurrentTrip = () => this.props.setPath('/newtrip/' + onTripsPageId)
         const newsletter = () => this.props.setPath('/newsletter')
-        const newsocial = () => this.props.setPath('/newsocial')
+        const newSocial = () => this.props.setPath('/newsocial')
+        const copyCurrentSocial = () => this.props.setPath('/newsocial/' + onTripsPageId)
         const routes = () => this.props.setPath('/routes')
         const mileageRates = () => this.props.setPath('/mileageRates')
         const destinations = () => this.props.setPath('/destinations')
@@ -79,9 +84,10 @@ export class TriphubNavbar extends Component<{
         const onAllTripsPage = this.props.path === '' || this.props.path === '/'
         const onCalendarPage = this.props.path === '/calendar'
         const onPastTripsPage = this.props.path === '/pasttrips'
-        const onNewTripPage = this.props.path === '/newtrip'
+        // const onNewPage = this.props.path === '/newtrip' || this.props.path === '/newSocial'
+        const onTripsPage = this.props.path.startsWith('/trips/')
+        const onTripsPageId = onTripsPage ? parseInt(this.props.path.slice('/trips/'.length)) : -1
         const onManageNewsletterPage = this.props.path === '/newsletter'
-        const onNewSocialPage = this.props.path === '/newSocial'
         const onManageRoutesPage = this.props.path === '/routes'
         const onManageMileageRatesPage = this.props.path === '/mileageRates'
         const onManageDestinationsPage = this.props.path === '/destinations'
@@ -90,6 +96,8 @@ export class TriphubNavbar extends Component<{
         const setTripLeaderPrivileges = () => this.props.setRole(Role.TripLeader)
         const setMemberPrivileges = () => this.props.setRole(Role.Member)
         const setNonMemberPrivileges = () => this.props.setRole(Role.NonMember)
+
+        const toggleNewTripDropdown = () => this.setState({newDropdownIsOpen: !this.state.newDropdownIsOpen});
 
         const toggleManageDropdown = () => this.setState({manageDropdownIsOpen: !this.state.manageDropdownIsOpen});
 
@@ -141,25 +149,33 @@ export class TriphubNavbar extends Component<{
                             </NavLink>
                         </NavItem>
                     }
-                    {this.props.isOnline && this.props.role >= Role.TripLeader && !onNewTripPage &&
-                        <NavItem key='newTrip'>
-                            <NavLink onClick={newtrip} disabled={this.props.isLoading}>
-                                <span className='triphub-navbar-item'>
-                                    <span className='fa fa-lightbulb'/> 
-                                    &nbsp; New trip
-                                </span>
-                            </NavLink>
-                        </NavItem>
-                    }
-                    {this.props.isOnline && isAdmin && !onNewSocialPage &&
-                        <NavItem key='addASocialEvent'>
-                            <NavLink onClick={newsocial} disabled={this.props.isLoading}>
-                                <span className='triphub-navbar-item'>
-                                    <span className='fa fa-users'/> 
-                                    &nbsp; Add a social event
-                                </span>
-                            </NavLink>
-                        </NavItem>
+                    {this.props.isOnline && this.props.role >= Role.TripLeader &&
+                        <Dropdown key='newTrip' nav={true} isOpen={this.state.newDropdownIsOpen} toggle={toggleNewTripDropdown}>
+                        <DropdownToggle className='triphub-navbar-item' nav={true} caret={false}>
+                            <span className='fa fa-lightbulb'/>
+                            &nbsp; New
+                        </DropdownToggle>
+                        <DropdownMenu color='primary'>
+                            <DropdownItem disabled={this.props.isLoading} onClick={newTrip}>
+                                <span><span className='fa fa-hiking'/>&nbsp; New Trip</span>
+                            </DropdownItem>
+                            <DropdownItem disabled={this.props.isLoading || !onTripsPage || this.props.isSocial} onClick={copyCurrentTrip}>
+                                <span><span className='fa fa-hiking'/>&nbsp; Copy Current Trip</span>
+                            </DropdownItem>
+                            {this.props.isOnline && isAdmin && 
+                                <>
+                                    <DropdownItem divider></DropdownItem>
+                                    <DropdownItem disabled={this.props.isLoading} onClick={newSocial}>
+                                        <span><span className='fa fa-users' />&nbsp; New Social Event</span>
+                                    </DropdownItem>
+                                    <DropdownItem disabled={this.props.isLoading || !onTripsPage || !this.props.isSocial} onClick={copyCurrentSocial}>
+                                        <span><span className='fa fa-users' />&nbsp; Copy Current Social Event</span>
+                                    </DropdownItem>
+                                </>
+                            }
+
+                        </DropdownMenu>
+                    </Dropdown>
                     }
                     {this.props.isOnline && isAdmin &&
                         <Dropdown key='manage' nav={true} isOpen={this.state.manageDropdownIsOpen} toggle={toggleManageDropdown}>
@@ -168,7 +184,7 @@ export class TriphubNavbar extends Component<{
                                 &nbsp; Manage
                             </DropdownToggle>
                             <DropdownMenu color='primary'>
-                            <DropdownItem disabled={onManageNewsletterPage} onClick={newsletter}>
+                                <DropdownItem disabled={onManageNewsletterPage} onClick={newsletter}>
                                     <span><span className='fa fa-newspaper'/>&nbsp; Manage Newsletter</span>
                                 </DropdownItem> 
                                 <DropdownItem disabled={onManageRoutesPage} onClick={routes}>
@@ -267,7 +283,7 @@ export class TriphubNavbar extends Component<{
             // in iframe - open a new tab of the site not in an iframe
             let src = (window.frameElement as any)?.src
             if (src) {
-                src = src.replace(/.$/,'') + '#/installStandalone'
+                src = src + '#/installStandalone'
                 window.open(src)
             }
         }

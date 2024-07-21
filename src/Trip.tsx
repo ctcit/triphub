@@ -1,5 +1,5 @@
 import { Component } from 'react'
-import { Badge, Button, Col, Container, Row } from 'reactstrap'
+import { Badge, Button, ButtonGroup, Col, Container, Row } from 'reactstrap'
 import { AdminHint as TripHubAlert } from './Widgets'
 import { IEdit, IParticipant, ITrip, IParticipantsInfo, IState, Role } from './Interfaces'
 import { GetDateString, AddDays, GetDisplayPriority, BindMethods } from './Utilities'
@@ -26,13 +26,15 @@ export class Trip extends Component<{
     isNew: boolean,
     isNewSocial: boolean,
     id?: number,
+    copyFromId?: number,
     role: Role,
     isOnline: boolean,
     isCached: boolean,
     setPath(path: string): void,
     addNotification(text: string, colour: string): void,
     loadingStatus(state: any): JSX.Element,
-    addCachedTrip(CachedTrip: ITrip): void
+    addCachedTrip(CachedTrip: ITrip): void,
+    isSocial(value: boolean): void
 }, {
     trip: ITrip,
     editId: number,
@@ -64,9 +66,25 @@ export class Trip extends Component<{
 
     public componentDidMount() {
         if (this.props.isNew) {
-            this.setState({ isLoadingTrip: false })
-            this.onStartNewEvent()
+            if (this.props.copyFromId == undefined) {
+                // new empty trip
+                this.setState({ isLoadingTrip: false })
+                this.onStartNewEvent()
+            } else {
+                // new trip copied from existing trip
+                this.setState({ isLoadingTrip: true })
+
+                let existingTrip: ITrip | null = null
+                TripsService.getTrip(this.props.copyFromId as number)
+                    .then((trip: ITrip | null) => {
+                        existingTrip = trip
+                    }).finally(() => {
+                        this.setState({ isLoadingTrip: false })
+                        this.onStartNewEvent(existingTrip)
+                    })
+            }
         } else {
+            // existing trip
             this.setState({ isLoadingTrip: true })
 
             TripsService.getTrip(this.props.id as number)
@@ -82,6 +100,7 @@ export class Trip extends Component<{
                                 })
                             })
                         }
+                        this.props.isSocial(trip.isSocial)
                     }
                 }).finally(() => {
                     this.setState({ isLoadingTrip: false })
@@ -166,7 +185,7 @@ export class Trip extends Component<{
         }
     }
 
-    public onStartNewEvent() {
+    public onStartNewEvent(existingTrip?: ITrip | null) {
         // First of the next month
         const openDate: Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
         // Friday in the week after the open date (or Wednesday for Socials)
@@ -181,29 +200,30 @@ export class Trip extends Component<{
                 openDate: GetDateString(openDate),
                 closeDate: GetDateString(closeDate),
                 tripDate: GetDateString(tripDate),
-                cost: '',
-                departurePoint: '',
-                departureDetails: '',
-                description: '',
-                grade: this.props.isNewSocial ? 'Social' : '',
+                cost: existingTrip ? existingTrip.cost : '',
+                departurePoint: existingTrip ? existingTrip.departurePoint : '',
+                departureDetails: existingTrip ? existingTrip.departureDetails : '',
+                description: existingTrip ? existingTrip.description : '',
+                grade: existingTrip ? existingTrip.grade : this.props.isNewSocial ? 'Social' : '',
                 isSocial: this.props.isNewSocial,
                 isNoSignup: this.props.isNewSocial,
+                prerequisites: existingTrip ? existingTrip.prerequisites : undefined,
                 id: -1,
-                length: 1,
-                logisticInfo: '',
-                maps: [],
-                mapHtml: '',
-                routes: [],
-                isLimited: false,
+                length: existingTrip ? existingTrip.length : 1,
+                logisticInfo: existingTrip ? existingTrip.logisticInfo : '',
+                maps: existingTrip ? existingTrip.maps : [],
+                mapHtml: existingTrip ? existingTrip.mapHtml : '',
+                routes: existingTrip ? existingTrip.routes : [],
+                isLimited: existingTrip ? existingTrip.isLimited : false,
                 isFull: false,
-                maxParticipants: 0,
+                maxParticipants: existingTrip ? existingTrip.maxParticipants : 0,
                 isDeleted: false,
                 approval: this.props.isNewSocial || this.amAdmin ? TripState.Approved.id : TripState.Pending.id,
                 approvalText: '',
-                title: '',
+                title: existingTrip ? existingTrip.title : '',
                 state: this.props.isNewSocial ? 'Open' : 'Suggested',
 
-                distanceOneWay: 0,
+                distanceOneWay: existingTrip ? existingTrip.distanceOneWay : 0,
                 totalVehicleCost: null,
                 payingParticipantsCount: null,
                 vehicleFee: null
@@ -434,7 +454,7 @@ export class Trip extends Component<{
                     {status}
                     <Pill>Status: {approval.id} Group: {trip.state}</Pill>
                 </div>
-                <div key='adminActions' className="py-1">
+                <div key='adminActions' className="py-1" style={{ display: 'flex'}}>
                     {approvalButtons}
                     <Button onClick={onDeleteTrip} hidden={!this.canEditTrip || isNew || trip.isDeleted}
                             className="ctc-button-outline px-2 mx-1">

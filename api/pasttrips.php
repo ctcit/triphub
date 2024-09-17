@@ -12,7 +12,7 @@ function PastTrips(mysqli $con, int $userId, array $query): array
     $where              = ["t.tripDate BETWEEN $from AND $to"];
     $deleted            = intval($query['deleted'] ?? 0);
     $member             = GetMembers($con, $userId, "id = $userId")[0];
-    $memberMap          = $query['memberMap'];
+    $memberMap          = $query['memberMap'] ?? [];
     $cols = SqlResultArray($con, "SHOW COLUMNS FROM $tripsTable", "Field", true);
     $idxs = SqlResultArray($con, "SHOW INDEX FROM $tripsTable", "Column_name", true);
     $comp = [
@@ -25,6 +25,7 @@ function PastTrips(mysqli $con, int $userId, array $query): array
     ];
 
     $fulltext = [];
+    $rankCols = [];
 
     foreach ($query as $key => $value) {
         $col = strtoupper($key);
@@ -60,9 +61,9 @@ function PastTrips(mysqli $con, int $userId, array $query): array
     }
 
     // Exit now with just the trips in the date range if there are no of filters 
-    if (!$rankCols && !$memberMap) return GetTrips($con, $userId, implode(' AND ', $where));
+    if (empty($rankCols) && empty($memberMap)) return GetTrips($con, $userId, implode(' AND ', $where));
 
-    if ($rankCols) {
+    if (!empty($rankCols)) {
         foreach ($rankCols as $key => $value) {
             $computed[] = "$value AS $key";
         }
@@ -75,7 +76,7 @@ function PastTrips(mysqli $con, int $userId, array $query): array
         );
     }
 
-    if ($memberMap) {
+    if (!empty($memberMap)) {
         // Sanitize the inputs
         foreach ($memberMap as $name => $value) {
             $name === $member['name'] || in_array($member['role'], ['Admin', 'Webmaster']) || die('disallowed');

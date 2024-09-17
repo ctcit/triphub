@@ -449,7 +449,7 @@ function ApiProcess(
 
 function TableFromEntity(string $entity): string {
     $configServer = (new ReflectionClass("ConfigServer"))->getConstants();
-    return strval($configServer[$entity.'Table']);
+    return strval($configServer[$entity.'Table'] ?? '');
 }
 
 // Specify a required role. If the current user has a role equal to or more

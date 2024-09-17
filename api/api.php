@@ -43,7 +43,7 @@ if ($method == "OPTIONS") {
     if (gettype($result) == 'string') {
         header('Content-Type: text/html');
         echo $result;
-    } else if ($query["prettyprintjson"]) {
+    } else if ($query["prettyprintjson"] ?? false) {
         header('Content-Type: text/html');
         echo PrettyPrintJson($result);
     } else {
@@ -464,7 +464,7 @@ function TableFromEntity(string $entity): string {
 function ValidateUser(mysqli $con, string $requiredRole="NonPrivileged"): int {
     if (ConfigServer::apiKeyUserId == 0 ||
         ConfigServer::apiKey == "" || 
-        $_SERVER["HTTP_API_KEY"] != ConfigServer::apiKey) {
+        ($_SERVER["HTTP_API_KEY"]  ?? "") != ConfigServer::apiKey) {
         // Not using an API key - get user logon details
         $member = GetLogonDetails($con, false);
     } else  if (date("Ymd") < ConfigServer::apiKeyExpiry) {

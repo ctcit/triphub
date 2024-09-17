@@ -10,7 +10,7 @@ function PastTrips(mysqli $con, int $userId, array $query): array
     $to                 = SqlVal($con, strval($query['to']));
     $limit              = intval($query['limit'] ?? 100);
     $where              = ["t.tripDate BETWEEN $from AND $to"];
-    $deleted            = intval($query['deleted']);
+    $deleted            = intval($query['deleted'] ?? 0);
     $member             = GetMembers($con, $userId, "id = $userId")[0];
     $memberMap          = $query['memberMap'];
     $cols = SqlResultArray($con, "SHOW COLUMNS FROM $tripsTable", "Field", true);
@@ -23,6 +23,8 @@ function PastTrips(mysqli $con, int $userId, array $query): array
                                           FROM $participantsTable p
                                           WHERE p.tripid = t.id AND NOT p.isDeleted),0)"
     ];
+
+    $fulltext = [];
 
     foreach ($query as $key => $value) {
         $col = strtoupper($key);
@@ -108,7 +110,10 @@ function PastTrips(mysqli $con, int $userId, array $query): array
 
         // Work out what trips have what members in what roles
         foreach ($members as $member) {
-            $trips[$member['tripId']] ??= ['id' => $member['tripId'], 'tripDate' => $member['tripDate']];
+            $trips[$member['tripId']] ??= ['id' => $member['tripId'], 
+                                           'tripDate' => $member['tripDate'], 
+                                           'ranking_member' => 0,
+                                           'ranking' => 0 ];
             $memberInfo[$member['tripId']][$member['name']][$member['role']] = 0.5;
             $memberInfo[$member['tripId']][$member['name']]['Either'] = 0.5;
             if ($member['role'] === 'Editor') continue;

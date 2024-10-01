@@ -10,7 +10,7 @@ function GetRoutes($con, $userid, $query = null)
 	$membersTable = ConfigServer::membersTable;
 
     $where = "WHERE r.hidden = FALSE";
-    if (array_key_exists("includeHidden", $query) && strcasecmp($query[includeHidden], 'true') == 0)
+    if (array_key_exists("includeHidden", $query) && strcasecmp($query["includeHidden"], 'true') == 0)
     {
         $where = "";
     }

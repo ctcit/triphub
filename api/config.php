@@ -7,7 +7,7 @@ class ConfigClient
 	const editRefreshInSec      	= 10;
 	const calendarStartOfWeek   	= 1; //0=Sun,6=Sat
 	const prerequisiteEquipment 	= 'Ice Axe,Crampons,Helmet,Harness,Avalanche Gear';
-	const prerequisiteSkills    	= 'Snow Skills,River Crossing';
+	const prerequisiteSkills    	= 'Snow Skills,River Crossing,Avalanch Training';
 	const loginUrl					= 'https://ctc.org.nz/index.php/log-in';
 }
 

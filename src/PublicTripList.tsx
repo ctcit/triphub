@@ -36,8 +36,8 @@ export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
             { !isSocialOnly && <p>Non-members are always welcome on our trips - 
                                 please <a href="/about/contact-us" target="_top">contact the New Members Rep</a> to
                                 get put in touch with the trip leader.</p> }
-            { !isTripsOnly && <p>Unless otherwise stated, socials are at 110 Waltham Road, Christchurch. Doors open at 7:30 pm
-                                 with the meeting starting around 7:50 pm and the talk staring at 8:00 pm</p>}
+            { !isTripsOnly && <p>Unless otherwise stated, socials are at 110 Waltham Road, Christchurch. Doors open at 7:00 pm
+                                 with the meeting starting around 7:20 pm and the talk staring at 7:30 pm</p>}
             { isLoading && <FullWidthLoading/> }
             { trips.map( (trip) =>
                 <div key={trip.id} className='pb-2' >

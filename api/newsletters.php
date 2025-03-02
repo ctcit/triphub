@@ -38,11 +38,18 @@ function GetLatestNewsletter($con, $userid) {
 
 function GetCurrentNewsletter($con, $userid) {
 	$newslettersTable = ConfigServer::newslettersTable;
+	// Currently, the way the frontend works is by letting the user work with the current newsletter if it exists,
+	// or otherwise gives them an option to create the next one, so we need to return an empty array here at some point
+	// so that they get the option to make a new one.
+	// Previously a newsletter was "current" (i.e. being workd on) until the issue data, and this worked because
+	// that was the newsletter folding evening.
+	// These days that doesn't happen, and often the newsletter is being worked on after the issue date.
+	// Now count a newsletter as "current" for two weeks after the issue date.
 	return SqlResultArray($con,
 		"SELECT * 
 		FROM
 			$newslettersTable
-		WHERE `issueDate` > NOW()
+		WHERE `issueDate` > CURRENT_DATE() - INTERVAL '14' DAY
 		ORDER by `date` ASC LIMIT 1");
 }
 

@@ -36,7 +36,9 @@ export class TripReportList extends Component<{
         if (this.props.newsletterId === 0) {
             return
         }
-        TripReportsService.getTripReports(99999)
+        const tripReportLimit = 999
+        const tripReportDays = 120
+        TripReportsService.getTripReports(tripReportLimit, tripReportDays)
         .then((tripReports : ITripReport[]) => {
             NewslettersService.getNewslettersTripReports(this.props.newsletterId)
             .then((newsletterTripReports : INewsletterTripReport[]) => {

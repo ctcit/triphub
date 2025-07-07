@@ -137,7 +137,7 @@ const extraPrecachedFiles: string[] = [
   `${process.env.PUBLIC_URL}/icon-512x512.png`,
   `${process.env.PUBLIC_URL}/manifest.json`,
   `${process.env.PUBLIC_URL}/runtime-config.js`,
-  `${process.env.PUBLIC_URL}/print.css`, // ???
+  `${process.env.PUBLIC_URL}/print.css`,
   "https://unpkg.com/leaflet@1.3.1/dist/leaflet.css"
 ];
 

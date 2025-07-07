@@ -76,8 +76,12 @@ export const PublicTripList = (props:IPublicCalendarProps) : JSX.Element  => {
                     {trip.isFull &&
                         <p><i>Sorry, this trip is full.</i></p>
                     }
-                    <p className='public-calendar-description'>{trip.description}</p>
-                    <p>{trip.logisticInfo}</p>
+                    <p className='public-calendar-description' dangerouslySetInnerHTML={{
+                        __html: trip.description?.replace(/\n/g, '<br>') || ''
+                    }}></p>
+                    <p dangerouslySetInnerHTML={{
+                        __html: trip.logisticInfo?.replace(/\n/g, '<br>') || ''
+                    }}></p>
                 </div>,
             )}
     </div>
